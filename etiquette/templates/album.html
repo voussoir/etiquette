@@ -1,0 +1,54 @@
+<!DOCTYPE html5>
+<html>
+<head>
+    {% import "photo_object.html" as photo_object %}
+    {% import "header.html" as header %}
+    <title>Album {{album.title}}</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/common.css">
+</head>
+<style>
+#content_body
+{
+    /* overriding common.css here */
+    display: block;
+}
+</style>
+
+<body>
+{{header.make_header()}}
+<div id="content_body">
+    <h2>{{album.title}}</h2>
+    {% set parent=album.parent() %}
+    {% if parent %}
+    <h3>Parent: <a href="/album/{{parent.id}}">{{parent.title}}</a></h3>
+    {% endif %}
+    {% if child_albums %}
+    <h3>Sub-albums</h3>
+    <ul>
+        {% for album in child_albums %}
+        <li><a href="/album/{{album.id}}">
+            {% if album.title %}
+            {{album.title}}
+            {% else %}
+            {{album.id}}
+            {% endif %}</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% if photos %}
+    <h3>Photos</h3>
+    <ul>
+        {% for photo in photos %}
+        {{photo_object.galleryview(photo)}}
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+</body>
+
+</html>
+
+<script type="text/javascript">
+</script>

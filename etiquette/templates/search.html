@@ -1,0 +1,463 @@
+<!DOCTYPE html5>
+<html>
+<head>
+    {% import "photo_object.html" as photo_object %}
+    {% import "header.html" as header %}
+    <title>Search</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/common.css">
+    <script src="/static/common.js"></script>
+</head>
+<style>
+form
+{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#error_message_area
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+}
+.search_warning
+{
+    align-self: center;
+    color: #fff;
+    background-color: #f00;
+    padding: 2px;
+}
+#left, #right
+{
+    /* Keep the prev-next buttons from scraping the floor */
+    padding-bottom: 30px;
+}
+#left
+{
+    background-color: rgba(0, 0, 0, 0.1);
+    width: 300px;
+    padding: 8px;
+}
+#right
+{
+    flex: 1;
+    width: auto;
+}
+.prev_page
+{
+    float: left;
+}
+.next_page
+{
+    float: right;
+}
+.prev_page, .next_page
+{
+    display: inline-block;
+    width: 48%;
+    height: auto;
+    background-color: #ffffd4;
+    font-size: 20;
+    border: 1px solid black;
+}
+
+.search_builder_tagger,
+#search_builder_orderby_ul
+{
+    margin: 0;
+}
+</style>
+
+{% macro prev_next_buttons() %}
+{% if prev_page_url or next_page_url %}
+<div class="prev_next_holder">
+    <center>
+    {% if prev_page_url %}
+    <a class="prev_page" href="{{prev_page_url}}">Previous</a>
+    {% else %}
+    <a class="prev_page"><br></a>
+    {% endif %}
+    {% if next_page_url %}
+    <a class="next_page" href="{{next_page_url}}">Next</a>
+    {% else %}
+    <a class="next_page"><br></a>
+    {% endif %}
+    </center>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro create_orderby_li(selected_column, selected_sorter) %}
+<li class="search_builder_orderby_li">
+    <select>
+        <option value="created" {%if selected_column=="created"%}selected{%endif%} >Creation date</option>
+        <option value="area"    {%if selected_column=="area"%}selected{%endif%}    >Area</option>
+        <option value="width"   {%if selected_column=="width"%}selected{%endif%}   >Width</option>
+        <option value="height"  {%if selected_column=="height"%}selected{%endif%}  >Height</option>
+        <option value="ratio"   {%if selected_column=="ratio"%}selected{%endif%}   >Aspect Ratio</option>
+        <option value="bytes"   {%if selected_column=="bytes"%}selected{%endif%}   >File size</option>
+        <option value="length"  {%if selected_column=="length"%}selected{%endif%}  >Duration</option>
+        <option value="random"  {%if selected_column=="random"%}selected{%endif%}  >Random</option>
+    </select>
+    <select>
+        <option value="desc" {%if selected_sorter=="desc"%}selected{%endif%} >Descending</option>
+        <option value="asc"  {%if selected_sorter=="asc"%}selected{%endif%} >Ascending</option>
+    </select>
+    <button class="remove_tag_button_perm" onclick="orderby_remove_hook(this);"></button>
+</li>
+{% endmacro %}
+
+<body>
+    {{header.make_header()}}
+    <div id="error_message_area">
+        {% for warn in warns %}
+        <span class="search_warning">{{warn}}</span>
+        {% endfor %}
+    </div>
+    <div id="content_body">
+    <div id="left">
+        {% for tagtype in ["musts", "mays", "forbids"] %}
+        <div id="search_builder_{{tagtype}}" {% if search_kwargs["tag_expression"]%}style="display:none"{%endif%}>
+            <span>Tag {{tagtype}}:</span>
+            <ul class="search_builder_tagger">
+                {% set key="tag_" + tagtype %}
+                {% for tagname in search_kwargs[key] %}
+                <li class="search_builder_{{tagtype}}_inputted">
+                    <span class="tag_object">{{tagname}}</span>
+                    <button class="remove_tag_button"
+                    onclick="remove_searchtag(this, '{{tagname}}', inputted_{{tagtype}});"></button>
+                </li>
+                {% endfor %}
+                <li><input id="search_builder_{{tagtype}}_input" type="text"></li>
+            </ul>
+        </div>
+        {% endfor %}
+        <div id="search_builder_expression" {% if not search_kwargs["tag_expression"]%}style="display:none"{%endif%}>
+            <span>Tag Expression:</span>
+            <input id="search_builder_expression_input" name="tag_expression" type="text"
+            {% if search_kwargs["tag_expression"] %}
+            value="{{search_kwargs["tag_expression"]}}"
+            {% endif %}
+            >
+        </div>
+        <div id="search_builder_orderby">
+            <span>Order by</span>
+            <ul id="search_builder_orderby_ul">
+                {% if "orderby" in search_kwargs and search_kwargs["orderby"] %}
+                {% for orderby in search_kwargs["orderby"] %}
+                    {% set column=orderby.split(" ")[0] %}
+                    {% set sorter=orderby.split(" ")[1] %}
+                    {{ create_orderby_li(selected_column=column, selected_sorter=sorter) }}
+                {% endfor %}
+                {% else %}
+                {{ create_orderby_li(selected_column=0, selected_sorter=0) }}
+                {% endif %}
+                <li id="search_builder_orderby_newrow"><button class="add_tag_button" onclick="add_new_orderby()">+</button></li>
+            </ul>
+        </div>
+        <br>
+        <form id="search_builder_form" action="" onsubmit="return submit_search();">
+            <input type="text"
+            value="{%if search_kwargs['mimetype']%}{{search_kwargs['mimetype']}}{%endif%}"
+            name="mimetype" placeholder="Mimetype(s)">
+
+            <input type="text"
+            value="{%if search_kwargs['extension']%}{{search_kwargs['extension']}}{%endif%}"
+            name="extension" placeholder="Extension(s)">
+
+            <input type="text"
+            value="{%if search_kwargs['extension_not']%}{{search_kwargs['extension_not']}}{%endif%}" 
+            name="extension_not" placeholder="Forbid extension(s)">
+            
+            <select name="limit">
+                <option value="20"  {%if search_kwargs['limit'] == 20%}selected{%endif%}>20 items</option>
+                <option value="50"  {%if search_kwargs['limit'] == 50%}selected{%endif%}>50 items</option>
+                <option value="100" {%if search_kwargs['limit'] == 100%}selected{%endif%}>100 items</option>
+            </select>
+            <select name="has_tags">
+                <option value=""   {%if search_kwargs['has_tags'] == None %}selected{%endif%}>Tagged and untagged</option>
+                <option value="yes"{%if search_kwargs['has_tags'] == True %}selected{%endif%}>Tagged only</option>
+                <option value="no" {%if search_kwargs['has_tags'] == False %}selected{%endif%}>Untagged only</option>
+            </select>
+            <button type="submit" id="search_go_button" value="">Search</button>
+        </form>
+        {% if total_tags %}
+        <span>Tags on this page (click to join query):</span>
+        <ul>
+            {% for tag in total_tags %}
+            <li><a href="" class="tag_object">{{tag._cached_qualname}}</a></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    <div id="right">
+        <p>You got {{photos|length}} items</p><br>
+        {{prev_next_buttons()}}
+        {% for photo in photos %}
+        {{photo_object.galleryview(photo)}}
+        {% endfor %}
+        {{prev_next_buttons()}}
+    </div>
+    </div>
+</body>
+</html>
+
+
+<script type="text/javascript">
+function add_searchtag(box, value, inputted_list, li_class)
+{
+    /*
+    Called by hitting Enter within a must/may/forbid field. Checks whether the tag exists
+    and adds it to the query.
+    */
+    console.log("adding " + value);
+    var already_have = false;
+    // We're going to be doing some in-place splicing to remove,
+    // so make a duplicate for iterating
+    existing_tags = Array.from(inputted_list);
+    for (var index = 0; index < existing_tags.length; index += 1)
+    {
+        existing_tag = existing_tags[index];
+        if (existing_tag == value)
+        {
+            already_have = true;
+        }
+        else if (existing_tag.startsWith(value + ".") || value.startsWith(existing_tag + "."))
+        {
+            remove_searchtag(box, existing_tag, inputted_list);
+        }
+    }
+    if (!already_have)
+    {
+        inputted_list.push(value);
+        var new_li = document.createElement("li");
+        new_li.className = li_class;
+
+        var new_span = document.createElement("span");
+        new_span.className = "tag_object";
+        new_span.innerHTML = value;
+
+        var new_delbutton = document.createElement("button")
+        new_delbutton.className = "remove_tag_button";
+        new_delbutton.onclick = function(){remove_searchtag(new_delbutton, value, inputted_list)};
+
+        new_li.appendChild(new_span);
+        new_li.appendChild(new_delbutton);
+
+        box_li = box.parentElement;
+        ul = box_li.parentElement;
+        ul.insertBefore(new_li, box_li);
+    }
+}
+function remove_searchtag(li_member, value, inputted_list)
+{
+    /*
+    Given a member of the same tag type as the one we intend to remove,
+    find the tag of interest and remove it from both the DOM and the
+    inputted_list.
+
+    Sorry for the roundabout technique.
+    */
+    console.log("removing " + value);
+    var li = li_member.parentElement;
+    var ul = li.parentElement;
+    var lis = ul.children;
+    //console.log(lis);
+    for (var index = 0; index < lis.length; index += 1)
+    {
+        li = lis[index];
+        var span = li.children[0];
+        if (span.tagName != "SPAN")
+        {continue}
+
+        var tagname = span.innerHTML;
+        if (tagname != value)
+        {continue}
+
+        ul.removeChild(li);
+        splice_at = inputted_list.indexOf(tagname);
+        if (splice_at == -1)
+        {continue}
+
+        inputted_list.splice(splice_at, 1);
+    }
+}
+function add_new_orderby()
+{
+    /* Called by the green + button */
+    var ul = document.getElementById("search_builder_orderby_ul");
+    if (ul.children.length >= 8)
+    {
+        /* 8 because there are only 8 sortable properties */
+        return;
+    }
+    var li = ul.children;
+    li = li[li.length - 2];
+    var clone_children = true;
+    var new_li = li.cloneNode(clone_children)
+    var button = document.getElementById("search_builder_orderby_newrow");
+    ul.insertBefore(new_li, button);
+}
+function orderby_remove_hook(button)
+{
+    /* Called by the red button next to orderby dropdowns */
+    var li = button.parentElement;
+    var ul = li.parentElement;
+    // 2 because keep 1 row and the adder button
+    if (ul.children.length>2)
+    {
+        /* You can't remove the only one left */
+        ul.removeChild(li);
+    }
+}
+function submit_search()
+{
+    /*
+    Gather up all the form data and tags and compose the search URL
+    */
+    var url = window.location.origin + "/search";
+    var parameters = [];
+    var has_tag_params = false;
+    var musts = inputted_musts.join(",");
+    if (musts) {parameters.push("tag_musts=" + musts); has_tag_params=true;}
+
+    var mays = inputted_mays.join(",");
+    if (mays) {parameters.push("tag_mays=" + mays); has_tag_params=true;}
+
+    var forbids = inputted_forbids.join(",");
+    if (forbids) {parameters.push("tag_forbids=" + forbids); has_tag_params=true;}
+
+    var expression = document.getElementsByName("tag_expression")[0].value;
+    if (expression)
+    {
+        expression = expression.replace(new RegExp(" ", 'g'), "-");
+        parameters.push("tag_expression=" + expression);
+        has_tag_params=true;
+    }
+
+    var basic_inputs = ["mimetype", "extension", "extension_not", "limit", "has_tags"];
+    for (var index = 0; index < basic_inputs.length; index += 1)
+    {
+        var boxname = basic_inputs[index];
+        var box = document.getElementsByName(boxname)[0];
+        var value = box.value;
+        if (boxname == "has_tags" && has_tag_params && value == "no")
+        {
+            /*
+            The user wants untagged only, but has tags in the search boxes?
+            Override to "tagged or untagged" and let the tag searcher handle it.
+            */
+            value = "";
+        }
+        if (value == "")
+        {
+            continue;
+        }
+        parameters.push(boxname + "=" + box.value);
+    }
+
+    orderby_rows = document.getElementsByClassName("search_builder_orderby_li");
+    orderby_params = [];
+    for (var index = 0; index < orderby_rows.length; index += 1)
+    {
+        var row = orderby_rows[index];
+        var column = row.children[0].value;
+        var sorter = row.children[1].value;
+        orderby_params.push(column + "-" + sorter);
+    }
+    orderby_params = orderby_params.join(",");
+    if (orderby_params)
+    {
+        parameters.push("orderby=" + orderby_params);
+    }
+
+    if (parameters)
+    {
+        parameters = parameters.join("&");
+        parameters = "?" + parameters;
+        url = url + parameters;
+    }
+    window.location.href = url;
+    return false;
+}
+function tags_on_this_page_hook()
+{
+    /*
+    This is hooked onto the tag objects listed under "Found on this page".
+    Clicking them will add it to your current search query under Musts
+    */
+    add_searchtag(
+        input_musts,
+        this.innerHTML,
+        inputted_musts,
+        "search_builder_musts_inputted"
+    );
+    return false;
+}
+function tag_input_hook(box, inputted_list, li_class)
+{
+    /*
+    Assigned to the input boxes for musts, mays, forbids.
+    Hitting Enter will add the resovled tag to the search form.
+    */
+    if (event.keyCode != 13)
+    {return;}
+
+    if (!box.value)
+    {return;}
+
+    var value = box.value.toLocaleLowerCase();
+    value = value.split(".");
+    value = value[value.length-1];
+    value = value.split("+")[0];
+    value = value.replace(" ", "_");
+    value = value.replace("-", "_");
+    if (!(value in QUALNAME_MAP))
+    {
+        return;
+    }
+    value = QUALNAME_MAP[value];
+    console.log(inputted_list);
+    add_searchtag(box, value, inputted_list, li_class)
+    box.value = "";
+}
+
+
+QUALNAME_MAP = {{qualname_map|safe}};
+var input_musts = document.getElementById("search_builder_musts_input");
+var input_mays = document.getElementById("search_builder_mays_input");
+var input_forbids = document.getElementById("search_builder_forbids_input");
+var input_expression = document.getElementById("search_builder_expression_input");
+
+/* Prefix the form with the parameters from last search */
+var inputted_musts = [];
+var inputted_mays = [];
+var inputted_forbids = [];
+{% for tagtype in ["musts", "mays", "forbids"] %}
+    {% set key="tag_" + tagtype %}
+    {% for tagname in search_kwargs[key] %}
+        inputted_{{tagtype}}.push("{{tagname}}");
+    {% endfor %}
+{% endfor %}
+
+/* Assign the click handler to "Tags on this page" results. */
+var found_on_page = document.getElementsByClassName("tag_object");
+for (var index = 0; index < found_on_page.length; index += 1)
+{
+    var tag_object = found_on_page[index];
+    if (tag_object.tagName != "A")
+    {continue}
+
+    tag_object.onclick = tags_on_this_page_hook;
+    
+}
+
+input_musts.onkeydown = function(){tag_input_hook(this, inputted_musts, "search_builder_musts_inputted")};
+input_mays.onkeydown = function(){tag_input_hook(this, inputted_mays, "search_builder_mays_inputted")};
+input_forbids.onkeydown = function(){tag_input_hook(this, inputted_forbids, "search_builder_forbids_inputted")};
+bind_box_to_button(input_expression, document.getElementById("search_go_button"));
+</script>

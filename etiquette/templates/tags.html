@@ -1,0 +1,142 @@
+<!DOCTYPE html5>
+<html>
+<head>
+    {% import "header.html" as header %}
+    <title>Tags</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/common.css">
+    <script src="/static/common.js"></script>
+</head>
+<style>
+body
+{
+    display:flex;
+}
+#left
+{
+    height:100%;
+}
+#left
+{
+    flex: 1;
+    height: auto;
+}
+#right
+{
+    background-color: rgba(0, 0, 0, 0.1);
+    width: 300px;
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    top: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+#editor_area
+{
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    justify-content center;
+    align-items: center;
+}
+#message_area
+{
+    overflow-y: auto;
+    background-color: rgba(0, 0, 0, 0.1);
+    width: 100%;
+    height: 100%;
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content center;
+    align-items: center;
+}
+</style>
+
+<body>
+{{header.make_header()}}
+<div id="content_body">
+    <div id="left">
+        <ul>
+            {% for tag in tags %}
+            <li>
+                <a class="tag_object" href="/search?tag_musts={{tag[1]}}">{{tag[0]}}</a>
+                {% if "+" in tag[0] %}
+                <button class="remove_tag_button" onclick="delete_tag_synonym('{{tag[0]}}', receive_callback);"></button>
+                {% else %}
+                <button class="remove_tag_button" onclick="delete_tag('{{tag[0]}}', receive_callback);"></button>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div id="right">
+        <div id="editor_area">
+        <input type="text" id="add_tag_textbox" autofocus>
+        <button class="add_tag_button" id="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
+        </div>
+        <div id="message_area">
+        </div>
+    </div>
+</div>
+</body>
+
+</html>
+
+
+<script type="text/javascript">
+var box = document.getElementById('add_tag_textbox');
+var button = document.getElementById('add_tag_button');
+var message_area = document.getElementById('message_area');
+bind_box_to_button(box, button);
+
+function receive_callback(responses)
+{
+    if (!(responses instanceof Array))
+    {
+        responses = [responses];
+    }
+    for (var index = 0; index < responses.length; index += 1)
+    {
+        var response = responses[index];
+        var tagname = response["tagname"];
+        if ("error" in response)
+        {
+            message_positivity = "callback_message_negative";
+            message_text = '"' + tagname + '" ' + response["error"];
+        }
+        else if ("action" in response)
+        {
+            var action = response["action"];
+            message_positivity = "callback_message_positive";
+            if (action == "new_tag")
+            {message_text = "Created tag " + tagname;}
+
+            else if (action == "existing_tag")
+            {message_text = "Existing tag " + tagname;}
+
+            else if (action == "join_group")
+            {message_text = "Grouped " + tagname;}
+
+            else if (action == "rename")
+            {message_text = "Renamed " + tagname;}
+
+            else if (action == "delete_tag")
+            {message_text = "Deleted tag " + tagname;}
+
+            else if (action == "delete_synonym")
+            {message_text = "Deleted synonym " + response["synonym"];}
+
+        }
+        create_message_bubble(message_positivity, message_text, 8000);
+    }
+}
+function submit_tag(callback)
+{
+    create_tag(box.value, callback);
+    box.value='';
+}
+</script>

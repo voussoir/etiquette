@@ -1,0 +1,30 @@
+{% macro galleryview(photo) %}
+<div class="photo_galleryview">
+    <div class="photo_galleryview_thumb">
+        <a target="_blank" href="/photo/{{photo.id}}">
+            <img height="150"
+        {% if photo.thumbnail %}
+            src="/thumbnail/{{photo.id}}.jpg"
+        {% else %}
+            {% set mimetype = photo.mimetype() %}
+            {% if mimetype == 'video' %}
+                src="/static/basic_thumbnails/video.png"
+            {% elif mimetype == 'audio' %}
+                src="/static/basic_thumbnails/audio.png"
+            {% else %}
+                src="/static/basic_thumbnails/other.png"
+            {% endif %}
+        {% endif %}
+        </a>
+    </div>
+    <div class="photo_galleryview_info">
+        <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
+        <span>
+        {% if photo.width %}
+            {{photo.width}}x{{photo.height}}
+        {% endif %}
+        {{photo.bytestring()}}
+        </span>
+    </div>
+</div>
+{% endmacro %}

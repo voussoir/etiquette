@@ -1,0 +1,114 @@
+        start_time = time.time()
+
+
+        # Raise for cases where the minimum > maximum
+        for (maxkey, maxval) in maximums.items():
+            if maxkey not in minimums:
+                continue
+            minval = minimums[maxkey]
+            if minval > maxval:
+                raise ValueError('Impossible min-max for %s' % maxkey)
+
+        conditions = []
+        minmaxers = {'<=': maximums, '>=': minimums}
+
+        # Convert the min-max parameters into query strings
+        print('Writing minmaxers')
+        for (comparator, minmaxer) in minmaxers.items():
+            for (field, value) in minmaxer.items():
+                if field not in Photo.int_properties:
+                    raise ValueError('Unknown Photo property: %s' % field)
+
+                value = str(value)
+                query = min_max_query_builder(field, comparator, value)
+                conditions.append(query)
+
+        print(conditions)
+
+        print('Writing extension rule')
+        if extension is not None:
+            if isinstance(extension, str):
+                extension = [extension]
+
+            # Normalize to prevent injections
+            extension = [normalize_tagname(e) for e in extension]
+            extension = ['extension == "%s"' % e for e in extension]
+            extension = ' OR '.join(extension)
+            extension = '(%s)' % extension
+            conditions.append(extension)
+
+        def setify(l):
+            if l is None:
+                return set()
+            else:
+                return set(self.get_tag_by_name(t) for t in l)
+
+        tag_musts = setify(tag_musts)
+        tag_mays = setify(tag_mays)
+        tag_forbids = setify(tag_forbids)
+
+        base = '''
+        {negator} EXISTS(
+            SELECT 1 FROM photo_tag_rel
+            WHERE photo_tag_rel.photoid == photos.id
+            AND photo_tag_rel.tagid {operator} {value}
+        )'''
+
+        print('Writing musts')
+        for tag in tag_musts:
+            # tagid == must
+            query = base.format(
+                negator='',
+                operator='==',
+                value='"%s"' % tag.id,
+            )
+            conditions.append(query)
+
+        print('Writing mays')
+        if len(tag_mays) > 0:
+            # not any(tagid not in mays)
+            acceptable = tag_mays.union(tag_musts)
+            acceptable = ['"%s"' % t.id for t in acceptable]
+            acceptable = ', '.join(acceptable)
+            query = base.format(
+                negator='',
+                operator='IN',
+                value='(%s)' % acceptable,
+            )
+            conditions.append(query)
+
+        print('Writing forbids')
+        if len(tag_forbids) > 0:
+            # not any(tagid in forbids)
+            forbids = ['"%s"' % t.id for t in tag_forbids]
+            forbids = ', '.join(forbids)
+            query = base.format(
+                negator='NOT',
+                operator='IN',
+                value='(%s)' % forbids
+            )
+            conditions.append(query)
+
+        if len(conditions) == 0:
+            raise ValueError('No search query provided')
+
+        conditions = [query for query in conditions if query is not None]
+        conditions = ['(%s)' % c for c in conditions]
+        conditions = ' AND '.join(conditions)
+        conditions = 'WHERE %s' % conditions
+
+        query = 'SELECT * FROM photos %s' % conditions
+        query = query.replace('\n', ' ')
+        while '  ' in query:
+            query = query.replace('  ', ' ')
+        print(query)
+
+        temp_cur = self.sql.cursor()
+        temp_cur.execute(query)
+
+        for fetch in fetch_generator(temp_cur):
+            photo = Photo(self, fetch)
+            yield photo
+
+        end_time = time.time()
+        print(end_time - start_time)

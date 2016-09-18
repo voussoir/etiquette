@@ -1,0 +1,33 @@
+<!DOCTYPE html5>
+<html>
+<head>
+    {% import "header.html" as header %}
+    <title>Albums</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/common.css">
+</head>
+<style>
+#content_body
+{
+    flex-direction: column;
+}
+</style>
+
+<body>
+{{header.make_header()}}
+<div id="content_body">
+    {% for album in albums %}
+    {% if album.title %}
+    {% set title=album.id + " " + album.title %}
+    {% else %}
+    {% set title=album.id %}
+    {% endif %}
+    <a href="/album/{{album.id}}">{{title}}</a>
+    {% endfor %}
+</div>
+</body>
+</html>
+
+
+<script type="text/javascript">
+</script>

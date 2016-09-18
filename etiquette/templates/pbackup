@@ -1,0 +1,162 @@
+<!DOCTYPE html5>
+<html>
+<style>
+#left
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background-color: rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+#right
+{
+    display: flex;
+    flex: 1;
+}
+#editor_area
+{
+    flex: 3;
+}
+#message_area
+{
+    overflow-y: auto;
+    flex: 1;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+.photo_object
+{
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.photo_object img
+{
+    display: flex;
+    max-width: 100%;
+    max-height: 100%;
+    height: auto;
+}
+.photo_object audio
+{
+    width: 100%;
+}
+.photo_object video
+{
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+}
+</style>
+<head>
+    {% import "header.html" as header %}
+    <title>Photo</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/common.css">
+    <script src="/static/common.js"></script>
+</head>
+
+<body>
+{{header.make_header()}}
+<div id="content_body">
+<div id="left">
+    <div id="editor_area">
+        <!-- TAG INFO -->
+        <h4><a href="/tags">Tags</a></h4>
+        <ul id="this_tags">
+            {% for tag in tags %}
+            <li>
+                <a class="tag_object" href="/search?tag_musts={{tag.name}}">{{tag.qualified_name()}}</a>
+                <button class="remove_tag_button" onclick="remove_photo_tag('{{photo.id}}', '{{tag.name}}', receive_callback);"></button>
+            </li>
+            {% endfor %}
+            <li>
+                <input id="add_tag_textbox" type="text" autofocus>
+                <button id="add_tag_button" class="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
+            </li>
+        </ul>
+
+        <!-- METADATA & DOWNLOAD -->
+        <h4>File info</h4>
+        <ul id="metadata">
+        {% if photo.width %}
+            <li>{{photo.width}}x{{photo.height}} px</li>
+            <li>{{photo.ratio}} aspect ratio</li>
+            <li>{{photo.bytestring()}}</li>
+        {% endif %}
+            <li><a href="/file/{{photo.id}}.{{photo.extension}}?download=1">Download as {{photo.id}}.{{photo.extension}}</a></li>
+            <li><a href="/file/{{photo.id}}.{{photo.extension}}?download=1&original_filename=1">Download as "{{photo.basename}}"</a></li>
+        </ul>
+
+        <!-- CONTAINING ALBUMS -->
+        {% set albums=photo.albums() %}
+        {% if albums %}
+        <h4>Albums containing this photo</h4>
+        <ul id="containing albums">
+            {% for album in albums %}
+            <li><a href="/album/{{album.id}}">{{album.title}}</a></li>
+            {% endfor %}
+        {% endif %}
+        </ul>
+    </div>
+    <div id="message_area">
+    </div>
+</div>
+
+<div id="right">
+    <div class="photo_object">
+        {% set filename = photo.id + "." + photo.extension %}
+        {% set link = "/file/" + filename %}
+        {% set mimetype=photo.mimetype() %}
+        {% if mimetype == "image" %}
+        <img src="{{link}}">
+        {% elif mimetype == "video" %}
+        <video src="{{link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
+        {% elif mimetype == "audio" %}
+        <audio src="{{link}}" controls></audio>
+        {% else %}
+        <a href="{{link}}">View {{filename}}</a>
+        {% endif %}
+    </div>
+</div>
+</div>
+</body>
+</html>
+
+<script type="text/javascript">
+var box = document.getElementById('add_tag_textbox');
+var button = document.getElementById('add_tag_button');
+var message_area = document.getElementById('message_area');
+bind_box_to_button(box, button);
+
+function receive_callback(response)
+{
+    var tagname = response["tagname"];
+    if ("error" in response)
+    {
+        message_positivity = "callback_message_negative";
+        message_text = '"' + tagname + '" ' + response["error"];
+    }
+    else if ("action" in response)
+    {
+        var action = response["action"];
+        message_positivity = "callback_message_positive";
+        if (action == "add_tag")
+        {
+            message_text = "Added tag " + tagname;
+        }
+        else if (action == "remove_tag")
+        {
+            message_text = "Removed tag " + tagname;
+        }
+    }
+    create_message_bubble(message_positivity, message_text, 8000);
+}
+function submit_tag(callback)
+{
+    add_photo_tag('{{photo.id}}', box.value, callback);
+    box.value='';
+}
+</script>
