@@ -141,11 +141,17 @@ li
 {
     max-height: 100%;
 }
-.photo_galleryview_info span
+.photo_galleryview_file_metadata
 {
     position: absolute;
     bottom: 0;
     right: 0;
+}
+.photo_galleryview_tags
+{
+    position: absolute;
+    bottom: 0;
+    left: 0;
 }
 .tag_object
 {

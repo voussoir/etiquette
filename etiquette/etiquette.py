@@ -1,22 +1,29 @@
 import distutils.util
 import flask
 from flask import request
+import functools
 import json
+import math
 import mimetypes
 import os
 import random
 import re
 import requests
+import sys
+import time
+import uuid
 import warnings
+
+import phototagger
+sys.path.append('C:\\git\\else\\Bytestring'); import bytestring
 
 site = flask.Flask(__name__)
 site.config.update(
     SEND_FILE_MAX_AGE_DEFAULT=180,
     TEMPLATES_AUTO_RELOAD=True,
 )
+site.jinja_env.add_extension('jinja2.ext.do')
 
-print(os.getcwd())
-import phototagger
 P = phototagger.PhotoDB()
 
 FILE_READ_CHUNK = 2 ** 20
@@ -32,16 +39,59 @@ ERROR_TAG_TOO_SHORT = 'Not enough valid chars'
 ERROR_SYNONYM_ITSELF = 'Cant apply synonym to itself'
 ERROR_NO_SUCH_TAG = 'Doesn\'t exist'
 
+####################################################################################################
+####################################################################################################
+####################################################################################################
+####################################################################################################
+
+def give_session_token(function):
+    @functools.wraps(function)
+    def wrapped(*args, **kwargs):
+        # Inject new token so the function doesn't know the difference
+        token = request.cookies.get('etiquette_session', None)
+        if not token:
+            token = generate_session_token()
+            request.cookies = dict(request.cookies)
+            request.cookies['etiquette_session'] = token
+
+        ret = function(*args, **kwargs)
+
+        # Send the token back to the client
+        if not isinstance(ret, flask.Response):
+            ret = flask.Response(ret)
+        ret.set_cookie('etiquette_session', value=token, max_age=60)
+
+        return ret
+    return wrapped
+
+def _helper_comma_split(s):
+    if s is None:
+        return s
+    s = s.replace(' ', ',')
+    s = [x.strip() for x in s.split(',')]
+    s = [x for x in s if x]
+    return s
+
 def edit_params(original, modifications):
     new_params = original.to_dict()
     new_params.update(modifications)
     if not new_params:
         return ''
-    keep_params = {}
     new_params = ['%s=%s' % (k, v) for (k, v) in new_params.items() if v]
     new_params = '&'.join(new_params)
     new_params = '?' + new_params
     return new_params
+
+def generate_session_token():
+    token = str(uuid.uuid4())
+    #print('MAKE SESSION', token)
+    return token
+
+def make_json_response(j, *args, **kwargs):
+    dumped = json.dumps(j)
+    response = flask.Response(dumped, *args, **kwargs)
+    response.headers['Content-Type'] = 'application/json;charset=utf-8'
+    return response
 
 def P_album(albumid):
     try:
@@ -80,6 +130,7 @@ def read_filebytes(filepath, range_min, range_max):
     sent_amount = 0
     with f:
         while sent_amount < range_span:
+            print(sent_amount)
             chunk = f.read(FILE_READ_CHUNK)
             if len(chunk) == 0:
                 break
@@ -91,6 +142,11 @@ def send_file(filepath):
     '''
     Range-enabled file sending.
     '''
+    try:
+        file_size = os.path.getsize(filepath)
+    except FileNotFoundError:
+        flask.abort(404)
+
     outgoing_headers = {}
     mimetype = mimetypes.guess_type(filepath)[0]
     if mimetype is not None:
@@ -98,200 +154,52 @@ def send_file(filepath):
             mimetype += '; charset=utf-8'
         outgoing_headers['Content-Type'] = mimetype
 
-    if 'range' not in request.headers:
-        response = flask.make_response(flask.send_file(filepath))
-        for (k, v) in outgoing_headers.items():
-            response.headers[k] = v
-        return response
+    if 'range' in request.headers:
+        desired_range = request.headers['range'].lower()
+        desired_range = desired_range.split('bytes=')[-1]
 
-    try:
-        file_size = os.path.getsize(filepath)
-    except FileNotFoundError:
-        flask.abort(404)
+        int_helper = lambda x: int(x) if x.isdigit() else None
+        if '-' in desired_range:
+            (desired_min, desired_max) = desired_range.split('-')
+            range_min = int_helper(desired_min)
+            range_max = int_helper(desired_max)
+        else:
+            range_min = int_helper(desired_range)
 
-    desired_range = request.headers['range'].lower()
-    desired_range = desired_range.split('bytes=')[-1]
+        if range_min is None:
+            range_min = 0
+        if range_max is None:
+            range_max = file_size
 
-    inthelper = lambda x: int(x) if x.isdigit() else None
-    if '-' in desired_range:
-        (desired_min, desired_max) = desired_range.split('-')
-        range_min = inthelper(desired_min)
-        range_max = inthelper(desired_max)
+        # because ranges are 0-indexed
+        range_max = min(range_max, file_size - 1)
+        range_min = max(range_min, 0)
+
+        range_header = 'bytes {min}-{max}/{outof}'.format(
+            min=range_min,
+            max=range_max,
+            outof=file_size,
+        )
+        outgoing_headers['Content-Range'] = range_header
+        status = 206
     else:
-        range_min = inthelper(desired_range)
-
-    if range_min is None:
+        range_max = file_size - 1
         range_min = 0
-    if range_max is None:
-        range_max = file_size
+        status = 200
 
-    # because ranges are 0-indexed
-    range_max = min(range_max, file_size - 1)
-    range_min = max(range_min, 0)
-
-    range_header = 'bytes {min}-{max}/{outof}'.format(
-        min=range_min,
-        max=range_max,
-        outof=file_size,
-    )
-    outgoing_headers['Content-Range'] = range_header
     outgoing_headers['Accept-Ranges'] = 'bytes'
     outgoing_headers['Content-Length'] = (range_max - range_min) + 1
 
-    outgoing_data = read_filebytes(filepath, range_min=range_min, range_max=range_max)
+    if request.method == 'HEAD':
+        outgoing_data = bytes()
+    else:
+        outgoing_data = read_filebytes(filepath, range_min=range_min, range_max=range_max)
+
     response = flask.Response(
         outgoing_data,
-        status=206,
+        status=status,
         headers=outgoing_headers,
     )
-    return response
-
-
-@site.route('/')
-def root():
-    motd = random.choice(MOTD_STRINGS)
-    return flask.render_template('root.html', motd=motd)
-
-@site.route('/album/<albumid>')
-def get_album(albumid):
-    album = P_album(albumid)
-    response = flask.render_template(
-        'album.html',
-        album=album,
-        child_albums=album.children(),
-        photos=album.photos()
-    )
-    return response
-
-@site.route('/file/<photoid>')
-def get_file(photoid):
-    requested_photoid = photoid
-    photoid = photoid.split('.')[0]
-    photo = P.get_photo(photoid)
-
-    do_download = request.args.get('download', False)
-    do_download = truthystring(do_download)
-
-    use_original_filename = request.args.get('original_filename', False)
-    use_original_filename = truthystring(use_original_filename)
-
-    if do_download:
-        if use_original_filename:
-            download_as = photo.basename
-        else:
-            download_as = photo.id + '.' + photo.extension
-
-        # Sorry, but otherwise the attachment filename gets terminated
-        #download_as = download_as.replace(';', '-')
-        download_as = download_as.replace('"', '\\"')
-        response = flask.make_response(send_file(photo.real_filepath))
-        response.headers['Content-Disposition'] = 'attachment; filename="%s"' % download_as
-        return response
-    else:
-        return send_file(photo.real_filepath)
-
-@site.route('/albums')
-def get_albums():
-    albums = P.get_albums()
-    albums = [a for a in albums if a.parent() is None]
-    return flask.render_template('albums.html', albums=albums)
-
-@site.route('/photo/<photoid>', methods=['GET'])
-def get_photo(photoid):
-    photo = P_photo(photoid)
-    tags = photo.tags()
-    tags.sort(key=lambda x: x.qualified_name())
-    return flask.render_template('photo.html', photo=photo, tags=tags)
-
-@site.route('/tags')
-@site.route('/tags/<specific_tag>')
-def get_tags(specific_tag=None):
-    try:
-        tags = P.export_tags(phototagger.tag_export_easybake, specific_tag=specific_tag)
-    except phototagger.NoSuchTag:
-        flask.abort(404, 'That tag doesnt exist')
-
-    tags = tags.split('\n')
-    tags = [t for t in tags if t != '']
-    tags = [(t, t.split('.')[-1].split('+')[0]) for t in tags]
-    return flask.render_template('tags.html', tags=tags)
-
-@site.route('/thumbnail/<photoid>')
-def get_thumbnail(photoid):
-    photoid = photoid.split('.')[0]
-    photo = P_photo(photoid)
-    if photo.thumbnail:
-        path = photo.thumbnail
-    else:
-        flask.abort(404, 'That file doesnt have a thumbnail')
-    return send_file(path)
-
-@site.route('/photo/<photoid>', methods=['POST'])
-def edit_photo(photoid):
-    print(request.form)
-    response = {}
-    photo = P_photo(photoid)
-
-    if 'add_tag' in request.form:
-        action = 'add_tag'
-        method = photo.add_tag
-    elif 'remove_tag' in request.form:
-        action = 'remove_tag'
-        method = photo.remove_tag
-    else:
-        flask.abort(400, 'Invalid action')
-
-    tag = request.form[action].strip()
-    if tag == '':
-        flask.abort(400, 'No tag supplied')
-
-    try:
-        tag = P.get_tag(tag)
-    except phototagger.NoSuchTag:
-        return flask.Response('{"error": "That tag doesnt exist", "tagname":"%s"}'%tag, status=404)
-
-    method(tag)
-    response['action'] = action
-    response['tagid'] = tag.id
-    response['tagname'] = tag.name
-    return json.dumps(response)
-
-@site.route('/tags', methods=['POST'])
-def edit_tags():
-    print(request.form)
-    status = 200
-    if 'create_tag' in request.form:
-        action = 'create_tag'
-        method = create_tag
-    elif 'delete_tag_synonym' in request.form:
-        action = 'delete_tag_synonym'
-        method = delete_synonym
-    elif 'delete_tag' in request.form:
-        action = 'delete_tag'
-        method = delete_tag
-    else:
-        response = {'error': ERROR_INVALID_ACTION}
-
-    if status == 200:
-        status = 400
-        tag = request.form[action].strip()
-        if tag == '':
-            response = {'error': ERROR_NO_TAG_GIVEN}
-        try:
-            response = method(tag)
-        except phototagger.TagTooShort:
-            response = {'error': ERROR_TAG_TOO_SHORT, 'tagname': tag}
-        except phototagger.CantSynonymSelf:
-            response = {'error': ERROR_SYNONYM_ITSELF, 'tagname': tag}
-        except phototagger.NoSuchTag as e:
-            response = {'error': ERROR_NO_SUCH_TAG, 'tagname': tag}
-        except ValueError as e:
-            response = {'error': e.args[0], 'tagname': tag}
-        else:
-            status = 200
-
-    response = json.dumps(response)
-    response = flask.Response(response, status=status)
     return response
 
 def create_tag(easybake_string):
@@ -320,24 +228,170 @@ def delete_synonym(synonym):
     master_tag.remove_synonym(synonym)
     return {'action':'delete_synonym', 'synonym': synonym}
 
+####################################################################################################
+####################################################################################################
+####################################################################################################
+####################################################################################################
 
-@site.route('/search')
-def search():
+def jsonify_album(album, minimal=False):
+    j = {
+        'id': album.id,
+        'description': album.description,
+        'title': album.title,
+    }
+    if minimal is False:
+        j['photos'] = [jsonify_photo(photo) for photo in album.photos()]
+        j['parent'] = album.parent()
+        j['sub_albums'] = [child.id for child in album.children()]
+
+    return j
+
+def seconds_to_hms(seconds):
+    seconds = math.ceil(seconds)
+    (minutes, seconds) = divmod(seconds, 60)
+    (hours, minutes) = divmod(minutes, 60)
+    parts = []
+    if hours: parts.append(hours)
+    if minutes: parts.append(minutes)
+    parts.append(seconds)
+    hms = ':'.join('%02d' % part for part in parts)
+    return hms
+
+def jsonify_photo(photo):
+    tags = photo.tags()
+    tags.sort(key=lambda x: x.name)
+    j = {
+        'id': photo.id,
+        'extension': photo.extension,
+        'width': photo.width,
+        'height': photo.height,
+        'ratio': photo.ratio,
+        'area': photo.area,
+        'bytes': photo.bytes,
+        'duration': seconds_to_hms(photo.duration) if photo.duration else None,
+        'duration_int': photo.duration,
+        'bytestring': photo.bytestring(),
+        'has_thumbnail': bool(photo.thumbnail),
+        'created': photo.created,
+        'filename': photo.basename,
+        'mimetype': photo.mimetype(),
+        'albums': [jsonify_album(album, minimal=True) for album in photo.albums()],
+        'tags': [jsonify_tag(tag) for tag in tags],
+    }
+    return j
+
+def jsonify_tag(tag):
+    j = {
+        'id': tag.id,
+        'name': tag.name,
+        'qualified_name': tag.qualified_name(),
+    }
+    return j
+
+####################################################################################################
+####################################################################################################
+####################################################################################################
+####################################################################################################
+
+@site.route('/')
+@give_session_token
+def root():
+    motd = random.choice(MOTD_STRINGS)
+    return flask.render_template('root.html', motd=motd)
+
+@site.route('/favicon.ico')
+@site.route('/favicon.png')
+def favicon():
+    filename = os.path.join('static', 'favicon.png')
+    return flask.send_file(filename)
+
+def get_album_core(albumid):
+    album = P_album(albumid)
+    album = jsonify_album(album)
+    return album
+
+@site.route('/album/<albumid>')
+@give_session_token
+def get_album_html(albumid):
+    album = get_album_core(albumid)
+    response = flask.render_template(
+        'album.html',
+        album=album,
+        child_albums=album['sub_albums'],
+        photos=album['photos'],
+    )
+    return response
+
+@site.route('/album/<albumid>')
+@give_session_token
+def get_album_json(albumid):
+    album = get_album_core(albumid)
+    return make_json_response(album)
+
+@site.route('/albums')
+@give_session_token
+def get_albums():
+    albums = P.get_albums()
+    albums = [a for a in albums if a.parent() is None]
+    return flask.render_template('albums.html', albums=albums)
+
+@site.route('/file/<photoid>')
+def get_file(photoid):
+    requested_photoid = photoid
+    photoid = photoid.split('.')[0]
+    photo = P.get_photo(photoid)
+
+    do_download = request.args.get('download', False)
+    do_download = truthystring(do_download)
+
+    use_original_filename = request.args.get('original_filename', False)
+    use_original_filename = truthystring(use_original_filename)
+
+    if do_download:
+        if use_original_filename:
+            download_as = photo.basename
+        else:
+            download_as = photo.id + '.' + photo.extension
+
+        ## Sorry, but otherwise the attachment filename gets terminated
+        #download_as = download_as.replace(';', '-')
+        download_as = download_as.replace('"', '\\"')
+        response = flask.make_response(send_file(photo.real_filepath))
+        response.headers['Content-Disposition'] = 'attachment; filename="%s"' % download_as
+        return response
+    else:
+        return send_file(photo.real_filepath)
+
+def get_photo_core(photoid):
+    photo = P_photo(photoid)
+    photo = jsonify_photo(photo)
+    return photo
+
+@site.route('/photo/<photoid>', methods=['GET'])
+@give_session_token
+def get_photo_html(photoid):
+    photo = get_photo_core(photoid)
+    photo['tags'].sort(key=lambda x: x['qualified_name'])
+    return flask.render_template('photo.html', photo=photo)
+
+@site.route('/photo/<photoid>.json', methods=['GET'])
+@give_session_token
+def get_photo_json(photoid):
+    photo = get_photo_core(photoid)
+    photo = make_json_response(photo)
+    return photo
+
+def get_search_core():
     print(request.args)
 
-    def comma_split_helper(s):
-        s = s.replace(' ', ',')
-        s = [x.strip() for x in s.split(',')]
-        s = [x for x in s if x]
-        return s
     # EXTENSION
-    extension_string = request.args.get('extension', '')
-    extension_not_string = request.args.get('extension_not', '')
-    mimetype_string = request.args.get('mimetype', '')
+    extension_string = request.args.get('extension', None)
+    extension_not_string = request.args.get('extension_not', None)
+    mimetype_string = request.args.get('mimetype', None)
 
-    extension_list = comma_split_helper(extension_string)
-    extension_not_list = comma_split_helper(extension_not_string)
-    mimetype_list = comma_split_helper(mimetype_string)
+    extension_list = _helper_comma_split(extension_string)
+    extension_not_list = _helper_comma_split(extension_not_string)
+    mimetype_list = _helper_comma_split(mimetype_string)
 
     # LIMIT
     limit = request.args.get('limit', '')
@@ -387,7 +441,7 @@ def search():
     height = request.args.get('height', None)
     ratio = request.args.get('ratio', None)
     bytes = request.args.get('bytes', None)
-    length = request.args.get('length', None)
+    duration = request.args.get('duration', None)
     created = request.args.get('created', None)
 
     # These are in a dictionary so I can pass them to the page template.
@@ -397,7 +451,7 @@ def search():
         'height': height,
         'ratio': ratio,
         'bytes': bytes,
-        'length': length,
+        'duration': duration,
 
         'created': created,
         'extension': extension_list,
@@ -418,14 +472,16 @@ def search():
     print(search_kwargs)
     with warnings.catch_warnings(record=True) as catcher:
         photos = list(P.search(**search_kwargs))
+        photos = [jsonify_photo(photo) for photo in photos]
         warns = [str(warning.message) for warning in catcher]
     print(warns)
+
+    # TAGS ON THIS PAGE
     total_tags = set()
     for photo in photos:
-        total_tags.update(photo.tags())
-    for tag in total_tags:
-        tag._cached_qualname = qualname_map[tag.name]
-    total_tags = sorted(total_tags, key=lambda x: x._cached_qualname)
+        for tag in photo['tags']:
+            total_tags.add(tag['qualified_name'])
+    total_tags = sorted(total_tags)
 
     # PREV-NEXT PAGE URLS
     offset = offset or 0
@@ -443,22 +499,148 @@ def search():
     search_kwargs['extension'] = extension_string
     search_kwargs['extension_not'] = extension_not_string
     search_kwargs['mimetype'] = mimetype_string
+
+    final_results = {
+        'next_page_url': next_page_url,
+        'prev_page_url': prev_page_url,
+        'photos': photos,
+        'total_tags': total_tags,
+        'warns': warns,
+        'search_kwargs': search_kwargs,
+        'qualname_map': qualname_map,
+    }
+    return final_results
+
+@site.route('/search')
+@give_session_token
+def get_search_html():
+    search_results = get_search_core()
+    search_kwargs = search_results['search_kwargs']
+    qualname_map = search_results['qualname_map']
     response = flask.render_template(
         'search.html',
-        photos=photos,
-        search_kwargs=search_kwargs,
-        total_tags=total_tags,
-        prev_page_url=prev_page_url,
-        next_page_url=next_page_url,
+        next_page_url=search_results['next_page_url'],
+        prev_page_url=search_results['prev_page_url'],
+        photos=search_results['photos'],
         qualname_map=json.dumps(qualname_map),
-        warns=warns,
+        search_kwargs=search_kwargs,
+        total_tags=search_results['total_tags'],
+        warns=search_results['warns'],
     )
     return response
 
+@site.route('/search.json')
+@give_session_token
+def get_search_json():
+    search_results = get_search_core()
+    search_kwargs = search_results['search_kwargs']
+    qualname_map = search_results['qualname_map']
+    include_qualname_map = request.args.get('include_map', False)
+    include_qualname_map = truthystring(include_qualname_map)
+    if not include_qualname_map:
+        search_results.pop('qualname_map')
+    return make_json_response(j)
+
 @site.route('/static/<filename>')
-def get_resource(filename):
-    print(filename)
-    return flask.send_file('.\\static\\%s' % filename)
+def get_static(filename):
+    filename = filename.replace('\\', os.sep)
+    filename = filename.replace('/', os.sep)
+    filename = os.path.join('static', filename)
+    return flask.send_file(filename)
+
+@site.route('/tags')
+@site.route('/tags/<specific_tag>')
+@give_session_token
+def get_tags(specific_tag=None):
+    try:
+        tags = P.export_tags(phototagger.tag_export_easybake, specific_tag=specific_tag)
+    except phototagger.NoSuchTag:
+        flask.abort(404, 'That tag doesnt exist')
+
+    tags = tags.split('\n')
+    tags = [t for t in tags if t != '']
+    tags = [(t, t.split('.')[-1].split('+')[0]) for t in tags]
+    return flask.render_template('tags.html', tags=tags)
+
+@site.route('/thumbnail/<photoid>')
+def get_thumbnail(photoid):
+    photoid = photoid.split('.')[0]
+    photo = P_photo(photoid)
+    if photo.thumbnail:
+        path = photo.thumbnail
+    else:
+        flask.abort(404, 'That file doesnt have a thumbnail')
+    return send_file(path)
+
+@site.route('/photo/<photoid>', methods=['POST'])
+@give_session_token
+def post_edit_photo(photoid):
+    print(request.form)
+    response = {}
+    photo = P_photo(photoid)
+
+    if 'add_tag' in request.form:
+        action = 'add_tag'
+        method = photo.add_tag
+    elif 'remove_tag' in request.form:
+        action = 'remove_tag'
+        method = photo.remove_tag
+    else:
+        flask.abort(400, 'Invalid action')
+
+    tag = request.form[action].strip()
+    if tag == '':
+        flask.abort(400, 'No tag supplied')
+
+    try:
+        tag = P.get_tag(tag)
+    except phototagger.NoSuchTag:
+        return flask.Response('{"error": "That tag doesnt exist", "tagname":"%s"}'%tag, status=404)
+
+    method(tag)
+    response['action'] = action
+    response['tagid'] = tag.id
+    response['tagname'] = tag.name
+    return json.dumps(response)
+
+@site.route('/tags', methods=['POST'])
+@give_session_token
+def post_edit_tags():
+    print(request.form)
+    status = 200
+    if 'create_tag' in request.form:
+        action = 'create_tag'
+        method = create_tag
+    elif 'delete_tag_synonym' in request.form:
+        action = 'delete_tag_synonym'
+        method = delete_synonym
+    elif 'delete_tag' in request.form:
+        action = 'delete_tag'
+        method = delete_tag
+    else:
+        response = {'error': ERROR_INVALID_ACTION}
+
+    if status == 200:
+        status = 400
+        tag = request.form[action].strip()
+        if tag == '':
+            response = {'error': ERROR_NO_TAG_GIVEN}
+        try:
+            response = method(tag)
+        except phototagger.TagTooShort:
+            response = {'error': ERROR_TAG_TOO_SHORT, 'tagname': tag}
+        except phototagger.CantSynonymSelf:
+            response = {'error': ERROR_SYNONYM_ITSELF, 'tagname': tag}
+        except phototagger.NoSuchTag as e:
+            response = {'error': ERROR_NO_SUCH_TAG, 'tagname': tag}
+        except ValueError as e:
+            response = {'error': e.args[0], 'tagname': tag}
+        else:
+            status = 200
+
+    response = json.dumps(response)
+    response = flask.Response(response, status=status)
+    return response
 
 
 if __name__ == '__main__':

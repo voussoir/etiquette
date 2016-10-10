@@ -1,11 +1,12 @@
 import os
 import phototagger
 import unittest
-
+import random
 
 class PhotoDBTest(unittest.TestCase):
     def setUp(self):
         self.P = phototagger.PhotoDB(':memory:')
+
 
 class AlbumTest(PhotoDBTest):
     '''
@@ -55,6 +56,7 @@ class PhotoTest(PhotoDBTest):
     def test_reload_metadata(self):
         pass
 
+
 class TagTest(PhotoDBTest):
     '''
     Test the creation and properties of tags
@@ -89,6 +91,7 @@ class TagTest(PhotoDBTest):
         self.assertRaises(phototagger.TagTooShort, tag.rename, '??')
         tag.rename(tag.name)  # does nothing
 
+
 class SearchTest(PhotoDBTest):
     def search_extension(self):
         pass
@@ -98,6 +101,7 @@ class SearchTest(PhotoDBTest):
         pass
     def search_tags(self):
         pass
+
 
 class SynonymTest(PhotoDBTest):
     '''
@@ -136,6 +140,7 @@ class SynonymTest(PhotoDBTest):
         tag.add_synonym('test get syns3')
         self.assertEqual(len(tag.synonyms()), 3)
 
+
 class AlbumGroupTest(PhotoDBTest):
     '''
     Test the relationships between albums as they form and leave groups
@@ -154,6 +159,7 @@ class AlbumGroupTest(PhotoDBTest):
 
     def test_album_parents(self):
         pass
+
 
 class TagGroupTest(PhotoDBTest):
     '''
@@ -187,6 +193,7 @@ class AlbumPhotoTest(PhotoDBTest):
 
     def test_remove_photo(self):
         pass
+
 
 class PhotoTagTest(PhotoDBTest):
     '''

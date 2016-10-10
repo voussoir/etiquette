@@ -94,14 +94,14 @@ form
 {% macro create_orderby_li(selected_column, selected_sorter) %}
 <li class="search_builder_orderby_li">
     <select>
-        <option value="created" {%if selected_column=="created"%}selected{%endif%} >Creation date</option>
-        <option value="area"    {%if selected_column=="area"%}selected{%endif%}    >Area</option>
-        <option value="width"   {%if selected_column=="width"%}selected{%endif%}   >Width</option>
-        <option value="height"  {%if selected_column=="height"%}selected{%endif%}  >Height</option>
-        <option value="ratio"   {%if selected_column=="ratio"%}selected{%endif%}   >Aspect Ratio</option>
-        <option value="bytes"   {%if selected_column=="bytes"%}selected{%endif%}   >File size</option>
-        <option value="length"  {%if selected_column=="length"%}selected{%endif%}  >Duration</option>
-        <option value="random"  {%if selected_column=="random"%}selected{%endif%}  >Random</option>
+        <option value="created"  {%if selected_column=="created"%}selected{%endif%}  >Creation date</option>
+        <option value="area"     {%if selected_column=="area"%}selected{%endif%}     >Area</option>
+        <option value="width"    {%if selected_column=="width"%}selected{%endif%}    >Width</option>
+        <option value="height"   {%if selected_column=="height"%}selected{%endif%}   >Height</option>
+        <option value="ratio"    {%if selected_column=="ratio"%}selected{%endif%}    >Aspect Ratio</option>
+        <option value="bytes"    {%if selected_column=="bytes"%}selected{%endif%}    >File size</option>
+        <option value="duration" {%if selected_column=="duration"%}selected{%endif%} >Duration</option>
+        <option value="random"   {%if selected_column=="random"%}selected{%endif%}   >Random</option>
     </select>
     <select>
         <option value="desc" {%if selected_sorter=="desc"%}selected{%endif%} >Descending</option>
@@ -149,8 +149,7 @@ form
             <ul id="search_builder_orderby_ul">
                 {% if "orderby" in search_kwargs and search_kwargs["orderby"] %}
                 {% for orderby in search_kwargs["orderby"] %}
-                    {% set column=orderby.split(" ")[0] %}
-                    {% set sorter=orderby.split(" ")[1] %}
+                    {% set column, sorter=orderby.split(" ") %}
                     {{ create_orderby_li(selected_column=column, selected_sorter=sorter) }}
                 {% endfor %}
                 {% else %}
@@ -161,24 +160,53 @@ form
         </div>
         <br>
         <form id="search_builder_form" action="" onsubmit="return submit_search();">
-            <input type="text"
+
+            <span>Min-max values</span>
+            <input type="text" class="basic_param"
+            value="{%if search_kwargs['area']%}{{search_kwargs['area']}}{%endif%}"
+            name="area" placeholder="Area: 1m-2m">
+
+            <input type="text" class="basic_param"
+            value="{%if search_kwargs['width']%}{{search_kwargs['width']}}{%endif%}"
+            name="width" placeholder="Width: 1k-2k">
+
+            <input type="text" class="basic_param"
+            value="{%if search_kwargs['height']%}{{search_kwargs['height']}}{%endif%}"
+            name="height" placeholder="Height: 1k-2k">
+
+            <input type="text" class="basic_param"
+            value="{%if search_kwargs['ratio']%}{{search_kwargs['ratio']}}{%endif%}"
+            name="ratio" placeholder="Aspect Ratio: 1.7-2">
+
+            <input type="text" class="basic_param"
+            value="{%if search_kwargs['bytes']%}{{search_kwargs['bytes']}}{%endif%}"
+            name="bytes" placeholder="File Size: 1mb-2mb">
+
+            <input type="text" class="basic_param"
+            value="{%if search_kwargs['duration']%}{{search_kwargs['duration']}}{%endif%}"
+            name="duration" placeholder="Duration: 10:00-20:00">
+
+            <br>
+
+            <span>Other filters</span>
+            <input type="text" class="basic_param"
             value="{%if search_kwargs['mimetype']%}{{search_kwargs['mimetype']}}{%endif%}"
             name="mimetype" placeholder="Mimetype(s)">
 
-            <input type="text"
+            <input type="text" class="basic_param"
             value="{%if search_kwargs['extension']%}{{search_kwargs['extension']}}{%endif%}"
             name="extension" placeholder="Extension(s)">
 
-            <input type="text"
+            <input type="text" class="basic_param"
             value="{%if search_kwargs['extension_not']%}{{search_kwargs['extension_not']}}{%endif%}" 
             name="extension_not" placeholder="Forbid extension(s)">
             
-            <select name="limit">
+            <select name="limit" class="basic_param">
                 <option value="20"  {%if search_kwargs['limit'] == 20%}selected{%endif%}>20 items</option>
                 <option value="50"  {%if search_kwargs['limit'] == 50%}selected{%endif%}>50 items</option>
                 <option value="100" {%if search_kwargs['limit'] == 100%}selected{%endif%}>100 items</option>
             </select>
-            <select name="has_tags">
+            <select name="has_tags" class="basic_param">
                 <option value=""   {%if search_kwargs['has_tags'] == None %}selected{%endif%}>Tagged and untagged</option>
                 <option value="yes"{%if search_kwargs['has_tags'] == True %}selected{%endif%}>Tagged only</option>
                 <option value="no" {%if search_kwargs['has_tags'] == False %}selected{%endif%}>Untagged only</option>
@@ -189,7 +217,7 @@ form
         <span>Tags on this page (click to join query):</span>
         <ul>
             {% for tag in total_tags %}
-            <li><a href="" class="tag_object">{{tag._cached_qualname}}</a></li>
+            <li><a href="" class="tag_object">{{tag}}</a></li>
             {% endfor %}
         </ul>
         {% endif %}
@@ -314,6 +342,18 @@ function orderby_remove_hook(button)
         ul.removeChild(li);
     }
 }
+function simplify_tagnames(tags)
+{
+    var new_tags = [];
+    for (var index = 0; index < tags.length; index += 1)
+    {
+        var tag = tags[index];
+        tag = tag.split(".");
+        tag = tag[tag.length - 1];
+        new_tags.push(tag);
+    }
+    return new_tags;
+}
 function submit_search()
 {
     /*
@@ -322,13 +362,13 @@ function submit_search()
     var url = window.location.origin + "/search";
     var parameters = [];
     var has_tag_params = false;
-    var musts = inputted_musts.join(",");
+    var musts = simplify_tagnames(inputted_musts).join(",");
     if (musts) {parameters.push("tag_musts=" + musts); has_tag_params=true;}
 
-    var mays = inputted_mays.join(",");
+    var mays = simplify_tagnames(inputted_mays).join(",");
     if (mays) {parameters.push("tag_mays=" + mays); has_tag_params=true;}
 
-    var forbids = inputted_forbids.join(",");
+    var forbids = simplify_tagnames(inputted_forbids).join(",");
     if (forbids) {parameters.push("tag_forbids=" + forbids); has_tag_params=true;}
 
     var expression = document.getElementsByName("tag_expression")[0].value;
@@ -339,10 +379,10 @@ function submit_search()
         has_tag_params=true;
     }
 
-    var basic_inputs = ["mimetype", "extension", "extension_not", "limit", "has_tags"];
+    var basic_inputs = document.getElementsByClassName("basic_param");
     for (var index = 0; index < basic_inputs.length; index += 1)
     {
-        var boxname = basic_inputs[index];
+        var boxname = basic_inputs[index].name;
         var box = document.getElementsByName(boxname)[0];
         var value = box.value;
         if (boxname == "has_tags" && has_tag_params && value == "no")
@@ -414,8 +454,8 @@ function tag_input_hook(box, inputted_list, li_class)
     value = value.split(".");
     value = value[value.length-1];
     value = value.split("+")[0];
-    value = value.replace(" ", "_");
-    value = value.replace("-", "_");
+    value = value.replace(new RegExp(" ", 'g'), "_");
+    value = value.replace(new RegExp("-", 'g'), "_");
     if (!(value in QUALNAME_MAP))
     {
         return;

@@ -91,7 +91,7 @@ body
 var box = document.getElementById('add_tag_textbox');
 var button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
-bind_box_to_button(box, button);
+box.onkeydown = function(){entry_with_history_hook(box, button)};
 
 function receive_callback(responses)
 {
@@ -115,6 +115,9 @@ function receive_callback(responses)
             if (action == "new_tag")
             {message_text = "Created tag " + tagname;}
 
+            else if (action == "new_synonym")
+            {message_text = "New synonym " + tagname;}
+
             else if (action == "existing_tag")
             {message_text = "Existing tag " + tagname;}
 
@@ -137,6 +140,6 @@ function receive_callback(responses)
 function submit_tag(callback)
 {
     create_tag(box.value, callback);
-    box.value='';
+    box.value = "";
 }
 </script>

@@ -27,10 +27,13 @@ DEFAULT_THUMBDIR = '_site_thumbnails'
 THUMBNAIL_WIDTH = 400
 THUMBNAIL_HEIGHT = 400
 
-ffmpeg = converter.Converter(
-    ffmpeg_path='C:\\software\\ffmpeg\\bin\\ffmpeg.exe',
-    ffprobe_path='C:\\software\\ffmpeg\\bin\\ffprobe.exe',
-)
+try:
+    ffmpeg = converter.Converter(
+        ffmpeg_path='C:\\software\\ffmpeg\\bin\\ffmpeg.exe',
+        ffprobe_path='C:\\software\\ffmpeg\\bin\\ffprobe.exe',
+    )
+except converter.ffmpeg.FFMpegError:
+    ffmpeg = None
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -40,8 +43,8 @@ ADDITIONAL_MIMETYPES = {
     'srt': 'text',
     'mkv': 'video',
 }
-WARNING_MINMAX_INVALID = 'Field {field}: "{value}" is not a valid request. Ignored.'
-WARNING_MINMAX_OOO = 'Field {field}: minimum "{min}" maximum "{max}" are out of order. Ignored.'
+WARNING_MINMAX_INVALID = 'Field "{field}": "{value}" is not a valid request. Ignored.'
+WARNING_MINMAX_OOO = 'Field "{field}": minimum "{min}" maximum "{max}" are out of order. Ignored.'
 WARNING_NO_SUCH_TAG = 'Tag "{tag}" does not exist. Ignored.'
 WARNING_ORDERBY_BADCOL = '"{column}" is not a sorting option. Ignored.'
 WARNING_ORDERBY_BADSORTER = 'You can\'t order "{column}" by "{sorter}". Defaulting to descending.'
@@ -66,7 +69,7 @@ SQL_PHOTO_COLUMNS = [
     'height',
     'ratio',
     'area',
-    'length',
+    'duration',
     'bytes',
     'created',
     'thumbnail',
@@ -79,7 +82,6 @@ SQL_SYN_COLUMNS = [
     'name',
     'master',
 ]
-
 SQL_ALBUMPHOTO_COLUMNS = [
     'albumid',
     'photoid',
@@ -119,7 +121,7 @@ CREATE TABLE IF NOT EXISTS photos(
     height INT,
     ratio REAL,
     area INT,
-    length INT,
+    duration INT,
     bytes INT,
     created INT,
     thumbnail TEXT
@@ -176,8 +178,30 @@ CREATE INDEX IF NOT EXISTS index_grouprel_parentid on tag_group_rel(parentid);
 CREATE INDEX IF NOT EXISTS index_grouprel_memberid on tag_group_rel(memberid);
 '''
 
+def not_implemented(function):
+    '''
+    Decorator to remember what needs doing.
+    '''
+    warnings.warn('%s is not implemented' % function.__name__)
+    return function
+
+def time_me(function):
+    '''
+    Decorator. After the function is run, print the elapsed time.
+    '''
+    @functools.wraps(function)
+    def timed_function(*args, **kwargs):
+        start = time.time()
+        result = function(*args, **kwargs)
+        end = time.time()
+        print('%s: %0.8f' % (function.__name__, end-start))
+        return result
+    return timed_function
 
 def _helper_extension(ext):
+    '''
+    When searching, this function normalizes the list of permissible extensions.
+    '''
     if isinstance(ext, str):
         ext = [ext]
     if ext is None:
@@ -188,6 +212,10 @@ def _helper_extension(ext):
     return ext
 
 def _helper_minmax(key, value, minimums, maximums):
+    '''
+    When searching, this function dissects a hyphenated range string
+    and inserts the correct k:v pair into both minimums and maximums.
+    '''
     if value is None:
         return
     if isinstance(value, (int, float)):
@@ -207,6 +235,10 @@ def _helper_minmax(key, value, minimums, maximums):
         maximums[key] = high
 
 def _helper_orderby(orderby):
+    '''
+    When searching, this function ensures that the user has entered a valid orderby
+    query, and normalizes the query text.
+    '''
     orderby = orderby.lower().strip()
     if orderby == '':
         return None
@@ -227,7 +259,7 @@ def _helper_orderby(orderby):
         'height',
         'ratio',
         'area',
-        'length',
+        'duration',
         'bytes',
         'created',
         'random',
@@ -244,6 +276,11 @@ def _helper_orderby(orderby):
     return (column, sorter)
 
 def _helper_setify(photodb, l, warn_bad_tags=False):
+    '''
+    When searching, this function converts the list of tag strings that the user
+    requested into Tag objects. If a tag doesn't exist we'll either raise an exception
+    or just issue a warning.
+    '''
     if l is None:
         return set()
 
@@ -262,6 +299,18 @@ def _helper_setify(photodb, l, warn_bad_tags=False):
         else:
             s.add(tag)
     return s
+
+def _helper_unitconvert(value):
+    '''
+    When parsing hyphenated ranges, this function is used to convert
+    strings like "1k" to 1024 and "1:00" to 60.
+    '''
+    if value is None:
+        return None
+    if ':' in value:
+        return hms_to_seconds(value)
+    else:
+        return bytestring.parsebytes(value)
 
 def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
     '''
@@ -286,25 +335,45 @@ def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
 
     return chunks
 
+def hms_to_seconds(hms):
+    '''
+    Convert hh:mm:ss string to an integer seconds.
+    '''
+    hms = hms.split(':')
+    seconds = 0
+    if len(hms) == 3:
+        seconds += int(hms[0])*3600
+        hms.pop(0)
+    if len(hms) == 2:
+        seconds += int(hms[0])*60
+        hms.pop(0)
+    if len(hms) == 1:
+        seconds += int(hms[0])
+    return seconds
+
 def hyphen_range(s):
     '''
-    Given a string like '1-3', return floats (1.0, 3.0) representing lower
+    Given a string like '1-3', return ints (1, 3) representing lower
     and upper bounds.
+
+    Supports bytestring.parsebytes and hh:mm:ss format.
     '''
     s = s.strip()
+    s = s.replace(' ', '')
     if not s:
         return (None, None)
-    pattern = r'^(\d*\.?\d*)-(\d*\.?\d*)$'
-    try:
-        match = re.search(pattern, s)
-        low = match.group(1)
-        high = match.group(2)
-    except AttributeError:
-        low = float(s)
+    parts = s.split('-')
+    parts = [part.strip() or None for part in parts]
+    if len(parts) == 1:
+        low = parts[0]
         high = None
+    elif len(parts) == 2:
+        (low, high) = parts
     else:
-        low = float(low) if low.strip() else None
-        high = float(high) if high.strip() else None
+        raise ValueError('Too many hyphens')
+
+    low = _helper_unitconvert(low)
+    high = _helper_unitconvert(high)
     if low is not None and high is not None and low > high:
         raise OutOfOrder(s, low, high)
     return low, high
@@ -349,7 +418,7 @@ def is_xor(*args):
 
 def normalize_filepath(filepath):
     '''
-    Remove some bad characters
+    Remove some bad characters.
     '''
     filepath = filepath.replace('<', '')
     filepath = filepath.replace('>', '')
@@ -374,13 +443,6 @@ def normalize_tagname(tagname):
         raise TagTooLong(tagname)
 
     return tagname
-
-def not_implemented(function):
-    '''
-    Decorator for keeping track of which functions still need to be filled out.
-    '''
-    warnings.warn('%s is not implemented' % function.__name__)
-    return function
 
 def operate(operand_stack, operator_stack):
     #print('before:', operand_stack, operator_stack)
@@ -488,7 +550,8 @@ def searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, f
 
     return True
 
-def select(sql, query, bindings=[]):
+def select(sql, query, bindings=None):
+    bindings = bindings or []
     cursor = sql.cursor()
     cursor.execute(query, bindings)
     while True:
@@ -556,6 +619,7 @@ def tag_export_stdout(tags, depth=0):
         if tag.parent() is None:
             print()
 
+@time_me
 def tag_export_totally_flat(tags):
     result = {}
     for tag in tags:
@@ -565,18 +629,6 @@ def tag_export_totally_flat(tags):
             for synonym in child.synonyms():
                 result[synonym] = children
     return result
-
-def time_me(function):
-    @functools.wraps(function)
-    def timed_function(*args, **kwargs):
-        start = time.time()
-        result = function(*args, **kwargs)
-        end = time.time()
-        print('%s: %0.8f' % (function.__name__, end-start))
-        return result
-    return timed_function
-
-tag_export_totally_flat = time_me(tag_export_totally_flat)
 
 ####################################################################################################
 ####################################################################################################
@@ -765,7 +817,7 @@ class PDBPhotoMixin:
         data[SQL_PHOTO['height']] = None
         data[SQL_PHOTO['area']] = None
         data[SQL_PHOTO['ratio']] = None
-        data[SQL_PHOTO['length']] = None
+        data[SQL_PHOTO['duration']] = None
         data[SQL_PHOTO['thumbnail']] = None
 
         self.cur.execute('INSERT INTO photos VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
@@ -782,7 +834,6 @@ class PDBPhotoMixin:
 
         if commit:
             log.debug('Commiting - new_photo')
-            self.sql.commit()
         return photo
 
     def search(
@@ -792,7 +843,7 @@ class PDBPhotoMixin:
             height=None,
             ratio=None,
             bytes=None,
-            length=None,
+            duration=None,
 
             created=None,
             extension=None,
@@ -811,12 +862,12 @@ class PDBPhotoMixin:
         ):
         '''
         PHOTO PROPERTISE
-        area, width, height, ratio, bytes, length:
+        area, width, height, ratio, bytes, duration:
             A hyphen_range string representing min and max. Or just a number for lower bound.
 
         TAGS AND FILTERS
         created:
-            A hyphen_range string respresenting min and max. Or jjust a number for lower bound.
+            A hyphen_range string respresenting min and max. Or just a number for lower bound.
 
         extension:
             A string or list of strings of acceptable file extensions.
@@ -854,7 +905,7 @@ class PDBPhotoMixin:
             Otherwise, a NoSuchTag exception would be raised.
 
         limit:
-            The maximum number of *successful* results to yield. 
+            The maximum number of *successful* results to yield.
 
         offset:
             How many *successful* results to skip before we start yielding.
@@ -868,11 +919,12 @@ class PDBPhotoMixin:
         maximums = {}
         minimums = {}
         _helper_minmax('area', area, minimums, maximums)
+        _helper_minmax('created', created, minimums, maximums)
         _helper_minmax('width', width, minimums, maximums)
         _helper_minmax('height', height, minimums, maximums)
         _helper_minmax('ratio', ratio, minimums, maximums)
         _helper_minmax('bytes', bytes, minimums, maximums)
-        _helper_minmax('length', length, minimums, maximums)
+        _helper_minmax('duration', duration, minimums, maximums)
         orderby = orderby or []
 
         extension = _helper_extension(extension)
@@ -907,7 +959,14 @@ class PDBPhotoMixin:
         # EVERY tag in the db is a key, and the value is a list of ALL ITS NESTED CHILDREN.
         # This representation is memory inefficient, but it is faster than repeated
         # database lookups
-        frozen_children = self.export_tags(tag_export_totally_flat)
+        is_must_may_forbid = bool(tag_musts or tag_mays or tag_forbids)
+        is_tagsearch = is_must_may_forbid or tag_expression
+        if is_tagsearch:
+            if self._cached_frozen_children:
+                frozen_children = self._cached_frozen_children
+            else:
+                frozen_children = self.export_tags(tag_export_totally_flat)
+                self._cached_frozen_children = frozen_children
         photos_received = 0
 
         for fetch in generator:
@@ -932,7 +991,7 @@ class PDBPhotoMixin:
                 #print('Failed minimums')
                 continue
 
-            if (has_tags is not None) or tag_musts or tag_mays or tag_forbids or tag_expression:
+            if (has_tags is not None) or is_tagsearch:
                 photo_tags = photo.tags()
 
                 if has_tags is False and len(photo_tags) > 0:
@@ -946,7 +1005,7 @@ class PDBPhotoMixin:
                 if tag_expression:
                     if not searchfilter_expression(photo_tags, tag_expression, frozen_children, warn_bad_tags):
                         continue
-                else:
+                elif is_must_may_forbid:
                     if not searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, frozen_children):
                         continue
 
@@ -956,7 +1015,7 @@ class PDBPhotoMixin:
 
             if limit is not None and photos_received >= limit:
                 break
-            
+
             photos_received += 1
             yield photo
 
@@ -1031,7 +1090,9 @@ class PDBTagMixin:
             pass
         else:
             raise TagExists(tagname)
+
         tagid = self.generate_id('tags')
+        self._cached_frozen_children = None
         self.cur.execute('INSERT INTO tags VALUES(?, ?)', [tagid, tagname])
         if commit:
             log.debug('Commiting - new_tag')
@@ -1047,7 +1108,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
     albums:
         Rows represent the inclusion of a photo in an album
 
-    photos: 
+    photos:
         Rows represent image files on the local disk.
         Entries contain a unique ID, the image's filepath, and metadata
         like dimensions and filesize.
@@ -1088,8 +1149,13 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         for statement in statements:
             self.cur.execute(statement)
 
+        self._cached_frozen_children = None
+
     def __repr__(self):
         return 'PhotoDB(databasename={dbname})'.format(dbname=repr(self.databasename))
+
+    def _uncache(self):
+        self._cached_frozen_children = None
 
     def digest_directory(self, directory, exclude_directories=None, exclude_filenames=None, commit=True):
         '''
@@ -1138,7 +1204,14 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             self.sql.commit()
         return album
 
-    def digest_new_files(self, directory, exclude_directories=None, exclude_filenames=None, commit=True):
+    def digest_new_files(
+            self,
+            directory,
+            exclude_directories=None,
+            exclude_filenames=None,
+            recurse=True,
+            commit=True
+        ):
         '''
         Walk the directory and add new files as Photos.
         Does NOT create or modify any albums like `digest_directory` does.
@@ -1161,6 +1234,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             directory,
             exclude_directories=exclude_directories,
             exclude_filenames=exclude_filenames,
+            recurse=recurse,
             yield_style='flat',
         )
         for filepath in generator:
@@ -1171,7 +1245,10 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
                 pass
             else:
                 continue
-            photo = self.new_photo(filepath)
+            photo = self.new_photo(filepath, commit=False)
+        if commit:
+            log.debug('Committing - digest_new_files')
+            self.sql.commit()
 
 
     def easybake(self, string):
@@ -1229,7 +1306,6 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             output_notes.append(note)
         else:
             tag_parts = tag.split('.')
-            print('wtf')
             tags = [create_or_get(t) for t in tag_parts]
             for (higher, lower) in zip(tags, tags[1:]):
                 try:
@@ -1271,7 +1347,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         else:
             # Use database value
             new_id_int = int(fetch[SQL_LASTID['last_id']]) + 1
-                
+
         new_id = str(new_id_int).rjust(self.id_length, '0')
         if do_insert:
             self.cur.execute('INSERT INTO id_numbers VALUES(?, ?)', [table, new_id])
@@ -1367,6 +1443,7 @@ class GroupableMixin:
                 that_group = self.group_getter(id=fetch[SQL_TAGGROUP['parentid']])
             raise GroupExists('%s already in group %s' % (member.name, that_group.name))
 
+        self.photodb._cached_frozen_children = None
         self.photodb.cur.execute('INSERT INTO tag_group_rel VALUES(?, ?)', [self.id, member.id])
         if commit:
             log.debug('Commiting - add to group')
@@ -1394,6 +1471,7 @@ class GroupableMixin:
             If True, all children will be deleted.
             Otherwise they'll just be raised up one level.
         '''
+        self.photodb._cached_frozen_children = None
         if delete_children:
             for child in self.children():
                 child.delete(delete_children=delete_children, commit=False)
@@ -1412,6 +1490,7 @@ class GroupableMixin:
         # Note that this part comes after the deletion of children to prevent issues of recursion.
         self.photodb.cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
         if commit:
+            log.debug('Committing - delete tag')
             self.photodb.sql.commit()
 
     def parent(self):
@@ -1435,7 +1514,6 @@ class GroupableMixin:
         if not isinstance(group, type(self)):
             raise TypeError('Group must also be %s' % type(self))
 
-        print('what')
         if self == group:
             raise ValueError('Cant join self')
 
@@ -1446,8 +1524,10 @@ class GroupableMixin:
         '''
         Leave the current group and become independent.
         '''
+        self.photodb._cached_frozen_children = None
         self.photodb.cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
         if commit:
+            log.debug('Committing - leave group')
             self.photodb.sql.commit()
 
     def walk_children(self):
@@ -1478,6 +1558,7 @@ class Album(ObjectBase, GroupableMixin):
             return
         self.photodb.cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
         if commit:
+            log.debug('Committing - add photo to album')
             self.photodb.sql.commit()
 
     def add_tag_to_all(self, tag, nested_children=True):
@@ -1495,6 +1576,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.cur.execute('DELETE FROM albums WHERE id == ?', [self.id])
         self.photodb.cur.execute('DELETE FROM album_photo_rel WHERE albumid == ?', [self.id])
         if commit:
+            log.debug('Committing - delete album')
             self.photodb.sql.commit()
 
     def edit(self, title=None, description=None, commit=True):
@@ -1509,6 +1591,7 @@ class Album(ObjectBase, GroupableMixin):
         self.title = title
         self.description = description
         if commit:
+            log.debug('Committing - edit album')
             self.photodb.sql.commit()
 
     def has_photo(self, photo):
@@ -1553,7 +1636,7 @@ class Photo(ObjectBase):
     '''
     A PhotoDB entry containing information about an image file.
     Photo objects cannot exist without a corresponding PhotoDB object, because
-    Photos are not the actual image data, just the database entry. 
+    Photos are not the actual image data, just the database entry.
     '''
     def __init__(self, photodb, row_tuple):
         self.photodb = photodb
@@ -1568,6 +1651,7 @@ class Photo(ObjectBase):
         self.ratio = row_tuple[SQL_PHOTO['ratio']]
         self.area = row_tuple[SQL_PHOTO['area']]
         self.bytes = row_tuple[SQL_PHOTO['bytes']]
+        self.duration = row_tuple[SQL_PHOTO['duration']]
         self.created = row_tuple[SQL_PHOTO['created']]
         self.thumbnail = row_tuple[SQL_PHOTO['thumbnail']]
         self.basename = self.real_filepath.split(os.sep)[-1]
@@ -1598,6 +1682,7 @@ class Photo(ObjectBase):
         log.debug('Applying tag {tag:s} to photo {pho:s}'.format(tag=tag, pho=self))
         self.photodb.cur.execute('INSERT INTO photo_tag_rel VALUES(?, ?)', [self.id, tag.id])
         if commit:
+            log.debug('Committing - add photo tag')
             self.photodb.sql.commit()
 
     def albums(self):
@@ -1625,6 +1710,7 @@ class Photo(ObjectBase):
         self.photodb.cur.execute('DELETE FROM photo_tag_rel WHERE photoid == ?', [self.id])
         self.photodb.cur.execute('DELETE FROM album_photo_rel WHERE photoid == ?', [self.id])
         if commit:
+            log.debug('Committing - delete photo')
             self.photodb.sql.commit()
 
     @time_me
@@ -1659,7 +1745,7 @@ class Photo(ObjectBase):
                 image.save(hopeful_filepath, quality=50)
                 return_filepath = hopeful_filepath
 
-        elif mime == 'video':
+        elif mime == 'video' and ffmpeg:
             print('video')
             probe = ffmpeg.probe(self.real_filepath)
             try:
@@ -1691,6 +1777,7 @@ class Photo(ObjectBase):
             self.thumbnail = return_filepath
 
         if commit:
+            log.debug('Committing - generate thumbnail')
             self.photodb.sql.commit()
 
         return self.thumbnail
@@ -1729,7 +1816,7 @@ class Photo(ObjectBase):
         self.height = None
         self.area = None
         self.ratio = None
-        self.length = None
+        self.duration = None
 
         mime = self.mimetype()
         if mime == 'image':
@@ -1742,11 +1829,11 @@ class Photo(ObjectBase):
                 image.close()
                 log.debug('Loaded image data for {photo:r}'.format(photo=self))
 
-        elif mime == 'video':
+        elif mime == 'video' and ffmpeg:
             try:
                 probe = ffmpeg.probe(self.real_filepath)
                 if probe and probe.video:
-                    self.length = probe.video.duration
+                    self.duration = probe.video.duration
                     self.width = probe.video.video_width
                     self.height = probe.video.video_height
             except:
@@ -1756,7 +1843,7 @@ class Photo(ObjectBase):
             try:
                 probe = ffmpeg.probe(self.real_filepath)
                 if probe and probe.audio:
-                    self.length = probe.audio.duration
+                    self.duration = probe.audio.duration
             except:
                 traceback.print_exc()
 
@@ -1764,10 +1851,11 @@ class Photo(ObjectBase):
             self.area = self.width * self.height
             self.ratio = round(self.width / self.height, 2)
 
-        self.photodb.cur.execute('UPDATE photos SET width=?, height=?, area=?, ratio=?, length=?, bytes=? WHERE id==?',
-            [self.width, self.height, self.area, self.ratio, self.length, self.bytes, self.id]
+        self.photodb.cur.execute('UPDATE photos SET width=?, height=?, area=?, ratio=?, duration=?, bytes=? WHERE id==?',
+            [self.width, self.height, self.area, self.ratio, self.duration, self.bytes, self.id],
         )
         if commit:
+            log.debug('Committing - reload metadata')
             self.photodb.sql.commit()
 
     def remove_tag(self, tag, commit=True):
@@ -1781,6 +1869,7 @@ class Photo(ObjectBase):
                 [self.id, tag.id]
             )
         if commit:
+            log.debug('Committing - remove photo tag')
             self.photodb.sql.commit()
 
     def tags(self):
@@ -1809,12 +1898,13 @@ class Tag(ObjectBase, GroupableMixin):
         self.id = row_tuple[SQL_TAG['id']]
         self.name = row_tuple[SQL_TAG['name']]
         self.group_getter = self.photodb.get_tag
+        self._cached_qualified_name = None
 
     def __eq__(self, other):
         if isinstance(other, str):
             return self.name == other
         elif isinstance(other, Tag):
-            return self.id == other.id
+            return self.id == other.id and self.name == other.name
         else:
             return False
 
@@ -1842,9 +1932,11 @@ class Tag(ObjectBase, GroupableMixin):
         else:
             raise TagExists(synname)
 
+        self.photodb._cached_frozen_children = None
         self.photodb.cur.execute('INSERT INTO tag_synonyms VALUES(?, ?)', [synname, self.name])
 
         if commit:
+            log.debug('Committing - add synonym')
             self.photodb.sql.commit()
 
     def convert_to_synonym(self, mastertag, commit=True):
@@ -1860,6 +1952,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         # Migrate the old tag's synonyms to the new one
         # UPDATE is safe for this operation because there is no chance of duplicates.
+        self.photodb._cached_frozen_children = None
         self.photodb.cur.execute(
             'UPDATE tag_synonyms SET mastername = ? WHERE mastername == ?',
             [mastertag.name, self.name]
@@ -1876,28 +1969,34 @@ class Tag(ObjectBase, GroupableMixin):
 
         # Then delete the relationships with the old tag
         self.delete()
-        
+
         # Enjoy your new life as a monk.
         mastertag.add_synonym(self.name, commit=False)
         if commit:
+            log.debug('Committing - convert to synonym')
             self.photodb.sql.commit()
 
     def delete(self, delete_children=False, commit=True):
         log.debug('Deleting tag {tag:r}'.format(tag=self))
+        self.photodb._cached_frozen_children = None
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
         self.photodb.cur.execute('DELETE FROM tags WHERE id == ?', [self.id])
         self.photodb.cur.execute('DELETE FROM photo_tag_rel WHERE tagid == ?', [self.id])
         self.photodb.cur.execute('DELETE FROM tag_synonyms WHERE mastername == ?', [self.name])
         if commit:
+            log.debug('Committing - delete tag')
             self.photodb.sql.commit()
 
     def qualified_name(self):
         '''
         Return the 'group1.group2.tag' string for this tag.
         '''
+        if self._cached_qualified_name:
+            return self._cached_qualified_name
         string = self.name
         for parent in self.walk_parents():
             string = parent.name + '.' + string
+        self._cached_qualified_name = string
         return string
 
     def remove_synonym(self, synname, commit=True):
@@ -1912,8 +2011,10 @@ class Tag(ObjectBase, GroupableMixin):
         if fetch is None:
             raise NoSuchSynonym(synname)
 
+        self.photodb._cached_frozen_children = None
         self.photodb.cur.execute('DELETE FROM tag_synonyms WHERE name == ?', [synname])
         if commit:
+            log.debug('Committing - remove synonym')
             self.photodb.sql.commit()
 
     def rename(self, new_name, apply_to_synonyms=True, commit=True):
@@ -1931,6 +2032,8 @@ class Tag(ObjectBase, GroupableMixin):
         else:
             raise TagExists(new_name)
 
+        self._cached_qualified_name = None
+        self.photodb._cached_frozen_children = None
         self.photodb.cur.execute('UPDATE tags SET name = ? WHERE id == ?', [new_name, self.id])
         if apply_to_synonyms:
             self.photodb.cur.execute(
@@ -1940,6 +2043,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.name = new_name
         if commit:
+            log.debug('Committing - rename tag')
             self.photodb.sql.commit()
 
     def synonyms(self):

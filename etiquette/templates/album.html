@@ -3,7 +3,7 @@
 <head>
     {% import "photo_object.html" as photo_object %}
     {% import "header.html" as header %}
-    <title>Album {{album.title}}</title>
+    <title>Album {{album["title"]}}</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
 </head>
@@ -18,20 +18,20 @@
 <body>
 {{header.make_header()}}
 <div id="content_body">
-    <h2>{{album.title}}</h2>
-    {% set parent=album.parent() %}
+    <h2>{{album["title"]}}</h2>
+    {% set parent=album["parent"] %}
     {% if parent %}
-    <h3>Parent: <a href="/album/{{parent.id}}">{{parent.title}}</a></h3>
+    <h3>Parent: <a href="/album/{{parent["id"]}}">{{parent.title}}</a></h3>
     {% endif %}
     {% if child_albums %}
     <h3>Sub-albums</h3>
     <ul>
         {% for album in child_albums %}
-        <li><a href="/album/{{album.id}}">
-            {% if album.title %}
-            {{album.title}}
+        <li><a href="/album/{{album["id"]}}">
+            {% if album["title"] %}
+            {{album["title"]}}
             {% else %}
-            {{album.id}}
+            {{album["id"]}}
             {% endif %}</a>
         </li>
         {% endfor %}

@@ -1,29 +1,47 @@
+{% set basics =
+    {
+        "audio": "audio",
+        "txt": "txt",
+        "video": "video",
+    }
+%}
 {% macro galleryview(photo) %}
 <div class="photo_galleryview">
     <div class="photo_galleryview_thumb">
-        <a target="_blank" href="/photo/{{photo.id}}">
+        <a target="_blank" href="/photo/{{photo["id"]}}">
             <img height="150"
-        {% if photo.thumbnail %}
-            src="/thumbnail/{{photo.id}}.jpg"
+        {% if photo["has_thumbnail"] %}
+            src="/thumbnail/{{photo["id"]}}.jpg"
         {% else %}
-            {% set mimetype = photo.mimetype() %}
-            {% if mimetype == 'video' %}
-                src="/static/basic_thumbnails/video.png"
-            {% elif mimetype == 'audio' %}
-                src="/static/basic_thumbnails/audio.png"
-            {% else %}
-                src="/static/basic_thumbnails/other.png"
-            {% endif %}
+            {% set choice =
+                photo['extension'] if photo['extension'] in basics else
+                photo['mimetype'] if photo['mimetype'] in basics else
+                'other'
+            %}
+            src="/static/basic_thumbnails/{{choice}}.png"
+            
         {% endif %}
         </a>
     </div>
     <div class="photo_galleryview_info">
-        <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
-        <span>
-        {% if photo.width %}
-            {{photo.width}}x{{photo.height}}
+        <a target="_blank" href="/photo/{{photo["id"]}}">{{photo["filename"]}}</a>
+        <span class="photo_galleryview_file_metadata">
+        {% if photo["width"] %}
+            {{photo["width"]}}x{{photo["height"]}},
         {% endif %}
-        {{photo.bytestring()}}
+        {% if photo["duration"] %}
+            {{photo["duration"]}},
+        {% endif %}
+        {{photo["bytestring"]}}
+        </span>
+        <span class="photo_galleryview_tags">
+            {% if photo["tags"] %}
+            {% set tags=[] %}
+            {% for tag in photo["tags"] %}
+            {% do tags.append(tag["name"]) %}
+            {% endfor %}
+            <span title="{{", ".join(tags)}}">T</span>
+            {% endif %}
         </span>
     </div>
 </div>
