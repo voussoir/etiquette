@@ -72,6 +72,32 @@ def _helper_comma_split(s):
     s = [x for x in s if x]
     return s
 
+def create_tag(easybake_string):
+    notes = P.easybake(easybake_string)
+    notes = [{'action': action, 'tagname': tagname} for (action, tagname) in notes]
+    return notes
+
+def delete_tag(tag):
+    tag = tag.split('.')[-1].split('+')[0]
+    tag = P.get_tag(tag)
+
+    tag.delete()
+    return {'action': 'delete_tag', 'tagname': tag.name}
+
+def delete_synonym(synonym):
+    synonym = synonym.split('+')[-1].split('.')[-1]
+    synonym = phototagger.normalize_tagname(synonym)
+    try:
+        master_tag = P.get_tag(synonym)
+    except phototagger.NoSuchTag:
+        flask.abort(404, 'That synonym doesnt exist')
+
+    if synonym not in master_tag.synonyms():
+        flask.abort(400, 'That name is not a synonym')
+
+    master_tag.remove_synonym(synonym)
+    return {'action':'delete_synonym', 'synonym': synonym}
+
 def edit_params(original, modifications):
     new_params = original.to_dict()
     new_params.update(modifications)
@@ -111,16 +137,6 @@ def P_tag(tagname):
     except phototagger.NoSuchTag as e:
         flask.abort(404, 'That tag doesnt exist: %s' % e)
 
-def truthystring(s):
-    if isinstance(s, (bool, int)) or s is None:
-        return s
-    s = s.lower()
-    if s in {'1', 'true', 't', 'yes', 'y', 'on'}:
-        return True
-    if s in {'null', 'none'}:
-        return None
-    return False
-
 def read_filebytes(filepath, range_min, range_max):
     range_span = range_max - range_min
 
@@ -130,13 +146,24 @@ def read_filebytes(filepath, range_min, range_max):
     sent_amount = 0
     with f:
         while sent_amount < range_span:
-            print(sent_amount)
+            #print(sent_amount)
             chunk = f.read(FILE_READ_CHUNK)
             if len(chunk) == 0:
                 break
 
             yield chunk
             sent_amount += len(chunk)
+
+def seconds_to_hms(seconds):
+    seconds = math.ceil(seconds)
+    (minutes, seconds) = divmod(seconds, 60)
+    (hours, minutes) = divmod(minutes, 60)
+    parts = []
+    if hours: parts.append(hours)
+    if minutes: parts.append(minutes)
+    parts.append(seconds)
+    hms = ':'.join('%02d' % part for part in parts)
+    return hms
 
 def send_file(filepath):
     '''
@@ -202,31 +229,15 @@ def send_file(filepath):
     )
     return response
 
-def create_tag(easybake_string):
-    notes = P.easybake(easybake_string)
-    notes = [{'action': action, 'tagname': tagname} for (action, tagname) in notes]
-    return notes
-
-def delete_tag(tag):
-    tag = tag.split('.')[-1].split('+')[0]
-    tag = P.get_tag(tag)
-
-    tag.delete()
-    return {'action': 'delete_tag', 'tagname': tag.name, 'tagid': tag.id}
-
-def delete_synonym(synonym):
-    synonym = synonym.split('+')[-1].split('.')[-1]
-    synonym = phototagger.normalize_tagname(synonym)
-    try:
-        master_tag = P.get_tag(synonym)
-    except phototagger.NoSuchTag:
-        flask.abort(404, 'That synonym doesnt exist')
-
-    if synonym not in master_tag.synonyms():
-        flask.abort(400, 'That name is not a synonym')
-
-    master_tag.remove_synonym(synonym)
-    return {'action':'delete_synonym', 'synonym': synonym}
+def truthystring(s):
+    if isinstance(s, (bool, int)) or s is None:
+        return s
+    s = s.lower()
+    if s in {'1', 'true', 't', 'yes', 'y', 'on'}:
+        return True
+    if s in {'null', 'none'}:
+        return None
+    return False
 
 ####################################################################################################
 ####################################################################################################
@@ -246,17 +257,6 @@ def jsonify_album(album, minimal=False):
 
     return j
 
-def seconds_to_hms(seconds):
-    seconds = math.ceil(seconds)
-    (minutes, seconds) = divmod(seconds, 60)
-    (hours, minutes) = divmod(minutes, 60)
-    parts = []
-    if hours: parts.append(hours)
-    if minutes: parts.append(minutes)
-    parts.append(seconds)
-    hms = ':'.join('%02d' % part for part in parts)
-    return hms
-
 def jsonify_photo(photo):
     tags = photo.tags()
     tags.sort(key=lambda x: x.name)
@@ -268,7 +268,7 @@ def jsonify_photo(photo):
         'ratio': photo.ratio,
         'area': photo.area,
         'bytes': photo.bytes,
-        'duration': seconds_to_hms(photo.duration) if photo.duration else None,
+        'duration': seconds_to_hms(photo.duration) if photo.duration is not None else None,
         'duration_int': photo.duration,
         'bytestring': photo.bytestring(),
         'has_thumbnail': bool(photo.thumbnail),
@@ -474,7 +474,7 @@ def get_search_core():
         photos = list(P.search(**search_kwargs))
         photos = [jsonify_photo(photo) for photo in photos]
         warns = [str(warning.message) for warning in catcher]
-    print(warns)
+    #print(warns)
 
     # TAGS ON THIS PAGE
     total_tags = set()
@@ -572,10 +572,20 @@ def get_thumbnail(photoid):
         flask.abort(404, 'That file doesnt have a thumbnail')
     return send_file(path)
 
+@site.route('/album/<albumid>', methods=['POST'])
+@give_session_token
+def post_edit_album(albumid):
+    '''
+    Edit the album's title and description.
+    Apply a tag to every photo in the album.
+    '''
+
 @site.route('/photo/<photoid>', methods=['POST'])
 @give_session_token
 def post_edit_photo(photoid):
-    print(request.form)
+    '''
+    Add and remove tags from photos.
+    '''
     response = {}
     photo = P_photo(photoid)
 
@@ -595,17 +605,21 @@ def post_edit_photo(photoid):
     try:
         tag = P.get_tag(tag)
     except phototagger.NoSuchTag:
-        return flask.Response('{"error": "That tag doesnt exist", "tagname":"%s"}'%tag, status=404)
+        response = {'error': 'That tag doesnt exist', 'tagname': tag}
+        return make_json_response(response, status=404)
 
     method(tag)
     response['action'] = action
-    response['tagid'] = tag.id
+    #response['tagid'] = tag.id
     response['tagname'] = tag.name
-    return json.dumps(response)
+    return make_json_response(response)
 
 @site.route('/tags', methods=['POST'])
 @give_session_token
 def post_edit_tags():
+    '''
+    Create and delete tags and synonyms.
+    '''
     print(request.form)
     status = 200
     if 'create_tag' in request.form:
@@ -618,13 +632,18 @@ def post_edit_tags():
         action = 'delete_tag'
         method = delete_tag
     else:
+        status = 400
         response = {'error': ERROR_INVALID_ACTION}
 
     if status == 200:
-        status = 400
         tag = request.form[action].strip()
         if tag == '':
             response = {'error': ERROR_NO_TAG_GIVEN}
+            status = 400
+
+    if status == 200:
+        # expect the worst
+        status = 400
         try:
             response = method(tag)
         except phototagger.TagTooShort:

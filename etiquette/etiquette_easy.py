@@ -14,8 +14,8 @@ def easytagger():
                 P.export_tags(specific_tag=i)
             except:
                 traceback.print_exc()
-            continue
-        P.easybake(i)
+        else:
+            P.easybake(i)
 
 def photag(photoid):
     photo = P.get_photo_by_id(photoid)

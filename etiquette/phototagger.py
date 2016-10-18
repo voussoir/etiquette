@@ -18,12 +18,12 @@ import warnings
 sys.path.append('C:\\git\\else\\Bytestring'); import bytestring
 sys.path.append('C:\\git\\else\\SpinalTap'); import spinal
 
-ID_LENGTH = 12
 VALID_TAG_CHARS = string.ascii_lowercase + string.digits + '_'
 MIN_TAG_NAME_LENGTH = 1
 MAX_TAG_NAME_LENGTH = 32
+DEFAULT_ID_LENGTH = 12
 DEFAULT_DBNAME = 'phototagger.db'
-DEFAULT_THUMBDIR = '_site_thumbnails'
+DEFAULT_THUMBDIR = '_etiquette\\site_thumbnails'
 THUMBNAIL_WIDTH = 400
 THUMBNAIL_HEIGHT = 400
 
@@ -33,6 +33,7 @@ try:
         ffprobe_path='C:\\software\\ffmpeg\\bin\\ffprobe.exe',
     )
 except converter.ffmpeg.FFMpegError:
+    traceback.print_exc()
     ffmpeg = None
 
 logging.basicConfig(level=logging.DEBUG)
@@ -161,6 +162,7 @@ CREATE INDEX IF NOT EXISTS index_albumrel_photoid on album_photo_rel(photoid);
 CREATE INDEX IF NOT EXISTS index_photo_id on photos(id);
 CREATE INDEX IF NOT EXISTS index_photo_path on photos(filepath);
 CREATE INDEX IF NOT EXISTS index_photo_created on photos(created);
+CREATE INDEX IF NOT EXISTS index_photo_extension on photos(extension);
 
 -- Tag
 CREATE INDEX IF NOT EXISTS index_tag_id on tags(id);
@@ -378,19 +380,18 @@ def hyphen_range(s):
         raise OutOfOrder(s, low, high)
     return low, high
 
-def fit_into_bounds(iw, ih, fw, fh):
+def fit_into_bounds(image_width, image_height, frame_width, frame_height):
     '''
     Given the w+h of the image and the w+h of the frame,
     return new w+h that fits the image into the frame
-    while maintaining the aspect ratio and leaving blank space
-    everywhere else
+    while maintaining the aspect ratio.
     '''
-    ratio = min(fw/iw, fh/ih)
+    ratio = min(frame_width/image_width, frame_height/image_height)
 
-    w = int(iw * ratio)
-    h = int(ih * ratio)
+    new_width = int(image_width * ratio)
+    new_height = int(image_height * ratio)
 
-    return (w, h)
+    return (new_width, new_height)
 
 def get_mimetype(filepath):
     extension = os.path.splitext(filepath)[1].replace('.', '')
@@ -420,6 +421,8 @@ def normalize_filepath(filepath):
     '''
     Remove some bad characters.
     '''
+    filepath = filepath.replace('/', os.sep)
+    filepath = filepath.replace('\\', os.sep)
     filepath = filepath.replace('<', '')
     filepath = filepath.replace('>', '')
     return filepath
@@ -713,7 +716,7 @@ class PDBAlbumMixin:
                 album.add_photo(photo, commit=False)
 
         if commit:
-            self.sql.commit()
+            self.commit()
         return album
 
 
@@ -1096,7 +1099,7 @@ class PDBTagMixin:
         self.cur.execute('INSERT INTO tags VALUES(?, ?)', [tagid, tagname])
         if commit:
             log.debug('Commiting - new_tag')
-            self.sql.commit()
+            self.commit()
         tag = Tag(self, [tagid, tagname])
         return tag
 
@@ -1139,8 +1142,9 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
     '''
     def __init__(self, databasename=DEFAULT_DBNAME, thumbnail_folder=DEFAULT_THUMBDIR, id_length=None):
         if id_length is None:
-            self.id_length = ID_LENGTH
+            self.id_length = DEFAULT_ID_LENGTH
         self.databasename = databasename
+        self.database_abspath = os.path.abspath(databasename)
         self.thumbnail_folder = os.path.abspath(thumbnail_folder)
         os.makedirs(thumbnail_folder, exist_ok=True)
         self.sql = sqlite3.connect(databasename)
@@ -1149,6 +1153,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         for statement in statements:
             self.cur.execute(statement)
 
+        self.on_commit_queue = []
         self._cached_frozen_children = None
 
     def __repr__(self):
@@ -1156,6 +1161,15 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
 
     def _uncache(self):
         self._cached_frozen_children = None
+
+    def commit(self):
+        while self.on_commit_queue:
+            task = self.on_commit_queue.pop()
+            print(task)
+            args = task.get('args', [])
+            kwargs = task.get('kwargs', {})
+            task['action'](*args, **kwargs)
+        self.sql.commit()
 
     def digest_directory(self, directory, exclude_directories=None, exclude_filenames=None, commit=True):
         '''
@@ -1201,7 +1215,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
 
         if commit:
             log.debug('Commiting - digest')
-            self.sql.commit()
+            self.commit()
         return album
 
     def digest_new_files(
@@ -1209,7 +1223,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             directory,
             exclude_directories=None,
             exclude_filenames=None,
-            recurse=True,
+            recurse=False,
             commit=True
         ):
         '''
@@ -1248,7 +1262,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             photo = self.new_photo(filepath, commit=False)
         if commit:
             log.debug('Committing - digest_new_files')
-            self.sql.commit()
+            self.commit()
 
 
     def easybake(self, string):
@@ -1309,7 +1323,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             tags = [create_or_get(t) for t in tag_parts]
             for (higher, lower) in zip(tags, tags[1:]):
                 try:
-                    lower.join(higher)
+                    lower.join_group(higher)
                     note = ('join_group', '%s.%s' % (higher.name, lower.name))
                     output_notes.append(note)
                 except GroupExists:
@@ -1447,7 +1461,7 @@ class GroupableMixin:
         self.photodb.cur.execute('INSERT INTO tag_group_rel VALUES(?, ?)', [self.id, member.id])
         if commit:
             log.debug('Commiting - add to group')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def children(self):
         self.photodb.cur.execute('SELECT * FROM tag_group_rel WHERE parentid == ?', [self.id])
@@ -1491,7 +1505,7 @@ class GroupableMixin:
         self.photodb.cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
         if commit:
             log.debug('Committing - delete tag')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def parent(self):
         '''
@@ -1505,7 +1519,7 @@ class GroupableMixin:
         parentid = fetch[SQL_TAGGROUP['parentid']]
         return self.group_getter(id=parentid)
 
-    def join(self, group, commit=True):
+    def join_group(self, group, commit=True):
         '''
         Leave the current group, then call `group.add(self)`.
         '''
@@ -1528,7 +1542,7 @@ class GroupableMixin:
         self.photodb.cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
         if commit:
             log.debug('Committing - leave group')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def walk_children(self):
         yield self
@@ -1559,7 +1573,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
         if commit:
             log.debug('Committing - add photo to album')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def add_tag_to_all(self, tag, nested_children=True):
         tag = self.photodb.get_tag(tag)
@@ -1577,7 +1591,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.cur.execute('DELETE FROM album_photo_rel WHERE albumid == ?', [self.id])
         if commit:
             log.debug('Committing - delete album')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def edit(self, title=None, description=None, commit=True):
         if title is None:
@@ -1592,7 +1606,7 @@ class Album(ObjectBase, GroupableMixin):
         self.description = description
         if commit:
             log.debug('Committing - edit album')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def has_photo(self, photo):
         if not isinstance(photo, Photo):
@@ -1620,10 +1634,12 @@ class Album(ObjectBase, GroupableMixin):
             return
         self.photodb.cur.execute(
             'DELETE FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
-            [self.id, photo.id])
+            [self.id, photo.id]
+        )
+        if commit:
+            self.photodb.commit()
 
     def walk_photos(self):
-        print('hi')
         yield from self.photos()
         children = self.walk_children()
         # The first yield is itself
@@ -1642,9 +1658,9 @@ class Photo(ObjectBase):
         self.photodb = photodb
         self.id = row_tuple[SQL_PHOTO['id']]
         self.real_filepath = row_tuple[SQL_PHOTO['filepath']]
-        self.real_filepath = self.real_filepath.replace('/', os.sep)
-        self.real_filepath = self.real_filepath.replace('\\', os.sep)
-        self.filepath = normalize_filepath(self.real_filepath)
+        self.real_filepath = normalize_filepath(self.real_filepath)
+        self.filepath = self.real_filepath
+        self.basename = os.path.basename(self.real_filepath)
         self.extension = row_tuple[SQL_PHOTO['extension']]
         self.width = row_tuple[SQL_PHOTO['width']]
         self.height = row_tuple[SQL_PHOTO['height']]
@@ -1654,7 +1670,6 @@ class Photo(ObjectBase):
         self.duration = row_tuple[SQL_PHOTO['duration']]
         self.created = row_tuple[SQL_PHOTO['created']]
         self.thumbnail = row_tuple[SQL_PHOTO['thumbnail']]
-        self.basename = self.real_filepath.split(os.sep)[-1]
 
     def __repr__(self):
         return 'Photo:{id}'.format(id=self.id)
@@ -1683,7 +1698,7 @@ class Photo(ObjectBase):
         self.photodb.cur.execute('INSERT INTO photo_tag_rel VALUES(?, ?)', [self.id, tag.id])
         if commit:
             log.debug('Committing - add photo tag')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def albums(self):
         '''
@@ -1711,7 +1726,7 @@ class Photo(ObjectBase):
         self.photodb.cur.execute('DELETE FROM album_photo_rel WHERE photoid == ?', [self.id])
         if commit:
             log.debug('Committing - delete photo')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     @time_me
     def generate_thumbnail(self, commit=True, **special):
@@ -1739,7 +1754,12 @@ class Photo(ObjectBase):
                 pass
             else:
                 (width, height) = image.size
-                (new_width, new_height) = fit_into_bounds(width, height, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
+                (new_width, new_height) = fit_into_bounds(
+                    image_width=width,
+                    image_height=height,
+                    frame_width=THUMBNAIL_WIDTH,
+                    frame_height=THUMBNAIL_HEIGHT,
+                )
                 if new_width < width:
                     image = image.resize((new_width, new_height))
                 image.save(hopeful_filepath, quality=50)
@@ -1751,10 +1771,10 @@ class Photo(ObjectBase):
             try:
                 if probe.video:
                     size = fit_into_bounds(
-                        iw=probe.video.video_width,
-                        ih=probe.video.video_height,
-                        fw=THUMBNAIL_WIDTH,
-                        fh=THUMBNAIL_HEIGHT,
+                        image_width=probe.video.video_width,
+                        image_height=probe.video.video_height,
+                        frame_width=THUMBNAIL_WIDTH,
+                        frame_height=THUMBNAIL_HEIGHT,
                     )
                     size = '%dx%d' % size
                     duration = probe.video.duration
@@ -1778,7 +1798,7 @@ class Photo(ObjectBase):
 
         if commit:
             log.debug('Committing - generate thumbnail')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
         return self.thumbnail
 
@@ -1811,6 +1831,9 @@ class Photo(ObjectBase):
 
     @time_me
     def reload_metadata(self, commit=True):
+        '''
+        Load the file's height, width, etc as appropriate for this type of file.
+        '''
         self.bytes = os.path.getsize(self.real_filepath)
         self.width = None
         self.height = None
@@ -1833,7 +1856,7 @@ class Photo(ObjectBase):
             try:
                 probe = ffmpeg.probe(self.real_filepath)
                 if probe and probe.video:
-                    self.duration = probe.video.duration
+                    self.duration = probe.format.duration or probe.video.duration
                     self.width = probe.video.video_width
                     self.height = probe.video.video_height
             except:
@@ -1851,12 +1874,13 @@ class Photo(ObjectBase):
             self.area = self.width * self.height
             self.ratio = round(self.width / self.height, 2)
 
-        self.photodb.cur.execute('UPDATE photos SET width=?, height=?, area=?, ratio=?, duration=?, bytes=? WHERE id==?',
+        self.photodb.cur.execute(
+            'UPDATE photos SET width=?, height=?, area=?, ratio=?, duration=?, bytes=? WHERE id==?',
             [self.width, self.height, self.area, self.ratio, self.duration, self.bytes, self.id],
         )
         if commit:
             log.debug('Committing - reload metadata')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def remove_tag(self, tag, commit=True):
         tag = self.photodb.get_tag(tag)
@@ -1870,7 +1894,39 @@ class Photo(ObjectBase):
             )
         if commit:
             log.debug('Committing - remove photo tag')
-            self.photodb.sql.commit()
+            self.photodb.commit()
+
+    def rename_file(self, new_filename, move=False, commit=True):
+        '''
+        Rename the file on the disk as well as in the database.
+        If `move` is True, allow this operation to move the file.
+        Otherwise, slashes will be considered an error.
+        '''
+        current_dir = os.path.normcase(os.path.dirname(self.real_filepath))
+        new_filename = normalize_filepath(new_filename)
+        new_dir = os.path.normcase(os.path.dirname(new_filename))
+        if new_dir == '':
+            new_dir = current_dir
+            new_abspath = os.path.join(new_dir, new_filename)
+        else:
+            new_abspath = os.path.abspath(new_filename)
+            new_dir = os.path.normcase(os.path.dirname(new_abspath))
+        if (new_dir != current_dir) and not move:
+            raise ValueError('Cannot move the file without param move=True')
+        new_basename = os.path.basename(new_abspath)
+        os.link(self.real_filepath, new_abspath)
+        self.photodb.cur.execute(
+            'UPDATE photos SET filepath = ? WHERE filepath == ?',
+            [new_abspath, self.real_filepath]
+        )
+        if commit:
+            os.remove(self.real_filepath)
+            self.photodb.commit()
+        else:
+            queue_action = {'action': os.remove, 'args': [self.real_filepath]}
+            self.photodb.on_commit_queue.append(queue_action)
+        self.real_filepath = new_abspath
+        self.basename = os.path.basename(new_abspath)
 
     def tags(self):
         '''
@@ -1912,12 +1968,12 @@ class Tag(ObjectBase, GroupableMixin):
         return hash(self.name)
 
     def __repr__(self):
-        r = 'Tag:{id}:{name}'.format(name=self.name, id=self.id)
-        return r
+        rep = 'Tag:{id}:{name}'.format(name=self.name, id=self.id)
+        return rep
 
     def __str__(self):
-        r = 'Tag:{name}'.format(name=self.name)
-        return r
+        rep = 'Tag:{name}'.format(name=self.name)
+        return rep
 
     def add_synonym(self, synname, commit=True):
         synname = normalize_tagname(synname)
@@ -1937,7 +1993,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         if commit:
             log.debug('Committing - add synonym')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def convert_to_synonym(self, mastertag, commit=True):
         '''
@@ -1974,7 +2030,7 @@ class Tag(ObjectBase, GroupableMixin):
         mastertag.add_synonym(self.name, commit=False)
         if commit:
             log.debug('Committing - convert to synonym')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def delete(self, delete_children=False, commit=True):
         log.debug('Deleting tag {tag:r}'.format(tag=self))
@@ -1985,7 +2041,7 @@ class Tag(ObjectBase, GroupableMixin):
         self.photodb.cur.execute('DELETE FROM tag_synonyms WHERE mastername == ?', [self.name])
         if commit:
             log.debug('Committing - delete tag')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def qualified_name(self):
         '''
@@ -2015,7 +2071,7 @@ class Tag(ObjectBase, GroupableMixin):
         self.photodb.cur.execute('DELETE FROM tag_synonyms WHERE name == ?', [synname])
         if commit:
             log.debug('Committing - remove synonym')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def rename(self, new_name, apply_to_synonyms=True, commit=True):
         '''
@@ -2026,7 +2082,7 @@ class Tag(ObjectBase, GroupableMixin):
             return
 
         try:
-            existing = self.photodb.get_tag(new_name)
+            self.photodb.get_tag(new_name)
         except NoSuchTag:
             pass
         else:
@@ -2044,7 +2100,7 @@ class Tag(ObjectBase, GroupableMixin):
         self.name = new_name
         if commit:
             log.debug('Committing - rename tag')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def synonyms(self):
         self.photodb.cur.execute('SELECT name FROM tag_synonyms WHERE mastername == ?', [self.name])
