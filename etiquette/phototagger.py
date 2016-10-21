@@ -1570,6 +1570,8 @@ class Album(ObjectBase, GroupableMixin):
     def add_photo(self, photo, commit=True):
         if self.has_photo(photo):
             return
+        if self.photodb != photo.photodb:
+            raise ValueError('Not the same PhotoDB')
         self.photodb.cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
         if commit:
             log.debug('Committing - add photo to album')

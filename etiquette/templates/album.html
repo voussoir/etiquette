@@ -51,4 +51,9 @@
 </html>
 
 <script type="text/javascript">
+function submit_tag(callback)
+{
+    add_photo_tag('{{album["id"]}}', add_tag_box.value, callback);
+    add_tag_box.value = "";
+}
 </script>

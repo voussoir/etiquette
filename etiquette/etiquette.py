@@ -322,7 +322,7 @@ def get_album_html(albumid):
     )
     return response
 
-@site.route('/album/<albumid>')
+@site.route('/album/<albumid>.json')
 @give_session_token
 def get_album_json(albumid):
     album = get_album_core(albumid)
@@ -330,10 +330,18 @@ def get_album_json(albumid):
 
 @site.route('/albums')
 @give_session_token
-def get_albums():
+def get_albums_html():
     albums = P.get_albums()
     albums = [a for a in albums if a.parent() is None]
     return flask.render_template('albums.html', albums=albums)
+
+@site.route('/albums.json')
+@give_session_token
+def get_albums_json():
+    albums = P.get_albums()
+    albums = [a for a in albums if a.parent() is None]
+    albums = [jsonify_album(album, minimal=True) for album in albums]
+    return make_json_response(albums)
 
 @site.route('/file/<photoid>')
 def get_file(photoid):
@@ -573,14 +581,34 @@ def get_thumbnail(photoid):
     return send_file(path)
 
 @site.route('/album/<albumid>', methods=['POST'])
+@site.route('/album/<albumid>.json', methods=['POST'])
 @give_session_token
 def post_edit_album(albumid):
     '''
     Edit the album's title and description.
     Apply a tag to every photo in the album.
     '''
+    response = {}
+    album = P_album(albumid)
+
+    if 'add_tag' in request.form:
+        action = 'add_tag'
+
+        tag = request.form[action].strip()
+        try:
+            tag = P_tag(tag)
+        except phototagger.NoSuchTag:
+            response = {'error': 'That tag doesnt exist', 'tagname': tag}
+            return make_json_response(response, status=404)
+        recursive = request.form.get('recursive', False)
+        recursive = truthystring(recursive)
+        album.add_tag_to_all(tag, nested_children=recursive)
+        response['action'] = action
+        response['tagname'] = tag.name
+        return make_json_response(response)
 
 @site.route('/photo/<photoid>', methods=['POST'])
+@site.route('/photo/<photoid>.json', methods=['POST'])
 @give_session_token
 def post_edit_photo(photoid):
     '''

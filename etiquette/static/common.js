@@ -12,7 +12,14 @@ function create_message_bubble(message_positivity, message_text, lifespan)
     message_area.appendChild(message);
     setTimeout(function(){message_area.removeChild(message);}, lifespan);
 }
-
+function add_album_tag(albumid, tagname, callback)
+{
+    if (tagname === ""){return}
+    var url = "/album/" + albumid;
+    data = new FormData();
+    data.append("add_tag", tagname);
+    return post(url, data, callback);
+}
 function add_photo_tag(photoid, tagname, callback)
 {
     if (tagname === ""){return}
