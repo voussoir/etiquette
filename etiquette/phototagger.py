@@ -210,7 +210,7 @@ def _helper_extension(ext):
         ext = [ext]
     if ext is None:
         return set()
-    ext = [e.lower() for e in ext]
+    ext = [e.lower().strip('.') for e in ext]
     ext = [e for e in ext if e]
     ext = set(ext)
     return ext
@@ -504,6 +504,7 @@ def searchfilter_expression(photo_tags, expression, frozen_children, warn_bad_ta
 
         if token not in OPERATORS:
             try:
+                token = normalize_tagname(token)
                 value = any(option in photo_tags for option in frozen_children[token])
             except KeyError:
                 if warn_bad_tags:
@@ -1694,6 +1695,7 @@ class Album(ObjectBase, GroupableMixin):
             photoid = photo[SQL_ALBUMPHOTO['photoid']]
             photo = self.photodb.get_photo(photoid)
             photos.append(photo)
+        photos.sort(key=lambda x: x.basename.lower())
         return photos
 
     def remove_photo(self, photo, commit=True):
