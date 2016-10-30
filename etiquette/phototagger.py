@@ -66,6 +66,7 @@ SQL_ALBUM_COLUMNS = [
 SQL_PHOTO_COLUMNS = [
     'id',
     'filepath',
+    'override_filename',
     'extension',
     'width',
     'height',
@@ -119,6 +120,7 @@ CREATE TABLE IF NOT EXISTS albums(
 CREATE TABLE IF NOT EXISTS photos(
     id TEXT,
     filepath TEXT COLLATE NOCASE,
+    override_filename TEXT COLLATE NOCASE,
     extension TEXT,
     width INT,
     height INT,
@@ -163,6 +165,7 @@ CREATE INDEX IF NOT EXISTS index_albumrel_photoid on album_photo_rel(photoid);
 -- Photo
 CREATE INDEX IF NOT EXISTS index_photo_id on photos(id);
 CREATE INDEX IF NOT EXISTS index_photo_path on photos(filepath COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS index_photo_fakepath on photos(override_filename COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS index_photo_created on photos(created);
 CREATE INDEX IF NOT EXISTS index_photo_extension on photos(extension);
 
@@ -841,6 +844,7 @@ class PDBPhotoMixin:
         data = [None] * len(SQL_PHOTO_COLUMNS)
         data[SQL_PHOTO['id']] = photoid
         data[SQL_PHOTO['filepath']] = filename
+        data[SQL_PHOTO['override_filename']] = None
         data[SQL_PHOTO['extension']] = extension
         data[SQL_PHOTO['created']] = created
         # These will be filled in just a moment
@@ -852,7 +856,7 @@ class PDBPhotoMixin:
         data[SQL_PHOTO['duration']] = None
         data[SQL_PHOTO['thumbnail']] = None
 
-        self.cur.execute('INSERT INTO photos VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
+        self.cur.execute('INSERT INTO photos VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
         photo = Photo(self, data)
         if do_metadata:
             photo.reload_metadata(commit=False)
@@ -1728,8 +1732,8 @@ class Photo(ObjectBase):
         self.id = row_tuple[SQL_PHOTO['id']]
         self.real_filepath = row_tuple[SQL_PHOTO['filepath']]
         self.real_filepath = normalize_filepath(self.real_filepath)
-        self.filepath = self.real_filepath
-        self.basename = os.path.basename(self.real_filepath)
+        self.filepath = row_tuple[SQL_PHOTO['override_filename']] or self.real_filepath
+        self.basename = row_tuple[SQL_PHOTO['override_filename']] or os.path.basename(self.real_filepath)
         self.extension = row_tuple[SQL_PHOTO['extension']]
         self.width = row_tuple[SQL_PHOTO['width']]
         self.height = row_tuple[SQL_PHOTO['height']]
