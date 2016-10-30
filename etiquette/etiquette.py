@@ -33,6 +33,7 @@ MOTD_STRINGS = [
 #'Buckle up, it\'s time to:',
 ]
 
+THUMBDIR = phototagger.DEFAULT_THUMBDIR
 ERROR_INVALID_ACTION = 'Invalid action'
 ERROR_NO_TAG_GIVEN = 'No tag name supplied'
 ERROR_TAG_TOO_SHORT = 'Not enough valid chars'
@@ -317,7 +318,7 @@ def get_album_html(albumid):
     response = flask.render_template(
         'album.html',
         album=album,
-        child_albums=album['sub_albums'],
+        child_albums=[jsonify_album(P_album(x)) for x in album['sub_albums']],
         photos=album['photos'],
     )
     return response
@@ -392,7 +393,8 @@ def get_photo_json(photoid):
 def get_search_core():
     print(request.args)
 
-    # EXTENSION
+    # FILENAME & EXTENSION
+    filename_terms = request.args.get('filename', None)
     extension_string = request.args.get('extension', None)
     extension_not_string = request.args.get('extension_not', None)
     mimetype_string = request.args.get('mimetype', None)
@@ -464,6 +466,7 @@ def get_search_core():
         'created': created,
         'extension': extension_list,
         'extension_not': extension_not_list,
+        'filename': filename_terms,
         'has_tags': has_tags,
         'mimetype': mimetype_list,
         'tag_musts': tag_musts,

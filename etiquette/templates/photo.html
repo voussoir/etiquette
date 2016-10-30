@@ -6,6 +6,9 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
     <script src="/static/common.js"></script>
+    {% set filename = photo["id"] + "." + photo["extension"] %}
+    {% set link = "/file/" + filename %}
+    {% set mimetype=photo["mimetype"] %}
 </head>
 <style>
 #content_body
@@ -46,18 +49,25 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    max-height: 100%;
-    max-width: 100%;
     height: 100%;
     width: 100%;
 }
 .photo_object a
 {
-    max-height: 100%;
-    max-width: 100%;
+    height: 100%;
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+#photo_img_holder
+{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-repeat: no-repeat;
 }
 .photo_object img
 {
@@ -100,12 +110,12 @@
         <h4>File info</h4>
         <ul id="metadata">
         {% if photo["width"] %}
-            <li>{{photo["width"]}}x{{photo["height"]}} px</li>
-            <li>{{photo["ratio"]}} aspect ratio</li>
-            <li>{{photo["bytestring"]}}</li>
+            <li>Dimensions: {{photo["width"]}}x{{photo["height"]}} px</li>
+            <li>Aspect ratio: {{photo["ratio"]}}</li>
+            <li>Size: {{photo["bytestring"]}}</li>
         {% endif %}
-            <li>{{photo["duration"]}}</li>
         {% if photo["duration"] %}
+            <li>Duration: {{photo["duration"]}}</li>
         {% endif %}
             <li><a href="/file/{{photo["id"]}}.{{photo["extension"]}}?download=1">Download as {{photo["id"]}}.{{photo["extension"]}}</a></li>
             <li><a href="/file/{{photo["id"]}}.{{photo["extension"]}}?download=1&original_filename=1">Download as "{{photo["filename"]}}"</a></li>
@@ -126,13 +136,11 @@
 </div>
 
 <div id="right">
+    <!-- THE PHOTO ITSELF -->
     <div class="photo_object">
-        {% set filename = photo["id"] + "." + photo["extension"] %}
-        {% set link = "/file/" + filename %}
-        {% set mimetype=photo["mimetype"] %}
         {% if mimetype == "image" %}
-        <!-- <a target="_blank" href="{{link}}"><img src="{{link}}"></a> -->
-        <img src="{{link}}">
+        <div id="photo_img_holder"><img id="photo_img" src="{{link}}" onclick="toggle_hoverzoom()" onload="this.style.opacity=0.99"></div>
+        <!-- <img src="{{link}}"> -->
         {% elif mimetype == "video" %}
         <video src="{{link}}" controls preload=none {%if photo["has_thumbnail"]%}poster="/thumbnail/{{photo["id"]}}.jpg"{%endif%}></video>
         {% elif mimetype == "audio" %}
@@ -152,6 +160,72 @@ var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
 add_tag_box.onkeydown = function(){entry_with_history_hook(add_tag_box, add_tag_button)};
 
+function enable_hoverzoom()
+{
+    console.log("enable");
+    div = document.getElementById("photo_img_holder");
+    img = document.getElementById("photo_img");
+    if (img.naturalWidth < div.offsetWidth && img.naturalHeight < div.offsetHeight)
+    {
+        return;
+    }
+    img.style.opacity = 0;
+    img.style.display = "none";
+    div.style.cursor = "zoom-out";
+    div.style.backgroundImage = "url('{{link}}')";
+    div.onmousemove = move_hoverzoom;
+    setTimeout(function(){div.onclick = disable_hoverzoom;}, 100);
+    return true;
+}
+function disable_hoverzoom()
+{
+    console.log("disable");
+    div = document.getElementById("photo_img_holder");
+    img = document.getElementById("photo_img");
+    img.style.opacity = 100;
+    div.style.cursor = "";
+    img.style.display="";
+    div.style.backgroundImage = "none";
+    div.onmousemove = null;
+    div.onclick = null;
+}
+function toggle_hoverzoom()
+{
+    img = document.getElementById("photo_img");
+    if (img.style.opacity === "0")
+    {
+        disable_hoverzoom();
+    }
+    else
+    {
+        enable_hoverzoom();
+    }
+}
+function move_hoverzoom(event)
+{
+    div = document.getElementById("photo_img_holder");
+    img = document.getElementById("photo_img");
+    var x;
+    var y;
+    if (img.naturalWidth < div.offsetWidth)
+    {
+        x = (img.naturalWidth - div.offsetWidth) / 2;
+    }
+    else
+    {
+        x = (img.naturalWidth - div.offsetWidth) * (event.offsetX / div.offsetWidth);
+    }
+    if (img.naturalHeight < div.offsetHeight)
+    {
+        y = (img.naturalHeight - div.offsetHeight) / 2;
+    }
+    else
+    {
+        y = (img.naturalHeight - div.offsetHeight) * (event.offsetY / div.offsetHeight);
+    }
+    //console.log(x);
+    div.style.backgroundPosition=(-x)+"px "+(-y)+"px";
+}
 function receive_callback(response)
 {
     var tagname = response["tagname"];

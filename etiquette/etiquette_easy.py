@@ -2,6 +2,8 @@
 # py -i etiquette_easy.py
 
 import phototagger
+import os
+import sys
 P = phototagger.PhotoDB()
 import traceback
 

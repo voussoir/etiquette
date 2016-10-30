@@ -190,6 +190,10 @@ form
 
             <span>Other filters</span>
             <input type="text" class="basic_param"
+            value="{%if search_kwargs['filename']%}{{search_kwargs['filename']}}{%endif%}"
+            name="filename" placeholder="Filename">
+
+            <input type="text" class="basic_param"
             value="{%if search_kwargs['mimetype']%}{{search_kwargs['mimetype']}}{%endif%}"
             name="mimetype" placeholder="Mimetype(s)">
 

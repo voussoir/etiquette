@@ -61,6 +61,7 @@ SQL_ALBUM_COLUMNS = [
     'id',
     'title',
     'description',
+    'associated_directory'
 ]
 SQL_PHOTO_COLUMNS = [
     'id',
@@ -112,11 +113,12 @@ PRAGMA cache_size = 10000;
 CREATE TABLE IF NOT EXISTS albums(
     id TEXT,
     title TEXT,
-    description TEXT
+    description TEXT,
+    associated_directory TEXT COLLATE NOCASE
 );
 CREATE TABLE IF NOT EXISTS photos(
     id TEXT,
-    filepath TEXT,
+    filepath TEXT COLLATE NOCASE,
     extension TEXT,
     width INT,
     height INT,
@@ -160,7 +162,7 @@ CREATE INDEX IF NOT EXISTS index_albumrel_photoid on album_photo_rel(photoid);
 
 -- Photo
 CREATE INDEX IF NOT EXISTS index_photo_id on photos(id);
-CREATE INDEX IF NOT EXISTS index_photo_path on photos(filepath);
+CREATE INDEX IF NOT EXISTS index_photo_path on photos(filepath COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS index_photo_created on photos(created);
 CREATE INDEX IF NOT EXISTS index_photo_extension on photos(extension);
 
@@ -212,6 +214,10 @@ def _helper_extension(ext):
     ext = [e for e in ext if e]
     ext = set(ext)
     return ext
+
+def _helper_filenamefilter(subject, terms):
+    basename = subject.lower()
+    return all(term in basename for term in terms)
 
 def _helper_minmax(key, value, minimums, maximums):
     '''
@@ -686,10 +692,27 @@ class PDBAlbumMixin:
     def get_album(self, id):
         return self.get_thing_by_id('album', id)
 
+    def get_album_by_path(self, filepath):
+        '''
+        Return the album with the `associated_directory` of this value, NOT case-sensitive.
+        '''
+        filepath = os.path.abspath(filepath)
+        self.cur.execute('SELECT * FROM albums WHERE associated_directory == ?', [filepath])
+        f = self.cur.fetchone()
+        if f is None:
+            raise NoSuchAlbum(filepath)
+        return self.get_album(f[SQL_ALBUM['id']])
+
     def get_albums(self):
         yield from self.get_things(thing_type='album')
 
-    def new_album(self, title=None, description=None, photos=None, commit=True):
+    def new_album(self,
+            associated_directory=None,
+            commit=True,
+            description=None,
+            photos=None,
+            title=None,
+        ):
         '''
         Create a new album. Photos can be added now or later.
         '''
@@ -697,6 +720,9 @@ class PDBAlbumMixin:
         albumid = self.generate_id('tags')
         title = title or ''
         description = description or ''
+        if associated_directory is not None:
+            associated_directory = os.path.abspath(associated_directory)
+
         if not isinstance(title, str):
             raise TypeError('Title must be string, not %s' % type(title))
 
@@ -707,8 +733,9 @@ class PDBAlbumMixin:
         data[SQL_ALBUM['id']] = albumid
         data[SQL_ALBUM['title']] = title
         data[SQL_ALBUM['description']] = description
+        data[SQL_ALBUM['associated_directory']] = associated_directory
 
-        self.cur.execute('INSERT INTO albums VALUES(?, ?, ?)', data)
+        self.cur.execute('INSERT INTO albums VALUES(?, ?, ?, ?)', data)
         album = Album(self, data)
         if photos:
             for photo in photos:
@@ -716,6 +743,7 @@ class PDBAlbumMixin:
                 album.add_photo(photo, commit=False)
 
         if commit:
+            log.debug('Committing - new Album')
             self.commit()
         return album
 
@@ -851,6 +879,7 @@ class PDBPhotoMixin:
             created=None,
             extension=None,
             extension_not=None,
+            filename=None,
             has_tags=None,
             mimetype=None,
             tag_musts=None,
@@ -877,6 +906,10 @@ class PDBPhotoMixin:
 
         extension_not:
             A string or list of strings of unacceptable file extensions.
+
+        filename:
+            A string or list of strings which will be split into words. The file's basename
+            must include every word, NOT case-sensitive.
 
         has_tags:
             If True, require that the Photo has >=1 tag.
@@ -934,6 +967,11 @@ class PDBPhotoMixin:
         extension_not = _helper_extension(extension_not)
         mimetype = _helper_extension(mimetype)
 
+        if filename is not None:
+            if not isinstance(filename, str):
+                filename = ' '.join(filename)
+            filename = set(term.lower() for term in filename.strip().split(' '))
+
         if (tag_musts or tag_mays or tag_forbids) and tag_expression:
             raise XORException('Expression filter cannot be used with musts, mays, forbids')
 
@@ -984,6 +1022,11 @@ class PDBPhotoMixin:
                 continue
 
             if mimetype and photo.mimetype() not in mimetype:
+                #print('Failed mimetype')
+                continue
+
+            if filename and not _helper_filenamefilter(subject=photo.basename, terms=filename):
+                #print('Failed filename')
                 continue
 
             if any(not fetch[SQL_PHOTO[key]] or fetch[SQL_PHOTO[key]] > value for (key, value) in maximums.items()):
@@ -1173,7 +1216,9 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
 
     def digest_directory(self, directory, exclude_directories=None, exclude_filenames=None, commit=True):
         '''
-        Create an album, and add the directory's contents to it.
+        Create an album, and add the directory's contents to it recursively.
+
+        If a Photo object already exists for a file, it will be added to the correct album.
         '''
         if not os.path.isdir(directory):
             raise ValueError('Not a directory: %s' % directory)
@@ -1189,22 +1234,41 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             ]
 
         directory = spinal.str_to_fp(directory)
+        directory.correct_case()
         generator = spinal.walk_generator(
             directory,
             exclude_directories=exclude_directories,
             exclude_filenames=exclude_filenames,
             yield_style='nested',
         )
-        album = self.new_album(title=directory.basename, commit=False)
+        try:
+            album = self.get_album_by_path(directory.absolute_path)
+        except NoSuchAlbum:
+            album = self.new_album(
+                associated_directory=directory.absolute_path,
+                commit=False,
+                title=directory.basename,
+            )
+
         albums = {directory.absolute_path: album}
         for (current_location, directories, files) in generator:
             current_album = albums.get(current_location.absolute_path, None)
             if current_album is None:
-                current_album = self.new_album(title=current_location.basename, commit=False)
-                print('Created %s' % current_album.title)
+                try:
+                    current_album = self.get_album_by_path(current_location.absolute_path)
+                except NoSuchAlbum:
+                    current_album = self.new_album(
+                        associated_directory=current_location.absolute_path,
+                        commit=False,
+                        title=current_location.basename,
+                    )
+                    print('Created %s' % current_album.title)
                 albums[current_location.absolute_path] = current_album
                 parent = albums[current_location.parent.absolute_path]
-                parent.add(current_album, commit=False)
+                try:
+                    parent.add(current_album, commit=False)
+                except GroupExists:
+                    pass
                 #print('Added to %s' % parent.title)
             for filepath in files:
                 try:
@@ -1561,6 +1625,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb = photodb
         self.id = row_tuple[SQL_ALBUM['id']]
         self.title = row_tuple[SQL_ALBUM['title']]
+        self.name = 'Album %s' % self.id
         self.description = row_tuple[SQL_ALBUM['description']]
         self.group_getter = self.photodb.get_album
 
@@ -1736,14 +1801,7 @@ class Photo(ObjectBase):
         special:
             For videos, you can provide a `timestamp` to take the thumbnail from.
         '''
-        chunked_id = chunk_sequence(self.id, 3)
-        basename = chunked_id[-1]
-        folder = chunked_id[:-1]
-        folder = os.sep.join(folder)
-        folder = os.path.join(self.photodb.thumbnail_folder, folder)
-        if folder:
-            os.makedirs(folder, exist_ok=True)
-        hopeful_filepath = os.path.join(folder, basename) + '.jpg'
+        hopeful_filepath = self.make_thumbnail_filepath()
         return_filepath = None
 
         mime = self.mimetype()
@@ -1827,6 +1885,17 @@ class Photo(ObjectBase):
                 return tag
 
         return False
+
+    def make_thumbnail_filepath(self):
+        chunked_id = chunk_sequence(self.id, 3)
+        basename = chunked_id[-1]
+        folder = chunked_id[:-1]
+        folder = os.sep.join(folder)
+        folder = os.path.join(self.photodb.thumbnail_folder, folder)
+        if folder:
+            os.makedirs(folder, exist_ok=True)
+        hopeful_filepath = os.path.join(folder, basename) + '.jpg'
+        return hopeful_filepath
 
     def mimetype(self):
         return get_mimetype(self.real_filepath)
