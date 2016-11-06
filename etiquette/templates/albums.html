@@ -17,12 +17,12 @@
 {{header.make_header()}}
 <div id="content_body">
     {% for album in albums %}
-    {% if album.title %}
-    {% set title=album.id + " " + album.title %}
+    {% if album["title"] %}
+    {% set title=album["id"] + " " + album["title"] %}
     {% else %}
-    {% set title=album.id %}
+    {% set title=album["id"] %}
     {% endif %}
-    <a href="/album/{{album.id}}">{{title}}</a>
+    <a href="/album/{{album["id"]}}">{{title}}</a>
     {% endfor %}
 </div>
 </body>

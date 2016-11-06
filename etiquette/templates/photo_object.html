@@ -1,4 +1,4 @@
-{% set basics =
+{% set thumbnails =
     {
         "audio": "audio",
         "txt": "txt",
@@ -15,12 +15,11 @@
             src="/thumbnail/{{photo["id"]}}.jpg"
         {% else %}
             {% set choice =
-                photo['extension'] if photo['extension'] in basics else
-                photo['mimetype'] if photo['mimetype'] in basics else
-                'other'
+                thumbnails.get(photo["extension"],
+                thumbnails.get(photo["mimetype"],
+                'other'))
             %}
             src="/static/basic_thumbnails/{{choice}}.png"
-            
         {% endif %}
         </a>
     </div>
@@ -31,7 +30,7 @@
             {{photo["width"]}}x{{photo["height"]}},
         {% endif %}
         {% if photo["duration"] %}
-            {{photo["duration"]}},
+            {{photo["duration_str"]}},
         {% endif %}
         {{photo["bytestring"]}}
         </span>

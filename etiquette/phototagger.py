@@ -15,17 +15,20 @@ import time
 import traceback
 import warnings
 
-sys.path.append('C:\\git\\else\\Bytestring'); import bytestring
-sys.path.append('C:\\git\\else\\SpinalTap'); import spinal
+import constants
+import decorators
+import helpers
 
-VALID_TAG_CHARS = string.ascii_lowercase + string.digits + '_'
-MIN_TAG_NAME_LENGTH = 1
-MAX_TAG_NAME_LENGTH = 32
-DEFAULT_ID_LENGTH = 12
-DEFAULT_DBNAME = 'phototagger.db'
-DEFAULT_THUMBDIR = '_etiquette\\site_thumbnails'
-THUMBNAIL_WIDTH = 400
-THUMBNAIL_HEIGHT = 400
+try:
+    sys.path.append('C:\\git\\else\\Bytestring')
+    sys.path.append('C:\\git\\else\\SpinalTap')
+    import bytestring
+    import spinal
+except ImportError:
+    # pip install
+    # https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
+    from vousoirkit import bytestring
+    from vousoirkit import spinal
 
 try:
     ffmpeg = converter.Converter(
@@ -39,18 +42,6 @@ except converter.ffmpeg.FFMpegError:
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
-
-ADDITIONAL_MIMETYPES = {
-    'srt': 'text',
-    'mkv': 'video',
-}
-WARNING_MINMAX_INVALID = 'Field "{field}": "{value}" is not a valid request. Ignored.'
-WARNING_MINMAX_OOO = 'Field "{field}": minimum "{min}" maximum "{max}" are out of order. Ignored.'
-WARNING_NO_SUCH_TAG = 'Tag "{tag}" does not exist. Ignored.'
-WARNING_ORDERBY_BADCOL = '"{column}" is not a sorting option. Ignored.'
-WARNING_ORDERBY_BADSORTER = 'You can\'t order "{column}" by "{sorter}". Defaulting to descending.'
-
-OPERATORS = {'(', ')', 'OR', 'AND', 'NOT'}
 
 SQL_LASTID_COLUMNS = [
     'table',
@@ -107,10 +98,11 @@ SQL_SYN = {key:index for (index, key) in enumerate(SQL_SYN_COLUMNS)}
 SQL_TAG = {key:index for (index, key) in enumerate(SQL_TAG_COLUMNS)}
 SQL_TAGGROUP = {key:index for (index, key) in enumerate(SQL_TAGGROUP_COLUMNS)}
 
-
+DATABASE_VERSION = 1
 DB_INIT = '''
 PRAGMA count_changes = OFF;
 PRAGMA cache_size = 10000;
+PRAGMA user_version = {user_version};
 CREATE TABLE IF NOT EXISTS albums(
     id TEXT,
     title TEXT,
@@ -183,27 +175,8 @@ CREATE INDEX IF NOT EXISTS index_tagsyn_name on tag_synonyms(name);
 -- Tag-group relation
 CREATE INDEX IF NOT EXISTS index_grouprel_parentid on tag_group_rel(parentid);
 CREATE INDEX IF NOT EXISTS index_grouprel_memberid on tag_group_rel(memberid);
-'''
+'''.format(user_version=DATABASE_VERSION)
 
-def not_implemented(function):
-    '''
-    Decorator to remember what needs doing.
-    '''
-    warnings.warn('%s is not implemented' % function.__name__)
-    return function
-
-def time_me(function):
-    '''
-    Decorator. After the function is run, print the elapsed time.
-    '''
-    @functools.wraps(function)
-    def timed_function(*args, **kwargs):
-        start = time.time()
-        result = function(*args, **kwargs)
-        end = time.time()
-        print('%s: %0.8f' % (function.__name__, end-start))
-        return result
-    return timed_function
 
 def _helper_extension(ext):
     '''
@@ -220,8 +193,6 @@ def _helper_extension(ext):
 
 def _helper_filenamefilter(subject, terms):
     basename = subject.lower()
-    #print(basename)
-    #print(terms)
     return all(term in basename for term in terms)
 
 def _helper_minmax(key, value, minimums, maximums):
@@ -237,10 +208,10 @@ def _helper_minmax(key, value, minimums, maximums):
     try:
         (low, high) = hyphen_range(value)
     except ValueError:
-        warnings.warn(WARNING_MINMAX_INVALID.format(field=key, value=value))
+        warnings.warn(constants.WARNING_MINMAX_INVALID.format(field=key, value=value))
         return
     except OutOfOrder as e:
-        warnings.warn(WARNING_MINMAX_OOO.format(field=key, min=e.args[1], max=e.args[2]))
+        warnings.warn(constants.WARNING_MINMAX_OOO.format(field=key, min=e.args[1], max=e.args[2]))
         return
     if low is not None:
         minimums[key] = low
@@ -278,13 +249,13 @@ def _helper_orderby(orderby):
         'random',
     ]
     if not sortable:
-        warnings.warn(WARNING_ORDERBY_BADCOL.format(column=column))
+        warnings.warn(constants.WARNING_ORDERBY_BADCOL.format(column=column))
         return None
     if column == 'random':
         column = 'RANDOM()'
 
     if sorter not in ['desc', 'asc']:
-        warnings.warn(WARNING_ORDERBY_BADSORTER.format(column=column, sorter=sorter))
+        warnings.warn(constants.WARNING_ORDERBY_BADSORTER.format(column=column, sorter=sorter))
         sorter = 'desc'
     return (column, sorter)
 
@@ -307,7 +278,7 @@ def _helper_setify(photodb, l, warn_bad_tags=False):
         except NoSuchTag:
             if not warn_bad_tags:
                 raise
-            warnings.warn(WARNING_NO_SUCH_TAG.format(tag=tag))
+            warnings.warn(constants.WARNING_NO_SUCH_TAG.format(tag=tag))
             continue
         else:
             s.add(tag)
@@ -321,50 +292,11 @@ def _helper_unitconvert(value):
     if value is None:
         return None
     if ':' in value:
-        return hms_to_seconds(value)
+        return helpers.hms_to_seconds(value)
     elif all(c in '0123456789.' for c in value):
         return float(value)
     else:
         return bytestring.parsebytes(value)
-
-def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
-    '''
-    Given a sequence, divide it into sequences of length `chunk_length`.
-
-    allow_incomplete:
-        If True, allow the final chunk to be shorter if the
-        given sequence is not an exact multiple of `chunk_length`.
-        If False, the incomplete chunk will be discarded.
-    '''
-    (complete, leftover) = divmod(len(sequence), chunk_length)
-    if not allow_incomplete:
-        leftover = 0
-
-    chunk_count = complete + min(leftover, 1)
-
-    chunks = []
-    for x in range(chunk_count):
-        left = chunk_length * x
-        right = left + chunk_length
-        chunks.append(sequence[left:right])
-
-    return chunks
-
-def hms_to_seconds(hms):
-    '''
-    Convert hh:mm:ss string to an integer seconds.
-    '''
-    hms = hms.split(':')
-    seconds = 0
-    if len(hms) == 3:
-        seconds += int(hms[0])*3600
-        hms.pop(0)
-    if len(hms) == 2:
-        seconds += int(hms[0])*60
-        hms.pop(0)
-    if len(hms) == 1:
-        seconds += int(hms[0])
-    return seconds
 
 def hyphen_range(s):
     '''
@@ -393,23 +325,10 @@ def hyphen_range(s):
         raise OutOfOrder(s, low, high)
     return low, high
 
-def fit_into_bounds(image_width, image_height, frame_width, frame_height):
-    '''
-    Given the w+h of the image and the w+h of the frame,
-    return new w+h that fits the image into the frame
-    while maintaining the aspect ratio.
-    '''
-    ratio = min(frame_width/image_width, frame_height/image_height)
-
-    new_width = int(image_width * ratio)
-    new_height = int(image_height * ratio)
-
-    return (new_width, new_height)
-
 def get_mimetype(filepath):
     extension = os.path.splitext(filepath)[1].replace('.', '')
-    if extension in ADDITIONAL_MIMETYPES:
-        return ADDITIONAL_MIMETYPES[extension]
+    if extension in constants.ADDITIONAL_MIMETYPES:
+        return constants.ADDITIONAL_MIMETYPES[extension]
     mimetype = mimetypes.guess_type(filepath)[0]
     if mimetype is not None:
         mimetype = mimetype.split('/')[0]
@@ -423,12 +342,6 @@ def getnow(timestamp=True):
     if timestamp:
         return now.timestamp()
     return now
-
-def is_xor(*args):
-    '''
-    Return True if and only if one arg is truthy.
-    '''
-    return [bool(a) for a in args].count(True) == 1
 
 def normalize_filepath(filepath):
     '''
@@ -450,12 +363,12 @@ def normalize_tagname(tagname):
     tagname = tagname.lower()
     tagname = tagname.replace('-', '_')
     tagname = tagname.replace(' ', '_')
-    tagname = (c for c in tagname if c in VALID_TAG_CHARS)
+    tagname = (c for c in tagname if c in constants.VALID_TAG_CHARS)
     tagname = ''.join(tagname)
 
-    if len(tagname) < MIN_TAG_NAME_LENGTH:
+    if len(tagname) < constants.MIN_TAG_NAME_LENGTH:
         raise TagTooShort(tagname)
-    if len(tagname) > MAX_TAG_NAME_LENGTH:
+    if len(tagname) > constants.MAX_TAG_NAME_LENGTH:
         raise TagTooLong(tagname)
 
     return tagname
@@ -509,13 +422,13 @@ def searchfilter_expression(photo_tags, expression, frozen_children, warn_bad_ta
         if can_shortcircuit and token != ')':
             continue
 
-        if token not in OPERATORS:
+        if token not in constants.EXPRESSION_OPERATORS:
             try:
                 token = normalize_tagname(token)
                 value = any(option in photo_tags for option in frozen_children[token])
             except KeyError:
                 if warn_bad_tags:
-                    warnings.warn(WARNING_NO_SUCH_TAG.format(tag=token))
+                    warnings.warn(constants.NO_SUCH_TAG.format(tag=token))
                 else:
                     raise NoSuchTag(token)
                 return False
@@ -536,13 +449,17 @@ def searchfilter_expression(photo_tags, expression, frozen_children, warn_bad_ta
             has_operand = True
             continue
 
-        if has_operand and ((operand_stack[-1] == 0 and token == 'AND') or (operand_stack[-1] == 1 and token == 'OR')):
-            can_shortcircuit = True
+        can_shortcircuit = (
+            has_operand and
+            (
+                (operand_stack[-1] == 0 and token == 'AND') or
+                (operand_stack[-1] == 1 and token == 'OR')
+            )
+        )
+        if can_shortcircuit:
             if operator_stack and operator_stack[-1] == '(':
                 operator_stack.pop()
             continue
-        else:
-            can_shortcircuit = False
 
         operator_stack.append(token)
         #time.sleep(.3)
@@ -636,7 +553,7 @@ def tag_export_stdout(tags, depth=0):
         if tag.parent() is None:
             print()
 
-@time_me
+@decorators.time_me
 def tag_export_totally_flat(tags):
     result = {}
     for tag in tags:
@@ -1097,7 +1014,7 @@ class PDBTagMixin:
         '''
         Redirect to get_tag_by_id or get_tag_by_name after xor-checking the parameters.
         '''
-        if not is_xor(id, name):
+        if not helpers.is_xor(id, name):
             raise XORException('One and only one of `id`, `name` can be passed.')
 
         if id is not None:
@@ -1192,18 +1109,34 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         The `rename` method of Tag objects includes a parameter
         `apply_to_synonyms` if you do want them to follow.
     '''
-    def __init__(self, databasename=DEFAULT_DBNAME, thumbnail_folder=DEFAULT_THUMBDIR, id_length=None):
-        if id_length is None:
-            self.id_length = DEFAULT_ID_LENGTH
+    def __init__(
+            self,
+            databasename=constants.DEFAULT_DBNAME,
+            thumbnail_folder=constants.DEFAULT_THUMBDIR,
+            id_length=constants.DEFAULT_ID_LENGTH,
+        ):
         self.databasename = databasename
         self.database_abspath = os.path.abspath(databasename)
-        self.thumbnail_folder = os.path.abspath(thumbnail_folder)
-        os.makedirs(thumbnail_folder, exist_ok=True)
+        existing_database = os.path.exists(databasename)
         self.sql = sqlite3.connect(databasename)
         self.cur = self.sql.cursor()
+        if existing_database:
+            self.cur.execute('PRAGMA user_version')
+            existing_version = self.cur.fetchone()[0]
+            if existing_version != DATABASE_VERSION:
+                message = constants.ERROR_DATABASE_OUTOFDATE
+                message = message.format(current=existing_version, new=DATABASE_VERSION)
+                log.critical(message)
+                raise SystemExit
+
         statements = DB_INIT.split(';')
         for statement in statements:
             self.cur.execute(statement)
+
+        self.thumbnail_folder = os.path.abspath(thumbnail_folder)
+        os.makedirs(thumbnail_folder, exist_ok=True)
+
+        self.id_length = id_length
 
         self.on_commit_queue = []
         self._cached_frozen_children = None
@@ -1232,15 +1165,9 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         if not os.path.isdir(directory):
             raise ValueError('Not a directory: %s' % directory)
         if exclude_directories is None:
-            exclude_directories = [
-                '_site_thumbnails',
-            ]
+            exclude_directories = constants.DEFAULT_DIGEST_EXCLUDE_DIRS
         if exclude_filenames is None:
-            exclude_filenames = [
-                DEFAULT_DBNAME,
-                'desktop.ini',
-                'thumbs.db'
-            ]
+            exclude_filenames = constants.DEFAULT_DIGEST_EXCLUDE_FILES
 
         directory = spinal.str_to_fp(directory)
         directory.correct_case()
@@ -1306,15 +1233,9 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         if not os.path.isdir(directory):
             raise ValueError('Not a directory: %s' % directory)
         if exclude_directories is None:
-            exclude_directories = [
-                '_site_thumbnails',
-            ]
+            exclude_directories = constants.DEFAULT_DIGEST_EXCLUDE_DIRS
         if exclude_filenames is None:
-            exclude_filenames = [
-                DEFAULT_DBNAME,
-                'desktop.ini',
-                'thumbs.db'
-            ]
+            exclude_filenames = constants.DEFAULT_DIGEST_EXCLUDE_FILES
 
         directory = spinal.str_to_fp(directory)
         generator = spinal.walk_generator(
@@ -1806,7 +1727,7 @@ class Photo(ObjectBase):
             log.debug('Committing - delete photo')
             self.photodb.commit()
 
-    @time_me
+    @decorators.time_me
     def generate_thumbnail(self, commit=True, **special):
         '''
         special:
@@ -1825,11 +1746,11 @@ class Photo(ObjectBase):
                 pass
             else:
                 (width, height) = image.size
-                (new_width, new_height) = fit_into_bounds(
+                (new_width, new_height) = helpers.fit_into_bounds(
                     image_width=width,
                     image_height=height,
-                    frame_width=THUMBNAIL_WIDTH,
-                    frame_height=THUMBNAIL_HEIGHT,
+                    frame_width=constants.THUMBNAIL_WIDTH,
+                    frame_height=constants.THUMBNAIL_HEIGHT,
                 )
                 if new_width < width:
                     image = image.resize((new_width, new_height))
@@ -1841,11 +1762,11 @@ class Photo(ObjectBase):
             probe = ffmpeg.probe(self.real_filepath)
             try:
                 if probe.video:
-                    size = fit_into_bounds(
+                    size = helpers.fit_into_bounds(
                         image_width=probe.video.video_width,
                         image_height=probe.video.video_height,
-                        frame_width=THUMBNAIL_WIDTH,
-                        frame_height=THUMBNAIL_HEIGHT,
+                        frame_width=constants.THUMBNAIL_WIDTH,
+                        frame_height=constants.THUMBNAIL_HEIGHT,
                     )
                     size = '%dx%d' % size
                     duration = probe.video.duration
@@ -1898,7 +1819,7 @@ class Photo(ObjectBase):
         return False
 
     def make_thumbnail_filepath(self):
-        chunked_id = chunk_sequence(self.id, 3)
+        chunked_id = helpers.chunk_sequence(self.id, 3)
         basename = chunked_id[-1]
         folder = chunked_id[:-1]
         folder = os.sep.join(folder)
@@ -1911,7 +1832,7 @@ class Photo(ObjectBase):
     def mimetype(self):
         return get_mimetype(self.real_filepath)
 
-    @time_me
+    @decorators.time_me
     def reload_metadata(self, commit=True):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
