@@ -220,6 +220,8 @@ def _helper_extension(ext):
 
 def _helper_filenamefilter(subject, terms):
     basename = subject.lower()
+    #print(basename)
+    #print(terms)
     return all(term in basename for term in terms)
 
 def _helper_minmax(key, value, minimums, maximums):
@@ -320,6 +322,8 @@ def _helper_unitconvert(value):
         return None
     if ':' in value:
         return hms_to_seconds(value)
+    elif all(c in '0123456789.' for c in value):
+        return float(value)
     else:
         return bytestring.parsebytes(value)
 
@@ -1638,10 +1642,10 @@ class Album(ObjectBase, GroupableMixin):
         return 'Album:{id}'.format(id=self.id)
 
     def add_photo(self, photo, commit=True):
-        if self.has_photo(photo):
-            return
         if self.photodb != photo.photodb:
             raise ValueError('Not the same PhotoDB')
+        if self.has_photo(photo):
+            return
         self.photodb.cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
         if commit:
             log.debug('Committing - add photo to album')
@@ -1687,6 +1691,7 @@ class Album(ObjectBase, GroupableMixin):
             'SELECT * FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
             [self.id, photo.id]
         )
+        return self.photodb.cur.fetchone() is not None
 
     def photos(self):
         photos = []
@@ -1832,7 +1837,7 @@ class Photo(ObjectBase):
                 return_filepath = hopeful_filepath
 
         elif mime == 'video' and ffmpeg:
-            print('video')
+            #print('video')
             probe = ffmpeg.probe(self.real_filepath)
             try:
                 if probe.video:

@@ -389,6 +389,8 @@ function submit_search()
         var boxname = basic_inputs[index].name;
         var box = document.getElementsByName(boxname)[0];
         var value = box.value;
+        value = value.split("&").join("%26");
+        console.log(value);
         if (boxname == "has_tags" && has_tag_params && value == "no")
         {
             /*
@@ -401,7 +403,7 @@ function submit_search()
         {
             continue;
         }
-        parameters.push(boxname + "=" + box.value);
+        parameters.push(boxname + "=" + value);
     }
 
     orderby_rows = document.getElementsByClassName("search_builder_orderby_li");
@@ -425,6 +427,7 @@ function submit_search()
         parameters = "?" + parameters;
         url = url + parameters;
     }
+    console.log(url);
     window.location.href = url;
     return false;
 }

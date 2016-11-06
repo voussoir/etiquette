@@ -11,11 +11,20 @@ import re
 import requests
 import sys
 import time
-import uuid
 import warnings
 
 import phototagger
-sys.path.append('C:\\git\\else\\Bytestring'); import bytestring
+
+try:
+    sys.path.append('C:\\git\\else\\Bytestring')
+    sys.path.append('C:\\git\\else\\WebstreamZip')
+    import bytestring
+    import webstreamzip
+except ImportError:
+    # pip install
+    # https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
+    from vousoirkit import bytestring
+    from vousoirkit import webstreamzip
 
 site = flask.Flask(__name__)
 site.config.update(
@@ -23,6 +32,7 @@ site.config.update(
     TEMPLATES_AUTO_RELOAD=True,
 )
 site.jinja_env.add_extension('jinja2.ext.do')
+#site.debug = True
 
 P = phototagger.PhotoDB()
 
@@ -45,25 +55,7 @@ ERROR_NO_SUCH_TAG = 'Doesn\'t exist'
 ####################################################################################################
 ####################################################################################################
 
-def give_session_token(function):
-    @functools.wraps(function)
-    def wrapped(*args, **kwargs):
-        # Inject new token so the function doesn't know the difference
-        token = request.cookies.get('etiquette_session', None)
-        if not token:
-            token = generate_session_token()
-            request.cookies = dict(request.cookies)
-            request.cookies['etiquette_session'] = token
 
-        ret = function(*args, **kwargs)
-
-        # Send the token back to the client
-        if not isinstance(ret, flask.Response):
-            ret = flask.Response(ret)
-        ret.set_cookie('etiquette_session', value=token, max_age=60)
-
-        return ret
-    return wrapped
 
 def _helper_comma_split(s):
     if s is None:
@@ -109,11 +101,6 @@ def edit_params(original, modifications):
     new_params = '?' + new_params
     return new_params
 
-def generate_session_token():
-    token = str(uuid.uuid4())
-    #print('MAKE SESSION', token)
-    return token
-
 def make_json_response(j, *args, **kwargs):
     dumped = json.dumps(j)
     response = flask.Response(dumped, *args, **kwargs)
@@ -124,7 +111,7 @@ def P_album(albumid):
     try:
         return P.get_album(albumid)
     except phototagger.NoSuchAlbum:
-        flask.abort(404, 'That tag doesnt exist')
+        flask.abort(404, 'That album doesnt exist')
 
 def P_photo(photoid):
     try:
@@ -329,6 +316,16 @@ def get_album_json(albumid):
     album = get_album_core(albumid)
     return make_json_response(album)
 
+@site.route('/album/<albumid>.tar')
+def get_album_tar(albumid):
+    album = P_album(albumid)
+    photos = list(album.walk_photos())
+    zipname_map = {p.real_filepath: '%s - %s' % (p.id, p.basename) for p in photos}
+    streamed_zip = webstreamzip.stream_tar(zipname_map)
+    content_length = sum(p.bytes for p in photos)
+    outgoing_headers = {'Content-Type': 'application/octet-stream'}
+    return flask.Response(streamed_zip, headers=outgoing_headers)
+
 @site.route('/albums')
 @give_session_token
 def get_albums_html():
@@ -391,7 +388,7 @@ def get_photo_json(photoid):
     return photo
 
 def get_search_core():
-    print(request.args)
+    #print(request.args)
 
     # FILENAME & EXTENSION
     filename_terms = request.args.get('filename', None)
@@ -480,7 +477,7 @@ def get_search_core():
 
         'warn_bad_tags': True,
     }
-    print(search_kwargs)
+    #print(search_kwargs)
     with warnings.catch_warnings(record=True) as catcher:
         photos = list(P.search(**search_kwargs))
         photos = [jsonify_photo(photo) for photo in photos]
