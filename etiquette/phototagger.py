@@ -746,6 +746,7 @@ class PDBPhotoMixin:
         Returns the Photo object.
         '''
         filename = os.path.abspath(filename)
+        assert os.path.isfile(filename)
         if not allow_duplicates:
             try:
                 existing = self.get_photo_by_path(filename)

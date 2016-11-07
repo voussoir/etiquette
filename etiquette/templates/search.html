@@ -1,7 +1,7 @@
 <!DOCTYPE html5>
 <html>
 <head>
-    {% import "photo_object.html" as photo_object %}
+    {% import "photo_card.html" as photo_card %}
     {% import "header.html" as header %}
     <title>Search</title>
     <meta charset="UTF-8">
@@ -16,7 +16,6 @@ form
     flex-direction: column;
     justify-content: center;
 }
-
 #error_message_area
 {
     display: flex;
@@ -46,6 +45,11 @@ form
 {
     flex: 1;
     width: auto;
+}
+.prev_next_holder
+{
+    /* Makes div match size of content */
+    overflow: auto;
 }
 .prev_page
 {
@@ -215,6 +219,10 @@ form
                 <option value="yes"{%if search_kwargs['has_tags'] == True %}selected{%endif%}>Tagged only</option>
                 <option value="no" {%if search_kwargs['has_tags'] == False %}selected{%endif%}>Untagged only</option>
             </select>
+            <select name="view" class="basic_param">
+                <option value="grid" {%if search_kwargs['view'] == "grid" %}selected{%endif%}>Grid</option>
+                <option value="list" {%if search_kwargs['view'] == "list" %}selected{%endif%}>List</option>
+            </select>
             <button type="submit" id="search_go_button" value="">Search</button>
         </form>
         {% if total_tags %}
@@ -230,7 +238,7 @@ form
         <p>You got {{photos|length}} items</p><br>
         {{prev_next_buttons()}}
         {% for photo in photos %}
-        {{photo_object.galleryview(photo)}}
+        {{photo_card.create_photo_card(photo, view=search_kwargs["view"])}}
         {% endfor %}
         {{prev_next_buttons()}}
     </div>
@@ -240,6 +248,10 @@ form
 
 
 <script type="text/javascript">
+PARAM_DEFAULTS = {
+    'limit': 50,
+    'view': 'grid',
+}
 function add_searchtag(box, value, inputted_list, li_class)
 {
     /*
@@ -391,6 +403,11 @@ function submit_search()
         var value = box.value;
         value = value.split("&").join("%26");
         console.log(value);
+        if (PARAM_DEFAULTS[boxname] == value)
+        {
+            // Don't clutter url with default values.
+            continue;
+        }
         if (boxname == "has_tags" && has_tag_params && value == "no")
         {
             /*
@@ -416,12 +433,13 @@ function submit_search()
         orderby_params.push(column + "-" + sorter);
     }
     orderby_params = orderby_params.join(",");
-    if (orderby_params)
+    if (orderby_params && orderby_params != "created-desc")
     {
+        // Don't clutter url with default of created-desc
         parameters.push("orderby=" + orderby_params);
     }
 
-    if (parameters)
+    if (parameters.length > 0)
     {
         parameters = parameters.join("&");
         parameters = "?" + parameters;

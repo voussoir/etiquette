@@ -1,7 +1,7 @@
 <!DOCTYPE html5>
 <html>
 <head>
-    {% import "photo_object.html" as photo_object %}
+    {% import "photo_card.html" as photo_card %}
     {% import "header.html" as header %}
     <title>Album {{album["title"]}}</title>
     <meta charset="UTF-8">
@@ -44,7 +44,7 @@
     <h3>Photos</h3>
     <ul>
         {% for photo in photos %}
-        {{photo_object.galleryview(photo)}}
+        {{photo_card.create_photo_card(photo)}}
         {% endfor %}
     </ul>
     {% endif %}

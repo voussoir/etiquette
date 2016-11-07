@@ -4,11 +4,24 @@
         "txt": "txt",
         "svg": "svg",
         "video": "video",
+
+        "7z": "archive",
+        "gz": "archive",
+        "rar": "archive",
+        "tar": "archive",
+        "zip": "archive",
     }
 %}
-{% macro galleryview(photo) %}
-<div class="photo_galleryview">
-    <div class="photo_galleryview_thumb">
+{% macro create_photo_card(photo, view="grid") %}
+
+{% if view == "list" %}
+<div class="photo_card_list">
+    <a target="_blank" href="/photo/{{photo["id"]}}">{{photo["filename"]}}</a>
+</div>
+
+{% else %}
+<div class="photo_card_grid">
+    <div class="photo_card_grid_thumb">
         <a target="_blank" href="/photo/{{photo["id"]}}">
             <img height="150"
         {% if photo["has_thumbnail"] %}
@@ -23,18 +36,18 @@
         {% endif %}
         </a>
     </div>
-    <div class="photo_galleryview_info">
+    <div class="photo_card_grid_info">
         <a target="_blank" href="/photo/{{photo["id"]}}">{{photo["filename"]}}</a>
-        <span class="photo_galleryview_file_metadata">
+        <span class="photo_card_grid_file_metadata">
         {% if photo["width"] %}
             {{photo["width"]}}x{{photo["height"]}},
         {% endif %}
         {% if photo["duration"] %}
             {{photo["duration_str"]}},
         {% endif %}
-        {{photo["bytestring"]}}
+        {{photo["bytes_str"]}}
         </span>
-        <span class="photo_galleryview_tags">
+        <span class="photo_card_grid_tags">
             {% if photo["tags"] %}
             {% set tags=[] %}
             {% for tag in photo["tags"] %}
@@ -45,4 +58,5 @@
         </span>
     </div>
 </div>
+{% endif %}
 {% endmacro %}

@@ -50,7 +50,8 @@ def edit_params(original, modifications):
         return ''
     new_params = ['%s=%s' % (k, v) for (k, v) in new_params.items() if v]
     new_params = '&'.join(new_params)
-    new_params = '?' + new_params
+    if new_params:
+        new_params = '?' + new_params
     return new_params
 
 def fit_into_bounds(image_width, image_height, frame_width, frame_height):

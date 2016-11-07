@@ -301,6 +301,7 @@ def get_search_core():
         limit = int(limit)
         limit = min(100, limit)
     else:
+        # Note to self: also apply to search.html template url builder.
         limit = 50
 
     # OFFSET
@@ -400,9 +401,8 @@ def get_search_core():
     else:
         prev_page_url = None
 
-    search_kwargs['extension'] = extension_string
-    search_kwargs['extension_not'] = extension_not_string
-    search_kwargs['mimetype'] = mimetype_string
+    view = request.args.get('view', 'grid')
+    search_kwargs['view'] = view
 
     final_results = {
         'next_page_url': next_page_url,

@@ -26,7 +26,7 @@ def photo(p, include_albums=True, include_tags=True):
         'bytes': p.bytes,
         'duration_str': helpers.seconds_to_hms(p.duration) if p.duration is not None else None,
         'duration': p.duration,
-        'bytestring': p.bytestring(),
+        'bytes_str': p.bytestring(),
         'has_thumbnail': bool(p.thumbnail),
         'created': p.created,
         'filename': p.basename,
