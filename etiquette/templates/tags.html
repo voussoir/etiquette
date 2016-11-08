@@ -63,7 +63,7 @@ body
         <ul>
             {% for tag in tags %}
             <li>
-                <a class="tag_object" href="/search?tag_musts={{tag[1]}}">{{tag[0]}}</a>
+                <a target="_blank" class="tag_object" href="/search?tag_musts={{tag[1]}}">{{tag[0]}}</a>
                 {% if "+" in tag[0] %}
                 <button class="remove_tag_button" onclick="delete_tag_synonym('{{tag[0]}}', receive_callback);"></button>
                 {% else %}

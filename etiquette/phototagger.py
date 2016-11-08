@@ -21,14 +21,17 @@ import helpers
 
 try:
     sys.path.append('C:\\git\\else\\Bytestring')
+    sys.path.append('C:\\git\\else\\Pathclass')
     sys.path.append('C:\\git\\else\\SpinalTap')
     import bytestring
+    import pathclass
     import spinal
 except ImportError:
     # pip install
     # https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
-    from vousoirkit import bytestring
-    from vousoirkit import spinal
+    from voussoirkit import bytestring
+    from voussoirkit import pathclass
+    from voussoirkit import spinal
 
 try:
     ffmpeg = converter.Converter(
@@ -1671,6 +1674,11 @@ class Photo(ObjectBase):
         self.created = row_tuple[SQL_PHOTO['created']]
         self.thumbnail = row_tuple[SQL_PHOTO['thumbnail']]
 
+    def __reinit__(self):
+        self.photodb.cur.execute('SELECT * FROM photos WHERE id == ?', [self.id])
+        row = self.photodb.cur.fetchone()
+        self.__init__(self.photodb, row)
+
     def __repr__(self):
         return 'Photo:{id}'.format(id=self.id)
 
@@ -1793,6 +1801,7 @@ class Photo(ObjectBase):
             log.debug('Committing - generate thumbnail')
             self.photodb.commit()
 
+        self.__reinit__()
         return self.thumbnail
 
     def has_tag(self, tag, check_children=True):
@@ -1917,20 +1926,37 @@ class Photo(ObjectBase):
             new_dir = os.path.normcase(os.path.dirname(new_abspath))
         if (new_dir != current_dir) and not move:
             raise ValueError('Cannot move the file without param move=True')
+
+        os.makedirs(new_dir, exist_ok=True)
         new_basename = os.path.basename(new_abspath)
-        os.link(self.real_filepath, new_abspath)
+
+        new_abs_norm = os.path.normcase(new_abspath)
+        current_norm = os.path.normcase(self.real_filepath)
+
+        if new_abs_norm != current_norm:
+            try:
+                os.link(self.real_filepath, new_abspath)
+            except OSError:
+                # Happens when trying to hardlink across disks
+                spinal.copy_file(self.real_filepath, new_abspath)
+
         self.photodb.cur.execute(
             'UPDATE photos SET filepath = ? WHERE filepath == ?',
             [new_abspath, self.real_filepath]
         )
+
         if commit:
-            os.remove(self.real_filepath)
+            if new_abs_norm != current_norm:
+                os.remove(self.real_filepath)
+            else:
+                os.rename(self.real_filepath, new_abspath)
+            log.debug('Committing - rename file')
             self.photodb.commit()
         else:
             queue_action = {'action': os.remove, 'args': [self.real_filepath]}
             self.photodb.on_commit_queue.append(queue_action)
-        self.real_filepath = new_abspath
-        self.basename = os.path.basename(new_abspath)
+        
+        self.__reinit__()
 
     def tags(self):
         '''
