@@ -3,6 +3,7 @@ from flask import request
 import functools
 import time
 import uuid
+import warnings
 
 def _generate_session_token():
     token = str(uuid.uuid4())
@@ -38,7 +39,7 @@ def not_implemented(function):
 
 def time_me(function):
     '''
-    Decorator. After the function is run, print the elapsed time.
+    After the function is run, print the elapsed time.
     '''
     @functools.wraps(function)
     def timed_function(*args, **kwargs):

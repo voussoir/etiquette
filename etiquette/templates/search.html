@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
     <script src="/static/common.js"></script>
-</head>
+
 <style>
 form
 {
@@ -114,6 +114,8 @@ form
     <button class="remove_tag_button_perm" onclick="orderby_remove_hook(this);"></button>
 </li>
 {% endmacro %}
+</head>
+
 
 <body>
     {{header.make_header()}}
@@ -244,7 +246,6 @@ form
     </div>
     </div>
 </body>
-</html>
 
 
 <script type="text/javascript">
@@ -526,3 +527,4 @@ input_mays.onkeydown = function(){tag_input_hook(this, inputted_mays, "search_bu
 input_forbids.onkeydown = function(){tag_input_hook(this, inputted_forbids, "search_builder_forbids_inputted")};
 bind_box_to_button(input_expression, document.getElementById("search_go_button"));
 </script>
+</html>

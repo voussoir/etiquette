@@ -6,7 +6,7 @@
     <title>Album {{album["title"]}}</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
-</head>
+
 <style>
 #content_body
 {
@@ -14,6 +14,8 @@
     display: block;
 }
 </style>
+</head>
+
 
 <body>
 {{header.make_header()}}
@@ -44,14 +46,13 @@
     <h3>Photos</h3>
     <ul>
         {% for photo in photos %}
-        {{photo_card.create_photo_card(photo)}}
+        {{photo_card.create_photo_card(photo, view=view)}}
         {% endfor %}
     </ul>
     {% endif %}
 </div>
 </body>
 
-</html>
 
 <script type="text/javascript">
 function submit_tag(callback)
@@ -60,3 +61,4 @@ function submit_tag(callback)
     add_tag_box.value = "";
 }
 </script>
+</html>

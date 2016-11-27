@@ -9,7 +9,7 @@
     {% set filename = photo["id"] + "." + photo["extension"] %}
     {% set link = "/file/" + filename %}
     {% set mimetype=photo["mimetype"] %}
-</head>
+
 <style>
 #content_body
 {
@@ -83,6 +83,8 @@
     width: 100%;
 }
 </style>
+</head>
+
 
 <body>
 {{header.make_header()}}
@@ -150,7 +152,7 @@
 </div>
 </div>
 </body>
-</html>
+
 
 <script type="text/javascript">
 var add_tag_box = document.getElementById('add_tag_textbox');
@@ -186,6 +188,7 @@ function disable_hoverzoom()
     div.style.backgroundImage = "none";
     div.onmousemove = null;
     div.onclick = null;
+    add_tag_box.focus();
 }
 function toggle_hoverzoom()
 {
@@ -199,30 +202,39 @@ function toggle_hoverzoom()
         enable_hoverzoom();
     }
 }
+
+photo_img_holder = document.getElementById("photo_img_holder");
+photo_img = document.getElementById("photo_img");
 function move_hoverzoom(event)
 {
-    div = document.getElementById("photo_img_holder");
-    img = document.getElementById("photo_img");
     var x;
     var y;
-    if (img.naturalWidth < div.offsetWidth)
+    var mouse_x = event.offsetX;
+    mouse_x -= (photo_img_holder.offsetWidth / 2);
+    mouse_x *= 1.05;
+    mouse_x += (photo_img_holder.offsetWidth / 2);
+    var mouse_y = event.offsetY;
+    mouse_y -= (photo_img_holder.offsetHeight / 2);
+    mouse_y *= 1.05;
+    mouse_y += (photo_img_holder.offsetHeight / 2);
+    if (photo_img.naturalWidth < photo_img_holder.offsetWidth)
     {
-        x = (img.naturalWidth - div.offsetWidth) / 2;
+        x = (photo_img.naturalWidth - photo_img_holder.offsetWidth) / 2;
     }
     else
     {
-        x = (img.naturalWidth - div.offsetWidth) * (event.offsetX / div.offsetWidth);
+        x = (photo_img.naturalWidth - photo_img_holder.offsetWidth) * (mouse_x / photo_img_holder.offsetWidth);
     }
-    if (img.naturalHeight < div.offsetHeight)
+    if (photo_img.naturalHeight < photo_img_holder.offsetHeight)
     {
-        y = (img.naturalHeight - div.offsetHeight) / 2;
+        y = (photo_img.naturalHeight - photo_img_holder.offsetHeight) / 2;
     }
     else
     {
-        y = (img.naturalHeight - div.offsetHeight) * (event.offsetY / div.offsetHeight);
+        y = (photo_img.naturalHeight - photo_img_holder.offsetHeight) * (mouse_y / photo_img_holder.offsetHeight);
     }
     //console.log(x);
-    div.style.backgroundPosition=(-x)+"px "+(-y)+"px";
+    photo_img_holder.style.backgroundPosition=(-x)+"px "+(-y)+"px";
 }
 function receive_callback(response)
 {
@@ -253,3 +265,4 @@ function submit_tag(callback)
     add_tag_box.value = "";
 }
 </script>
+</html>

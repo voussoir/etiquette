@@ -194,6 +194,7 @@ def get_album_html(albumid):
         'album.html',
         album=album,
         photos=album['photos'],
+        view=request.args.get('view', 'grid'),
     )
     return response
 
@@ -403,6 +404,9 @@ def get_search_core():
 
     view = request.args.get('view', 'grid')
     search_kwargs['view'] = view
+    search_kwargs['extension'] = extension_string
+    search_kwargs['extension_not'] = extension_not_string
+    search_kwargs['mimetype'] = mimetype_string
 
     final_results = {
         'next_page_url': next_page_url,
@@ -604,4 +608,5 @@ def post_edit_tags():
 
 
 if __name__ == '__main__':
-    site.run(threaded=True)
+    #site.run(threaded=True)
+    pass

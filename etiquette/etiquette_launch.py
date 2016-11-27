@@ -1,5 +1,5 @@
-from gevent import monkey
-monkey.patch_all()
+import gevent.monkey
+gevent.monkey.patch_all()
 
 import etiquette
 import gevent.pywsgi
@@ -13,13 +13,17 @@ else:
 
 if port == 443:
     http = gevent.pywsgi.WSGIServer(
-        ('', port),
-        etiquette.site,
-        keyfile='https\\etiquette.key',
-        certfile='https\\etiquette.crt',
+        listener=('', port),
+        application=etiquette.site,
+        keyfile='C:\\git\\etiquette\\etiquette\\https\\etiquette.key',
+        certfile='C:\\git\\etiquette\\etiquette\\https\\etiquette.crt',
     )
 else:
-    http = gevent.wsgi.WSGIServer(('', port), etiquette.site)
+    http = gevent.pywsgi.WSGIServer(
+        listener=('', port),
+        application=etiquette.site,
+    )
+
 
 print('Starting server')
 http.serve_forever()

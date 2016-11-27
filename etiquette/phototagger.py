@@ -44,7 +44,7 @@ except converter.ffmpeg.FFMpegError:
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
-logging.getLogger("PIL.PngImagePlugin").setLevel(logging.WARNING)
+logging.getLogger('PIL.PngImagePlugin').setLevel(logging.WARNING)
 
 SQL_LASTID_COLUMNS = [
     'table',
@@ -55,7 +55,7 @@ SQL_ALBUM_COLUMNS = [
     'id',
     'title',
     'description',
-    'associated_directory'
+    'associated_directory',
 ]
 SQL_PHOTO_COLUMNS = [
     'id',
@@ -1576,14 +1576,18 @@ class Album(ObjectBase, GroupableMixin):
             log.debug('Committing - add photo to album')
             self.photodb.commit()
 
-    def add_tag_to_all(self, tag, nested_children=True):
+    def add_tag_to_all(self, tag, nested_children=True, commit=True):
         tag = self.photodb.get_tag(tag)
         if nested_children:
             photos = self.walk_photos()
         else:
             photos = self.photos()
         for photo in photos:
-            photo.add_tag(tag)
+            photo.add_tag(tag, commit=False)
+
+        if commit:
+            log.debug('Committing - add tag to all')
+            self.photodb.commit()
 
     def delete(self, delete_children=False, commit=True):
         log.debug('Deleting album {album:r}'.format(album=self))
@@ -1673,8 +1677,12 @@ class Photo(ObjectBase):
         self.duration = row_tuple[SQL_PHOTO['duration']]
         self.created = row_tuple[SQL_PHOTO['created']]
         self.thumbnail = row_tuple[SQL_PHOTO['thumbnail']]
+        self.real_path = pathclass.Path(self.real_filepath)
 
     def __reinit__(self):
+        '''
+        Reload the row from the database and do __init__ with them.
+        '''
         self.photodb.cur.execute('SELECT * FROM photos WHERE id == ?', [self.id])
         row = self.photodb.cur.fetchone()
         self.__init__(self.photodb, row)
@@ -1915,45 +1923,51 @@ class Photo(ObjectBase):
         If `move` is True, allow this operation to move the file.
         Otherwise, slashes will be considered an error.
         '''
-        current_dir = os.path.normcase(os.path.dirname(self.real_filepath))
+        old_path = self.real_path
+        old_path.correct_case()
+
         new_filename = normalize_filepath(new_filename)
-        new_dir = os.path.normcase(os.path.dirname(new_filename))
-        if new_dir == '':
-            new_dir = current_dir
-            new_abspath = os.path.join(new_dir, new_filename)
+        if os.path.dirname(new_filename) == '':
+            new_path = old_path.parent.with_child(new_filename)
         else:
-            new_abspath = os.path.abspath(new_filename)
-            new_dir = os.path.normcase(os.path.dirname(new_abspath))
-        if (new_dir != current_dir) and not move:
+            new_path = pathclass.Path(new_filename)
+        new_path.correct_case()
+
+        log.debug(old_path)
+        log.debug(new_path)
+        if (new_path.parent != old_path.parent) and not move:
             raise ValueError('Cannot move the file without param move=True')
 
-        os.makedirs(new_dir, exist_ok=True)
-        new_basename = os.path.basename(new_abspath)
+        if new_path.absolute_path == old_path.absolute_path:
+            raise ValueError('The new and old names are the same')
 
-        new_abs_norm = os.path.normcase(new_abspath)
-        current_norm = os.path.normcase(self.real_filepath)
+        os.makedirs(new_path.parent.absolute_path, exist_ok=True)
 
-        if new_abs_norm != current_norm:
+        if new_path != old_path:
+            # This is different than the absolute == absolute check above, because this normalizes
+            # the paths. It's possible on case-insensitive systems to have the paths point to the
+            # same place while being differently cased, thus we couldn't make the intermediate link.
             try:
-                os.link(self.real_filepath, new_abspath)
+                os.link(old_path.absolute_path, new_path.absolute_path)
             except OSError:
-                # Happens when trying to hardlink across disks
-                spinal.copy_file(self.real_filepath, new_abspath)
+                spinal.copy_file(old_path, new_path)
 
         self.photodb.cur.execute(
             'UPDATE photos SET filepath = ? WHERE filepath == ?',
-            [new_abspath, self.real_filepath]
+            [new_path.absolute_path, old_path.absolute_path]
         )
 
         if commit:
-            if new_abs_norm != current_norm:
-                os.remove(self.real_filepath)
+            if new_path == old_path:
+                # If they are equivalent but differently cased paths, just rename.
+                os.rename(old_path.absolute_path, new_path.absolute_path)
             else:
-                os.rename(self.real_filepath, new_abspath)
+                # Delete the original hardlink or copy.
+                os.remove(old_path.absolute_path)
             log.debug('Committing - rename file')
             self.photodb.commit()
         else:
-            queue_action = {'action': os.remove, 'args': [self.real_filepath]}
+            queue_action = {'action': os.remove, 'args': [old_path.absolute_path]}
             self.photodb.on_commit_queue.append(queue_action)
         
         self.__reinit__()
