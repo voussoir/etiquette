@@ -70,6 +70,7 @@ SQL_PHOTO_COLUMNS = [
     'bytes',
     'created',
     'thumbnail',
+    'tagged_at',
 ]
 SQL_TAG_COLUMNS = [
     'id',
@@ -101,7 +102,10 @@ SQL_SYN = {key:index for (index, key) in enumerate(SQL_SYN_COLUMNS)}
 SQL_TAG = {key:index for (index, key) in enumerate(SQL_TAG_COLUMNS)}
 SQL_TAGGROUP = {key:index for (index, key) in enumerate(SQL_TAGGROUP_COLUMNS)}
 
-DATABASE_VERSION = 1
+# Note: Setting user_version pragma in init sequence is safe because it only
+# happens after the out-of-date check occurs, so no chance of accidentally
+# overwriting it.
+DATABASE_VERSION = 2
 DB_INIT = '''
 PRAGMA count_changes = OFF;
 PRAGMA cache_size = 10000;
@@ -124,7 +128,8 @@ CREATE TABLE IF NOT EXISTS photos(
     duration INT,
     bytes INT,
     created INT,
-    thumbnail TEXT
+    thumbnail TEXT,
+    tagged_at INT
 );
 CREATE TABLE IF NOT EXISTS tags(
     id TEXT,
@@ -180,6 +185,18 @@ CREATE INDEX IF NOT EXISTS index_grouprel_parentid on tag_group_rel(parentid);
 CREATE INDEX IF NOT EXISTS index_grouprel_memberid on tag_group_rel(memberid);
 '''.format(user_version=DATABASE_VERSION)
 
+ALLOWED_ORDERBY_COLUMNS = [
+    'extension',
+    'width',
+    'height',
+    'ratio',
+    'area',
+    'duration',
+    'bytes',
+    'created',
+    'tagged_at',
+    'random',
+]
 
 def _helper_extension(ext):
     '''
@@ -240,18 +257,7 @@ def _helper_orderby(orderby):
         return None
 
     #print(column, sorter)
-    sortable = column in [
-        'extension',
-        'width',
-        'height',
-        'ratio',
-        'area',
-        'duration',
-        'bytes',
-        'created',
-        'random',
-    ]
-    if not sortable:
+    if column not in ALLOWED_ORDERBY_COLUMNS:
         warnings.warn(constants.WARNING_ORDERBY_BADCOL.format(column=column))
         return None
     if column == 'random':
@@ -1666,6 +1672,7 @@ class Photo(ObjectBase):
         self.id = row_tuple[SQL_PHOTO['id']]
         self.real_filepath = row_tuple[SQL_PHOTO['filepath']]
         self.real_filepath = normalize_filepath(self.real_filepath)
+        self.real_path = pathclass.Path(self.real_filepath)
         self.filepath = row_tuple[SQL_PHOTO['override_filename']] or self.real_filepath
         self.basename = row_tuple[SQL_PHOTO['override_filename']] or os.path.basename(self.real_filepath)
         self.extension = row_tuple[SQL_PHOTO['extension']]
@@ -1677,7 +1684,7 @@ class Photo(ObjectBase):
         self.duration = row_tuple[SQL_PHOTO['duration']]
         self.created = row_tuple[SQL_PHOTO['created']]
         self.thumbnail = row_tuple[SQL_PHOTO['thumbnail']]
-        self.real_path = pathclass.Path(self.real_filepath)
+        self.tagged_at = row_tuple[SQL_PHOTO['tagged_at']]
 
     def __reinit__(self):
         '''
@@ -1709,9 +1716,10 @@ class Photo(ObjectBase):
                 log.debug('Preferring new {tag:s} over {par:s}'.format(tag=tag, par=parent))
                 self.remove_tag(parent)
 
-
         log.debug('Applying tag {tag:s} to photo {pho:s}'.format(tag=tag, pho=self))
+        now = int(getnow())
         self.photodb.cur.execute('INSERT INTO photo_tag_rel VALUES(?, ?)', [self.id, tag.id])
+        self.photodb.cur.execute('UPDATE photos SET tagged_at = ? WHERE id == ?', [now, self.id])
         if commit:
             log.debug('Committing - add photo tag')
             self.photodb.commit()
@@ -1913,6 +1921,8 @@ class Photo(ObjectBase):
                 'DELETE FROM photo_tag_rel WHERE photoid == ? AND tagid == ?',
                 [self.id, tag.id]
             )
+        now = int(getnow())
+        self.photodb.cur.execute('UPDATE photos SET tagged_at = ? WHERE id == ?', [now, self.id])
         if commit:
             log.debug('Committing - remove photo tag')
             self.photodb.commit()

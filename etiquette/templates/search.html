@@ -98,14 +98,15 @@ form
 {% macro create_orderby_li(selected_column, selected_sorter) %}
 <li class="search_builder_orderby_li">
     <select>
-        <option value="created"  {%if selected_column=="created"%}selected{%endif%}  >Creation date</option>
-        <option value="area"     {%if selected_column=="area"%}selected{%endif%}     >Area</option>
-        <option value="width"    {%if selected_column=="width"%}selected{%endif%}    >Width</option>
-        <option value="height"   {%if selected_column=="height"%}selected{%endif%}   >Height</option>
-        <option value="ratio"    {%if selected_column=="ratio"%}selected{%endif%}    >Aspect Ratio</option>
-        <option value="bytes"    {%if selected_column=="bytes"%}selected{%endif%}    >File size</option>
-        <option value="duration" {%if selected_column=="duration"%}selected{%endif%} >Duration</option>
-        <option value="random"   {%if selected_column=="random"%}selected{%endif%}   >Random</option>
+        <option value="created"   {%if selected_column=="created"%}selected{%endif%}  >Creation date</option>
+        <option value="area"      {%if selected_column=="area"%}selected{%endif%}     >Area</option>
+        <option value="width"     {%if selected_column=="width"%}selected{%endif%}    >Width</option>
+        <option value="height"    {%if selected_column=="height"%}selected{%endif%}   >Height</option>
+        <option value="ratio"     {%if selected_column=="ratio"%}selected{%endif%}    >Aspect Ratio</option>
+        <option value="bytes"     {%if selected_column=="bytes"%}selected{%endif%}    >File size</option>
+        <option value="duration"  {%if selected_column=="duration"%}selected{%endif%} >Duration</option>
+        <option value="tagged_at" {%if selected_column=="tagged_at"%}selected{%endif%}>Recently tagged</option>
+        <option value="random"    {%if selected_column=="random"%}selected{%endif%}   >Random</option>
     </select>
     <select>
         <option value="desc" {%if selected_sorter=="desc"%}selected{%endif%} >Descending</option>

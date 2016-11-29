@@ -235,6 +235,11 @@ def get_albums_json():
     return make_json_response(albums)
 
 
+@site.route('/bookmarks')
+def get_bookmarks():
+    return flask.render_template('bookmarks.html')
+
+
 @site.route('/file/<photoid>')
 def get_file(photoid):
     requested_photoid = photoid
@@ -327,7 +332,6 @@ def get_search_core():
     orderby = request.args.get('orderby', None)
     if orderby:
         orderby = orderby.replace('-', ' ')
-        orderby = orderby.replace('_', ' ')
         orderby = orderby.split(',')
     else:
         orderby = None
