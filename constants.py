@@ -1,5 +1,18 @@
 import string
 
+ALLOWED_ORDERBY_COLUMNS = [
+    'extension',
+    'width',
+    'height',
+    'ratio',
+    'area',
+    'duration',
+    'bytes',
+    'created',
+    'tagged_at',
+    'random',
+]
+
 # Errors and warnings
 ERROR_DATABASE_OUTOFDATE = 'Database is out-of-date. {current} should be {new}. Please use etiquette_upgrader.py'
 ERROR_INVALID_ACTION = 'Invalid action'
@@ -21,7 +34,7 @@ VALID_TAG_CHARS = string.ascii_lowercase + string.digits + '_'
 
 DEFAULT_ID_LENGTH = 12
 DEFAULT_DBNAME = 'phototagger.db'
-DEFAULT_THUMBDIR = '_etiquette\\site_thumbnails'
+DEFAULT_DATADIR = '.\\_etiquette'
 DEFAULT_DIGEST_EXCLUDE_FILES = [
     DEFAULT_DBNAME,
     'desktop.ini',

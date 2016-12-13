@@ -25,5 +25,5 @@ else:
     )
 
 
-print('Starting server')
+print('Starting server on port %d' % port)
 http.serve_forever()

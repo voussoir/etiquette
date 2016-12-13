@@ -17,21 +17,14 @@ import warnings
 
 import constants
 import decorators
+import exceptions
 import helpers
 
-try:
-    sys.path.append('C:\\git\\else\\Bytestring')
-    sys.path.append('C:\\git\\else\\Pathclass')
-    sys.path.append('C:\\git\\else\\SpinalTap')
-    import bytestring
-    import pathclass
-    import spinal
-except ImportError:
-    # pip install
-    # https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
-    from voussoirkit import bytestring
-    from voussoirkit import pathclass
-    from voussoirkit import spinal
+# pip install
+# https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
+from voussoirkit import bytestring
+from voussoirkit import pathclass
+from voussoirkit import spinal
 
 try:
     ffmpeg = converter.Converter(
@@ -185,163 +178,10 @@ CREATE INDEX IF NOT EXISTS index_grouprel_parentid on tag_group_rel(parentid);
 CREATE INDEX IF NOT EXISTS index_grouprel_memberid on tag_group_rel(memberid);
 '''.format(user_version=DATABASE_VERSION)
 
-ALLOWED_ORDERBY_COLUMNS = [
-    'extension',
-    'width',
-    'height',
-    'ratio',
-    'area',
-    'duration',
-    'bytes',
-    'created',
-    'tagged_at',
-    'random',
-]
-
-def _helper_extension(ext):
-    '''
-    When searching, this function normalizes the list of permissible extensions.
-    '''
-    if isinstance(ext, str):
-        ext = [ext]
-    if ext is None:
-        return set()
-    ext = [e.lower().strip('.') for e in ext]
-    ext = [e for e in ext if e]
-    ext = set(ext)
-    return ext
 
 def _helper_filenamefilter(subject, terms):
     basename = subject.lower()
     return all(term in basename for term in terms)
-
-def _helper_minmax(key, value, minimums, maximums):
-    '''
-    When searching, this function dissects a hyphenated range string
-    and inserts the correct k:v pair into both minimums and maximums.
-    '''
-    if value is None:
-        return
-    if isinstance(value, (int, float)):
-        minimums[key] = value
-        return
-    try:
-        (low, high) = hyphen_range(value)
-    except ValueError:
-        warnings.warn(constants.WARNING_MINMAX_INVALID.format(field=key, value=value))
-        return
-    except OutOfOrder as e:
-        warnings.warn(constants.WARNING_MINMAX_OOO.format(field=key, min=e.args[1], max=e.args[2]))
-        return
-    if low is not None:
-        minimums[key] = low
-    if high is not None:
-        maximums[key] = high
-
-def _helper_orderby(orderby):
-    '''
-    When searching, this function ensures that the user has entered a valid orderby
-    query, and normalizes the query text.
-    '''
-    orderby = orderby.lower().strip()
-    if orderby == '':
-        return None
-
-    orderby = orderby.split(' ')
-    if len(orderby) == 2:
-        (column, sorter) = orderby
-    elif len(orderby) == 1:
-        column = orderby[0]
-        sorter = 'desc'
-    else:
-        return None
-
-    #print(column, sorter)
-    if column not in ALLOWED_ORDERBY_COLUMNS:
-        warnings.warn(constants.WARNING_ORDERBY_BADCOL.format(column=column))
-        return None
-    if column == 'random':
-        column = 'RANDOM()'
-
-    if sorter not in ['desc', 'asc']:
-        warnings.warn(constants.WARNING_ORDERBY_BADSORTER.format(column=column, sorter=sorter))
-        sorter = 'desc'
-    return (column, sorter)
-
-def _helper_setify(photodb, l, warn_bad_tags=False):
-    '''
-    When searching, this function converts the list of tag strings that the user
-    requested into Tag objects. If a tag doesn't exist we'll either raise an exception
-    or just issue a warning.
-    '''
-    if l is None:
-        return set()
-
-    s = set()
-    for tag in l:
-        tag = tag.strip()
-        if tag == '':
-            continue
-        try:
-            tag = photodb.get_tag(tag)
-        except NoSuchTag:
-            if not warn_bad_tags:
-                raise
-            warnings.warn(constants.WARNING_NO_SUCH_TAG.format(tag=tag))
-            continue
-        else:
-            s.add(tag)
-    return s
-
-def _helper_unitconvert(value):
-    '''
-    When parsing hyphenated ranges, this function is used to convert
-    strings like "1k" to 1024 and "1:00" to 60.
-    '''
-    if value is None:
-        return None
-    if ':' in value:
-        return helpers.hms_to_seconds(value)
-    elif all(c in '0123456789.' for c in value):
-        return float(value)
-    else:
-        return bytestring.parsebytes(value)
-
-def hyphen_range(s):
-    '''
-    Given a string like '1-3', return ints (1, 3) representing lower
-    and upper bounds.
-
-    Supports bytestring.parsebytes and hh:mm:ss format.
-    '''
-    s = s.strip()
-    s = s.replace(' ', '')
-    if not s:
-        return (None, None)
-    parts = s.split('-')
-    parts = [part.strip() or None for part in parts]
-    if len(parts) == 1:
-        low = parts[0]
-        high = None
-    elif len(parts) == 2:
-        (low, high) = parts
-    else:
-        raise ValueError('Too many hyphens')
-
-    low = _helper_unitconvert(low)
-    high = _helper_unitconvert(high)
-    if low is not None and high is not None and low > high:
-        raise OutOfOrder(s, low, high)
-    return low, high
-
-def get_mimetype(filepath):
-    extension = os.path.splitext(filepath)[1].replace('.', '')
-    if extension in constants.ADDITIONAL_MIMETYPES:
-        return constants.ADDITIONAL_MIMETYPES[extension]
-    mimetype = mimetypes.guess_type(filepath)[0]
-    if mimetype is not None:
-        mimetype = mimetype.split('/')[0]
-    return mimetype
 
 def getnow(timestamp=True):
     '''
@@ -376,9 +216,9 @@ def normalize_tagname(tagname):
     tagname = ''.join(tagname)
 
     if len(tagname) < constants.MIN_TAG_NAME_LENGTH:
-        raise TagTooShort(tagname)
+        raise exceptions.TagTooShort(tagname)
     if len(tagname) > constants.MAX_TAG_NAME_LENGTH:
-        raise TagTooLong(tagname)
+        raise exceptions.TagTooLong(tagname)
 
     return tagname
 
@@ -437,9 +277,9 @@ def searchfilter_expression(photo_tags, expression, frozen_children, warn_bad_ta
                 value = any(option in photo_tags for option in frozen_children[token])
             except KeyError:
                 if warn_bad_tags:
-                    warnings.warn(constants.NO_SUCH_TAG.format(tag=token))
+                    warnings.warn(constants.WARNING_NO_SUCH_TAG.format(tag=token))
                 else:
-                    raise NoSuchTag(token)
+                    raise exceptions.NoSuchTag(token)
                 return False
             operand_stack.append(value)
             if has_operand:
@@ -573,50 +413,6 @@ def tag_export_totally_flat(tags):
                 result[synonym] = children
     return result
 
-####################################################################################################
-####################################################################################################
-
-class CantSynonymSelf(Exception):
-    pass
-
-class NoSuchAlbum(Exception):
-    pass
-
-class NoSuchGroup(Exception):
-    pass
-
-class NoSuchPhoto(Exception):
-    pass
-
-class NoSuchSynonym(Exception):
-    pass
-
-class NoSuchTag(Exception):
-    pass
-
-
-class PhotoExists(Exception):
-    pass
-
-class TagExists(Exception):
-    pass
-
-class GroupExists(Exception):
-    pass
-
-
-class TagTooLong(Exception):
-    pass
-
-class TagTooShort(Exception):
-    pass
-
-class XORException(Exception):
-    pass
-
-class OutOfOrder(Exception):
-    pass
-
 
 ####################################################################################################
 ####################################################################################################
@@ -632,15 +428,16 @@ class PDBAlbumMixin:
         '''
         filepath = os.path.abspath(filepath)
         self.cur.execute('SELECT * FROM albums WHERE associated_directory == ?', [filepath])
-        f = self.cur.fetchone()
-        if f is None:
-            raise NoSuchAlbum(filepath)
-        return self.get_album(f[SQL_ALBUM['id']])
+        fetch = self.cur.fetchone()
+        if fetch is None:
+            raise exceptions.NoSuchAlbum(filepath)
+        return self.get_album(fetch[SQL_ALBUM['id']])
 
     def get_albums(self):
         yield from self.get_things(thing_type='album')
 
-    def new_album(self,
+    def new_album(
+            self,
             associated_directory=None,
             commit=True,
             description=None,
@@ -691,7 +488,7 @@ class PDBPhotoMixin:
         self.cur.execute('SELECT * FROM photos WHERE filepath == ?', [filepath])
         fetch = self.cur.fetchone()
         if fetch is None:
-            raise_no_such_thing(NoSuchPhoto, thing_name=filepath)
+            raise_no_such_thing(exceptions.NoSuchPhoto, thing_name=filepath)
         photo = Photo(self, fetch)
         return photo
 
@@ -706,10 +503,10 @@ class PDBPhotoMixin:
         temp_cur = self.sql.cursor()
         temp_cur.execute('SELECT * FROM photos ORDER BY created DESC')
         while True:
-            f = temp_cur.fetchone()
-            if f is None:
+            fetch = temp_cur.fetchone()
+            if fetch is None:
                 break
-            photo = Photo(self, f)
+            photo = Photo(self, fetch)
 
             yield photo
 
@@ -750,7 +547,7 @@ class PDBPhotoMixin:
         database. Tags may be applied now or later.
 
         If `allow_duplicates` is False, we will first check the database for any files
-        with the same path and raise PhotoExists if found.
+        with the same path and raise exceptions.PhotoExists if found.
 
         Returns the Photo object.
         '''
@@ -759,10 +556,10 @@ class PDBPhotoMixin:
         if not allow_duplicates:
             try:
                 existing = self.get_photo_by_path(filename)
-            except NoSuchPhoto:
+            except exceptions.NoSuchPhoto:
                 pass
             else:
-                exc = PhotoExists(filename, existing)
+                exc = exceptions.PhotoExists(filename, existing)
                 exc.photo = existing
                 raise exc
 
@@ -874,7 +671,7 @@ class PDBPhotoMixin:
         QUERY OPTIONS
         warn_bad_tags:
             If a tag is not found, issue a warning but continue the search.
-            Otherwise, a NoSuchTag exception would be raised.
+            Otherwise, a exceptions.NoSuchTag exception would be raised.
 
         limit:
             The maximum number of *successful* results to yield.
@@ -890,18 +687,18 @@ class PDBPhotoMixin:
         start_time = time.time()
         maximums = {}
         minimums = {}
-        _helper_minmax('area', area, minimums, maximums)
-        _helper_minmax('created', created, minimums, maximums)
-        _helper_minmax('width', width, minimums, maximums)
-        _helper_minmax('height', height, minimums, maximums)
-        _helper_minmax('ratio', ratio, minimums, maximums)
-        _helper_minmax('bytes', bytes, minimums, maximums)
-        _helper_minmax('duration', duration, minimums, maximums)
+        helpers._minmax('area', area, minimums, maximums)
+        helpers._minmax('created', created, minimums, maximums)
+        helpers._minmax('width', width, minimums, maximums)
+        helpers._minmax('height', height, minimums, maximums)
+        helpers._minmax('ratio', ratio, minimums, maximums)
+        helpers._minmax('bytes', bytes, minimums, maximums)
+        helpers._minmax('duration', duration, minimums, maximums)
         orderby = orderby or []
 
-        extension = _helper_extension(extension)
-        extension_not = _helper_extension(extension_not)
-        mimetype = _helper_extension(mimetype)
+        extension = helpers._normalize_extensions(extension)
+        extension_not = helpers._normalize_extensions(extension_not)
+        mimetype = helpers._normalize_extensions(mimetype)
 
         if filename is not None:
             if not isinstance(filename, str):
@@ -909,14 +706,14 @@ class PDBPhotoMixin:
             filename = set(term.lower() for term in filename.strip().split(' '))
 
         if (tag_musts or tag_mays or tag_forbids) and tag_expression:
-            raise XORException('Expression filter cannot be used with musts, mays, forbids')
+            raise exceptions.NotExclusive('Expression filter cannot be used with musts, mays, forbids')
 
-        tag_musts = _helper_setify(self, tag_musts, warn_bad_tags=warn_bad_tags)
-        tag_mays = _helper_setify(self, tag_mays, warn_bad_tags=warn_bad_tags)
-        tag_forbids = _helper_setify(self, tag_forbids, warn_bad_tags=warn_bad_tags)
+        tag_musts = helpers._setify_tags(photodb=self, tags=tag_musts, warn_bad_tags=warn_bad_tags)
+        tag_mays = helpers._setify_tags(photodb=self, tags=tag_mays, warn_bad_tags=warn_bad_tags)
+        tag_forbids = helpers._setify_tags(photodb=self, tags=tag_forbids, warn_bad_tags=warn_bad_tags)
 
         query = 'SELECT * FROM photos'
-        orderby = [_helper_orderby(o) for o in orderby]
+        orderby = [helpers._orderby(o) for o in orderby]
         orderby = [o for o in orderby if o]
         if orderby:
             whereable_columns = [o[0] for o in orderby if o[0] != 'RANDOM()']
@@ -1025,14 +822,14 @@ class PDBTagMixin:
         Redirect to get_tag_by_id or get_tag_by_name after xor-checking the parameters.
         '''
         if not helpers.is_xor(id, name):
-            raise XORException('One and only one of `id`, `name` can be passed.')
+            raise exceptions.NotExclusive('One and only one of `id`, `name` can be passed.')
 
         if id is not None:
             return self.get_tag_by_id(id)
         elif name is not None:
             return self.get_tag_by_name(name)
         else:
-            raise_no_such_thing(NoSuchTag, thing_id=id, thing_name=name)
+            raise_no_such_thing(exceptions.NoSuchTag, thing_id=id, thing_name=name)
 
     def get_tag_by_id(self, id):
         return self.get_thing_by_id('tag', thing_id=id)
@@ -1055,7 +852,7 @@ class PDBTagMixin:
             fetch = self.cur.fetchone()
             if fetch is None:
                 # was not a top tag or synonym
-                raise_no_such_thing(NoSuchTag, thing_name=tagname)
+                raise_no_such_thing(exceptions.NoSuchTag, thing_name=tagname)
             tagname = fetch[SQL_SYN['master']]
 
     def get_tags(self):
@@ -1068,10 +865,10 @@ class PDBTagMixin:
         tagname = normalize_tagname(tagname)
         try:
             self.get_tag_by_name(tagname)
-        except NoSuchTag:
+        except exceptions.NoSuchTag:
             pass
         else:
-            raise TagExists(tagname)
+            raise exceptions.TagExists(tagname)
 
         tagid = self.generate_id('tags')
         self._cached_frozen_children = None
@@ -1121,10 +918,17 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
     '''
     def __init__(
             self,
-            databasename=constants.DEFAULT_DBNAME,
-            thumbnail_folder=constants.DEFAULT_THUMBDIR,
-            id_length=constants.DEFAULT_ID_LENGTH,
+            databasename=None,
+            data_directory=None,
+            id_length=None,
         ):
+        if databasename is None:
+            databasename = constants.DEFAULT_DBNAME
+        if data_directory is None:
+            data_directory = constants.DEFAULT_DATADIR
+        if id_length is None:
+            id_length = constants.DEFAULT_ID_LENGTH
+
         self.databasename = databasename
         self.database_abspath = os.path.abspath(databasename)
         existing_database = os.path.exists(databasename)
@@ -1143,8 +947,11 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         for statement in statements:
             self.cur.execute(statement)
 
-        self.thumbnail_folder = os.path.abspath(thumbnail_folder)
-        os.makedirs(thumbnail_folder, exist_ok=True)
+
+        self.data_directory = data_directory
+        self.thumbnail_folder = os.path.join(data_directory, 'site_thumbnails')
+        self.thumbnail_folder = os.path.abspath(self.thumbnail_folder)
+        os.makedirs(self.thumbnail_folder, exist_ok=True)
 
         self.id_length = id_length
 
@@ -1189,7 +996,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         )
         try:
             album = self.get_album_by_path(directory.absolute_path)
-        except NoSuchAlbum:
+        except exceptions.NoSuchAlbum:
             album = self.new_album(
                 associated_directory=directory.absolute_path,
                 commit=False,
@@ -1202,7 +1009,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             if current_album is None:
                 try:
                     current_album = self.get_album_by_path(current_location.absolute_path)
-                except NoSuchAlbum:
+                except exceptions.NoSuchAlbum:
                     current_album = self.new_album(
                         associated_directory=current_location.absolute_path,
                         commit=False,
@@ -1213,13 +1020,13 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
                 parent = albums[current_location.parent.absolute_path]
                 try:
                     parent.add(current_album, commit=False)
-                except GroupExists:
+                except exceptions.GroupExists:
                     pass
                 #print('Added to %s' % parent.title)
             for filepath in files:
                 try:
                     photo = self.new_photo(filepath.absolute_path, commit=False)
-                except PhotoExists as e:
+                except exceptions.PhotoExists as e:
                     photo = e.photo
                 current_album.add_photo(photo, commit=False)
 
@@ -1259,7 +1066,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             filepath = filepath.absolute_path
             try:
                 photo = self.get_photo_by_path(filepath)
-            except NoSuchPhoto:
+            except exceptions.NoSuchPhoto:
                 pass
             else:
                 continue
@@ -1282,7 +1089,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             try:
                 item = self.get_tag(name)
                 note = ('existing_tag', item.qualified_name())
-            except NoSuchTag:
+            except exceptions.NoSuchTag:
                 item = self.new_tag(name)
                 note = ('new_tag', item.qualified_name())
             output_notes.append(note)
@@ -1330,7 +1137,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
                     lower.join_group(higher)
                     note = ('join_group', '%s.%s' % (higher.name, lower.name))
                     output_notes.append(note)
-                except GroupExists:
+                except exceptions.GroupExists:
                     pass
             tag = tags[-1]
 
@@ -1340,7 +1147,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
                 note = ('new_synonym', '%s+%s' % (tag.name, synonym))
                 output_notes.append(note)
                 print('New syn %s' % synonym)
-            except TagExists:
+            except exceptions.TagExists:
                 pass
         return output_notes
 
@@ -1405,19 +1212,19 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             'album':
             {
                 'class': Album,
-                'exception': NoSuchAlbum,
+                'exception': exceptions.NoSuchAlbum,
                 'table': 'albums',
             },
             'tag':
             {
                 'class': Tag,
-                'exception': NoSuchTag,
+                'exception': exceptions.NoSuchTag,
                 'table': 'tags',
             },
             'photo':
             {
                 'class': Photo,
-                'exception': NoSuchPhoto,
+                'exception': exceptions.NoSuchPhoto,
                 'table': 'photos',
             },
         }[thing_type]
@@ -1447,7 +1254,7 @@ class GroupableMixin:
         '''
         Add a Tag object to this group.
 
-        If that object is already a member of another group, a GroupExists is raised.
+        If that object is already a member of another group, a exceptions.GroupExists is raised.
         '''
         if not isinstance(member, type(self)):
             raise TypeError('Member must be of type %s' % type(self))
@@ -1459,7 +1266,7 @@ class GroupableMixin:
                 that_group = self
             else:
                 that_group = self.group_getter(id=fetch[SQL_TAGGROUP['parentid']])
-            raise GroupExists('%s already in group %s' % (member.name, that_group.name))
+            raise exceptions.GroupExists('%s already in group %s' % (member.name, that_group.name))
 
         self.photodb._cached_frozen_children = None
         self.photodb.cur.execute('INSERT INTO tag_group_rel VALUES(?, ?)', [self.id, member.id])
@@ -1740,7 +1547,7 @@ class Photo(ObjectBase):
         for tag in other_photo.tags():
             self.add_tag(tag)
 
-    def delete(self, commit=True):
+    def delete(self, delete_file=False, commit=True):
         '''
         Delete the Photo and its relation to any tags and albums.
         '''
@@ -1748,6 +1555,14 @@ class Photo(ObjectBase):
         self.photodb.cur.execute('DELETE FROM photos WHERE id == ?', [self.id])
         self.photodb.cur.execute('DELETE FROM photo_tag_rel WHERE photoid == ?', [self.id])
         self.photodb.cur.execute('DELETE FROM album_photo_rel WHERE photoid == ?', [self.id])
+
+        if delete_file:
+            path = self.real_path.absolute_path
+            if commit:
+                os.remove(path)
+            else:
+                queue_action = {'action': os.remove, 'args': [path]}
+                self.photodb.on_commit_queue.append(queue_action)
         if commit:
             log.debug('Committing - delete photo')
             self.photodb.commit()
@@ -1856,7 +1671,7 @@ class Photo(ObjectBase):
         return hopeful_filepath
 
     def mimetype(self):
-        return get_mimetype(self.real_filepath)
+        return helpers.get_mimetype(self.real_filepath)
 
     @decorators.time_me
     def reload_metadata(self, commit=True):
@@ -1979,7 +1794,7 @@ class Photo(ObjectBase):
         else:
             queue_action = {'action': os.remove, 'args': [old_path.absolute_path]}
             self.photodb.on_commit_queue.append(queue_action)
-        
+
         self.__reinit__()
 
     def tags(self):
@@ -2036,11 +1851,11 @@ class Tag(ObjectBase, GroupableMixin):
             raise ValueError('Cannot assign synonym to itself.')
 
         try:
-            tag = self.photodb.get_tag_by_name(synname)
-        except NoSuchTag:
+            self.photodb.get_tag_by_name(synname)
+        except exceptions.NoSuchTag:
             pass
         else:
-            raise TagExists(synname)
+            raise exceptions.TagExists(synname)
 
         self.photodb._cached_frozen_children = None
         self.photodb.cur.execute('INSERT INTO tag_synonyms VALUES(?, ?)', [synname, self.name])
@@ -2103,11 +1918,11 @@ class Tag(ObjectBase, GroupableMixin):
         '''
         if self._cached_qualified_name:
             return self._cached_qualified_name
-        string = self.name
+        qualname = self.name
         for parent in self.walk_parents():
-            string = parent.name + '.' + string
-        self._cached_qualified_name = string
-        return string
+            qualname = parent.name + '.' + qualname
+        self._cached_qualified_name = qualname
+        return qualname
 
     def remove_synonym(self, synname, commit=True):
         '''
@@ -2137,10 +1952,10 @@ class Tag(ObjectBase, GroupableMixin):
 
         try:
             self.photodb.get_tag(new_name)
-        except NoSuchTag:
+        except exceptions.NoSuchTag:
             pass
         else:
-            raise TagExists(new_name)
+            raise exceptions.TagExists(new_name)
 
         self._cached_qualified_name = None
         self.photodb._cached_frozen_children = None

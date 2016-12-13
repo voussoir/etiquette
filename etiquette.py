@@ -12,20 +12,15 @@ import warnings
 
 import constants
 import decorators
+import exceptions
 import helpers
 import jsonify
 import phototagger
 
-try:
-    sys.path.append('C:\\git\\else\\Bytestring')
-    sys.path.append('C:\\git\\else\\WebstreamZip')
-    import bytestring
-    import webstreamzip
-except ImportError:
-    # pip install
-    # https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
-    from vousoirkit import bytestring
-    from vousoirkit import webstreamzip
+# pip install
+# https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
+from voussoirkit import bytestring
+from voussoirkit import webstreamzip
 
 site = flask.Flask(__name__)
 site.config.update(
@@ -61,7 +56,7 @@ def delete_synonym(synonym):
     synonym = phototagger.normalize_tagname(synonym)
     try:
         master_tag = P.get_tag(synonym)
-    except phototagger.NoSuchTag:
+    except exceptions.NoSuchTag:
         flask.abort(404, 'That synonym doesnt exist')
 
     if synonym not in master_tag.synonyms():
@@ -79,19 +74,19 @@ def make_json_response(j, *args, **kwargs):
 def P_album(albumid):
     try:
         return P.get_album(albumid)
-    except phototagger.NoSuchAlbum:
+    except exceptions.NoSuchAlbum:
         flask.abort(404, 'That album doesnt exist')
 
 def P_photo(photoid):
     try:
         return P.get_photo(photoid)
-    except phototagger.NoSuchPhoto:
+    except exceptions.NoSuchPhoto:
         flask.abort(404, 'That photo doesnt exist')
 
 def P_tag(tagname):
     try:
         return P.get_tag(tagname)
-    except phototagger.NoSuchTag as e:
+    except exceptions.NoSuchTag as e:
         flask.abort(404, 'That tag doesnt exist: %s' % e)
 
 def send_file(filepath):
@@ -465,7 +460,7 @@ def get_static(filename):
 def get_tags_core(specific_tag=None):
     try:
         tags = P.export_tags(phototagger.tag_export_easybake, specific_tag=specific_tag)
-    except phototagger.NoSuchTag:
+    except exceptions.NoSuchTag:
         flask.abort(404, 'That tag doesnt exist')
     tags = tags.split('\n')
     tags = [t for t in tags if t != '']
@@ -516,7 +511,7 @@ def post_edit_album(albumid):
         tag = request.form[action].strip()
         try:
             tag = P_tag(tag)
-        except phototagger.NoSuchTag:
+        except exceptions.NoSuchTag:
             response = {'error': 'That tag doesnt exist', 'tagname': tag}
             return make_json_response(response, status=404)
         recursive = request.form.get('recursive', False)
@@ -552,7 +547,7 @@ def post_edit_photo(photoid):
 
     try:
         tag = P.get_tag(tag)
-    except phototagger.NoSuchTag:
+    except exceptions.NoSuchTag:
         response = {'error': 'That tag doesnt exist', 'tagname': tag}
         return make_json_response(response, status=404)
 
@@ -595,11 +590,11 @@ def post_edit_tags():
         status = 400
         try:
             response = method(tag)
-        except phototagger.TagTooShort:
+        except exceptions.TagTooShort:
             response = {'error': constants.ERROR_TAG_TOO_SHORT, 'tagname': tag}
-        except phototagger.CantSynonymSelf:
+        except exceptions.CantSynonymSelf:
             response = {'error': constants.ERROR_SYNONYM_ITSELF, 'tagname': tag}
-        except phototagger.NoSuchTag as e:
+        except exceptions.NoSuchTag as e:
             response = {'error': constants.ERROR_NO_SUCH_TAG, 'tagname': tag}
         except ValueError as e:
             response = {'error': e.args[0], 'tagname': tag}
