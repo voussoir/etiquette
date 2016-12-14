@@ -183,6 +183,25 @@ def _helper_filenamefilter(subject, terms):
     basename = subject.lower()
     return all(term in basename for term in terms)
 
+def binding_filler(column_names, values, require_all=True):
+    '''
+    Manually aligning question marks and bindings is annoying.
+    Given the table's column names and a dictionary of {column: value},
+    return the question marks and the list of bindings in the right order.
+    '''
+    values = values.copy()
+    for column in column_names:
+        if column in values:
+            continue
+        if require_all:
+            raise ValueError('Missing column "%s"' % column)
+        else:
+            values.setdefault(column, None)
+    qmarks = '?' * len(column_names)
+    qmarks = ', '.join(qmarks)
+    bindings = [values[column] for column in column_names]
+    return (qmarks, bindings)
+
 def getnow(timestamp=True):
     '''
     Return the current UTC timestamp or datetime object.
@@ -460,13 +479,16 @@ class PDBAlbumMixin:
         if not isinstance(description, str):
             raise TypeError('Description must be string, not %s' % type(description))
 
-        data = [None] * len(SQL_ALBUM_COLUMNS)
-        data[SQL_ALBUM['id']] = albumid
-        data[SQL_ALBUM['title']] = title
-        data[SQL_ALBUM['description']] = description
-        data[SQL_ALBUM['associated_directory']] = associated_directory
+        data = {}
+        data['id'] = albumid
+        data['title'] = title
+        data['description'] = description
+        data['associated_directory'] = associated_directory
 
-        self.cur.execute('INSERT INTO albums VALUES(?, ?, ?, ?)', data)
+        (qmarks, bindings) = binding_filler(SQL_ALBUM_COLUMNS, data)
+        query = 'INSERT INTO albums VALUES(%s)' % qmarks
+        self.cur.execute(query, bindings)
+
         album = Album(self, data)
         if photos:
             for photo in photos:
@@ -569,23 +591,27 @@ class PDBPhotoMixin:
         created = int(getnow())
         photoid = self.generate_id('photos')
 
-        data = [None] * len(SQL_PHOTO_COLUMNS)
-        data[SQL_PHOTO['id']] = photoid
-        data[SQL_PHOTO['filepath']] = filename
-        data[SQL_PHOTO['override_filename']] = None
-        data[SQL_PHOTO['extension']] = extension
-        data[SQL_PHOTO['created']] = created
-        # These will be filled in just a moment
-        data[SQL_PHOTO['bytes']] = None
-        data[SQL_PHOTO['width']] = None
-        data[SQL_PHOTO['height']] = None
-        data[SQL_PHOTO['area']] = None
-        data[SQL_PHOTO['ratio']] = None
-        data[SQL_PHOTO['duration']] = None
-        data[SQL_PHOTO['thumbnail']] = None
+        data = {}
+        data['id'] = photoid
+        data['filepath'] = filename
+        data['override_filename'] = None
+        data['extension'] = extension
+        data['created'] = created
+        data['tagged_at'] = None
+        # These will be filled in during the metadata stage.
+        data['bytes'] = None
+        data['width'] = None
+        data['height'] = None
+        data['area'] = None
+        data['ratio'] = None
+        data['duration'] = None
+        data['thumbnail'] = None
 
-        self.cur.execute('INSERT INTO photos VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
+        (qmarks, bindings) = binding_filler(SQL_PHOTO_COLUMNS, data)
+        query = 'INSERT INTO photos VALUES(%s)' % qmarks
+        self.cur.execute(query, bindings)
         photo = Photo(self, data)
+
         if do_metadata:
             photo.reload_metadata(commit=False)
         if do_thumbnail:
@@ -598,6 +624,7 @@ class PDBPhotoMixin:
 
         if commit:
             log.debug('Commiting - new_photo')
+            self.commit()
         return photo
 
     def search(
@@ -1252,9 +1279,11 @@ class ObjectBase:
 class GroupableMixin:
     def add(self, member, commit=True):
         '''
-        Add a Tag object to this group.
+        Add a child object to this group.
+        Child must be of the same type as the calling object.
 
-        If that object is already a member of another group, a exceptions.GroupExists is raised.
+        If that object is already a member of another group, an
+        exceptions.GroupExists is raised.
         '''
         if not isinstance(member, type(self)):
             raise TypeError('Member must be of type %s' % type(self))
@@ -1290,7 +1319,12 @@ class GroupableMixin:
 
     def delete(self, delete_children=False, commit=True):
         '''
-        Delete a tag and its relationship with photos, synonyms, and tag groups.
+        Delete this object's relationships to other groupables.
+        Any unique / specific deletion methods should be written within the
+        inheriting class.
+
+        For example, Tag.delete calls here to remove the group links, but then
+        does the rest of the tag deletion process on its own.
 
         delete_children:
             If True, all children will be deleted.
@@ -1320,7 +1354,8 @@ class GroupableMixin:
 
     def parent(self):
         '''
-        Return the Tag object of which this is a member, or None.
+        Return the group of which this is a member, or None.
+        Returned object will be of the same type as calling object.
         '''
         self.photodb.cur.execute('SELECT * FROM tag_group_rel WHERE memberid == ?', [self.id])
         fetch = self.photodb.cur.fetchone()
@@ -1370,10 +1405,12 @@ class GroupableMixin:
 class Album(ObjectBase, GroupableMixin):
     def __init__(self, photodb, row_tuple):
         self.photodb = photodb
-        self.id = row_tuple[SQL_ALBUM['id']]
-        self.title = row_tuple[SQL_ALBUM['title']]
+        if isinstance(row_tuple, (list, tuple)):
+            row_tuple = {SQL_ALBUM_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
+        self.id = row_tuple['id']
+        self.title = row_tuple['title']
+        self.description = row_tuple['description']
         self.name = 'Album %s' % self.id
-        self.description = row_tuple[SQL_ALBUM['description']]
         self.group_getter = self.photodb.get_album
 
     def __repr__(self):
@@ -1476,22 +1513,25 @@ class Photo(ObjectBase):
     '''
     def __init__(self, photodb, row_tuple):
         self.photodb = photodb
-        self.id = row_tuple[SQL_PHOTO['id']]
-        self.real_filepath = row_tuple[SQL_PHOTO['filepath']]
+        if isinstance(row_tuple, (list, tuple)):
+            row_tuple = {SQL_PHOTO_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
+
+        self.id = row_tuple['id']
+        self.real_filepath = row_tuple['filepath']
         self.real_filepath = normalize_filepath(self.real_filepath)
         self.real_path = pathclass.Path(self.real_filepath)
-        self.filepath = row_tuple[SQL_PHOTO['override_filename']] or self.real_filepath
-        self.basename = row_tuple[SQL_PHOTO['override_filename']] or os.path.basename(self.real_filepath)
-        self.extension = row_tuple[SQL_PHOTO['extension']]
-        self.width = row_tuple[SQL_PHOTO['width']]
-        self.height = row_tuple[SQL_PHOTO['height']]
-        self.ratio = row_tuple[SQL_PHOTO['ratio']]
-        self.area = row_tuple[SQL_PHOTO['area']]
-        self.bytes = row_tuple[SQL_PHOTO['bytes']]
-        self.duration = row_tuple[SQL_PHOTO['duration']]
-        self.created = row_tuple[SQL_PHOTO['created']]
-        self.thumbnail = row_tuple[SQL_PHOTO['thumbnail']]
-        self.tagged_at = row_tuple[SQL_PHOTO['tagged_at']]
+        self.filepath = row_tuple['override_filename'] or self.real_filepath
+        self.basename = row_tuple['override_filename'] or os.path.basename(self.real_filepath)
+        self.extension = row_tuple['extension']
+        self.width = row_tuple['width']
+        self.height = row_tuple['height']
+        self.ratio = row_tuple['ratio']
+        self.area = row_tuple['area']
+        self.bytes = row_tuple['bytes']
+        self.duration = row_tuple['duration']
+        self.created = row_tuple['created']
+        self.thumbnail = row_tuple['thumbnail']
+        self.tagged_at = row_tuple['tagged_at']
 
     def __reinit__(self):
         '''
@@ -1820,8 +1860,10 @@ class Tag(ObjectBase, GroupableMixin):
     '''
     def __init__(self, photodb, row_tuple):
         self.photodb = photodb
-        self.id = row_tuple[SQL_TAG['id']]
-        self.name = row_tuple[SQL_TAG['name']]
+        if isinstance(row_tuple, (list, tuple)):
+            row_tuple = {SQL_TAG_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
+        self.id = row_tuple['id']
+        self.name = row_tuple['name']
         self.group_getter = self.photodb.get_tag
         self._cached_qualified_name = None
 

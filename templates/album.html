@@ -28,7 +28,7 @@ p
     <p>{{album["description"]}}</p>
     {% set parent=album["parent"] %}
     {% if parent %}
-    <h3>Parent: <a href="/album/{{parent["id"]}}">{{parent.title}}</a></h3>
+    <h3>Parent: <a href="/album/{{parent["id"]}}">{{parent["id"] + " " + parent.title}}</a></h3>
     {% else %}
     <h3>Parent: <a href="/albums">Albums</a></h3>
     {% endif %}
