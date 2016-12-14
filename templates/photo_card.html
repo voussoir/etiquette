@@ -24,16 +24,16 @@
     <div class="photo_card_grid_thumb">
         <a target="_blank" href="/photo/{{photo["id"]}}">
             <img height="150"
-        {% if photo["has_thumbnail"] %}
-            src="/thumbnail/{{photo["id"]}}.jpg"
-        {% else %}
-            {% set choice =
-                thumbnails.get(photo["extension"],
-                thumbnails.get(photo["mimetype"],
-                'other'))
-            %}
-            src="/static/basic_thumbnails/{{choice}}.png"
-        {% endif %}
+            {% if photo["has_thumbnail"] %}
+                src="/thumbnail/{{photo["id"]}}.jpg"
+            {% else %}
+                {% set choice =
+                    thumbnails.get(photo["extension"],
+                    thumbnails.get(photo["mimetype"],
+                    'other'))
+                %}
+                src="/static/basic_thumbnails/{{choice}}.png"
+            {% endif %}
         </a>
     </div>
     <div class="photo_card_grid_info">

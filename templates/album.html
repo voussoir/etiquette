@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="/static/common.css">
 
 <style>
+p
+{
+    word-break: break-word;
+}
 #content_body
 {
     /* overriding common.css here */
@@ -21,6 +25,7 @@
 {{header.make_header()}}
 <div id="content_body">
     <h2>{{album["title"]}}</h2>
+    <p>{{album["description"]}}</p>
     {% set parent=album["parent"] %}
     {% if parent %}
     <h3>Parent: <a href="/album/{{parent["id"]}}">{{parent.title}}</a></h3>

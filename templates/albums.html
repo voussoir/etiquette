@@ -24,7 +24,7 @@
     {% else %}
     {% set title=album["id"] %}
     {% endif %}
-    <a href="/album/{{album["id"]}}">{{title}}</a>
+    <div><a href="/album/{{album["id"]}}">{{album["id"] + " " + album["title"]}}</a></div>
     {% endfor %}
 </div>
 </body>
