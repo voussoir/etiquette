@@ -457,11 +457,12 @@ class PDBAlbumMixin:
 
     def new_album(
             self,
+            title=None,
+            description=None,
+            *,
             associated_directory=None,
             commit=True,
-            description=None,
             photos=None,
-            title=None,
         ):
         '''
         Create a new album. Photos can be added now or later.
@@ -558,6 +559,7 @@ class PDBPhotoMixin:
     def new_photo(
             self,
             filename,
+            *,
             allow_duplicates=False,
             commit=True,
             do_metadata=True,
@@ -629,6 +631,7 @@ class PDBPhotoMixin:
 
     def search(
             self,
+            *,
             area=None,
             width=None,
             height=None,
@@ -885,9 +888,9 @@ class PDBTagMixin:
     def get_tags(self):
         yield from self.get_things(thing_type='tag')
 
-    def new_tag(self, tagname, commit=True):
+    def new_tag(self, tagname, *, commit=True):
         '''
-        Register a new tag in and return the Tag object.
+        Register a new tag and return the Tag object.
         '''
         tagname = normalize_tagname(tagname)
         try:
@@ -947,6 +950,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             self,
             databasename=None,
             data_directory=None,
+            *,
             id_length=None,
         ):
         if databasename is None:
@@ -1000,7 +1004,14 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             task['action'](*args, **kwargs)
         self.sql.commit()
 
-    def digest_directory(self, directory, exclude_directories=None, exclude_filenames=None, commit=True):
+    def digest_directory(
+            self,
+            directory,
+            *,
+            exclude_directories=None,
+            exclude_filenames=None,
+            commit=True,
+        ):
         '''
         Create an album, and add the directory's contents to it recursively.
 
@@ -1277,7 +1288,7 @@ class ObjectBase:
 
 
 class GroupableMixin:
-    def add(self, member, commit=True):
+    def add(self, member, *, commit=True):
         '''
         Add a child object to this group.
         Child must be of the same type as the calling object.
@@ -1317,7 +1328,7 @@ class GroupableMixin:
             results.sort(key=lambda x: x.id)
         return results
 
-    def delete(self, delete_children=False, commit=True):
+    def delete(self, *, delete_children=False, commit=True):
         '''
         Delete this object's relationships to other groupables.
         Any unique / specific deletion methods should be written within the
@@ -1365,7 +1376,7 @@ class GroupableMixin:
         parentid = fetch[SQL_TAGGROUP['parentid']]
         return self.group_getter(id=parentid)
 
-    def join_group(self, group, commit=True):
+    def join_group(self, group, *, commit=True):
         '''
         Leave the current group, then call `group.add(self)`.
         '''
@@ -1380,7 +1391,7 @@ class GroupableMixin:
         self.leave_group(commit=commit)
         group.add(self, commit=commit)
 
-    def leave_group(self, commit=True):
+    def leave_group(self, *, commit=True):
         '''
         Leave the current group and become independent.
         '''
@@ -1416,7 +1427,7 @@ class Album(ObjectBase, GroupableMixin):
     def __repr__(self):
         return 'Album:{id}'.format(id=self.id)
 
-    def add_photo(self, photo, commit=True):
+    def add_photo(self, photo, *, commit=True):
         if self.photodb != photo.photodb:
             raise ValueError('Not the same PhotoDB')
         if self.has_photo(photo):
@@ -1426,7 +1437,7 @@ class Album(ObjectBase, GroupableMixin):
             log.debug('Committing - add photo to album')
             self.photodb.commit()
 
-    def add_tag_to_all(self, tag, nested_children=True, commit=True):
+    def add_tag_to_all(self, tag, *, nested_children=True, commit=True):
         tag = self.photodb.get_tag(tag)
         if nested_children:
             photos = self.walk_photos()
@@ -1439,7 +1450,7 @@ class Album(ObjectBase, GroupableMixin):
             log.debug('Committing - add tag to all')
             self.photodb.commit()
 
-    def delete(self, delete_children=False, commit=True):
+    def delete(self, *, delete_children=False, commit=True):
         log.debug('Deleting album {album:r}'.format(album=self))
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
         self.photodb.cur.execute('DELETE FROM albums WHERE id == ?', [self.id])
@@ -1448,7 +1459,7 @@ class Album(ObjectBase, GroupableMixin):
             log.debug('Committing - delete album')
             self.photodb.commit()
 
-    def edit(self, title=None, description=None, commit=True):
+    def edit(self, title=None, description=None, *, commit=True):
         if title is None:
             title = self.title
         if description is None:
@@ -1486,7 +1497,7 @@ class Album(ObjectBase, GroupableMixin):
         photos.sort(key=lambda x: x.basename.lower())
         return photos
 
-    def remove_photo(self, photo, commit=True):
+    def remove_photo(self, photo, *, commit=True):
         if not self.has_photo(photo):
             return
         self.photodb.cur.execute(
@@ -1544,7 +1555,7 @@ class Photo(ObjectBase):
     def __repr__(self):
         return 'Photo:{id}'.format(id=self.id)
 
-    def add_tag(self, tag, commit=True):
+    def add_tag(self, tag, *, commit=True):
         tag = self.photodb.get_tag(tag)
 
         if self.has_tag(tag, check_children=False):
@@ -1587,7 +1598,7 @@ class Photo(ObjectBase):
         for tag in other_photo.tags():
             self.add_tag(tag)
 
-    def delete(self, delete_file=False, commit=True):
+    def delete(self, *, delete_file=False, commit=True):
         '''
         Delete the Photo and its relation to any tags and albums.
         '''
@@ -1608,7 +1619,7 @@ class Photo(ObjectBase):
             self.photodb.commit()
 
     @decorators.time_me
-    def generate_thumbnail(self, commit=True, **special):
+    def generate_thumbnail(self, *, commit=True, **special):
         '''
         special:
             For videos, you can provide a `timestamp` to take the thumbnail from.
@@ -1675,7 +1686,7 @@ class Photo(ObjectBase):
         self.__reinit__()
         return self.thumbnail
 
-    def has_tag(self, tag, check_children=True):
+    def has_tag(self, tag, *, check_children=True):
         '''
         Return the Tag object if this photo contains that tag. Otherwise return False.
 
@@ -1714,7 +1725,7 @@ class Photo(ObjectBase):
         return helpers.get_mimetype(self.real_filepath)
 
     @decorators.time_me
-    def reload_metadata(self, commit=True):
+    def reload_metadata(self, *, commit=True):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
         '''
@@ -1766,7 +1777,7 @@ class Photo(ObjectBase):
             log.debug('Committing - reload metadata')
             self.photodb.commit()
 
-    def remove_tag(self, tag, commit=True):
+    def remove_tag(self, tag, *, commit=True):
         tag = self.photodb.get_tag(tag)
 
         log.debug('Removing tag {t} from photo {p}'.format(t=repr(tag), p=repr(self)))
@@ -1782,7 +1793,7 @@ class Photo(ObjectBase):
             log.debug('Committing - remove photo tag')
             self.photodb.commit()
 
-    def rename_file(self, new_filename, move=False, commit=True):
+    def rename_file(self, new_filename, *, move=False, commit=True):
         '''
         Rename the file on the disk as well as in the database.
         If `move` is True, allow this operation to move the file.
@@ -1886,7 +1897,7 @@ class Tag(ObjectBase, GroupableMixin):
         rep = 'Tag:{name}'.format(name=self.name)
         return rep
 
-    def add_synonym(self, synname, commit=True):
+    def add_synonym(self, synname, *, commit=True):
         synname = normalize_tagname(synname)
 
         if synname == self.name:
@@ -1906,7 +1917,7 @@ class Tag(ObjectBase, GroupableMixin):
             log.debug('Committing - add synonym')
             self.photodb.commit()
 
-    def convert_to_synonym(self, mastertag, commit=True):
+    def convert_to_synonym(self, mastertag, *, commit=True):
         '''
         Convert an independent tag into a synonym for a different independent tag.
         All photos which possess the current tag will have it replaced
@@ -1943,7 +1954,7 @@ class Tag(ObjectBase, GroupableMixin):
             log.debug('Committing - convert to synonym')
             self.photodb.commit()
 
-    def delete(self, delete_children=False, commit=True):
+    def delete(self, *, delete_children=False, commit=True):
         log.debug('Deleting tag {tag:r}'.format(tag=self))
         self.photodb._cached_frozen_children = None
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
@@ -1966,7 +1977,7 @@ class Tag(ObjectBase, GroupableMixin):
         self._cached_qualified_name = qualname
         return qualname
 
-    def remove_synonym(self, synname, commit=True):
+    def remove_synonym(self, synname, *, commit=True):
         '''
         Delete a synonym.
         This will have no effect on photos or other synonyms because
@@ -1984,7 +1995,7 @@ class Tag(ObjectBase, GroupableMixin):
             log.debug('Committing - remove synonym')
             self.photodb.commit()
 
-    def rename(self, new_name, apply_to_synonyms=True, commit=True):
+    def rename(self, new_name, *, apply_to_synonyms=True, commit=True):
         '''
         Rename the tag. Does not affect its relation to Photos or tag groups.
         '''
