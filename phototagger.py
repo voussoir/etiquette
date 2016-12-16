@@ -462,7 +462,7 @@ class PDBAlbumMixin:
             *,
             associated_directory=None,
             commit=True,
-            photos=None,
+            photos=None
         ):
         '''
         Create a new album. Photos can be added now or later.
@@ -564,7 +564,7 @@ class PDBPhotoMixin:
             commit=True,
             do_metadata=True,
             do_thumbnail=True,
-            tags=None,
+            tags=None
         ):
         '''
         Given a filepath, determine its attributes and create a new Photo object in the
@@ -653,7 +653,7 @@ class PDBPhotoMixin:
             warn_bad_tags=False,
             limit=None,
             offset=None,
-            orderby=None,
+            orderby=None
         ):
         '''
         PHOTO PROPERTISE
@@ -951,7 +951,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             databasename=None,
             data_directory=None,
             *,
-            id_length=None,
+            id_length=None
         ):
         if databasename is None:
             databasename = constants.DEFAULT_DBNAME
@@ -1010,7 +1010,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             *,
             exclude_directories=None,
             exclude_filenames=None,
-            commit=True,
+            commit=True
         ):
         '''
         Create an album, and add the directory's contents to it recursively.
