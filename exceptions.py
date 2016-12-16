@@ -1,6 +1,4 @@
-class CantSynonymSelf(Exception):
-    pass
-
+# NO SUCH
 class NoSuchAlbum(Exception):
     pass
 
@@ -16,6 +14,13 @@ class NoSuchSynonym(Exception):
 class NoSuchTag(Exception):
     pass
 
+class NoSuchUser(Exception):
+    pass
+
+
+# EXISTS
+class GroupExists(Exception):
+    pass
 
 class PhotoExists(Exception):
     pass
@@ -23,16 +28,39 @@ class PhotoExists(Exception):
 class TagExists(Exception):
     pass
 
-class GroupExists(Exception):
+class UserExists(Exception):
     pass
 
 
+# TAG ERRORS
 class TagTooLong(Exception):
     pass
 
 class TagTooShort(Exception):
     pass
 
+class CantSynonymSelf(Exception):
+    pass
+
+
+# USER ERRORS
+class InvalidUsernameChars(Exception):
+    pass
+
+class PasswordTooShort(Exception):
+    pass
+
+class UsernameTooLong(Exception):
+    pass
+
+class UsernameTooShort(Exception):
+    pass
+
+class WrongLogin(Exception):
+    pass
+
+
+# GENERAL ERRORS
 class NotExclusive(Exception):
     '''
     For when two or more mutually exclusive actions have been requested.

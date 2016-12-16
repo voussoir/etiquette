@@ -32,6 +32,11 @@ MIN_TAG_NAME_LENGTH = 1
 MAX_TAG_NAME_LENGTH = 32
 VALID_TAG_CHARS = string.ascii_lowercase + string.digits + '_'
 
+MIN_USERNAME_LENGTH = 2
+MAX_USERNAME_LENGTH = 24
+MIN_PASSWORD_LENGTH = 6
+VALID_USERNAME_CHARS = string.ascii_letters + string.digits + '~!@#$%^&*()[]{}:;,.<>/\\-_+='
+
 DEFAULT_ID_LENGTH = 12
 DEFAULT_DATADIR = '.\\_etiquette'
 DEFAULT_DIGEST_EXCLUDE_FILES = [

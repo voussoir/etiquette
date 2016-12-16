@@ -1,3 +1,4 @@
+import bcrypt
 import collections
 import converter
 import datetime
@@ -85,20 +86,28 @@ SQL_TAGGROUP_COLUMNS = [
     'parentid',
     'memberid',
 ]
+SQL_USER_COLUMNS = [
+    'id',
+    'username',
+    'password',
+    'created',
+]
 
-SQL_ALBUM = {key:index for (index, key) in enumerate(SQL_ALBUM_COLUMNS)}
-SQL_ALBUMPHOTO = {key:index for (index, key) in enumerate(SQL_ALBUMPHOTO_COLUMNS)}
-SQL_LASTID = {key:index for (index, key) in enumerate(SQL_LASTID_COLUMNS)}
-SQL_PHOTO = {key:index for (index, key) in enumerate(SQL_PHOTO_COLUMNS)}
-SQL_PHOTOTAG = {key:index for (index, key) in enumerate(SQL_PHOTOTAG_COLUMNS)}
-SQL_SYN = {key:index for (index, key) in enumerate(SQL_SYN_COLUMNS)}
-SQL_TAG = {key:index for (index, key) in enumerate(SQL_TAG_COLUMNS)}
-SQL_TAGGROUP = {key:index for (index, key) in enumerate(SQL_TAGGROUP_COLUMNS)}
+_sql_dictify = lambda columns: {key:index for (index, key) in enumerate(columns)}
+SQL_ALBUM = _sql_dictify(SQL_ALBUM_COLUMNS)
+SQL_ALBUMPHOTO = _sql_dictify(SQL_ALBUMPHOTO_COLUMNS)
+SQL_LASTID = _sql_dictify(SQL_LASTID_COLUMNS)
+SQL_PHOTO = _sql_dictify(SQL_PHOTO_COLUMNS)
+SQL_PHOTOTAG = _sql_dictify(SQL_PHOTOTAG_COLUMNS)
+SQL_SYN = _sql_dictify(SQL_SYN_COLUMNS)
+SQL_TAG = _sql_dictify(SQL_TAG_COLUMNS)
+SQL_TAGGROUP = _sql_dictify(SQL_TAGGROUP_COLUMNS)
+SQL_USER = _sql_dictify(SQL_USER_COLUMNS)
 
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
-DATABASE_VERSION = 2
+DATABASE_VERSION = 3
 DB_INIT = '''
 PRAGMA count_changes = OFF;
 PRAGMA cache_size = 10000;
@@ -144,10 +153,15 @@ CREATE TABLE IF NOT EXISTS tag_synonyms(
     name TEXT,
     mastername TEXT
 );
-
 CREATE TABLE IF NOT EXISTS id_numbers(
     tab TEXT,
     last_id TEXT
+);
+CREATE TABLE IF NOT EXISTS users(
+    id TEXT,
+    username TEXT COLLATE NOCASE,
+    password BLOB,
+    created INT
 );
 
 -- Album
@@ -176,6 +190,10 @@ CREATE INDEX IF NOT EXISTS index_tagsyn_name on tag_synonyms(name);
 -- Tag-group relation
 CREATE INDEX IF NOT EXISTS index_grouprel_parentid on tag_group_rel(parentid);
 CREATE INDEX IF NOT EXISTS index_grouprel_memberid on tag_group_rel(memberid);
+
+-- User
+CREATE INDEX IF NOT EXISTS index_user_id on users(id);
+CREATE INDEX IF NOT EXISTS index_user_username on users(username COLLATE NOCASE);
 '''.format(user_version=DATABASE_VERSION)
 
 
@@ -852,7 +870,7 @@ class PDBTagMixin:
         Redirect to get_tag_by_id or get_tag_by_name after xor-checking the parameters.
         '''
         if not helpers.is_xor(id, name):
-            raise exceptions.NotExclusive('One and only one of `id`, `name` can be passed.')
+            raise exceptions.NotExclusive('One and only one of `id`, `name` must be passed.')
 
         if id is not None:
             return self.get_tag_by_id(id)
@@ -910,7 +928,101 @@ class PDBTagMixin:
         return tag
 
 
-class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
+class PDBUserMixin:
+    def generate_user_id(self):
+        '''
+        User IDs are randomized instead of integers like the other objects,
+        so they get their own method.
+        '''
+        possible = string.digits + string.ascii_uppercase
+        for retry in range(20):
+            user_id = [random.choice(possible) for x in range(self.id_length)]
+            user_id = ''.join(user_id)
+
+            self.cur.execute('SELECT * FROM users WHERE id == ?', [user_id])
+            if self.cur.fetchone() is None:
+                break
+        else:
+            raise Exception('Failed to create user id after 20 tries.')
+
+        return user_id
+
+    def get_user(self, username=None, id=None):
+        if not helpers.is_xor(id, username):
+            raise exceptions.NotExclusive('One and only one of `id`, `username` must be passed.')
+
+        if username is not None:
+            self.cur.execute('SELECT * FROM users WHERE username == ?', [username])
+        else:
+            self.cur.execute('SELECT * FROM users WHERE id == ?', [id])
+
+        fetch = self.cur.fetchone()
+        if fetch is not None:
+            return User(self, fetch)
+        else:
+            raise exceptions.NoSuchUser(username)
+
+    def login(self, user_id, password):
+        self.cur.execute('SELECT * FROM users WHERE id == ?', [user_id])
+        fetch = self.cur.fetchone()
+
+        if fetch is None:
+            raise exceptions.WrongLogin()
+
+        stored_password = fetch[SQL_USER['password']]
+
+        if not isinstance(password, bytes):
+            password = password.encode('utf-8')
+
+        success = bcrypt.checkpw(password, stored_password)
+        if not success:
+            raise exceptions.WrongLogin()
+
+        return User(self, fetch)
+
+    def register_user(self, username, password, commit=True):
+        if len(username) < constants.MIN_USERNAME_LENGTH:
+            raise exceptions.UsernameTooShort(username)
+
+        if len(username) > constants.MAX_USERNAME_LENGTH:
+            raise exceptions.UsernameTooLong(username)
+
+        badchars = [c for c in username if c not in constants.VALID_USERNAME_CHARS]
+        if badchars:
+            raise exceptions.InvalidUsernameChars(badchars)
+
+        if not isinstance(password, bytes):
+            password = password.encode('utf-8')
+
+        if len(password) < constants.MIN_PASSWORD_LENGTH:
+            raise exceptions.PasswordTooShort
+
+        self.cur.execute('SELECT * FROM users WHERE username == ?', [username])
+        if self.cur.fetchone() is not None:
+            raise exceptions.UserExists(username)
+
+        user_id = self.generate_user_id()
+        hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
+        created = int(getnow())
+
+        data = {}
+        data['id'] = user_id
+        data['username'] = username
+        data['password'] = hashed_password
+        data['created'] = created
+
+        (qmarks, bindings) = binding_filler(SQL_USER_COLUMNS, data)
+        query = 'INSERT INTO users VALUES(%s)' % qmarks
+        self.cur.execute(query, bindings)
+
+        if commit:
+            log.debug('Committing - register user')
+            self.commit()
+
+        return User(self, data)
+
+
+class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
     '''
     This class represents an SQLite3 database containing the following tables:
 
@@ -973,8 +1085,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
             if existing_version != DATABASE_VERSION:
                 message = constants.ERROR_DATABASE_OUTOFDATE
                 message = message.format(current=existing_version, new=DATABASE_VERSION)
-                log.critical(message)
-                raise SystemExit
+                raise SystemExit(message)
 
         statements = DB_INIT.split(';')
         for statement in statements:
@@ -1192,14 +1303,13 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
     def generate_id(self, table):
         '''
         Create a new ID number that is unique to the given table.
-        Note that this method does not commit the database. We'll wait for that
-        to happen in whoever is calling us, so we know the ID is actually used.
+        Note that while this method may INSERT / UPDATE, it does not commit.
+        We'll wait for that to happen in whoever is calling us, so we know the
+        ID is actually used.
         '''
         table = table.lower()
         if table not in ['photos', 'tags', 'groups']:
             raise ValueError('Invalid table requested: %s.', table)
-
-        do_insert = False
 
         self.cur.execute('SELECT * FROM id_numbers WHERE tab == ?', [table])
         fetch = self.cur.fetchone()
@@ -1210,6 +1320,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         else:
             # Use database value
             new_id_int = int(fetch[SQL_LASTID['last_id']]) + 1
+            do_insert = False
 
         new_id = str(new_id_int).rjust(self.id_length, '0')
         if do_insert:
@@ -1273,9 +1384,11 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
 
 class ObjectBase:
     def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return False
-        return self.id == other.id
+        return (
+            isinstance(other, type(self)) and
+            self.photodb == other.photodb and
+            self.id == other.id
+        )
 
     def __format__(self, formcode):
         if formcode == 'r':
@@ -1878,14 +1991,6 @@ class Tag(ObjectBase, GroupableMixin):
         self.group_getter = self.photodb.get_tag
         self._cached_qualified_name = None
 
-    def __eq__(self, other):
-        if isinstance(other, str):
-            return self.name == other
-        elif isinstance(other, Tag):
-            return self.id == other.id and self.name == other.name
-        else:
-            return False
-
     def __hash__(self):
         return hash(self.name)
 
@@ -2030,6 +2135,27 @@ class Tag(ObjectBase, GroupableMixin):
         fetch = [f[0] for f in fetch]
         fetch.sort()
         return fetch
+
+
+class User(ObjectBase):
+    '''
+    A dear friend of ours.
+    '''
+    def __init__(self, photodb, row_tuple):
+        self.photodb = photodb
+        if isinstance(row_tuple, (list, tuple)):
+            row_tuple = {SQL_USER_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
+        self.id = row_tuple['id']
+        self.username = row_tuple['username']
+        self.created = row_tuple['created']
+
+    def __repr__(self):
+        rep = 'User:{id}:{username}'.format(id=self.id, username=self.username)
+        return rep
+
+    def __str__(self):
+        rep = 'User:{username}'.format(username=self.username)
+        return rep
 
 
 if __name__ == '__main__':
