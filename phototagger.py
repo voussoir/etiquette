@@ -948,23 +948,25 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
     '''
     def __init__(
             self,
-            databasename=None,
             data_directory=None,
             *,
             id_length=None
         ):
-        if databasename is None:
-            databasename = constants.DEFAULT_DBNAME
         if data_directory is None:
             data_directory = constants.DEFAULT_DATADIR
         if id_length is None:
             id_length = constants.DEFAULT_ID_LENGTH
 
-        self.databasename = databasename
-        self.database_abspath = os.path.abspath(databasename)
-        existing_database = os.path.exists(databasename)
-        self.sql = sqlite3.connect(databasename)
+        data_directory = normalize_filepath(data_directory)
+
+        self.data_directory = os.path.abspath(data_directory)
+        os.makedirs(self.data_directory, exist_ok=True)
+
+        self.database_abspath = os.path.join(data_directory, 'phototagger.db')
+        existing_database = os.path.exists(self.database_abspath)
+        self.sql = sqlite3.connect(self.database_abspath)
         self.cur = self.sql.cursor()
+
         if existing_database:
             self.cur.execute('PRAGMA user_version')
             existing_version = self.cur.fetchone()[0]
@@ -978,11 +980,9 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         for statement in statements:
             self.cur.execute(statement)
 
-
-        self.data_directory = data_directory
-        self.thumbnail_folder = os.path.join(data_directory, 'site_thumbnails')
-        self.thumbnail_folder = os.path.abspath(self.thumbnail_folder)
-        os.makedirs(self.thumbnail_folder, exist_ok=True)
+        self.thumbnail_directory = os.path.join(self.data_directory, 'site_thumbnails')
+        self.thumbnail_directory = os.path.abspath(self.thumbnail_directory)
+        os.makedirs(self.thumbnail_directory, exist_ok=True)
 
         self.id_length = id_length
 
@@ -990,7 +990,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin):
         self._cached_frozen_children = None
 
     def __repr__(self):
-        return 'PhotoDB(databasename={dbname})'.format(dbname=repr(self.databasename))
+        return 'PhotoDB(data_directory={datadir})'.format(datadir=repr(self.data_directory))
 
     def _uncache(self):
         self._cached_frozen_children = None
@@ -1715,7 +1715,7 @@ class Photo(ObjectBase):
         basename = chunked_id[-1]
         folder = chunked_id[:-1]
         folder = os.sep.join(folder)
-        folder = os.path.join(self.photodb.thumbnail_folder, folder)
+        folder = os.path.join(self.photodb.thumbnail_directory, folder)
         if folder:
             os.makedirs(folder, exist_ok=True)
         hopeful_filepath = os.path.join(folder, basename) + '.jpg'

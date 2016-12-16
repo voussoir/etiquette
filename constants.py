@@ -33,16 +33,16 @@ MAX_TAG_NAME_LENGTH = 32
 VALID_TAG_CHARS = string.ascii_lowercase + string.digits + '_'
 
 DEFAULT_ID_LENGTH = 12
-DEFAULT_DBNAME = 'phototagger.db'
 DEFAULT_DATADIR = '.\\_etiquette'
 DEFAULT_DIGEST_EXCLUDE_FILES = [
-    DEFAULT_DBNAME,
+    'phototagger.db',
     'desktop.ini',
     'thumbs.db'
 ]
 DEFAULT_DIGEST_EXCLUDE_DIRS = [
     '_site_thumbnails',
 ]
+
 FILE_READ_CHUNK = 2 ** 20
 
 THUMBNAIL_WIDTH = 400
