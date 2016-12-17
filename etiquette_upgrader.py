@@ -48,7 +48,7 @@ def upgrade_all(database_filename):
     needed_version = phototagger.DATABASE_VERSION
 
     if current_version == needed_version:
-        print('Already up-to-date.')
+        print('Already up-to-date with version %d.' % needed_version)
         return
 
     for version_number in range(current_version + 1, needed_version + 1):

@@ -498,11 +498,12 @@ class PDBAlbumMixin:
         if not isinstance(description, str):
             raise TypeError('Description must be string, not %s' % type(description))
 
-        data = {}
-        data['id'] = albumid
-        data['title'] = title
-        data['description'] = description
-        data['associated_directory'] = associated_directory
+        data = {
+            'id': albumid,
+            'title': title,
+            'description': description,
+            'associated_directory': associated_directory,
+        }
 
         (qmarks, bindings) = binding_filler(SQL_ALBUM_COLUMNS, data)
         query = 'INSERT INTO albums VALUES(%s)' % qmarks
@@ -557,23 +558,6 @@ class PDBPhotoMixin:
             if count <= 0:
                 break
 
-    def purge_deleted_files(self):
-        '''
-        Remove Photo entries if their corresponding file is no longer found.
-        '''
-        photos = self.get_photos_by_recent()
-        for photo in photos:
-            if os.path.exists(photo.real_filepath):
-                continue
-            photo.delete()
-
-    def purge_empty_albums(self):
-        albums = self.get_albums()
-        for album in albums:
-            if album.children() or album.photos():
-                continue
-            album.delete()
-
     def new_photo(
             self,
             filename,
@@ -611,21 +595,22 @@ class PDBPhotoMixin:
         created = int(getnow())
         photoid = self.generate_id('photos')
 
-        data = {}
-        data['id'] = photoid
-        data['filepath'] = filename
-        data['override_filename'] = None
-        data['extension'] = extension
-        data['created'] = created
-        data['tagged_at'] = None
-        # These will be filled in during the metadata stage.
-        data['bytes'] = None
-        data['width'] = None
-        data['height'] = None
-        data['area'] = None
-        data['ratio'] = None
-        data['duration'] = None
-        data['thumbnail'] = None
+        data = {
+            'id': photoid,
+            'filepath': filename,
+            'override_filename': None,
+            'extension': extension,
+            'created': created,
+            'tagged_at': None,
+            # These will be filled in during the metadata stage.
+            'bytes': None,
+            'width': None,
+            'height': None,
+            'area': None,
+            'ratio': None,
+            'duration': None,
+            'thumbnail': None,
+        }
 
         (qmarks, bindings) = binding_filler(SQL_PHOTO_COLUMNS, data)
         query = 'INSERT INTO photos VALUES(%s)' % qmarks
@@ -646,6 +631,23 @@ class PDBPhotoMixin:
             log.debug('Commiting - new_photo')
             self.commit()
         return photo
+
+    def purge_deleted_files(self):
+        '''
+        Remove Photo entries if their corresponding file is no longer found.
+        '''
+        photos = self.get_photos_by_recent()
+        for photo in photos:
+            if os.path.exists(photo.real_filepath):
+                continue
+            photo.delete()
+
+    def purge_empty_albums(self):
+        albums = self.get_albums()
+        for album in albums:
+            if album.children() or album.photos():
+                continue
+            album.delete()
 
     def search(
             self,
@@ -1005,11 +1007,12 @@ class PDBUserMixin:
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
         created = int(getnow())
 
-        data = {}
-        data['id'] = user_id
-        data['username'] = username
-        data['password'] = hashed_password
-        data['created'] = created
+        data = {
+            'id': user_id,
+            'username': username,
+            'password': hashed_password,
+            'created': created,
+        }
 
         (qmarks, bindings) = binding_filler(SQL_USER_COLUMNS, data)
         query = 'INSERT INTO users VALUES(%s)' % qmarks
@@ -1330,7 +1333,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
         return new_id
 
     def get_thing_by_id(self, thing_type, thing_id):
-        thing_map = self.thing_map(thing_type)
+        thing_map = _THING_CLASSES[thing_type]
 
         if isinstance(thing_id, thing_map['class']):
             thing_id = thing_id.id
@@ -1344,7 +1347,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
         return thing
 
     def get_things(self, thing_type, orderby=None):
-        thing_map = self.thing_map(thing_type)
+        thing_map = _THING_CLASSES[thing_type]
 
         if orderby:
             self.cur.execute('SELECT * FROM %s ORDER BY %s' % (thing_map['table'], orderby))
@@ -1356,27 +1359,6 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
             thing = thing_map['class'](self, row_tuple=thing)
             yield thing
 
-    def thing_map(self, thing_type):
-        return {
-            'album':
-            {
-                'class': Album,
-                'exception': exceptions.NoSuchAlbum,
-                'table': 'albums',
-            },
-            'tag':
-            {
-                'class': Tag,
-                'exception': exceptions.NoSuchTag,
-                'table': 'tags',
-            },
-            'photo':
-            {
-                'class': Photo,
-                'exception': exceptions.NoSuchPhoto,
-                'table': 'photos',
-            },
-        }[thing_type]
 
 ####################################################################################################
 ####################################################################################################
@@ -2157,6 +2139,33 @@ class User(ObjectBase):
         rep = 'User:{username}'.format(username=self.username)
         return rep
 
+
+_THING_CLASSES = {
+    'album':
+    {
+        'class': Album,
+        'exception': exceptions.NoSuchAlbum,
+        'table': 'albums',
+    },
+    'photo':
+    {
+        'class': Photo,
+        'exception': exceptions.NoSuchPhoto,
+        'table': 'photos',
+    },
+    'tag':
+    {
+        'class': Tag,
+        'exception': exceptions.NoSuchTag,
+        'table': 'tags',
+    },
+    'user':
+    {
+        'class': User,
+        'exception': exceptions.NoSuchUser,
+        'table': 'users',
+    }
+}
 
 if __name__ == '__main__':
     p = PhotoDB()
