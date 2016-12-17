@@ -262,7 +262,7 @@ def _setify_tags(photodb, tags, warn_bad_tags=False):
         try:
             tag = photodb.get_tag(tag)
             tagset.add(tag)
-        except NoSuchTag:
+        except exceptions.NoSuchTag:
             if warn_bad_tags:
                 warnings.warn(constants.WARNING_NO_SUCH_TAG.format(tag=tag))
                 continue

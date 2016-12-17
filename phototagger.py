@@ -1759,8 +1759,8 @@ class Photo(ObjectBase):
                 (new_width, new_height) = helpers.fit_into_bounds(
                     image_width=width,
                     image_height=height,
-                    frame_width=self.config['thumbnail_width'],
-                    frame_height=self.config['thumbnail_height'],
+                    frame_width=self.photodb.config['thumbnail_width'],
+                    frame_height=self.photodb.config['thumbnail_height'],
                 )
                 if new_width < width:
                     image = image.resize((new_width, new_height))
@@ -1775,8 +1775,8 @@ class Photo(ObjectBase):
                     size = helpers.fit_into_bounds(
                         image_width=probe.video.video_width,
                         image_height=probe.video.video_height,
-                        frame_width=self.config['thumbnail_width'],
-                        frame_height=self.config['thumbnail_height'],
+                        frame_width=self.photodb.config['thumbnail_width'],
+                        frame_height=self.photodb.config['thumbnail_height'],
                     )
                     size = '%dx%d' % size
                     duration = probe.video.duration
@@ -1996,6 +1996,9 @@ class Tag(ObjectBase, GroupableMixin):
         self.name = row_tuple['name']
         self.group_getter = self.photodb.get_tag
         self._cached_qualified_name = None
+
+    def __eq__(self, other):
+        return self.name == other or ObjectBase.__eq__(self, other)
 
     def __hash__(self):
         return hash(self.name)
