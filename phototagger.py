@@ -1,8 +1,10 @@
 import bcrypt
 import collections
 import converter
+import copy
 import datetime
 import functools
+import json
 import logging
 import mimetypes
 import os
@@ -239,26 +241,6 @@ def normalize_filepath(filepath):
     filepath = filepath.replace('>', '')
     return filepath
 
-def normalize_tagname(tagname):
-    '''
-    Tag names can only consist of VALID_TAG_CHARS.
-    The given tagname is lowercased, gets its spaces and hyphens
-    replaced by underscores, and is stripped of any not-whitelisted
-    characters.
-    '''
-    tagname = tagname.lower()
-    tagname = tagname.replace('-', '_')
-    tagname = tagname.replace(' ', '_')
-    tagname = (c for c in tagname if c in constants.VALID_TAG_CHARS)
-    tagname = ''.join(tagname)
-
-    if len(tagname) < constants.MIN_TAG_NAME_LENGTH:
-        raise exceptions.TagTooShort(tagname)
-    if len(tagname) > constants.MAX_TAG_NAME_LENGTH:
-        raise exceptions.TagTooLong(tagname)
-
-    return tagname
-
 def operate(operand_stack, operator_stack):
     #print('before:', operand_stack, operator_stack)
     operator = operator_stack.pop()
@@ -286,7 +268,7 @@ def raise_no_such_thing(exception_class, thing_id=None, thing_name=None, comment
         message = ''
     raise exception_class(message)
 
-def searchfilter_expression(photo_tags, expression, frozen_children, warn_bad_tags):
+def searchfilter_expression(photo_tags, expression, frozen_children, token_normalizer, warn_bad_tags):
     photo_tags = set(tag.name for tag in photo_tags)
     operator_stack = collections.deque()
     operand_stack = collections.deque()
@@ -310,7 +292,7 @@ def searchfilter_expression(photo_tags, expression, frozen_children, warn_bad_ta
 
         if token not in constants.EXPRESSION_OPERATORS:
             try:
-                token = normalize_tagname(token)
+                token = token_normalizer(token)
                 value = any(option in photo_tags for option in frozen_children[token])
             except KeyError:
                 if warn_bad_tags:
@@ -591,7 +573,7 @@ class PDBPhotoMixin:
 
         extension = os.path.splitext(filename)[1]
         extension = extension.replace('.', '')
-        extension = normalize_tagname(extension)
+        extension = self.normalize_tagname(extension)
         created = int(getnow())
         photoid = self.generate_id('photos')
 
@@ -832,10 +814,24 @@ class PDBPhotoMixin:
                 photo_tags = set(photo_tags)
 
                 if tag_expression:
-                    if not searchfilter_expression(photo_tags, tag_expression, frozen_children, warn_bad_tags):
+                    success = searchfilter_expression(
+                        photo_tags=photo_tags,
+                        expression=tag_expression,
+                        frozen_children=frozen_children,
+                        token_normalizer=self.normalize_tagname,
+                        warn_bad_tags=warn_bad_tags,
+                    )
+                    if not success:
                         continue
                 elif is_must_may_forbid:
-                    if not searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, frozen_children):
+                    success = searchfilter_must_may_forbid(
+                        photo_tags=photo_tags,
+                        tag_musts=tag_musts,
+                        tag_mays=tag_mays,
+                        tag_forbids=tag_forbids,
+                        frozen_children=frozen_children,
+                    )
+                    if not success:
                         continue
 
             if offset is not None and offset > 0:
@@ -889,7 +885,7 @@ class PDBTagMixin:
             tagname = tagname.name
 
         tagname = tagname.split('.')[-1].split('+')[0]
-        tagname = normalize_tagname(tagname)
+        tagname = self.normalize_tagname(tagname)
 
         while True:
             # Return if it's a toplevel, or resolve the synonym and try that.
@@ -912,7 +908,7 @@ class PDBTagMixin:
         '''
         Register a new tag and return the Tag object.
         '''
-        tagname = normalize_tagname(tagname)
+        tagname = self.normalize_tagname(tagname)
         try:
             self.get_tag_by_name(tagname)
         except exceptions.NoSuchTag:
@@ -929,6 +925,25 @@ class PDBTagMixin:
         tag = Tag(self, [tagid, tagname])
         return tag
 
+    def normalize_tagname(self, tagname):
+        '''
+        Tag names can only consist of characters defined in the config.
+        The given tagname is lowercased, gets its spaces and hyphens
+        replaced by underscores, and is stripped of any not-whitelisted
+        characters.
+        '''
+        tagname = tagname.lower()
+        tagname = tagname.replace('-', '_')
+        tagname = tagname.replace(' ', '_')
+        tagname = (c for c in tagname if c in self.config['valid_tag_chars'])
+        tagname = ''.join(tagname)
+
+        if len(tagname) < self.config['min_tag_name_length']:
+            raise exceptions.TagTooShort(tagname)
+        if len(tagname) > self.config['max_tag_name_length']:
+            raise exceptions.TagTooLong(tagname)
+
+        return tagname
 
 class PDBUserMixin:
     def generate_user_id(self):
@@ -938,7 +953,7 @@ class PDBUserMixin:
         '''
         possible = string.digits + string.ascii_uppercase
         for retry in range(20):
-            user_id = [random.choice(possible) for x in range(self.id_length)]
+            user_id = [random.choice(possible) for x in range(self.config['id_length'])]
             user_id = ''.join(user_id)
 
             self.cur.execute('SELECT * FROM users WHERE id == ?', [user_id])
@@ -983,20 +998,20 @@ class PDBUserMixin:
         return User(self, fetch)
 
     def register_user(self, username, password, commit=True):
-        if len(username) < constants.MIN_USERNAME_LENGTH:
+        if len(username) < self.config['min_username_length']:
             raise exceptions.UsernameTooShort(username)
 
-        if len(username) > constants.MAX_USERNAME_LENGTH:
+        if len(username) > self.config['max_username_length']:
             raise exceptions.UsernameTooLong(username)
 
-        badchars = [c for c in username if c not in constants.VALID_USERNAME_CHARS]
+        badchars = [c for c in username if c not in self.config['valid_username_chars']]
         if badchars:
             raise exceptions.InvalidUsernameChars(badchars)
 
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
 
-        if len(password) < constants.MIN_PASSWORD_LENGTH:
+        if len(password) < self.config['min_password_length']:
             raise exceptions.PasswordTooShort
 
         self.cur.execute('SELECT * FROM users WHERE username == ?', [username])
@@ -1064,20 +1079,17 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
     def __init__(
             self,
             data_directory=None,
-            *,
-            id_length=None
         ):
         if data_directory is None:
             data_directory = constants.DEFAULT_DATADIR
-        if id_length is None:
-            id_length = constants.DEFAULT_ID_LENGTH
 
+        # DATA DIR PREP
         data_directory = normalize_filepath(data_directory)
-
         self.data_directory = os.path.abspath(data_directory)
         os.makedirs(self.data_directory, exist_ok=True)
 
-        self.database_abspath = os.path.join(data_directory, 'phototagger.db')
+        # DATABASE
+        self.database_abspath = os.path.join(self.data_directory, 'phototagger.db')
         existing_database = os.path.exists(self.database_abspath)
         self.sql = sqlite3.connect(self.database_abspath)
         self.cur = self.sql.cursor()
@@ -1094,12 +1106,24 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
         for statement in statements:
             self.cur.execute(statement)
 
+        # CONFIG
+        self.config_abspath = os.path.join(self.data_directory, 'config.json')
+        self.config = copy.deepcopy(constants.DEFAULT_CONFIGURATION)
+        if os.path.isfile(self.config_abspath):
+            with open(self.config_abspath, 'r') as handle:
+                user_config = json.load(handle)
+            self.config.update(user_config)
+        else:
+            with open(self.config_abspath, 'w') as handle:
+                handle.write(json.dumps(self.config, indent=4, sort_keys=True))
+        #print(self.config)
+
+        # THUMBNAIL DIRECTORY
         self.thumbnail_directory = os.path.join(self.data_directory, 'site_thumbnails')
         self.thumbnail_directory = os.path.abspath(self.thumbnail_directory)
         os.makedirs(self.thumbnail_directory, exist_ok=True)
 
-        self.id_length = id_length
-
+        # OTHER
         self.on_commit_queue = []
         self._cached_frozen_children = None
 
@@ -1134,9 +1158,9 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
         if not os.path.isdir(directory):
             raise ValueError('Not a directory: %s' % directory)
         if exclude_directories is None:
-            exclude_directories = constants.DEFAULT_DIGEST_EXCLUDE_DIRS
+            exclude_directories = self.config['digest_exclude_dirs']
         if exclude_filenames is None:
-            exclude_filenames = constants.DEFAULT_DIGEST_EXCLUDE_FILES
+            exclude_filenames = self.config['digest_exclude_files']
 
         directory = spinal.str_to_fp(directory)
         directory.correct_case()
@@ -1202,9 +1226,9 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
         if not os.path.isdir(directory):
             raise ValueError('Not a directory: %s' % directory)
         if exclude_directories is None:
-            exclude_directories = constants.DEFAULT_DIGEST_EXCLUDE_DIRS
+            exclude_directories = self.config['digest_exclude_dirs']
         if exclude_filenames is None:
-            exclude_filenames = constants.DEFAULT_DIGEST_EXCLUDE_FILES
+            exclude_filenames = self.config['digest_exclude_files']
 
         directory = spinal.str_to_fp(directory)
         generator = spinal.walk_generator(
@@ -1325,7 +1349,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
             new_id_int = int(fetch[SQL_LASTID['last_id']]) + 1
             do_insert = False
 
-        new_id = str(new_id_int).rjust(self.id_length, '0')
+        new_id = str(new_id_int).rjust(self.config['id_length'], '0')
         if do_insert:
             self.cur.execute('INSERT INTO id_numbers VALUES(?, ?)', [table, new_id])
         else:
@@ -1735,8 +1759,8 @@ class Photo(ObjectBase):
                 (new_width, new_height) = helpers.fit_into_bounds(
                     image_width=width,
                     image_height=height,
-                    frame_width=constants.THUMBNAIL_WIDTH,
-                    frame_height=constants.THUMBNAIL_HEIGHT,
+                    frame_width=self.config['thumbnail_width'],
+                    frame_height=self.config['thumbnail_height'],
                 )
                 if new_width < width:
                     image = image.resize((new_width, new_height))
@@ -1751,8 +1775,8 @@ class Photo(ObjectBase):
                     size = helpers.fit_into_bounds(
                         image_width=probe.video.video_width,
                         image_height=probe.video.video_height,
-                        frame_width=constants.THUMBNAIL_WIDTH,
-                        frame_height=constants.THUMBNAIL_HEIGHT,
+                        frame_width=self.config['thumbnail_width'],
+                        frame_height=self.config['thumbnail_height'],
                     )
                     size = '%dx%d' % size
                     duration = probe.video.duration
@@ -1985,7 +2009,7 @@ class Tag(ObjectBase, GroupableMixin):
         return rep
 
     def add_synonym(self, synname, *, commit=True):
-        synname = normalize_tagname(synname)
+        synname = self.normalize_tagname(synname)
 
         if synname == self.name:
             raise ValueError('Cannot assign synonym to itself.')
@@ -2070,7 +2094,7 @@ class Tag(ObjectBase, GroupableMixin):
         This will have no effect on photos or other synonyms because
         they always resolve to the master tag before application.
         '''
-        synname = normalize_tagname(synname)
+        synname = self.photodb.normalize_tagname(synname)
         self.photodb.cur.execute('SELECT * FROM tag_synonyms WHERE name == ?', [synname])
         fetch = self.photodb.cur.fetchone()
         if fetch is None:
@@ -2086,7 +2110,7 @@ class Tag(ObjectBase, GroupableMixin):
         '''
         Rename the tag. Does not affect its relation to Photos or tag groups.
         '''
-        new_name = normalize_tagname(new_name)
+        new_name = self.photodb.normalize_tagname(new_name)
         if new_name == self.name:
             return
 

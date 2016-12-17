@@ -53,7 +53,7 @@ def delete_tag(tag):
 
 def delete_synonym(synonym):
     synonym = synonym.split('+')[-1].split('.')[-1]
-    synonym = phototagger.normalize_tagname(synonym)
+    synonym = P.normalize_tagname(synonym)
     try:
         master_tag = P.get_tag(synonym)
     except exceptions.NoSuchTag:
@@ -144,7 +144,12 @@ def send_file(filepath):
     if request.method == 'HEAD':
         outgoing_data = bytes()
     else:
-        outgoing_data = helpers.read_filebytes(filepath, range_min=range_min, range_max=range_max)
+        outgoing_data = helpers.read_filebytes(
+            filepath,
+            range_min=range_min,
+            range_max=range_max,
+            chunk_size=P.config['file_read_chunk'],
+        )
 
     response = flask.Response(
         outgoing_data,
@@ -162,7 +167,7 @@ def send_file(filepath):
 @site.route('/')
 @decorators.give_session_token
 def root():
-    motd = random.choice(constants.MOTD_STRINGS)
+    motd = random.choice(P.config['motd_strings'])
     return flask.render_template('root.html', motd=motd)
 
 

@@ -129,7 +129,7 @@ def is_xor(*args):
     '''
     return [bool(a) for a in args].count(True) == 1
 
-def read_filebytes(filepath, range_min, range_max):
+def read_filebytes(filepath, range_min, range_max, chunk_size=2 ** 20):
     '''
     Yield chunks of bytes from the file between the endpoints.
     '''
@@ -142,7 +142,7 @@ def read_filebytes(filepath, range_min, range_max):
     with f:
         while sent_amount < range_span:
             #print(sent_amount)
-            chunk = f.read(constants.FILE_READ_CHUNK)
+            chunk = f.read(chunk_size)
             if len(chunk) == 0:
                 break
 

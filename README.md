@@ -12,7 +12,6 @@ This is the readme file.
 - Move out more helpers
 - Create objects.py
 - Debate whether the `UserMixin.login` method should accept usernames or I should standardize the usage of IDs only internally.
-- Move config type variables out of constants and create a real config system.
 
 ### Changelog
 

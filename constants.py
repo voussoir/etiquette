@@ -26,41 +26,40 @@ WARNING_NO_SUCH_TAG = 'Tag "{tag}" does not exist. Ignored.'
 WARNING_ORDERBY_BADCOL = '"{column}" is not a sorting option. Ignored.'
 WARNING_ORDERBY_BADSORTER = 'You can\'t order "{column}" by "{sorter}". Defaulting to descending.'
 
-
-# Default settings
-MIN_TAG_NAME_LENGTH = 1
-MAX_TAG_NAME_LENGTH = 32
-VALID_TAG_CHARS = string.ascii_lowercase + string.digits + '_'
-
-MIN_USERNAME_LENGTH = 2
-MAX_USERNAME_LENGTH = 24
-MIN_PASSWORD_LENGTH = 6
-VALID_USERNAME_CHARS = string.ascii_letters + string.digits + '~!@#$%^&*()[]{}:;,.<>/\\-_+='
-
-DEFAULT_ID_LENGTH = 12
-DEFAULT_DATADIR = '.\\_etiquette'
-DEFAULT_DIGEST_EXCLUDE_FILES = [
-    'phototagger.db',
-    'desktop.ini',
-    'thumbs.db'
-]
-DEFAULT_DIGEST_EXCLUDE_DIRS = [
-    '_site_thumbnails',
-]
-
-FILE_READ_CHUNK = 2 ** 20
-
-THUMBNAIL_WIDTH = 400
-THUMBNAIL_HEIGHT = 400
-
-
 # Operational info
+EXPRESSION_OPERATORS = {'(', ')', 'OR', 'AND', 'NOT'}
 ADDITIONAL_MIMETYPES = {
     'srt': 'text',
     'mkv': 'video',
 }
-EXPRESSION_OPERATORS = {'(', ')', 'OR', 'AND', 'NOT'}
-MOTD_STRINGS = [
-'Good morning, Paul. What will your first sequence of the day be?',
-#'Buckle up, it\'s time to:',
-]
+
+DEFAULT_DATADIR = '.\\_etiquette'
+
+DEFAULT_CONFIGURATION = {
+    'min_tag_name_length': 1,
+    'max_tag_name_length': 32,
+    'valid_tag_chars': string.ascii_lowercase + string.digits + '_',
+
+    'min_username_length': 2,
+    'max_username_length': 24,
+    'valid_username_chars': string.ascii_letters + string.digits + '~!@#$%^&*()[]{}:;,.<>/\\-_+=',
+    'min_password_length': 6,
+
+    'id_length': 12,
+    'digest_exclude_files': [
+        'phototagger.db',
+        'desktop.ini',
+        'thumbs.db',
+    ],
+    'digest_exclude_dirs': [
+        '_site_thumbnails',
+    ],
+
+    'file_read_chunk': 2 ** 20,
+    'thumbnail_width': 400,
+    'thumbnail_height': 400,
+    'motd_strings': [
+        'Good morning, Paul. What will your first sequence of the day be?',
+    ],
+
+}
