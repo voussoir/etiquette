@@ -1,4 +1,15 @@
+import converter
 import string
+import traceback
+
+try:
+    ffmpeg = converter.Converter(
+        ffmpeg_path='C:\\software\\ffmpeg\\bin\\ffmpeg.exe',
+        ffprobe_path='C:\\software\\ffmpeg\\bin\\ffprobe.exe',
+    )
+except converter.ffmpeg.FFMpegError:
+    traceback.print_exc()
+    ffmpeg = None
 
 ALLOWED_ORDERBY_COLUMNS = [
     'extension',
@@ -12,6 +23,70 @@ ALLOWED_ORDERBY_COLUMNS = [
     'tagged_at',
     'random',
 ]
+
+SQL_LASTID_COLUMNS = [
+    'table',
+    'last_id',
+]
+SQL_ALBUM_COLUMNS = [
+    'id',
+    'title',
+    'description',
+    'associated_directory',
+]
+SQL_PHOTO_COLUMNS = [
+    'id',
+    'filepath',
+    'override_filename',
+    'extension',
+    'width',
+    'height',
+    'ratio',
+    'area',
+    'duration',
+    'bytes',
+    'created',
+    'thumbnail',
+    'tagged_at',
+]
+SQL_TAG_COLUMNS = [
+    'id',
+    'name',
+]
+SQL_SYN_COLUMNS = [
+    'name',
+    'master',
+]
+SQL_ALBUMPHOTO_COLUMNS = [
+    'albumid',
+    'photoid',
+]
+SQL_PHOTOTAG_COLUMNS = [
+    'photoid',
+    'tagid',
+]
+SQL_TAGGROUP_COLUMNS = [
+    'parentid',
+    'memberid',
+]
+SQL_USER_COLUMNS = [
+    'id',
+    'username',
+    'password',
+    'created',
+]
+
+_sql_dictify = lambda columns: {key:index for (index, key) in enumerate(columns)}
+SQL_ALBUM = _sql_dictify(SQL_ALBUM_COLUMNS)
+SQL_ALBUMPHOTO = _sql_dictify(SQL_ALBUMPHOTO_COLUMNS)
+SQL_LASTID = _sql_dictify(SQL_LASTID_COLUMNS)
+SQL_PHOTO = _sql_dictify(SQL_PHOTO_COLUMNS)
+SQL_PHOTOTAG = _sql_dictify(SQL_PHOTOTAG_COLUMNS)
+SQL_SYN = _sql_dictify(SQL_SYN_COLUMNS)
+SQL_TAG = _sql_dictify(SQL_TAG_COLUMNS)
+SQL_TAGGROUP = _sql_dictify(SQL_TAGGROUP_COLUMNS)
+SQL_USER = _sql_dictify(SQL_USER_COLUMNS)
+
 
 # Errors and warnings
 ERROR_DATABASE_OUTOFDATE = 'Database is out-of-date. {current} should be {new}. Please use etiquette_upgrader.py'

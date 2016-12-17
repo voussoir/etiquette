@@ -10,7 +10,6 @@ This is the readme file.
 - Improve the "tags on this page" list. Maybe add separate buttons for must/may/forbid on each.
 - Some way for the database to re-identify a file that was moved / renamed (lost & found). Maybe file hash of the first few mb is good enough.
 - Move out more helpers
-- Create objects.py
 - Debate whether the `UserMixin.login` method should accept usernames or I should standardize the usage of IDs only internally.
 
 ### Changelog

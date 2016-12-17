@@ -1,10 +1,13 @@
+import datetime
 import math
 import mimetypes
 import os
 
-import exceptions
 import constants
+import exceptions
 import warnings
+
+from voussoirkit import bytestring
 
 def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
     '''
@@ -129,6 +132,25 @@ def is_xor(*args):
     '''
     return [bool(a) for a in args].count(True) == 1
 
+def normalize_filepath(filepath):
+    '''
+    Remove some bad characters.
+    '''
+    filepath = filepath.replace('/', os.sep)
+    filepath = filepath.replace('\\', os.sep)
+    filepath = filepath.replace('<', '')
+    filepath = filepath.replace('>', '')
+    return filepath
+
+def now(timestamp=True):
+    '''
+    Return the current UTC timestamp or datetime object.
+    '''
+    n = datetime.datetime.now(datetime.timezone.utc)
+    if timestamp:
+        return n.timestamp()
+    return n
+
 def read_filebytes(filepath, range_min, range_max, chunk_size=2 ** 20):
     '''
     Yield chunks of bytes from the file between the endpoints.
@@ -158,11 +180,23 @@ def seconds_to_hms(seconds):
     (minutes, seconds) = divmod(seconds, 60)
     (hours, minutes) = divmod(minutes, 60)
     parts = []
-    if hours: parts.append(hours)
-    if minutes: parts.append(minutes)
+    if hours:
+        parts.append(hours)
+    if minutes:
+        parts.append(minutes)
     parts.append(seconds)
     hms = ':'.join('%02d' % part for part in parts)
     return hms
+
+def select_generator(sql, query, bindings=None):
+    bindings = bindings or []
+    cursor = sql.cursor()
+    cursor.execute(query, bindings)
+    while True:
+        fetch = cursor.fetchone()
+        if fetch is None:
+            break
+        yield fetch
 
 def truthystring(s):
     if isinstance(s, (bool, int)) or s is None:
@@ -279,7 +313,7 @@ def _unitconvert(value):
     if value is None:
         return None
     if ':' in value:
-        return helpers.hms_to_seconds(value)
+        return hms_to_seconds(value)
     elif all(c in '0123456789.' for c in value):
         return float(value)
     else:

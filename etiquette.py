@@ -4,10 +4,6 @@ import json
 import mimetypes
 import os
 import random
-import re
-import requests
-import sys
-import time
 import warnings
 
 import constants
@@ -19,7 +15,6 @@ import phototagger
 
 # pip install
 # https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
-from voussoirkit import bytestring
 from voussoirkit import webstreamzip
 
 site = flask.Flask(__name__)
@@ -211,7 +206,7 @@ def get_album_tar(albumid):
     photos = list(album.walk_photos())
     zipname_map = {p.real_filepath: '%s - %s' % (p.id, p.basename) for p in photos}
     streamed_zip = webstreamzip.stream_tar(zipname_map)
-    content_length = sum(p.bytes for p in photos)
+    #content_length = sum(p.bytes for p in photos)
     outgoing_headers = {'Content-Type': 'application/octet-stream'}
     return flask.Response(streamed_zip, headers=outgoing_headers)
 
@@ -242,7 +237,6 @@ def get_bookmarks():
 
 @site.route('/file/<photoid>')
 def get_file(photoid):
-    requested_photoid = photoid
     photoid = photoid.split('.')[0]
     photo = P.get_photo(photoid)
 
@@ -445,8 +439,8 @@ def get_search_html():
 @decorators.give_session_token
 def get_search_json():
     search_results = get_search_core()
-    search_kwargs = search_results['search_kwargs']
-    qualname_map = search_results['qualname_map']
+    #search_kwargs = search_results['search_kwargs']
+    #qualname_map = search_results['qualname_map']
     include_qualname_map = request.args.get('include_map', False)
     include_qualname_map = helpers.truthystring(include_qualname_map)
     if not include_qualname_map:
@@ -471,7 +465,7 @@ def get_tags_core(specific_tag=None):
     tags = [t for t in tags if t != '']
     tags = [(t, t.split('.')[-1].split('+')[0]) for t in tags]
     return tags
-    
+
 @site.route('/tags')
 @site.route('/tags/<specific_tag>')
 @decorators.give_session_token
