@@ -16,7 +16,7 @@
 
 
 <body>
-{{header.make_header()}}
+{{header.make_header(session=session)}}
 <div id="content_body">
     {% for album in albums %}
     {% if album["title"] %}

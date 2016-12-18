@@ -119,7 +119,7 @@ form
 
 
 <body>
-    {{header.make_header()}}
+    {{header.make_header(session=session)}}
     <div id="error_message_area">
         {% for warn in warns %}
         <span class="search_warning">{{warn}}</span>

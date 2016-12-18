@@ -2,10 +2,10 @@ import datetime
 import math
 import mimetypes
 import os
+import warnings
 
 import constants
 import exceptions
-import warnings
 
 from voussoirkit import bytestring
 

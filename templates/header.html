@@ -1,7 +1,13 @@
-{% macro make_header() %}
+{% macro make_header(session) %}
 <div id="header">
     <a class="header_element" href="/">Etiquette</a>
     <a class="header_element" href="/search">Search</a>
     <a class="header_element" href="/tags">Tags</a>
+    {% if session %}
+    <a class="header_element" href="/user/{{session.user.username}}">{{session.user.username}}</a>
+    <a class="header_element" href="/logout" style="flex:0">Logout</a>
+    {% else %}
+    <a class="header_element" href="/login">Log in</a>
+    {% endif %}
 </div>
 {% endmacro %}

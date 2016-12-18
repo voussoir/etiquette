@@ -34,6 +34,11 @@ a:hover
     <a href="/tags">Browse tags</a>
     <a href="/albums">Browse albums</a>
     <a href="/bookmarks">Bookmarks</a>
+    {% if session %}
+    <a href="/user/{{session.user.username}}">{{session.user.username}}</a>
+    {% else %}
+    <a href="/login">Log in</a>
+    {% endif %}
 </body>
 
 

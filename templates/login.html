@@ -1,0 +1,74 @@
+<!DOCTYPE html5>
+<html>
+<head>
+    {% import "header.html" as header %}
+    <title>Login/Register</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/common.css">
+    <script src="/static/common.js"></script>
+
+<style>
+#content_body
+{
+    justify-content: center;
+    align-content: center;
+    flex: 1;
+}
+#login_register_box
+{
+    margin: auto;
+    display: flex;
+    flex-direction: row;
+}
+form
+{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    margin: 25px;
+    border: 1px black solid;
+    border-radius: 6px;
+}
+form > *
+{
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+input
+{
+    width: 300px;
+}
+button
+{
+    width: 80px;
+}
+</style>
+</head>
+
+
+<body>
+    {{header.make_header(session=session)}}
+    <div id="content_body">
+        <div id="login_register_box">
+        <form id="login_form" action="/login" method="post">
+            <span>Log in</span>
+            <input type="text" name="username" placeholder="username">
+            <input type="password" name="password" placeholder="password">
+            <button type="submit">Log in</button>
+        </form>
+        <form id="register_form" action="/register" method="post">
+            <span>Register</span>
+            <input type="text" name="username" placeholder="username">
+            <input type="password" name="password_1" placeholder="password">
+            <input type="password" name="password_2" placeholder="password again">
+            <button type="submit">Register</button>
+        </form>
+        </div>
+    </div>
+</body>
+
+
+<script type="text/javascript">
+</script>
+</html>
