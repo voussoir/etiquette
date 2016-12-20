@@ -287,6 +287,7 @@ class Photo(ObjectBase):
         self.created = row_tuple['created']
         self.thumbnail = row_tuple['thumbnail']
         self.tagged_at = row_tuple['tagged_at']
+        self.author_id = row_tuple['author_id']
 
     def __reinit__(self):
         '''
@@ -335,6 +336,9 @@ class Photo(ObjectBase):
         fetch = self.photodb.cur.fetchall()
         albums = [self.photodb.get_album(f[0]) for f in fetch]
         return albums
+
+    def author(self):
+        return self.photodb.get_user(id=self.author_id)
 
     def bytestring(self):
         return bytestring.bytestring(self.bytes)

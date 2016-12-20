@@ -48,6 +48,7 @@ SQL_PHOTO_COLUMNS = [
     'created',
     'thumbnail',
     'tagged_at',
+    'author_id',
 ]
 SQL_TAG_COLUMNS = [
     'id',

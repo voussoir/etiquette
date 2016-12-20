@@ -28,7 +28,7 @@ logging.getLogger('PIL.PngImagePlugin').setLevel(logging.WARNING)
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
-DATABASE_VERSION = 3
+DATABASE_VERSION = 4
 DB_INIT = '''
 PRAGMA count_changes = OFF;
 PRAGMA cache_size = 10000;
@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS photos(
     bytes INT,
     created INT,
     thumbnail TEXT,
-    tagged_at INT
+    tagged_at INT,
+    author_id TEXT
 );
 CREATE TABLE IF NOT EXISTS tags(
     id TEXT,
@@ -96,6 +97,7 @@ CREATE INDEX IF NOT EXISTS index_photo_path on photos(filepath COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS index_photo_fakepath on photos(override_filename COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS index_photo_created on photos(created);
 CREATE INDEX IF NOT EXISTS index_photo_extension on photos(extension);
+CREATE INDEX IF NOT EXISTS index_photo_author on photos(author_id);
 
 -- Tag
 CREATE INDEX IF NOT EXISTS index_tag_id on tags(id);
@@ -435,6 +437,7 @@ class PDBPhotoMixin:
             filename,
             *,
             allow_duplicates=False,
+            author=None,
             commit=True,
             do_metadata=True,
             do_thumbnail=True,
@@ -461,6 +464,14 @@ class PDBPhotoMixin:
                 exc.photo = existing
                 raise exc
 
+        if isinstance(author, objects.User):
+            if author.photodb != self:
+                raise ValueError('That user does not belong to this photodb')
+            author_id = author.id
+        elif author is not None:
+            # Just to confirm
+            author_id = self.get_user(id=author).id
+
         extension = os.path.splitext(filename)[1]
         extension = extension.replace('.', '')
         extension = self.normalize_tagname(extension)
@@ -474,6 +485,7 @@ class PDBPhotoMixin:
             'extension': extension,
             'created': created,
             'tagged_at': None,
+            'author_id': author_id,
             # These will be filled in during the metadata stage.
             'bytes': None,
             'width': None,

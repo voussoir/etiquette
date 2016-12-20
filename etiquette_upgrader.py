@@ -31,6 +31,13 @@ def upgrade_2_to_3(sql):
     cur.execute('CREATE INDEX IF NOT EXISTS index_user_id ON users(id)')
     cur.execute('CREATE INDEX IF NOT EXISTS index_user_username ON users(username COLLATE NOCASE)')
 
+def upgrade_3_to_4(sql):
+    '''
+    Add an `author_id` column to Photos.
+    '''
+    cur = sql.cursor()
+    cur.execute('ALTER TABLE photos ADD COLUMN author_id TEXT')
+    cur.execute('CREATE INDEX IF NOT EXISTS index_photo_author on photos(author_id)')
 
 def upgrade_all(database_filename):
     '''
