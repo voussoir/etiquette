@@ -413,7 +413,13 @@ class Photo(ObjectBase):
                             timestamp = 0
                         else:
                             timestamp = 2
-                    constants.ffmpeg.thumbnail(self.real_filepath, time=timestamp, quality=2, size=size, outfile=hopeful_filepath)
+                    constants.ffmpeg.thumbnail(
+                        self.real_filepath,
+                        outfile=hopeful_filepath,
+                        quality=2,
+                        size=size,
+                        time=timestamp,
+                    )
             except:
                 traceback.print_exc()
             else:
@@ -421,7 +427,10 @@ class Photo(ObjectBase):
 
 
         if return_filepath != self.thumbnail:
-            self.photodb.cur.execute('UPDATE photos SET thumbnail = ? WHERE id == ?', [return_filepath, self.id])
+            self.photodb.cur.execute(
+                'UPDATE photos SET thumbnail = ? WHERE id == ?',
+                [return_filepath, self.id]
+            )
             self.thumbnail = return_filepath
 
         if commit:
@@ -678,12 +687,18 @@ class Tag(ObjectBase, GroupableMixin):
 
         # Iterate over all photos with the old tag, and swap them to the new tag
         # if they don't already have it.
-        generator = helpers.select_generator(self.photodb.sql, 'SELECT * FROM photo_tag_rel WHERE tagid == ?', [self.id])
+        generator = helpers.select_generator(
+            self.photodb.sql,
+            'SELECT * FROM photo_tag_rel WHERE tagid == ?',
+            [self.id]
+        )
         for relationship in generator:
             photoid = relationship[constants.SQL_PHOTOTAG['photoid']]
-            self.photodb.cur.execute('SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid == ?', [photoid, mastertag.id])
+            query = 'SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid == ?'
+            self.photodb.cur.execute(query, [photoid, mastertag.id])
             if self.photodb.cur.fetchone() is None:
-                self.photodb.cur.execute('INSERT INTO photo_tag_rel VALUES(?, ?)', [photoid, mastertag.id])
+                query = 'INSERT INTO photo_tag_rel VALUES(?, ?)'
+                self.photodb.cur.execute(query, [photoid, mastertag.id])
 
         # Then delete the relationships with the old tag
         self.delete()

@@ -227,7 +227,6 @@ def post_register():
     response = flask.Response('redirect', status=302, headers={'Location': '/'})
     return response
 
-
 @site.route('/logout', methods=['GET', 'POST'])
 @session_manager.give_token
 def logout():

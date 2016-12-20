@@ -684,11 +684,17 @@ class PDBPhotoMixin:
                 #print('Failed filename')
                 continue
 
-            if any(not fetch[constants.SQL_PHOTO[key]] or fetch[constants.SQL_PHOTO[key]] > value for (key, value) in maximums.items()):
+            if any(
+                not fetch[constants.SQL_PHOTO[key]] or
+                fetch[constants.SQL_PHOTO[key]] > value for (key, value) in maximums.items()
+                ):
                 #print('Failed maximums')
                 continue
 
-            if any(not fetch[constants.SQL_PHOTO[key]] or fetch[constants.SQL_PHOTO[key]] < value for (key, value) in minimums.items()):
+            if any(
+                not fetch[constants.SQL_PHOTO[key]] or
+                fetch[constants.SQL_PHOTO[key]] < value for (key, value) in minimums.items()
+                ):
                 #print('Failed minimums')
                 continue
 
