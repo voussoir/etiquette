@@ -166,6 +166,51 @@ var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
 add_tag_box.onkeydown = function(){entry_with_history_hook(add_tag_box, add_tag_button)};
 
+function add_photo_tag(photoid, tagname, callback)
+{
+    if (tagname === ""){return}
+    var url = "/photo/" + photoid;
+    data = new FormData();
+    data.append("add_tag", tagname);
+    return post(url, data, callback);
+}
+function remove_photo_tag(photoid, tagname, callback)
+{
+    if (tagname === ""){return}
+    var url = "/photo/" + photoid;
+    data = new FormData();
+    data.append("remove_tag", tagname);
+    return post(url, data, callback);
+}
+function submit_tag(callback)
+{
+    add_photo_tag('{{photo.id}}', add_tag_box.value, callback);
+    add_tag_box.value = "";
+}
+function receive_callback(response)
+{
+    var tagname = response["tagname"];
+    if ("error" in response)
+    {
+        message_positivity = "callback_message_negative";
+        message_text = '"' + tagname + '" ' + response["error"];
+    }
+    else if ("action" in response)
+    {
+        var action = response["action"];
+        message_positivity = "callback_message_positive";
+        if (action == "add_tag")
+        {
+            message_text = "Added tag " + tagname;
+        }
+        else if (action == "remove_tag")
+        {
+            message_text = "Removed tag " + tagname;
+        }
+    }
+    create_message_bubble(message_area, message_positivity, message_text, 8000);
+}
+
 function enable_hoverzoom()
 {
     console.log("enable");
@@ -253,34 +298,6 @@ function move_hoverzoom(event)
     }
     //console.log(x);
     photo_img_holder.style.backgroundPosition=(-x)+"px "+(-y)+"px";
-}
-function receive_callback(response)
-{
-    var tagname = response["tagname"];
-    if ("error" in response)
-    {
-        message_positivity = "callback_message_negative";
-        message_text = '"' + tagname + '" ' + response["error"];
-    }
-    else if ("action" in response)
-    {
-        var action = response["action"];
-        message_positivity = "callback_message_positive";
-        if (action == "add_tag")
-        {
-            message_text = "Added tag " + tagname;
-        }
-        else if (action == "remove_tag")
-        {
-            message_text = "Removed tag " + tagname;
-        }
-    }
-    create_message_bubble(message_positivity, message_text, 8000);
-}
-function submit_tag(callback)
-{
-    add_photo_tag('{{photo.id}}', add_tag_box.value, callback);
-    add_tag_box.value = "";
 }
 </script>
 </html>

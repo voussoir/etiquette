@@ -1,4 +1,4 @@
-function create_message_bubble(message_positivity, message_text, lifespan)
+function create_message_bubble(message_area, message_positivity, message_text, lifespan)
 {
     if (lifespan === undefined)
     {
@@ -19,43 +19,6 @@ function add_album_tag(albumid, tagname, callback)
     data = new FormData();
     data.append("add_tag", tagname);
     return post(url, data, callback);
-}
-function add_photo_tag(photoid, tagname, callback)
-{
-    if (tagname === ""){return}
-    var url = "/photo/" + photoid;
-    data = new FormData();
-    data.append("add_tag", tagname);
-    return post(url, data, callback);
-}
-function remove_photo_tag(photoid, tagname, callback)
-{
-    if (tagname === ""){return}
-    var url = "/photo/" + photoid;
-    data = new FormData();
-    data.append("remove_tag", tagname);
-    return post(url, data, callback);
-}
-
-function edit_tags(action, name, callback)
-{
-    if (name === ""){return}
-    var url = "/tags";
-    data = new FormData();
-    data.append(action, name);
-    return post(url, data, callback);    
-}
-function delete_tag_synonym(name, callback)
-{
-    return edit_tags("delete_tag_synonym", name, callback);
-}
-function delete_tag(name, callback)
-{
-    return edit_tags("delete_tag", name, callback);
-}
-function create_tag(name, callback)
-{
-    return edit_tags("create_tag", name, callback);
 }
 
 function post(url, data, callback)

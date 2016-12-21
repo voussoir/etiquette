@@ -93,6 +93,32 @@ var button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
 box.onkeydown = function(){entry_with_history_hook(box, button)};
 
+function submit_tag(callback)
+{
+    create_tag(box.value, callback);
+    box.value = "";
+}
+function edit_tags(action, tagname, callback)
+{
+    if (tagname === ""){return}
+    var url = "/tags";
+    data = new FormData();
+    data.append(action, tagname);
+    return post(url, data, callback);    
+}
+function delete_tag_synonym(tagname, callback)
+{
+    return edit_tags("delete_tag_synonym", tagname, callback);
+}
+function delete_tag(tagname, callback)
+{
+    return edit_tags("delete_tag", tagname, callback);
+}
+function create_tag(tagname, callback)
+{
+    return edit_tags("create_tag", tagname, callback);
+}
+
 function receive_callback(responses)
 {
     if (!(responses instanceof Array))
@@ -134,13 +160,8 @@ function receive_callback(responses)
             {message_text = "Deleted synonym " + response["synonym"];}
 
         }
-        create_message_bubble(message_positivity, message_text, 8000);
+        create_message_bubble(message_area, message_positivity, message_text, 8000);
     }
-}
-function submit_tag(callback)
-{
-    create_tag(box.value, callback);
-    box.value = "";
 }
 </script>
 </html>
