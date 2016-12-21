@@ -685,6 +685,8 @@ def post_edit_tags():
             response = {'error': constants.ERROR_SYNONYM_ITSELF, 'tagname': tag}
         except exceptions.NoSuchTag as e:
             response = {'error': constants.ERROR_NO_SUCH_TAG, 'tagname': tag}
+        except exceptions.RecursiveGrouping as e:
+            response = {'error': constants.ERROR_RECURSIVE_GROUPING, 'tagname': tag}
         except ValueError as e:
             response = {'error': e.args[0], 'tagname': tag}
         else:

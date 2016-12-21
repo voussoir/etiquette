@@ -33,6 +33,9 @@ class UserExists(Exception):
 
 
 # TAG ERRORS
+class RecursiveGrouping(Exception):
+    pass
+
 class TagTooLong(Exception):
     pass
 

@@ -43,14 +43,21 @@ class GroupableMixin:
         if not isinstance(member, type(self)):
             raise TypeError('Member must be of type %s' % type(self))
 
+        # Groupables are only allowed to have 1 parent.
+        # Unlike photos which can exist in multiple albums.
         self.photodb.cur.execute('SELECT * FROM tag_group_rel WHERE memberid == ?', [member.id])
         fetch = self.photodb.cur.fetchone()
         if fetch is not None:
-            if fetch[constants.SQL_TAGGROUP['parentid']] == self.id:
+            parent_id = fetch[constants.SQL_TAGGROUP['parentid']]
+            if parent_id == self.id:
                 that_group = self
             else:
-                that_group = self.group_getter(id=fetch[constants.SQL_TAGGROUP['parentid']])
+                that_group = self.group_getter(id=parent_id)
             raise exceptions.GroupExists('%s already in group %s' % (member.name, that_group.name))
+
+        for parent in self.walk_parents():
+            if parent.id == member.id:
+                raise exceptions.RecursiveGrouping('%s is an ancestor of %s' % (member.name, self.name))
 
         self.photodb._cached_frozen_children = None
         self.photodb.cur.execute('INSERT INTO tag_group_rel VALUES(?, ?)', [self.id, member.id])
