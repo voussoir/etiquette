@@ -6,9 +6,9 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
     <script src="/static/common.js"></script>
-    {% set filename = photo["id"] + "." + photo["extension"] %}
+    {% set filename = photo.id + "." + photo.extension %}
     {% set link = "/file/" + filename %}
-    {% set mimetype=photo["mimetype"] %}
+    {% set mimetype=photo.mimetype() %}
 
 <style>
 #content_body
@@ -94,10 +94,11 @@
         <!-- TAG INFO -->
         <h4>Tags</h4>
         <ul id="this_tags">
-            {% for tag in photo['tags'] %}
+            {% set tags = photo.sorted_tags() %}
+            {% for tag in tags %}
             <li>
-                <a class="tag_object" href="/search?tag_musts={{tag["name"]}}">{{tag["qualified_name"]}}</a>
-                <button class="remove_tag_button" onclick="remove_photo_tag('{{photo["id"]}}', '{{tag["name"]}}', receive_callback);"></button>
+                <a class="tag_object" href="/search?tag_musts={{tag.name}}">{{tag.qualified_name()}}</a>
+                <button class="remove_tag_button" onclick="remove_photo_tag('{{photo.id}}', '{{tag.name}}', receive_callback);"></button>
             </li>
             {% endfor %}
             <li>
@@ -109,24 +110,29 @@
         <!-- METADATA & DOWNLOAD -->
         <h4>File info</h4>
         <ul id="metadata">
-        {% if photo["width"] %}
-            <li>Dimensions: {{photo["width"]}}x{{photo["height"]}} px</li>
-            <li>Aspect ratio: {{photo["ratio"]}}</li>
-            <li>Size: {{photo["bytes_str"]}}</li>
+        {% if photo.author_id %}
+            {% set author = photo.author() %}
+            <li>Author: <a href="/user/{{author.username}}">{{author.username}}</a>
         {% endif %}
-        {% if photo["duration"] %}
-            <li>Duration: {{photo["duration_str"]}}</li>
+        {% if photo.width %}
+            <li>Dimensions: {{photo.width}}x{{photo.height}} px</li>
+            <li>Aspect ratio: {{photo.ratio}}</li>
+            <li>Size: {{photo.bytestring()}}</li>
         {% endif %}
-            <li><a href="/file/{{photo["id"]}}.{{photo["extension"]}}?download=1">Download as {{photo["id"]}}.{{photo["extension"]}}</a></li>
-            <li><a href="/file/{{photo["id"]}}.{{photo["extension"]}}?download=1&original_filename=1">Download as "{{photo["filename"]}}"</a></li>
+        {% if photo.duration %}
+            <li>Duration: {{photo.duration_str}}</li>
+        {% endif %}
+            <li><a href="/file/{{photo.id}}.{{photo.extension}}?download=1">Download as {{photo.id}}.{{photo.extension}}</a></li>
+            <li><a href="/file/{{photo.id}}.{{photo.extension}}?download=1&original_filename=1">Download as "{{photo.basename}}"</a></li>
         </ul>
 
         <!-- CONTAINING ALBUMS -->
-        {% if photo["albums"] %}
+        {% set albums = photo.albums() %}
+        {% if albums %}
         <h4>Albums containing this photo</h4>
         <ul id="containing albums">
-            {% for album in photo["albums"] %}
-            <li><a href="/album/{{album["id"]}}">{{album["title"]}}</a></li>
+            {% for album in albums %}
+            <li><a href="/album/{{album.id}}">{{album.title}}</a></li>
             {% endfor %}
         {% endif %}
         </ul>
@@ -142,7 +148,7 @@
         <div id="photo_img_holder"><img id="photo_img" src="{{link}}" onclick="toggle_hoverzoom()" onload="this.style.opacity=0.99"></div>
         <!-- <img src="{{link}}"> -->
         {% elif mimetype == "video" %}
-        <video src="{{link}}" controls preload=none {%if photo["has_thumbnail"]%}poster="/thumbnail/{{photo["id"]}}.jpg"{%endif%}></video>
+        <video src="{{link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
         {% elif mimetype == "audio" %}
         <audio src="{{link}}" controls></audio>
         {% else %}
@@ -261,7 +267,7 @@ function receive_callback(response)
 }
 function submit_tag(callback)
 {
-    add_photo_tag('{{photo["id"]}}', add_tag_box.value, callback);
+    add_photo_tag('{{photo.id}}', add_tag_box.value, callback);
     add_tag_box.value = "";
 }
 </script>

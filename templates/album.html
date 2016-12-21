@@ -3,7 +3,7 @@
 <head>
     {% import "photo_card.html" as photo_card %}
     {% import "header.html" as header %}
-    <title>Album {{album["title"]}}</title>
+    <title>Album {{album.title}}</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
 
@@ -24,29 +24,31 @@ p
 <body>
 {{header.make_header(session=session)}}
 <div id="content_body">
-    <h2>{{album["title"]}}</h2>
-    <p>{{album["description"]}}</p>
-    {% set parent=album["parent"] %}
+    <h2>{{album.title}}</h2>
+    <p>{{album.description}}</p>
+    {% set parent=album.parent() %}
     {% if parent %}
-    <h3>Parent: <a href="/album/{{parent["id"]}}">{{parent["id"] + " " + parent.title}}</a></h3>
+    <h3>Parent: <a href="/album/{{parent.id}}">{{parent.id + " " + parent.title}}</a></h3>
     {% else %}
     <h3>Parent: <a href="/albums">Albums</a></h3>
     {% endif %}
-    {% if album["sub_albums"] %}
+    {% set sub_albums = album.children() %}
+    {% if sub_albums %}
     <h3>Sub-albums</h3>
     <ul>
-        {% for sub_album in album["sub_albums"] %}
-        <li><a href="/album/{{sub_album["id"]}}">
-            {% if sub_album["title"] %}
-            {{sub_album["title"]}}
+        {% for sub_album in sub_albums %}
+        <li><a href="/album/{{sub_album.id}}">
+            {% if sub_album.title %}
+            {{sub_album.title}}
             {% else %}
-            {{sub_album["id"]}}
+            {{sub_album.id}}
             {% endif %}</a>
         </li>
         {% endfor %}
     </ul>
     {% endif %}
-    <span><a href="/album/{{album["id"]}}.tar">(download .tar)</a></span>
+    <span><a href="/album/{{album.id}}.tar">(download .tar)</a></span>
+    {% set photos = album.photos() %}
     {% if photos %}
     <h3>Photos</h3>
     <ul>
@@ -62,7 +64,7 @@ p
 <script type="text/javascript">
 function submit_tag(callback)
 {
-    add_photo_tag('{{album["id"]}}', add_tag_box.value, callback);
+    add_photo_tag('{{album.id}}', add_tag_box.value, callback);
     add_tag_box.value = "";
 }
 </script>

@@ -367,6 +367,11 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Committing - delete photo')
             self.photodb.commit()
 
+    def duration_string(self):
+        if self.duration is None:
+            return None
+        return helpers.seconds_to_hms(self.duration)
+
     @decorators.time_me
     def generate_thumbnail(self, *, commit=True, **special):
         '''
@@ -605,6 +610,11 @@ class Photo(ObjectBase):
             self.photodb.on_commit_queue.append(queue_action)
 
         self.__reinit__()
+
+    def sorted_tags(self):
+        tags = self.tags()
+        tags.sort(key=lambda x: x.qualified_name())
+        return tags
 
     def tags(self):
         '''

@@ -244,10 +244,6 @@ def favicon():
 
 def get_album_core(albumid):
     album = P_album(albumid)
-    album = jsonify.album(album)
-    album['sub_albums'] = [P_album(x) for x in album['sub_albums']]
-    album['sub_albums'].sort(key=lambda x: (x.title or x.id).lower())
-    album['sub_albums'] = [jsonify.album(x, minimal=True) for x in album['sub_albums']]
     return album
 
 @site.route('/album/<albumid>')
@@ -258,7 +254,6 @@ def get_album_html(albumid):
     response = flask.render_template(
         'album.html',
         album=album,
-        photos=album['photos'],
         session=session,
         view=request.args.get('view', 'grid'),
     )
@@ -268,6 +263,10 @@ def get_album_html(albumid):
 @session_manager.give_token
 def get_album_json(albumid):
     album = get_album_core(albumid)
+    album = jsonify.album(album)
+    album['sub_albums'] = [P_album(x) for x in album['sub_albums']]
+    album['sub_albums'].sort(key=lambda x: (x.title or x.id).lower())
+    album['sub_albums'] = [jsonify.album(x, minimal=True) for x in album['sub_albums']]
     return jsonify.make_json_response(album)
 
 
@@ -285,7 +284,6 @@ def get_album_tar(albumid):
 def get_albums_core():
     albums = P.get_albums()
     albums = [a for a in albums if a.parent() is None]
-    albums = [jsonify.album(album, minimal=True) for album in albums]
     return albums
 
 @site.route('/albums')
@@ -299,6 +297,7 @@ def get_albums_html():
 @session_manager.give_token
 def get_albums_json():
     albums = get_albums_core()
+    albums = [jsonify.album(album, minimal=True) for album in albums]
     return jsonify.make_json_response(albums)
 
 
@@ -338,14 +337,12 @@ def get_file(photoid):
 
 def get_photo_core(photoid):
     photo = P_photo(photoid)
-    photo = jsonify.photo(photo)
     return photo
 
 @site.route('/photo/<photoid>', methods=['GET'])
 @session_manager.give_token
 def get_photo_html(photoid):
     photo = get_photo_core(photoid)
-    photo['tags'].sort(key=lambda x: x['qualified_name'])
     session = session_manager.get(request)
     return flask.render_template('photo.html', photo=photo, session=session)
 
@@ -353,6 +350,7 @@ def get_photo_html(photoid):
 @session_manager.give_token
 def get_photo_json(photoid):
     photo = get_photo_core(photoid)
+    photo = jsonify.photo(photo)
     photo = jsonify.make_json_response(photo)
     return photo
 
@@ -449,15 +447,14 @@ def get_search_core():
     #print(search_kwargs)
     with warnings.catch_warnings(record=True) as catcher:
         photos = list(P.search(**search_kwargs))
-        photos = [jsonify.photo(photo, include_albums=False) for photo in photos]
         warns = [str(warning.message) for warning in catcher]
     #print(warns)
 
     # TAGS ON THIS PAGE
     total_tags = set()
     for photo in photos:
-        for tag in photo['tags']:
-            total_tags.add(tag['qualified_name'])
+        for tag in photo.tags():
+            total_tags.add(tag.qualified_name())
     total_tags = sorted(total_tags)
 
     # PREV-NEXT PAGE URLS
@@ -515,6 +512,7 @@ def get_search_html():
 @session_manager.give_token
 def get_search_json():
     search_results = get_search_core()
+    search_results['photos'] = [jsonify.photo(photo, include_albums=False) for photo in search_results['photos']]
     #search_kwargs = search_results['search_kwargs']
     #qualname_map = search_results['qualname_map']
     include_qualname_map = request.args.get('include_map', False)

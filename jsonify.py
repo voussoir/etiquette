@@ -32,7 +32,7 @@ def photo(p, include_albums=True, include_tags=True):
         'ratio': p.ratio,
         'area': p.area,
         'bytes': p.bytes,
-        'duration_str': helpers.seconds_to_hms(p.duration) if p.duration is not None else None,
+        'duration_str': p.duration_string(),
         'duration': p.duration,
         'bytes_str': p.bytestring(),
         'has_thumbnail': bool(p.thumbnail),

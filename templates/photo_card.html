@@ -16,20 +16,20 @@
 
 {% if view == "list" %}
 <div class="photo_card_list">
-    <a target="_blank" href="/photo/{{photo["id"]}}">{{photo["filename"]}}</a>
+    <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
 </div>
 
 {% else %}
 <div class="photo_card_grid">
     <div class="photo_card_grid_thumb">
-        <a target="_blank" href="/photo/{{photo["id"]}}">
+        <a target="_blank" href="/photo/{{photo.id}}">
             <img height="150"
-            {% if photo["has_thumbnail"] %}
-                src="/thumbnail/{{photo["id"]}}.jpg"
+            {% if photo.thumbnail %}
+                src="/thumbnail/{{photo.id}}.jpg"
             {% else %}
                 {% set choice =
-                    thumbnails.get(photo["extension"],
-                    thumbnails.get(photo["mimetype"],
+                    thumbnails.get(photo.extension,
+                    thumbnails.get(photo.mimetype,
                     'other'))
                 %}
                 src="/static/basic_thumbnails/{{choice}}.png"
@@ -37,23 +37,24 @@
         </a>
     </div>
     <div class="photo_card_grid_info">
-        <a target="_blank" href="/photo/{{photo["id"]}}">{{photo["filename"]}}</a>
+        <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
         <span class="photo_card_grid_file_metadata">
-        {% if photo["width"] %}
-            {{photo["width"]}}x{{photo["height"]}},
+        {% if photo.width %}
+            {{photo.width}}x{{photo.height}},
         {% endif %}
-        {% if photo["duration"] %}
-            {{photo["duration_str"]}},
+        {% if photo.duration %}
+            {{photo.duration_string()}},
         {% endif %}
-        {{photo["bytes_str"]}}
+        {{photo.bytestring()}}
         </span>
         <span class="photo_card_grid_tags">
-            {% if photo["tags"] %}
-            {% set tags=[] %}
-            {% for tag in photo["tags"] %}
-            {% do tags.append(tag["name"]) %}
+            {% set tags = photo.tags() %}
+            {% set tag_names = [] %}
+            {% for tag in tags %}
+            {% do tag_names.append(tag.name) %}
             {% endfor %}
-            <span title="{{", ".join(tags)}}">T</span>
+            {% if tags %}
+                <span title="{{", ".join(tag_names)}}">T</span>
             {% endif %}
         </span>
     </div>
