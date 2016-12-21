@@ -9,6 +9,35 @@ import exceptions
 
 from voussoirkit import bytestring
 
+def album_zip_filenames(album, recursive=True):
+    '''
+    Given an album, produce a dictionary mapping local filepaths to the filenames
+    that will appear inside the zip archive.
+    This includes creating subfolders for sub albums.
+
+    If a photo appears in multiple albums, only the first is used.
+    '''
+    if album.title:
+        root_folder = '%s - %s' % (album.id, normalize_filepath(album.title))
+    else:
+        root_folder = '%s' % album.id
+
+    photos = album.photos()
+    arcnames = {}
+    for photo in photos:
+        photo_name = '%s - %s' % (photo.id, photo.basename)
+        arcnames[photo.real_filepath] = os.path.join(root_folder, photo_name)
+
+    if recursive:
+        for child_album in album.children():
+            child_arcnames = album_zip_filenames(child_album)
+            for (filepath, arcname) in child_arcnames.items():
+                if filepath in arcnames:
+                    continue
+                arcname = os.path.join(root_folder, arcname)
+                arcnames[filepath] = arcname
+    return arcnames
+
 def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
     '''
     Given a sequence, divide it into sequences of length `chunk_length`.
@@ -132,14 +161,20 @@ def is_xor(*args):
     '''
     return [bool(a) for a in args].count(True) == 1
 
-def normalize_filepath(filepath):
+def normalize_filepath(filepath, allowed=''):
     '''
     Remove some bad characters.
     '''
+    badchars = constants.FILENAME_BADCHARS
+    for character in allowed:
+        badchars = badchars.replace(allowed, '')
+
+    filepath = remove_control_characters(filepath)
+    badchars = dict.fromkeys(badchars)
+    filepath = filepath.translate(badchars)
+
     filepath = filepath.replace('/', os.sep)
     filepath = filepath.replace('\\', os.sep)
-    filepath = filepath.replace('<', '')
-    filepath = filepath.replace('>', '')
     return filepath
 
 def now(timestamp=True):
@@ -170,6 +205,15 @@ def read_filebytes(filepath, range_min, range_max, chunk_size=2 ** 20):
 
             yield chunk
             sent_amount += len(chunk)
+
+def remove_control_characters(text):
+    '''
+    Thanks SilentGhost
+    http://stackoverflow.com/a/4324823
+    '''
+    kill = dict.fromkeys(range(32))
+    text = text.translate(kill)
+    return text
 
 def seconds_to_hms(seconds):
     '''

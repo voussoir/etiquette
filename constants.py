@@ -11,6 +11,8 @@ except converter.ffmpeg.FFMpegError:
     traceback.print_exc()
     ffmpeg = None
 
+FILENAME_BADCHARS = '\\/:*?<>|"'
+
 ALLOWED_ORDERBY_COLUMNS = [
     'extension',
     'width',

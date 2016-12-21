@@ -5,6 +5,7 @@ import mimetypes
 import os
 import random
 import warnings
+import zipstream
 
 import constants
 import decorators
@@ -13,10 +14,6 @@ import helpers
 import jsonify
 import phototagger
 import sessions
-
-# pip install
-# https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
-from voussoirkit import webstreamzip
 
 site = flask.Flask(__name__)
 site.config.update(
@@ -270,14 +267,34 @@ def get_album_json(albumid):
     return jsonify.make_json_response(album)
 
 
-@site.route('/album/<albumid>.tar')
-def get_album_tar(albumid):
+@site.route('/album/<albumid>.zip')
+def get_album_zip(albumid):
     album = P_album(albumid)
-    photos = list(album.walk_photos())
-    zipname_map = {p.real_filepath: '%s - %s' % (p.id, p.basename) for p in photos}
-    streamed_zip = webstreamzip.stream_tar(zipname_map)
-    #content_length = sum(p.bytes for p in photos)
-    outgoing_headers = {'Content-Type': 'application/octet-stream'}
+
+    recursive = request.args.get('recursive', True)
+    recursive = helpers.truthystring(recursive)
+    arcnames = helpers.album_zip_filenames(album, recursive=recursive)
+
+    streamed_zip = zipstream.ZipFile()
+    for (real_filepath, arcname) in arcnames.items():
+        streamed_zip.write(real_filepath, arcname=arcname)
+
+    #if album.description:
+    #    streamed_zip.writestr(
+    #        arcname='%s.txt' % album.id,
+    #        data=album.description.encode('utf-8'),
+    #    )
+
+    if album.title:
+        download_as = '%s - %s.zip' % (album.id, album.title)
+    else:
+        download_as = '%s.zip' % album.id
+    download_as = download_as.replace('"', '\\"')
+    outgoing_headers = {
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': 'attachment; filename=%s' % download_as,
+
+    }
     return flask.Response(streamed_zip, headers=outgoing_headers)
 
 
@@ -325,8 +342,6 @@ def get_file(photoid):
         else:
             download_as = photo.id + '.' + photo.extension
 
-        ## Sorry, but otherwise the attachment filename gets terminated
-        #download_as = download_as.replace(';', '-')
         download_as = download_as.replace('"', '\\"')
         response = flask.make_response(send_file(photo.real_filepath))
         response.headers['Content-Disposition'] = 'attachment; filename="%s"' % download_as

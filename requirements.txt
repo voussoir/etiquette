@@ -2,5 +2,6 @@ bcrypt
 flask
 gevent
 pillow
+zipstream
 https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
 git+https://github.com/senko/python-video-converter.git

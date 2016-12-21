@@ -992,7 +992,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
             data_directory = constants.DEFAULT_DATADIR
 
         # DATA DIR PREP
-        data_directory = helpers.normalize_filepath(data_directory)
+        data_directory = helpers.normalize_filepath(data_directory, allowed='/\\')
         self.data_directory = os.path.abspath(data_directory)
         os.makedirs(self.data_directory, exist_ok=True)
 
