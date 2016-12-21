@@ -169,16 +169,29 @@ li
     font-family: monospace;
     line-height: 1.3;
 }
-.callback_message_positive, .callback_message_negative
+#message_area
+{
+    overflow-y: auto;
+    background-color: rgba(0, 0, 0, 0.1);
+    width: 100%;
+    height: 100%;
+    max-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content center;
+    align-items: center;
+    flex: 2;
+}
+.message_positive, .message_negative
 {
     width: 80%;
     margin: 4px;
 }
-.callback_message_positive
+.message_positive
 {
     background-color: #afa;
 }
-.callback_message_negative
+.message_negative
 {
     background-color: #faa;
 }

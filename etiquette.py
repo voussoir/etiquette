@@ -178,7 +178,7 @@ def get_register():
 @decorators.required_fields(['username', 'password'])
 def post_login():
     if session_manager.get(request):
-        flask.abort(403, 'You\'re already signed in.')
+        return jsonify.make_json_response({'error': 'You\'re already signed in'}, status=403)
 
     username = request.form['username']
     password = request.form['password']
@@ -186,43 +186,46 @@ def post_login():
         user = P.get_user(username=username)
         user = P.login(user.id, password)
     except (exceptions.NoSuchUser, exceptions.WrongLogin):
-        flask.abort(422, 'Wrong login.')
+        return jsonify.make_json_response({'error': 'Wrong login'}, status=422)
     session = sessions.Session(request, user)
     session_manager.add(session)
-    response = flask.Response('redirect', status=302, headers={'Location': '/'})
-    return response
+    return jsonify.make_json_response({})
 
 @site.route('/register', methods=['POST'])
 @session_manager.give_token
 @decorators.required_fields(['username', 'password_1', 'password_2'])
 def post_register():
     if session_manager.get(request):
-        flask.abort(403, 'You\'re already signed in.')
+        return jsonify.make_json_response({'error': 'You\'re already signed in'}, status=403)
 
     username = request.form['username']
     password_1 = request.form['password_1']
     password_2 = request.form['password_2']
 
     if password_1 != password_2:
-        flask.abort(422, 'Passwords do not match.')
+        return jsonify.make_json_response({'error': 'Passwords do not match'}, status=422)
 
     try:
         user = P.register_user(username, password_1)
     except exceptions.UsernameTooShort as e:
-        flask.abort(422, 'Username shorter than minimum of %d' % P.config['min_username_length'])
+        error = 'Username shorter than minimum of %d' % P.config['min_username_length']
     except exceptions.UsernameTooLong as e:
-        flask.abort(422, 'Username longer than maximum of %d' % P.config['max_username_length'])
+        error = 'Username longer than maximum of %d' % P.config['max_username_length']
     except exceptions.InvalidUsernameChars as e:
-        flask.abort(422, 'Username contains invalid characters %s' % e.args[0])
+        error = 'Username contains invalid characters %s' % e.args[0]
     except exceptions.PasswordTooShort as e:
-        flask.abort(422, 'Password is shorter than minimum of %d' % P.config['min_password_length'])
+        error = 'Password is shorter than minimum of %d' % P.config['min_password_length']
     except exceptions.UserExists as e:
-        flask.abort(422, 'User %s already exists' % e.args[0])
+        error = 'User %s already exists' % e.args[0]
+    else:
+        error = None
+
+    if error is not None:
+        return jsonify.make_json_response({'error': error}, status=422)
 
     session = sessions.Session(request, user)
     session_manager.add(session)
-    response = flask.Response('redirect', status=302, headers={'Location': '/'})
-    return response
+    return jsonify.make_json_response({})
 
 @site.route('/logout', methods=['GET', 'POST'])
 @session_manager.give_token

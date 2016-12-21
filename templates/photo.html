@@ -192,13 +192,13 @@ function receive_callback(response)
     var tagname = response["tagname"];
     if ("error" in response)
     {
-        message_positivity = "callback_message_negative";
+        message_positivity = "message_negative";
         message_text = '"' + tagname + '" ' + response["error"];
     }
     else if ("action" in response)
     {
         var action = response["action"];
-        message_positivity = "callback_message_positive";
+        message_positivity = "message_positive";
         if (action == "add_tag")
         {
             message_text = "Added tag " + tagname;

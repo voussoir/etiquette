@@ -104,7 +104,7 @@ function edit_tags(action, tagname, callback)
     var url = "/tags";
     data = new FormData();
     data.append(action, tagname);
-    return post(url, data, callback);    
+    return post(url, data, callback);
 }
 function delete_tag_synonym(tagname, callback)
 {
@@ -131,13 +131,13 @@ function receive_callback(responses)
         var tagname = response["tagname"];
         if ("error" in response)
         {
-            message_positivity = "callback_message_negative";
+            message_positivity = "message_negative";
             message_text = '"' + tagname + '" ' + response["error"];
         }
         else if ("action" in response)
         {
             var action = response["action"];
-            message_positivity = "callback_message_positive";
+            message_positivity = "message_positive";
             if (action == "new_tag")
             {message_text = "Created tag " + tagname;}
 

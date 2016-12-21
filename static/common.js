@@ -29,9 +29,9 @@ function post(url, data, callback)
     {
         if (request.readyState == 4)
         {
-            var text = request.responseText;
             if (callback != null)
             {
+                var text = request.responseText;
                 console.log(text);
                 callback(JSON.parse(text));
             }

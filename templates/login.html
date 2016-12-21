@@ -8,33 +8,6 @@
     <script src="/static/common.js"></script>
 
 <style>
-#content_body
-{
-    justify-content: center;
-    align-content: center;
-    flex: 1;
-}
-#login_register_box
-{
-    margin: auto;
-    display: flex;
-    flex-direction: row;
-}
-form
-{
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 25px;
-    margin: 25px;
-    border: 1px black solid;
-    border-radius: 6px;
-}
-form > *
-{
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
 input
 {
     width: 300px;
@@ -43,6 +16,42 @@ button
 {
     width: 80px;
 }
+
+#content_body
+{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#login_register_box
+{
+    display: flex;
+    flex-direction: row;
+}
+
+#login_form,
+#register_form
+{
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid black;
+    margin: 10px;
+}
+#login_form > *,
+#register_form > *
+{
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
 </style>
 </head>
 
@@ -51,24 +60,86 @@ button
     {{header.make_header(session=session)}}
     <div id="content_body">
         <div id="login_register_box">
-        <form id="login_form" action="/login" method="post">
-            <span>Log in</span>
-            <input type="text" name="username" placeholder="username" autofocus>
-            <input type="password" name="password" placeholder="password">
-            <button type="submit">Log in</button>
-        </form>
-        <form id="register_form" action="/register" method="post">
-            <span>Register</span>
-            <input type="text" name="username" placeholder="username">
-            <input type="password" name="password_1" placeholder="password">
-            <input type="password" name="password_2" placeholder="password again">
-            <button type="submit">Register</button>
-        </form>
+            <div id="login_form" action="/login" method="post">
+                <span>Log in</span>
+                <input type="text" id="login_input_username" name="username" placeholder="username" autofocus>
+                <input type="password" id="login_input_password" name="password" placeholder="password">
+                <button type="submit" id="login_submit_button" onclick="submit_login()">Log in</button>
+            </div>
+            <div id="register_form" action="/register" method="post">
+                <span>Register</span>
+                <input type="text" id="register_input_username" name="username" placeholder="username">
+                <input type="password" id="register_input_password_1" name="password_1" placeholder="password">
+                <input type="password" id="register_input_password_2" name="password_2" placeholder="password again">
+                <button type="submit" id="register_input_button" onclick="submit_register()">Register</button>
+            </div>
+        </div>
+        <div id="message_area">
         </div>
     </div>
 </body>
 
 
 <script type="text/javascript">
+var login_input_username = document.getElementById("login_input_username");
+var login_input_password = document.getElementById("login_input_password");
+var login_submit_button = document.getElementById("login_submit_button");
+bind_box_to_button(login_input_username, login_submit_button);
+bind_box_to_button(login_input_password, login_submit_button);
+
+var register_input_username = document.getElementById("register_input_username");
+var register_input_password_1 = document.getElementById("register_input_password_1");
+var register_input_password_2 = document.getElementById("register_input_password_2");
+var register_input_button = document.getElementById("register_input_button");
+bind_box_to_button(register_input_username, register_input_button);
+bind_box_to_button(register_input_password_1, register_input_button);
+bind_box_to_button(register_input_password_2, register_input_button);
+
+var message_area = document.getElementById("message_area");
+
+function submit_login()
+{
+    var username = document.getElementById("login_input_username").value;
+    var password = document.getElementById("login_input_password").value;
+    if (username == "" || password == "")
+    {
+        create_message_bubble(message_area, "message_negative", "Fill out the form yo", 8000);
+        return;
+    }
+    var url = "/login";
+    data = new FormData();
+    data.append("username", username);
+    data.append("password", password);
+    return post(url, data, receive_callback);
+}
+function submit_register()
+{
+    var username = document.getElementById("register_input_username").value;
+    var password_1 = document.getElementById("register_input_password_1").value;
+    var password_2 = document.getElementById("register_input_password_2").value;
+    if (username == "" || password_1 == "" || password_2 == "")
+    {
+        create_message_bubble(message_area, "message_negative", "Fill out the form yo", 8000);
+        return;
+    }
+    var url = "/register";
+    data = new FormData();
+    data.append("username", username);
+    data.append("password_1", password_1);
+    data.append("password_2", password_2);
+    return post(url, data, receive_callback);
+}
+function receive_callback(response)
+{
+    if ("error" in response)
+    {
+        create_message_bubble(message_area, "message_negative", response["error"], 8000);
+    }
+    else
+    {
+        window.location.href = "/";
+    }
+}
+
 </script>
 </html>
