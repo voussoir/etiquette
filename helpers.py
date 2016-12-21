@@ -50,6 +50,25 @@ def album_zip_filenames(album, recursive=True):
 
     return arcnames
 
+def binding_filler(column_names, values, require_all=True):
+    '''
+    Manually aligning question marks and bindings is annoying.
+    Given the table's column names and a dictionary of {column: value},
+    return the question marks and the list of bindings in the right order.
+    '''
+    values = values.copy()
+    for column in column_names:
+        if column in values:
+            continue
+        if require_all:
+            raise ValueError('Missing column "%s"' % column)
+        else:
+            values.setdefault(column, None)
+    qmarks = '?' * len(column_names)
+    qmarks = ', '.join(qmarks)
+    bindings = [values[column] for column in column_names]
+    return (qmarks, bindings)
+
 def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
     '''
     Given a sequence, divide it into sequences of length `chunk_length`.

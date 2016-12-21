@@ -215,22 +215,34 @@ function move_hoverzoom(event)
 {
     var x;
     var y;
+
+    // Adding 5% to perceived position gives us a bit of padding around the image,
+    // so you don't need to navigate a 1px line to see the edge.
+    // We first subtract half of the image dimensions so that the 5% is applied
+    // to both left and right. Otherwise 105% of 0 is still 0 which doesn't
+    // apply padding on the left.
     var mouse_x = event.offsetX;
     mouse_x -= (photo_img_holder.offsetWidth / 2);
     mouse_x *= 1.05;
     mouse_x += (photo_img_holder.offsetWidth / 2);
+
     var mouse_y = event.offsetY;
     mouse_y -= (photo_img_holder.offsetHeight / 2);
     mouse_y *= 1.05;
     mouse_y += (photo_img_holder.offsetHeight / 2);
+
     if (photo_img.naturalWidth < photo_img_holder.offsetWidth)
     {
+        // If the image is smaller than the frame, just center it
         x = (photo_img.naturalWidth - photo_img_holder.offsetWidth) / 2;
     }
     else
     {
+        // Take the amount of movement necessary (frame width - image width)
+        // times our distance across the image as a percentage.
         x = (photo_img.naturalWidth - photo_img_holder.offsetWidth) * (mouse_x / photo_img_holder.offsetWidth);
     }
+
     if (photo_img.naturalHeight < photo_img_holder.offsetHeight)
     {
         y = (photo_img.naturalHeight - photo_img_holder.offsetHeight) / 2;

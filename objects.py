@@ -281,23 +281,24 @@ class Photo(ObjectBase):
         if isinstance(row_tuple, (list, tuple)):
             row_tuple = {constants.SQL_PHOTO_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
 
-        self.id = row_tuple['id']
-        self.real_filepath = row_tuple['filepath']
-        self.real_filepath = helpers.normalize_filepath(self.real_filepath, allowed=':\\/')
+        self.real_filepath = helpers.normalize_filepath(row_tuple['filepath'], allowed=':\\/')
         self.real_path = pathclass.Path(self.real_filepath)
-        self.filepath = row_tuple['override_filename'] or self.real_filepath
-        self.basename = row_tuple['override_filename'] or os.path.basename(self.real_filepath)
+
+        self.id = row_tuple['id']
+        self.created = row_tuple['created']
+        self.author_id = row_tuple['author_id']
+        self.filepath = row_tuple['override_filename'] or self.real_path.absolute_path
+        self.basename = row_tuple['override_filename'] or self.real_path.basename
         self.extension = row_tuple['extension']
-        self.width = row_tuple['width']
-        self.height = row_tuple['height']
-        self.ratio = row_tuple['ratio']
+        self.tagged_at = row_tuple['tagged_at']
+
         self.area = row_tuple['area']
         self.bytes = row_tuple['bytes']
         self.duration = row_tuple['duration']
-        self.created = row_tuple['created']
+        self.width = row_tuple['width']
+        self.height = row_tuple['height']
+        self.ratio = row_tuple['ratio']
         self.thumbnail = row_tuple['thumbnail']
-        self.tagged_at = row_tuple['tagged_at']
-        self.author_id = row_tuple['author_id']
 
     def __reinit__(self):
         '''

@@ -182,10 +182,10 @@ def post_login():
 
     username = request.form['username']
     password = request.form['password']
-    user = P.get_user(username=username)
     try:
+        user = P.get_user(username=username)
         user = P.login(user.id, password)
-    except exceptions.WrongLogin:
+    except (exceptions.NoSuchUser, exceptions.WrongLogin):
         flask.abort(422, 'Wrong login.')
     session = sessions.Session(request, user)
     session_manager.add(session)

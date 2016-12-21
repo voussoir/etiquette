@@ -33,6 +33,9 @@ class UserExists(Exception):
 
 
 # TAG ERRORS
+class CantSynonymSelf(Exception):
+    pass
+
 class RecursiveGrouping(Exception):
     pass
 
@@ -40,9 +43,6 @@ class TagTooLong(Exception):
     pass
 
 class TagTooShort(Exception):
-    pass
-
-class CantSynonymSelf(Exception):
     pass
 
 

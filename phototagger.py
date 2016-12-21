@@ -124,25 +124,6 @@ def _helper_filenamefilter(subject, terms):
     basename = subject.lower()
     return all(term in basename for term in terms)
 
-def binding_filler(column_names, values, require_all=True):
-    '''
-    Manually aligning question marks and bindings is annoying.
-    Given the table's column names and a dictionary of {column: value},
-    return the question marks and the list of bindings in the right order.
-    '''
-    values = values.copy()
-    for column in column_names:
-        if column in values:
-            continue
-        if require_all:
-            raise ValueError('Missing column "%s"' % column)
-        else:
-            values.setdefault(column, None)
-    qmarks = '?' * len(column_names)
-    qmarks = ', '.join(qmarks)
-    bindings = [values[column] for column in column_names]
-    return (qmarks, bindings)
-
 def operate(operand_stack, operator_stack):
     #print('before:', operand_stack, operator_stack)
     operator = operator_stack.pop()
@@ -379,7 +360,7 @@ class PDBAlbumMixin:
             'associated_directory': associated_directory,
         }
 
-        (qmarks, bindings) = binding_filler(constants.SQL_ALBUM_COLUMNS, data)
+        (qmarks, bindings) = helpers.binding_filler(constants.SQL_ALBUM_COLUMNS, data)
         query = 'INSERT INTO albums VALUES(%s)' % qmarks
         self.cur.execute(query, bindings)
 
@@ -496,7 +477,7 @@ class PDBPhotoMixin:
             'thumbnail': None,
         }
 
-        (qmarks, bindings) = binding_filler(constants.SQL_PHOTO_COLUMNS, data)
+        (qmarks, bindings) = helpers.binding_filler(constants.SQL_PHOTO_COLUMNS, data)
         query = 'INSERT INTO photos VALUES(%s)' % qmarks
         self.cur.execute(query, bindings)
         photo = objects.Photo(self, data)
@@ -937,7 +918,7 @@ class PDBUserMixin:
             'created': created,
         }
 
-        (qmarks, bindings) = binding_filler(constants.SQL_USER_COLUMNS, data)
+        (qmarks, bindings) = helpers.binding_filler(constants.SQL_USER_COLUMNS, data)
         query = 'INSERT INTO users VALUES(%s)' % qmarks
         self.cur.execute(query, bindings)
 
