@@ -279,11 +279,20 @@ def get_album_zip(albumid):
     for (real_filepath, arcname) in arcnames.items():
         streamed_zip.write(real_filepath, arcname=arcname)
 
-    #if album.description:
-    #    streamed_zip.writestr(
-    #        arcname='%s.txt' % album.id,
-    #        data=album.description.encode('utf-8'),
-    #    )
+    directories = helpers.album_zip_directories(album, recursive=recursive)
+    for (inner_album, directory) in directories.items():
+        text = []
+        if inner_album.title:
+            text.append(inner_album.title)
+        if inner_album.description:
+            text.append(inner_album.description)
+        if not text:
+            continue
+        text = '\r\n\r\n'.join(text)
+        streamed_zip.writestr(
+            arcname=os.path.join(directory, '%s.txt' % inner_album.id),
+            data=text.encode('utf-8'),
+        )
 
     if album.title:
         download_as = '%s - %s.zip' % (album.id, album.title)

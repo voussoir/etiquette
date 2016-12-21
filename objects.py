@@ -175,6 +175,9 @@ class Album(ObjectBase, GroupableMixin):
         self.name = 'Album %s' % self.id
         self.group_getter = self.photodb.get_album
 
+    def __hash__(self):
+        return hash(self.id)
+
     def __repr__(self):
         return 'Album:{id}'.format(id=self.id)
 
@@ -280,7 +283,7 @@ class Photo(ObjectBase):
 
         self.id = row_tuple['id']
         self.real_filepath = row_tuple['filepath']
-        self.real_filepath = helpers.normalize_filepath(self.real_filepath)
+        self.real_filepath = helpers.normalize_filepath(self.real_filepath, allowed=':\\/')
         self.real_path = pathclass.Path(self.real_filepath)
         self.filepath = row_tuple['override_filename'] or self.real_filepath
         self.basename = row_tuple['override_filename'] or os.path.basename(self.real_filepath)
@@ -572,7 +575,7 @@ class Photo(ObjectBase):
         old_path = self.real_path
         old_path.correct_case()
 
-        new_filename = helpers.normalize_filepath(new_filename)
+        new_filename = helpers.normalize_filepath(new_filename, allowed=':\\/')
         if os.path.dirname(new_filename) == '':
             new_path = old_path.parent.with_child(new_filename)
         else:

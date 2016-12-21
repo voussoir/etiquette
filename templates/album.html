@@ -47,7 +47,11 @@ p
         {% endfor %}
     </ul>
     {% endif %}
-    <span><a href="/album/{{album.id}}.zip">(download .zip)</a></span>
+    <span>
+        Download:
+        <a href="/album/{{album.id}}.zip?recursive=no">These files</a>
+        {% if sub_albums %} | <a href="/album/{{album.id}}.zip?recursive=yes">Include children</a>{% endif %}
+    </span>
     {% set photos = album.photos() %}
     {% if photos %}
     <h3>Photos</h3>

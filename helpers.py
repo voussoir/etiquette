@@ -9,6 +9,27 @@ import exceptions
 
 from voussoirkit import bytestring
 
+def album_zip_directories(album, recursive=True):
+    '''
+    Given an album, produce a dictionary mapping Album objects to directory
+    names as they will appear inside the zip archive.
+    Sub-albums become subfolders.
+    '''
+    directories = {}
+    if album.title:
+        root_folder = '%s - %s' % (album.id, normalize_filepath(album.title))
+    else:
+        root_folder = '%s' % album.id
+
+    directories[album] = root_folder
+    if recursive:
+        for child_album in album.children():
+            child_directories = album_zip_directories(child_album, recursive=True)
+            for (child_album, child_directory) in child_directories.items():
+                child_directory = os.path.join(root_folder, child_directory)
+                directories[child_album] = child_directory
+    return directories
+    
 def album_zip_filenames(album, recursive=True):
     '''
     Given an album, produce a dictionary mapping local filepaths to the filenames
@@ -17,25 +38,16 @@ def album_zip_filenames(album, recursive=True):
 
     If a photo appears in multiple albums, only the first is used.
     '''
-    if album.title:
-        root_folder = '%s - %s' % (album.id, normalize_filepath(album.title))
-    else:
-        root_folder = '%s' % album.id
-
-    photos = album.photos()
     arcnames = {}
-    for photo in photos:
-        photo_name = '%s - %s' % (photo.id, photo.basename)
-        arcnames[photo.real_filepath] = os.path.join(root_folder, photo_name)
+    directories = album_zip_directories(album, recursive=recursive)
+    for (album, directory) in directories.items():
+        photos = album.photos()
+        for photo in photos:
+            if photo.real_filepath in arcnames:
+                continue
+            photo_name = '%s - %s' % (photo.id, photo.basename)
+            arcnames[photo.real_filepath] = os.path.join(directory, photo_name)
 
-    if recursive:
-        for child_album in album.children():
-            child_arcnames = album_zip_filenames(child_album)
-            for (filepath, arcname) in child_arcnames.items():
-                if filepath in arcnames:
-                    continue
-                arcname = os.path.join(root_folder, arcname)
-                arcnames[filepath] = arcname
     return arcnames
 
 def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
@@ -165,13 +177,8 @@ def normalize_filepath(filepath, allowed=''):
     '''
     Remove some bad characters.
     '''
-    badchars = constants.FILENAME_BADCHARS
-    for character in allowed:
-        badchars = badchars.replace(allowed, '')
-
-    filepath = remove_control_characters(filepath)
-    badchars = dict.fromkeys(badchars)
-    filepath = filepath.translate(badchars)
+    badchars = remove_characters(constants.FILENAME_BADCHARS, allowed)
+    filepath = remove_characters(filepath, badchars)
 
     filepath = filepath.replace('/', os.sep)
     filepath = filepath.replace('\\', os.sep)
@@ -206,13 +213,18 @@ def read_filebytes(filepath, range_min, range_max, chunk_size=2 ** 20):
             yield chunk
             sent_amount += len(chunk)
 
+def remove_characters(text, characters):
+    translator = {ord(c): None for c in characters}
+    text = text.translate(translator)
+    return text
+
 def remove_control_characters(text):
     '''
     Thanks SilentGhost
     http://stackoverflow.com/a/4324823
     '''
-    kill = dict.fromkeys(range(32))
-    text = text.translate(kill)
+    translator = dict.fromkeys(range(32))
+    text = text.translate(translator)
     return text
 
 def seconds_to_hms(seconds):
