@@ -300,6 +300,8 @@ class Photo(ObjectBase):
         self.ratio = row_tuple['ratio']
         self.thumbnail = row_tuple['thumbnail']
 
+        self.mimetype = helpers.get_mimetype(self.real_filepath)
+
     def __reinit__(self):
         '''
         Reload the row from the database and do __init__ with them.
@@ -392,8 +394,7 @@ class Photo(ObjectBase):
         hopeful_filepath = self.make_thumbnail_filepath()
         return_filepath = None
 
-        mime = self.mimetype()
-        if mime == 'image':
+        if self.mimetype == 'image':
             self.photodb.log.debug('Thumbnailing %s' % self.real_filepath)
             try:
                 image = PIL.Image.open(self.real_filepath)
@@ -413,7 +414,7 @@ class Photo(ObjectBase):
                 image.save(hopeful_filepath, quality=50)
                 return_filepath = hopeful_filepath
 
-        elif mime == 'video' and constants.ffmpeg:
+        elif self.mimetype == 'video' and constants.ffmpeg:
             #print('video')
             probe = constants.ffmpeg.probe(self.real_filepath)
             try:
@@ -495,9 +496,6 @@ class Photo(ObjectBase):
         hopeful_filepath = os.path.join(folder, basename) + '.jpg'
         return hopeful_filepath
 
-    def mimetype(self):
-        return helpers.get_mimetype(self.real_filepath)
-
     @decorators.time_me
     def reload_metadata(self, *, commit=True):
         '''
@@ -510,8 +508,7 @@ class Photo(ObjectBase):
         self.ratio = None
         self.duration = None
 
-        mime = self.mimetype()
-        if mime == 'image':
+        if self.mimetype == 'image':
             try:
                 image = PIL.Image.open(self.real_filepath)
             except (OSError, ValueError):
@@ -521,7 +518,7 @@ class Photo(ObjectBase):
                 image.close()
                 self.photodb.log.debug('Loaded image data for {photo:r}'.format(photo=self))
 
-        elif mime == 'video' and constants.ffmpeg:
+        elif self.mimetype == 'video' and constants.ffmpeg:
             try:
                 probe = constants.ffmpeg.probe(self.real_filepath)
                 if probe and probe.video:
@@ -531,7 +528,7 @@ class Photo(ObjectBase):
             except:
                 traceback.print_exc()
 
-        elif mime == 'audio':
+        elif self.mimetype == 'audio':
             try:
                 probe = constants.ffmpeg.probe(self.real_filepath)
                 if probe and probe.audio:

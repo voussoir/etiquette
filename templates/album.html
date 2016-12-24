@@ -47,12 +47,12 @@ p
         {% endfor %}
     </ul>
     {% endif %}
+    {% set photos = album.photos() %}
     <span>
         Download:
-        <a href="/album/{{album.id}}.zip?recursive=no">These files</a>
-        {% if sub_albums %} | <a href="/album/{{album.id}}.zip?recursive=yes">Include children</a>{% endif %}
+        {% if photos %}<a href="/album/{{album.id}}.zip?recursive=no">These files</a>{% endif %}
+        {% if sub_albums %}<a href="/album/{{album.id}}.zip?recursive=yes">Include children</a>{% endif %}
     </span>
-    {% set photos = album.photos() %}
     {% if photos %}
     <h3>Photos</h3>
     <ul>

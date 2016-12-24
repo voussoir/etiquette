@@ -33,7 +33,7 @@ form
 #left, #right
 {
     /* Keep the prev-next buttons from scraping the floor */
-    padding-bottom: 30px;
+    /*padding-bottom: 30px;*/
 }
 #left
 {
@@ -44,26 +44,27 @@ form
 #right
 {
     flex: 1;
+    padding: 8px;
     width: auto;
 }
 .prev_next_holder
 {
-    /* Makes div match size of content */
-    overflow: auto;
+    display: flex;
+    flex-direction: row;
 }
 .prev_page
 {
-    float: left;
+    margin-right: 10px;
 }
 .next_page
 {
-    float: right;
+    margin-left: 10px;
 }
 .prev_page, .next_page
 {
-    display: inline-block;
-    width: 48%;
-    height: auto;
+    flex: 1;
+    display: flex;
+    justify-content: center;
     background-color: #ffffd4;
     font-size: 20;
     border: 1px solid black;
@@ -79,7 +80,6 @@ form
 {% macro prev_next_buttons() %}
 {% if prev_page_url or next_page_url %}
 <div class="prev_next_holder">
-    <center>
     {% if prev_page_url %}
     <a class="prev_page" href="{{prev_page_url}}">Previous</a>
     {% else %}
@@ -90,7 +90,6 @@ form
     {% else %}
     <a class="next_page"><br></a>
     {% endif %}
-    </center>
 </div>
 {% endif %}
 {% endmacro %}
@@ -238,11 +237,14 @@ form
         {% endif %}
     </div>
     <div id="right">
-        <p>You got {{photos|length}} items</p><br>
+        <p>You got {{photos|length}} items</p>
         {{prev_next_buttons()}}
+        <div id="search_results_holder">
         {% for photo in photos %}
         {{photo_card.create_photo_card(photo, view=search_kwargs["view"])}}
         {% endfor %}
+        </div>
+
         {{prev_next_buttons()}}
     </div>
     </div>

@@ -8,7 +8,6 @@
     <script src="/static/common.js"></script>
     {% set filename = photo.id + "." + photo.extension %}
     {% set link = "/file/" + filename %}
-    {% set mimetype=photo.mimetype() %}
 
 <style>
 #content_body
@@ -21,6 +20,7 @@
 #left
 {
     display: flex;
+    padding: 8px;
     flex-direction: column;
     justify-content: flex-start;
     background-color: rgba(0, 0, 0, 0.1);
@@ -117,10 +117,10 @@
         {% if photo.width %}
             <li>Dimensions: {{photo.width}}x{{photo.height}} px</li>
             <li>Aspect ratio: {{photo.ratio}}</li>
-            <li>Size: {{photo.bytestring()}}</li>
         {% endif %}
+        <li>Size: {{photo.bytestring()}}</li>
         {% if photo.duration %}
-            <li>Duration: {{photo.duration_str}}</li>
+            <li>Duration: {{photo.duration_string()}}</li>
         {% endif %}
             <li><a href="/file/{{photo.id}}.{{photo.extension}}?download=1">Download as {{photo.id}}.{{photo.extension}}</a></li>
             <li><a href="/file/{{photo.id}}.{{photo.extension}}?download=1&original_filename=1">Download as "{{photo.basename}}"</a></li>
@@ -144,12 +144,12 @@
 <div id="right">
     <!-- THE PHOTO ITSELF -->
     <div class="photo_viewer">
-        {% if mimetype == "image" %}
+        {% if photo.mimetype == "image" %}
         <div id="photo_img_holder"><img id="photo_img" src="{{link}}" onclick="toggle_hoverzoom()" onload="this.style.opacity=0.99"></div>
         <!-- <img src="{{link}}"> -->
-        {% elif mimetype == "video" %}
+        {% elif photo.mimetype == "video" %}
         <video src="{{link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
-        {% elif mimetype == "audio" %}
+        {% elif photo.mimetype == "audio" %}
         <audio src="{{link}}" controls></audio>
         {% else %}
         <a href="{{link}}">View {{filename}}</a>

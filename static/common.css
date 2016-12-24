@@ -154,6 +154,10 @@ li
     bottom: 0;
     right: 0;
 }
+.photo_card_grid_filename
+{
+    word-break:break-word;
+}
 .photo_card_grid_tags
 {
     position: absolute;
@@ -194,9 +198,4 @@ li
 .message_negative
 {
     background-color: #faa;
-}
-
-@font-face {
-    font-family: 'Highlander';
-    src: url('/static/Highlander_Normal.ttf');
 }

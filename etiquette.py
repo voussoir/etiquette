@@ -404,8 +404,8 @@ def get_search_core():
         limit = 50
 
     # OFFSET
-    offset = request.args.get('offset', None)
-    if offset:
+    offset = request.args.get('offset', '')
+    if offset.isdigit():
         offset = int(offset)
     else:
         offset = None
@@ -421,6 +421,15 @@ def get_search_core():
     tag_mays = [qualname_map.get(tag, tag) for tag in tag_mays if tag != '']
     tag_forbids = [qualname_map.get(tag, tag) for tag in tag_forbids if tag != '']
 
+    # AUTHOR
+    authors = request.args.get('author', None)
+    if authors:
+        authors = authors.split(',')
+        authors = [a.strip() for a in authors]
+        authors = [P.get_user(username=a) for a in authors]
+    else:
+        authors = None
+
     # ORDERBY
     orderby = request.args.get('orderby', None)
     if orderby:
@@ -430,11 +439,11 @@ def get_search_core():
         orderby = None
 
     # HAS_TAGS
-    has_tags = request.args.get('has_tags', '')
-    if has_tags == '':
-        has_tags = None
-    else:
+    has_tags = request.args.get('has_tags', None)
+    if has_tags:
         has_tags = helpers.truthystring(has_tags)
+    else:
+        has_tags = None
 
     # MINMAXERS
     area = request.args.get('area', None)
@@ -454,6 +463,7 @@ def get_search_core():
         'bytes': bytes,
         'duration': duration,
 
+        'authors': authors,
         'created': created,
         'extension': extension_list,
         'extension_not': extension_not_list,

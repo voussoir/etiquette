@@ -121,7 +121,7 @@ DEFAULT_CONFIGURATION = {
 
     'min_username_length': 2,
     'max_username_length': 24,
-    'valid_username_chars': string.ascii_letters + string.digits + '~!@#$%^&*()[]{}:;,.<>/\\-_+=',
+    'valid_username_chars': string.ascii_letters + string.digits + '~!@#$%^*()[]{}:;,.<>/\\-_+=',
     'min_password_length': 6,
 
     'id_length': 12,

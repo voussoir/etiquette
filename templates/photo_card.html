@@ -37,7 +37,7 @@
         </a>
     </div>
     <div class="photo_card_grid_info">
-        <a target="_blank" href="/photo/{{photo.id}}" style="word-break:break-all">{{photo.basename}}</a>
+        <a target="_blank" class="photo_card_grid_filename" href="/photo/{{photo.id}}">{{photo.basename}}</a>
         <span class="photo_card_grid_file_metadata">
         {% if photo.width %}
             {{photo.width}}x{{photo.height}},

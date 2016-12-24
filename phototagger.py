@@ -452,6 +452,8 @@ class PDBPhotoMixin:
         elif author is not None:
             # Just to confirm
             author_id = self.get_user(id=author).id
+        else:
+            author_id = None
 
         extension = os.path.splitext(filename)[1]
         extension = extension.replace('.', '')
@@ -524,6 +526,7 @@ class PDBPhotoMixin:
             bytes=None,
             duration=None,
 
+            authors=None,
             created=None,
             extension=None,
             extension_not=None,
@@ -541,11 +544,14 @@ class PDBPhotoMixin:
             orderby=None
         ):
         '''
-        PHOTO PROPERTISE
+        PHOTO PROPERTIES
         area, width, height, ratio, bytes, duration:
             A hyphen_range string representing min and max. Or just a number for lower bound.
 
         TAGS AND FILTERS
+        authors:
+            A list of User object or users IDs.
+
         created:
             A hyphen_range string respresenting min and max. Or just a number for lower bound.
 
@@ -615,6 +621,11 @@ class PDBPhotoMixin:
         extension_not = helpers._normalize_extensions(extension_not)
         mimetype = helpers._normalize_extensions(mimetype)
 
+        if authors is not None:
+            if isinstance(authors, str):
+                authors = {authors, }
+            authors = set(a.id if isinstance(a, objects.User) else a for a in authors)
+
         if filename is not None:
             if not isinstance(filename, str):
                 filename = ' '.join(filename)
@@ -669,8 +680,11 @@ class PDBPhotoMixin:
                 #print('Failed extension_not')
                 continue
 
-            if mimetype and photo.mimetype() not in mimetype:
+            if mimetype and photo.mimetype not in mimetype:
                 #print('Failed mimetype')
+                continue
+
+            if authors and photo.author_id not in authors:
                 continue
 
             if filename and not _helper_filenamefilter(subject=photo.basename, terms=filename):

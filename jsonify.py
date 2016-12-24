@@ -38,7 +38,7 @@ def photo(p, include_albums=True, include_tags=True):
         'has_thumbnail': bool(p.thumbnail),
         'created': p.created,
         'filename': p.basename,
-        'mimetype': p.mimetype(),
+        'mimetype': p.mimetype,
     }
     if include_albums:
         j['albums'] = [album(a, minimal=True) for a in p.albums()]
