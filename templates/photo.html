@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
     <script src="/static/common.js"></script>
-    {% set filename = photo.id + "." + photo.extension %}
+    {% set filename = photo.id + photo.dot_extension %}
     {% set link = "/file/" + filename %}
 
 <style>
@@ -122,9 +122,8 @@
         {% if photo.duration %}
             <li>Duration: {{photo.duration_string()}}</li>
         {% endif %}
-        {% set extension= "." + photo.extension if photo.extension != "" else "" %}
-            <li><a href="/file/{{photo.id}}{{extension}}?download=1">Download as {{photo.id}}.{{photo.extension}}</a></li>
-            <li><a href="/file/{{photo.id}}{{extension}}?download=1&original_filename=1">Download as "{{photo.basename}}"</a></li>
+            <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=1">Download as {{photo.id}}.{{photo.extension}}</a></li>
+            <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=1&original_filename=1">Download as "{{photo.basename}}"</a></li>
         </ul>
 
         <!-- CONTAINING ALBUMS -->

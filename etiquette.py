@@ -4,6 +4,7 @@ import json
 import mimetypes
 import os
 import random
+import urllib.parse
 import warnings
 import zipstream
 
@@ -303,10 +304,10 @@ def get_album_zip(albumid):
         download_as = '%s - %s.zip' % (album.id, album.title)
     else:
         download_as = '%s.zip' % album.id
-    download_as = download_as.replace('"', '\\"')
+    download_as = urllib.parse.quote(download_as)
     outgoing_headers = {
         'Content-Type': 'application/octet-stream',
-        'Content-Disposition': 'attachment; filename=%s' % download_as,
+        'Content-Disposition': 'attachment; filename*=UTF-8\'\'%s' % download_as,
 
     }
     return flask.Response(streamed_zip, headers=outgoing_headers)
@@ -354,13 +355,11 @@ def get_file(photoid):
         if use_original_filename:
             download_as = photo.basename
         else:
-            download_as = photo.id
-            if photo.extension:
-                download_as += photo.extension
+            download_as = photo.id + photo.dot_extension
 
-        download_as = download_as.replace('"', '\\"')
+        download_as =  urllib.parse.quote(download_as)
         response = flask.make_response(send_file(photo.real_filepath))
-        response.headers['Content-Disposition'] = 'attachment; filename="%s"' % download_as
+        response.headers['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % download_as
         return response
     else:
         return send_file(photo.real_filepath)
@@ -485,7 +484,7 @@ def get_search_core():
     total_tags = sorted(total_tags)
 
     # PREV-NEXT PAGE URLS
-    offset = offset or 0
+    offset = search_kwargs['offset'] or 0
     original_params = request.args.to_dict()
     if len(photos) == limit:
         next_params = helpers.edit_params(original_params, {'offset': offset + limit})

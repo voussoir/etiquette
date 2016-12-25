@@ -567,6 +567,7 @@ class PDBPhotoMixin:
 
         extension_not:
             A string or list of strings of unacceptable file extensions.
+            Including '*' will forbid all extensions
 
         filename:
             A string or list of strings which will be split into words. The file's basename
@@ -722,7 +723,14 @@ class PDBPhotoMixin:
                 #print('Failed extension')
                 continue
 
-            if extension_not and photo.extension in extension_not:
+            ext_fail = (
+                extension_not and
+                (
+                    ('*' in extension_not and photo.extension) or
+                    (photo.extension in extension_not)
+                )
+            )
+            if (ext_fail):
                 #print('Failed extension_not')
                 continue
 

@@ -292,6 +292,11 @@ class Photo(ObjectBase):
         self.extension = row_tuple['extension']
         self.tagged_at = row_tuple['tagged_at']
 
+        if self.extension == '':
+            self.dot_extension = ''
+        else:
+            self.dot_extension = '.' + self.extension
+
         self.area = row_tuple['area']
         self.bytes = row_tuple['bytes']
         self.duration = row_tuple['duration']

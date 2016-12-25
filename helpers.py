@@ -191,9 +191,6 @@ def is_xor(*args):
     '''
     return [bool(a) for a in args].count(True) == 1
 
-def normalize_extension(extension):
-    pass
-
 def normalize_filepath(filepath, allowed=''):
     '''
     Remove some bad characters.
