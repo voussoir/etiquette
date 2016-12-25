@@ -102,8 +102,10 @@ ERROR_RECURSIVE_GROUPING = 'Recursive grouping'
 WARNING_MINMAX_INVALID = 'Field "{field}": "{value}" is not a valid request. Ignored.'
 WARNING_MINMAX_OOO = 'Field "{field}": minimum "{min}" maximum "{max}" are out of order. Ignored.'
 WARNING_NO_SUCH_TAG = 'Tag "{tag}" does not exist. Ignored.'
+WARNING_NO_SUCH_USER = 'User "{username}" does not exist. Ignored.'
+WARNING_ORDERBY_INVALID = 'Invalid orderby request "{request}". Ignored.'
 WARNING_ORDERBY_BADCOL = '"{column}" is not a sorting option. Ignored.'
-WARNING_ORDERBY_BADSORTER = 'You can\'t order "{column}" by "{sorter}". Defaulting to descending.'
+WARNING_ORDERBY_BADDIRECTION = 'You can\'t order "{column}" by "{direction}". Defaulting to descending.'
 
 # Operational info
 EXPRESSION_OPERATORS = {'(', ')', 'OR', 'AND', 'NOT'}

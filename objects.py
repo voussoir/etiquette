@@ -392,6 +392,8 @@ class Photo(ObjectBase):
             For videos, you can provide a `timestamp` to take the thumbnail from.
         '''
         hopeful_filepath = self.make_thumbnail_filepath()
+        hopeful_filepath = hopeful_filepath.relative_path
+        #print(hopeful_filepath)
         return_filepath = None
 
         if self.mimetype == 'image':
@@ -490,10 +492,10 @@ class Photo(ObjectBase):
         basename = chunked_id[-1]
         folder = chunked_id[:-1]
         folder = os.sep.join(folder)
-        folder = os.path.join(self.photodb.thumbnail_directory, folder)
+        folder = self.photodb.thumbnail_directory.join(folder)
         if folder:
-            os.makedirs(folder, exist_ok=True)
-        hopeful_filepath = os.path.join(folder, basename) + '.jpg'
+            os.makedirs(folder.absolute_path, exist_ok=True)
+        hopeful_filepath = folder.with_child(basename + '.jpg')
         return hopeful_filepath
 
     @decorators.time_me
@@ -828,3 +830,10 @@ class User(ObjectBase):
     def __str__(self):
         rep = 'User:{username}'.format(username=self.username)
         return rep
+
+class WarningBag:
+    def __init__(self):
+        self.warnings = set()
+
+    def add(self, warning):
+        self.warnings.add(warning)

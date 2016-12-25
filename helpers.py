@@ -2,7 +2,6 @@ import datetime
 import math
 import mimetypes
 import os
-import warnings
 
 import constants
 import exceptions
@@ -192,6 +191,9 @@ def is_xor(*args):
     '''
     return [bool(a) for a in args].count(True) == 1
 
+def normalize_extension(extension):
+    pass
+
 def normalize_filepath(filepath, allowed=''):
     '''
     Remove some bad characters.
@@ -283,102 +285,6 @@ def truthystring(s):
         return None
     return False
 
-#===============================================================================
-
-def _minmax(key, value, minimums, maximums):
-    '''
-    When searching, this function dissects a hyphenated range string
-    and inserts the correct k:v pair into both minimums and maximums.
-    ('area', '100-200', {}, {}) --> {'area': 100}, {'area': 200} (MODIFIED IN PLACE)
-    '''
-    if value is None:
-        return
-    if isinstance(value, (int, float)):
-        minimums[key] = value
-        return
-    try:
-        (low, high) = hyphen_range(value)
-    except ValueError:
-        warnings.warn(constants.WARNING_MINMAX_INVALID.format(field=key, value=value))
-        return
-    except exceptions.OutOfOrder as e:
-        warnings.warn(constants.WARNING_MINMAX_OOO.format(field=key, min=e.args[1], max=e.args[2]))
-        return
-    if low is not None:
-        minimums[key] = low
-    if high is not None:
-        maximums[key] = high
-
-def _normalize_extensions(extensions):
-    '''
-    When searching, this function normalizes the list of inputted extensions.
-    '''
-    if isinstance(extensions, str):
-        extensions = extensions.split()
-    if extensions is None:
-        return set()
-    extensions = [e.lower().strip('.').strip() for e in extensions]
-    extensions = set(e for e in extensions if e)
-    return extensions
-
-def _orderby(orderby):
-    '''
-    When searching, this function ensures that the user has entered a valid orderby
-    query, and normalizes the query text.
-
-    'random asc' --> ('random', 'asc')
-    'area' --> ('area', 'desc')
-    '''
-    orderby = orderby.lower().strip()
-    if orderby == '':
-        return None
-
-    orderby = orderby.split(' ')
-    if len(orderby) == 2:
-        (column, sorter) = orderby
-    elif len(orderby) == 1:
-        column = orderby[0]
-        sorter = 'desc'
-    else:
-        return None
-
-    #print(column, sorter)
-    if column not in constants.ALLOWED_ORDERBY_COLUMNS:
-        warnings.warn(constants.WARNING_ORDERBY_BADCOL.format(column=column))
-        return None
-    if column == 'random':
-        column = 'RANDOM()'
-
-    if sorter not in ['desc', 'asc']:
-        warnings.warn(constants.WARNING_ORDERBY_BADSORTER.format(column=column, sorter=sorter))
-        sorter = 'desc'
-    return (column, sorter)
-
-def _setify_tags(photodb, tags, warn_bad_tags=False):
-    '''
-    When searching, this function converts the list of tag strings that the user
-    requested into Tag objects. If a tag doesn't exist we'll either raise an exception
-    or just issue a warning.
-    '''
-    if tags is None:
-        return set()
-
-    tagset = set()
-    for tag in tags:
-        tag = tag.strip()
-        if tag == '':
-            continue
-        try:
-            tag = photodb.get_tag(tag)
-            tagset.add(tag)
-        except exceptions.NoSuchTag:
-            if warn_bad_tags:
-                warnings.warn(constants.WARNING_NO_SUCH_TAG.format(tag=tag))
-                continue
-            else:
-                raise
-
-    return tagset
 
 def _unitconvert(value):
     '''

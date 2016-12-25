@@ -8,16 +8,18 @@ import random
 import sqlite3
 import string
 import time
-import warnings
 
 import constants
 import decorators
 import exceptions
 import helpers
 import objects
+import searchhelpers
 
 # pip install
 # https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
+from voussoirkit import pathclass
+from voussoirkit import safeprint
 from voussoirkit import spinal
 
 
@@ -151,7 +153,7 @@ def raise_no_such_thing(exception_class, thing_id=None, thing_name=None, comment
         message = ''
     raise exception_class(message)
 
-def searchfilter_expression(photo_tags, expression, frozen_children, token_normalizer, warn_bad_tags):
+def searchfilter_expression(photo_tags, expression, frozen_children, token_normalizer, warning_bag=None):
     photo_tags = set(tag.name for tag in photo_tags)
     operator_stack = collections.deque()
     operand_stack = collections.deque()
@@ -178,8 +180,8 @@ def searchfilter_expression(photo_tags, expression, frozen_children, token_norma
                 token = token_normalizer(token)
                 value = any(option in photo_tags for option in frozen_children[token])
             except KeyError:
-                if warn_bad_tags:
-                    warnings.warn(constants.WARNING_NO_SUCH_TAG.format(tag=token))
+                if warning_bag:
+                    warning_bag.add(constants.WARNING_NO_SUCH_TAG.format(tag=token))
                 else:
                     raise exceptions.NoSuchTag(token)
                 return False
@@ -218,7 +220,8 @@ def searchfilter_expression(photo_tags, expression, frozen_children, token_norma
     while len(operand_stack) > 1 or len(operator_stack) > 0:
         operate(operand_stack, operator_stack)
     #print(operand_stack)
-    return operand_stack.pop()
+    success = operand_stack.pop()
+    return success
 
 def searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, frozen_children):
     if tag_musts and not all(any(option in photo_tags for option in frozen_children[must]) for must in tag_musts):
@@ -434,7 +437,10 @@ class PDBPhotoMixin:
         Returns the Photo object.
         '''
         filename = os.path.abspath(filename)
-        assert os.path.isfile(filename)
+        safeprint.safeprint('Processing %s' % filename)
+        if not os.path.isfile(filename):
+            raise FileNotFoundError(filename)
+
         if not allow_duplicates:
             try:
                 existing = self.get_photo_by_path(filename)
@@ -457,7 +463,7 @@ class PDBPhotoMixin:
 
         extension = os.path.splitext(filename)[1]
         extension = extension.replace('.', '')
-        extension = self.normalize_tagname(extension)
+        #extension = self.normalize_tagname(extension)
         created = int(helpers.now())
         photoid = self.generate_id('photos')
 
@@ -538,10 +544,11 @@ class PDBPhotoMixin:
             tag_forbids=None,
             tag_expression=None,
 
-            warn_bad_tags=False,
             limit=None,
             offset=None,
-            orderby=None
+            orderby=None,
+            warning_bag=None,
+            give_back_parameters=False
         ):
         '''
         PHOTO PROPERTIES
@@ -590,10 +597,6 @@ class PDBPhotoMixin:
             Can NOT be used with the must, may, forbid style search.
 
         QUERY OPTIONS
-        warn_bad_tags:
-            If a tag is not found, issue a warning but continue the search.
-            Otherwise, a exceptions.NoSuchTag exception would be raised.
-
         limit:
             The maximum number of *successful* results to yield.
 
@@ -604,57 +607,99 @@ class PDBPhotoMixin:
             A list of strings like ['ratio DESC', 'created ASC'] to sort
             and subsort the results.
             Descending is assumed if not provided.
+
+        warning_bag:
+            Invalid search queries will add a warning to the bag and try their best to continue.
+            Otherwise they may raise exceptions.
+
+        give_back_parameters:
+            If True, the generator's first yield will be a dictionary of all the cleaned up, normalized
+            parameters. The user may have given us loads of trash, so we should show them the formatting
+            we want.
         '''
         start_time = time.time()
+
+        # MINMAXERS
+
+        has_tags = searchhelpers.normalize_has_tags(has_tags)
+        if has_tags is False:
+            tag_musts = None
+            tag_mays = None
+            tag_forbids = None
+            tag_expression = None    
+        else:
+            tag_musts = searchhelpers.normalize_tag_mmf(photodb=self, tags=tag_musts, warning_bag=warning_bag)
+            tag_mays = searchhelpers.normalize_tag_mmf(photodb=self, tags=tag_mays, warning_bag=warning_bag)
+            tag_forbids = searchhelpers.normalize_tag_mmf(photodb=self, tags=tag_forbids, warning_bag=warning_bag)
+            tag_expression = searchhelpers.normalize_tag_expression(tag_expression)
+
+        #print(tag_musts, tag_mays, tag_forbids)
+        if (tag_musts or tag_mays or tag_forbids) and tag_expression:
+            message = 'Expression filter cannot be used with musts, mays, forbids'
+            if warning_bag:
+                warning_bag.add(message)
+                tag_musts = None
+                tag_mays = None
+                tag_forbids = None
+                tag_expression = None
+            else:
+                raise exceptions.NotExclusive(message)
+
+        extension = searchhelpers.normalize_extensions(extension)
+        extension_not = searchhelpers.normalize_extensions(extension_not)
+        mimetype = searchhelpers.normalize_extensions(mimetype)
+
+        authors = searchhelpers.normalize_authors(authors, photodb=self, warning_bag=warning_bag)
+
+        filename = searchhelpers.normalize_filename(filename)
+
+        limit = searchhelpers.normalize_limit(limit, warning_bag=warning_bag)
+
+        offset = searchhelpers.normalize_offset(offset)
+        if offset is None:
+            offset = 0
+
         maximums = {}
         minimums = {}
-        helpers._minmax('area', area, minimums, maximums)
-        helpers._minmax('created', created, minimums, maximums)
-        helpers._minmax('width', width, minimums, maximums)
-        helpers._minmax('height', height, minimums, maximums)
-        helpers._minmax('ratio', ratio, minimums, maximums)
-        helpers._minmax('bytes', bytes, minimums, maximums)
-        helpers._minmax('duration', duration, minimums, maximums)
-        orderby = orderby or []
+        searchhelpers.minmax('area', area, minimums, maximums, warning_bag=warning_bag)
+        searchhelpers.minmax('created', created, minimums, maximums, warning_bag=warning_bag)
+        searchhelpers.minmax('width', width, minimums, maximums, warning_bag=warning_bag)
+        searchhelpers.minmax('height', height, minimums, maximums, warning_bag=warning_bag)
+        searchhelpers.minmax('ratio', ratio, minimums, maximums, warning_bag=warning_bag)
+        searchhelpers.minmax('bytes', bytes, minimums, maximums, warning_bag=warning_bag)
+        searchhelpers.minmax('duration', duration, minimums, maximums, warning_bag=warning_bag)
 
-        extension = helpers._normalize_extensions(extension)
-        extension_not = helpers._normalize_extensions(extension_not)
-        mimetype = helpers._normalize_extensions(mimetype)
-
-        if authors is not None:
-            if isinstance(authors, str):
-                authors = {authors, }
-            authors = set(a.id if isinstance(a, objects.User) else a for a in authors)
-
-        if filename is not None:
-            if not isinstance(filename, str):
-                filename = ' '.join(filename)
-            filename = set(term.lower() for term in filename.strip().split(' '))
-
-        if (tag_musts or tag_mays or tag_forbids) and tag_expression:
-            raise exceptions.NotExclusive('Expression filter cannot be used with musts, mays, forbids')
-
-        tag_musts = helpers._setify_tags(photodb=self, tags=tag_musts, warn_bad_tags=warn_bad_tags)
-        tag_mays = helpers._setify_tags(photodb=self, tags=tag_mays, warn_bad_tags=warn_bad_tags)
-        tag_forbids = helpers._setify_tags(photodb=self, tags=tag_forbids, warn_bad_tags=warn_bad_tags)
-
-        query = 'SELECT * FROM photos'
-        orderby = [helpers._orderby(o) for o in orderby]
-        orderby = [o for o in orderby if o]
-        if orderby:
-            whereable_columns = [o[0] for o in orderby if o[0] != 'RANDOM()']
-            whereable_columns = [column + ' IS NOT NULL' for column in whereable_columns]
-            if whereable_columns:
-                query += ' WHERE '
-                query += ' AND '.join(whereable_columns)
-            orderby = [' '.join(o) for o in orderby]
-            orderby = ', '.join(orderby)
-            query += ' ORDER BY %s' % orderby
-        else:
-            query += ' ORDER BY created DESC'
+        orderby = searchhelpers.normalize_orderby(orderby)
+        query = searchhelpers.build_query(orderby)
         print(query)
         generator = helpers.select_generator(self.sql, query)
 
+        if give_back_parameters:
+            parameters = {
+                'area': area,
+                'width': width,
+                'height': height,
+                'ratio': ratio,
+                'bytes': bytes,
+                'duration': duration,
+                'authors': authors,
+                'created': created,
+                'extension': extension,
+                'extension_not': extension_not,
+                'filename': filename,
+                'has_tags': has_tags,
+                'mimetype': mimetype,
+                'tag_musts': tag_musts,
+                'tag_mays': tag_mays,
+                'tag_forbids': tag_forbids,
+                'tag_expression': tag_expression,
+                'limit': limit,
+                'offset': offset,
+                'orderby': orderby,
+            }
+            yield parameters
+
+        # FROZEN CHILDREN
         # To lighten the amount of database reading here, `frozen_children` is a dict where
         # EVERY tag in the db is a key, and the value is a list of ALL ITS NESTED CHILDREN.
         # This representation is memory inefficient, but it is faster than repeated
@@ -669,6 +714,7 @@ class PDBPhotoMixin:
                 self._cached_frozen_children = frozen_children
         photos_received = 0
 
+        # LET'S GET STARTED
         for fetch in generator:
             photo = objects.Photo(self, fetch)
 
@@ -685,6 +731,7 @@ class PDBPhotoMixin:
                 continue
 
             if authors and photo.author_id not in authors:
+                #print('Failed author')
                 continue
 
             if filename and not _helper_filenamefilter(subject=photo.basename, terms=filename):
@@ -709,9 +756,11 @@ class PDBPhotoMixin:
                 photo_tags = photo.tags()
 
                 if has_tags is False and len(photo_tags) > 0:
+                    #print('Failed has_tags=False')
                     continue
 
                 if has_tags is True and len(photo_tags) == 0:
+                    #print('Failed has_tags=True')
                     continue
 
                 photo_tags = set(photo_tags)
@@ -722,9 +771,10 @@ class PDBPhotoMixin:
                         expression=tag_expression,
                         frozen_children=frozen_children,
                         token_normalizer=self.normalize_tagname,
-                        warn_bad_tags=warn_bad_tags,
+                        warning_bag=warning_bag,
                     )
                     if not success:
+                        #print('Failed tag expression')
                         continue
                 elif is_must_may_forbid:
                     success = searchfilter_must_may_forbid(
@@ -735,17 +785,22 @@ class PDBPhotoMixin:
                         frozen_children=frozen_children,
                     )
                     if not success:
+                        #print('Failed tag mmf')
                         continue
 
-            if offset is not None and offset > 0:
+            if offset > 0:
                 offset -= 1
                 continue
 
             if limit is not None and photos_received >= limit:
                 break
 
+
             photos_received += 1
             yield photo
+
+        if warning_bag.warnings:
+            yield warning_bag
 
         end_time = time.time()
         print(end_time - start_time)
@@ -988,13 +1043,13 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
 
         # DATA DIR PREP
         data_directory = helpers.normalize_filepath(data_directory, allowed='/\\')
-        self.data_directory = os.path.abspath(data_directory)
-        os.makedirs(self.data_directory, exist_ok=True)
+        self.data_directory = pathclass.Path(data_directory)
+        os.makedirs(self.data_directory.absolute_path, exist_ok=True)
 
         # DATABASE
-        self.database_abspath = os.path.join(self.data_directory, 'phototagger.db')
-        existing_database = os.path.exists(self.database_abspath)
-        self.sql = sqlite3.connect(self.database_abspath)
+        self.database_file = self.data_directory.with_child('phototagger.db')
+        existing_database = self.database_file.exists
+        self.sql = sqlite3.connect(self.database_file.absolute_path)
         self.cur = self.sql.cursor()
 
         if existing_database:
@@ -1010,21 +1065,20 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
             self.cur.execute(statement)
 
         # CONFIG
-        self.config_abspath = os.path.join(self.data_directory, 'config.json')
+        self.config_file = self.data_directory.with_child('config.json')
         self.config = copy.deepcopy(constants.DEFAULT_CONFIGURATION)
-        if os.path.isfile(self.config_abspath):
-            with open(self.config_abspath, 'r') as handle:
+        if self.config_file.is_file:
+            with open(self.config_file.absolute_path, 'r') as handle:
                 user_config = json.load(handle)
             self.config.update(user_config)
         else:
-            with open(self.config_abspath, 'w') as handle:
+            with open(self.config_file.absolute_path, 'w') as handle:
                 handle.write(json.dumps(self.config, indent=4, sort_keys=True))
         #print(self.config)
 
         # THUMBNAIL DIRECTORY
-        self.thumbnail_directory = os.path.join(self.data_directory, 'site_thumbnails')
-        self.thumbnail_directory = os.path.abspath(self.thumbnail_directory)
-        os.makedirs(self.thumbnail_directory, exist_ok=True)
+        self.thumbnail_directory = self.data_directory.with_child('site_thumbnails')
+        os.makedirs(self.thumbnail_directory.absolute_path, exist_ok=True)
 
         # OTHER
         self.log = logging.getLogger(__name__)
@@ -1095,14 +1149,16 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
                         commit=False,
                         title=current_location.basename,
                     )
-                    print('Created %s' % current_album.title)
+                    safeprint.safeprint('Created %s' % current_album.title)
                 albums[current_location.absolute_path] = current_album
-                parent = albums[current_location.parent.absolute_path]
+
+            parent = albums.get(current_location.parent.absolute_path, None)
+            if parent is not None:
                 try:
                     parent.add(current_album, commit=False)
+                    #safeprint.safeprint('Added to %s' % parent.title)
                 except exceptions.GroupExists:
                     pass
-                #print('Added to %s' % parent.title)
             for filepath in files:
                 try:
                     photo = self.new_photo(filepath.absolute_path, commit=False)

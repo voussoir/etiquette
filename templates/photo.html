@@ -122,8 +122,9 @@
         {% if photo.duration %}
             <li>Duration: {{photo.duration_string()}}</li>
         {% endif %}
-            <li><a href="/file/{{photo.id}}.{{photo.extension}}?download=1">Download as {{photo.id}}.{{photo.extension}}</a></li>
-            <li><a href="/file/{{photo.id}}.{{photo.extension}}?download=1&original_filename=1">Download as "{{photo.basename}}"</a></li>
+        {% set extension= "." + photo.extension if photo.extension != "" else "" %}
+            <li><a href="/file/{{photo.id}}{{extension}}?download=1">Download as {{photo.id}}.{{photo.extension}}</a></li>
+            <li><a href="/file/{{photo.id}}{{extension}}?download=1&original_filename=1">Download as "{{photo.basename}}"</a></li>
         </ul>
 
         <!-- CONTAINING ALBUMS -->

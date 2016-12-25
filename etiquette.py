@@ -12,7 +12,9 @@ import decorators
 import exceptions
 import helpers
 import jsonify
+import objects
 import phototagger
+import searchhelpers
 import sessions
 
 site = flask.Flask(__name__)
@@ -352,7 +354,9 @@ def get_file(photoid):
         if use_original_filename:
             download_as = photo.basename
         else:
-            download_as = photo.id + '.' + photo.extension
+            download_as = photo.id
+            if photo.extension:
+                download_as += photo.extension
 
         download_as = download_as.replace('"', '\\"')
         response = flask.make_response(send_file(photo.real_filepath))
@@ -382,77 +386,41 @@ def get_photo_json(photoid):
     return photo
 
 def get_search_core():
-    #print(request.args)
+    warning_bag = objects.WarningBag()
 
-    # FILENAME & EXTENSION
-    filename_terms = request.args.get('filename', None)
-    extension_string = request.args.get('extension', None)
-    extension_not_string = request.args.get('extension_not', None)
-    mimetype_string = request.args.get('mimetype', None)
+    has_tags = request.args.get('has_tags')
+    tag_musts = request.args.get('tag_musts')
+    tag_mays = request.args.get('tag_mays')
+    tag_forbids = request.args.get('tag_forbids')
+    tag_expression = request.args.get('tag_expression')
 
-    extension_list = helpers.comma_split(extension_string)
-    extension_not_list = helpers.comma_split(extension_not_string)
-    mimetype_list = helpers.comma_split(mimetype_string)
+    filename_terms = request.args.get('filename')
+    extension = request.args.get('extension')
+    extension_not = request.args.get('extension_not')
+    mimetype = request.args.get('mimetype')
 
-    # LIMIT
-    limit = request.args.get('limit', '')
-    if limit.isdigit():
-        limit = int(limit)
-        limit = min(100, limit)
-    else:
-        # Note to self: also apply to search.html template url builder.
+    limit = request.args.get('limit')
+    # This is being pre-processed because the site enforces a maximum value
+    # which the PhotoDB api does not.
+    limit = searchhelpers.normalize_limit(limit, warning_bag=warning_bag)
+
+    if limit is None:
         limit = 50
-
-    # OFFSET
-    offset = request.args.get('offset', '')
-    if offset.isdigit():
-        offset = int(offset)
     else:
-        offset = None
+        limit = min(limit, 100)
 
-    # MUSTS, MAYS, FORBIDS
-    qualname_map = P.export_tags(exporter=phototagger.tag_export_qualname_map)
-    tag_musts = request.args.get('tag_musts', '').split(',')
-    tag_mays = request.args.get('tag_mays', '').split(',')
-    tag_forbids = request.args.get('tag_forbids', '').split(',')
-    tag_expression = request.args.get('tag_expression', None)
+    offset = request.args.get('offset')
 
-    tag_musts = [qualname_map.get(tag, tag) for tag in tag_musts if tag != '']
-    tag_mays = [qualname_map.get(tag, tag) for tag in tag_mays if tag != '']
-    tag_forbids = [qualname_map.get(tag, tag) for tag in tag_forbids if tag != '']
+    authors = request.args.get('author')
 
-    # AUTHOR
-    authors = request.args.get('author', None)
-    if authors:
-        authors = authors.split(',')
-        authors = [a.strip() for a in authors]
-        authors = [P.get_user(username=a) for a in authors]
-    else:
-        authors = None
-
-    # ORDERBY
-    orderby = request.args.get('orderby', None)
-    if orderby:
-        orderby = orderby.replace('-', ' ')
-        orderby = orderby.split(',')
-    else:
-        orderby = None
-
-    # HAS_TAGS
-    has_tags = request.args.get('has_tags', None)
-    if has_tags:
-        has_tags = helpers.truthystring(has_tags)
-    else:
-        has_tags = None
-
-    # MINMAXERS
-    area = request.args.get('area', None)
-    width = request.args.get('width', None)
-    height = request.args.get('height', None)
-    ratio = request.args.get('ratio', None)
-    bytes = request.args.get('bytes', None)
-    duration = request.args.get('duration', None)
-    created = request.args.get('created', None)
+    orderby = request.args.get('orderby')
+    area = request.args.get('area')
+    width = request.args.get('width')
+    height = request.args.get('height')
+    ratio = request.args.get('ratio')
+    bytes = request.args.get('bytes')
+    duration = request.args.get('duration')
+    created = request.args.get('created')
 
     # These are in a dictionary so I can pass them to the page template.
     search_kwargs = {
@@ -465,11 +433,11 @@ def get_search_core():
 
         'authors': authors,
         'created': created,
-        'extension': extension_list,
-        'extension_not': extension_not_list,
+        'extension': extension,
+        'extension_not': extension_not,
         'filename': filename_terms,
         'has_tags': has_tags,
-        'mimetype': mimetype_list,
+        'mimetype': mimetype,
         'tag_musts': tag_musts,
         'tag_mays': tag_mays,
         'tag_forbids': tag_forbids,
@@ -479,13 +447,35 @@ def get_search_core():
         'offset': offset,
         'orderby': orderby,
 
-        'warn_bad_tags': True,
+        'warning_bag': warning_bag,
+        'give_back_parameters': True
     }
     #print(search_kwargs)
-    with warnings.catch_warnings(record=True) as catcher:
-        photos = list(P.search(**search_kwargs))
-        warns = [str(warning.message) for warning in catcher]
-    #print(warns)
+    search_generator = P.search(**search_kwargs)
+    # Because of the giveback, first element is cleaned up kwargs
+    search_kwargs = next(search_generator)
+
+    # The search has converted many arguments into sets or other types.
+    # Convert them back into something that will display nicely on the search form.
+    join_helper = lambda x: ', '.join(x) if x else None
+    tagname_helper = lambda tags: [tag.qualified_name() for tag in tags] if tags else None
+    filename_helper = lambda fn: ' '.join('"%s"' % part if ' ' in part else part for part in fn) if fn else None
+    search_kwargs['extension'] = join_helper(search_kwargs['extension'])
+    search_kwargs['extension_not'] = join_helper(search_kwargs['extension_not'])
+    search_kwargs['mimetype'] = join_helper(search_kwargs['mimetype'])
+    search_kwargs['filename'] = filename_helper(search_kwargs['filename'])
+    search_kwargs['tag_musts'] = tagname_helper(search_kwargs['tag_musts'])
+    search_kwargs['tag_mays'] = tagname_helper(search_kwargs['tag_mays'])
+    search_kwargs['tag_forbids'] = tagname_helper(search_kwargs['tag_forbids'])
+
+    search_results = list(search_generator)
+    warnings = set()
+    photos = []
+    for item in search_results:
+        if isinstance(item, objects.WarningBag):
+            warnings.update(item.warnings)
+        else:
+            photos.append(item)
 
     # TAGS ON THIS PAGE
     total_tags = set()
@@ -510,18 +500,14 @@ def get_search_core():
 
     view = request.args.get('view', 'grid')
     search_kwargs['view'] = view
-    search_kwargs['extension'] = extension_string
-    search_kwargs['extension_not'] = extension_not_string
-    search_kwargs['mimetype'] = mimetype_string
 
     final_results = {
         'next_page_url': next_page_url,
         'prev_page_url': prev_page_url,
         'photos': photos,
         'total_tags': total_tags,
-        'warns': warns,
+        'warnings': list(warnings),
         'search_kwargs': search_kwargs,
-        'qualname_map': qualname_map,
     }
     return final_results
 
@@ -530,7 +516,7 @@ def get_search_core():
 def get_search_html():
     search_results = get_search_core()
     search_kwargs = search_results['search_kwargs']
-    qualname_map = search_results['qualname_map']
+    qualname_map = P.export_tags(exporter=phototagger.tag_export_qualname_map)
     session = session_manager.get(request)
     response = flask.render_template(
         'search.html',
@@ -541,7 +527,7 @@ def get_search_html():
         search_kwargs=search_kwargs,
         session=session,
         total_tags=search_results['total_tags'],
-        warns=search_results['warns'],
+        warnings=search_results['warnings'],
     )
     return response
 
@@ -550,17 +536,11 @@ def get_search_html():
 def get_search_json():
     search_results = get_search_core()
     search_results['photos'] = [jsonify.photo(photo, include_albums=False) for photo in search_results['photos']]
-    #search_kwargs = search_results['search_kwargs']
-    #qualname_map = search_results['qualname_map']
-    include_qualname_map = request.args.get('include_map', False)
-    include_qualname_map = helpers.truthystring(include_qualname_map)
-    if not include_qualname_map:
-        search_results.pop('qualname_map')
     return jsonify.make_json_response(search_results)
 
 
 @site.route('/static/<filename>')
-def get_static(filename):
+def geft_static(filename):
     filename = filename.replace('\\', os.sep)
     filename = filename.replace('/', os.sep)
     filename = os.path.join('static', filename)
