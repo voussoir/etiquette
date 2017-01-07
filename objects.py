@@ -7,8 +7,6 @@ import decorators
 import exceptions
 import helpers
 
-# pip install
-# https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
 from voussoirkit import bytestring
 from voussoirkit import pathclass
 from voussoirkit import spinal

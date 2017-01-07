@@ -16,8 +16,6 @@ import helpers
 import objects
 import searchhelpers
 
-# pip install
-# https://raw.githubusercontent.com/voussoir/else/master/_voussoirkit/voussoirkit.zip
 from voussoirkit import pathclass
 from voussoirkit import safeprint
 from voussoirkit import spinal
@@ -696,7 +694,7 @@ class PDBPhotoMixin:
                 'tag_expression': tag_expression,
                 'limit': limit,
                 'offset': offset,
-                'orderby': orderby,
+                'orderby': [term.replace('RANDOM()', 'random') for term in orderby],
             }
             yield parameters
 
@@ -1179,46 +1177,46 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
             self.commit()
         return album
 
-    def digest_new_files(
-            self,
-            directory,
-            exclude_directories=None,
-            exclude_filenames=None,
-            recurse=False,
-            commit=True
-        ):
-        '''
-        Walk the directory and add new files as Photos.
-        Does NOT create or modify any albums like `digest_directory` does.
-        '''
-        if not os.path.isdir(directory):
-            raise ValueError('Not a directory: %s' % directory)
-        if exclude_directories is None:
-            exclude_directories = self.config['digest_exclude_dirs']
-        if exclude_filenames is None:
-            exclude_filenames = self.config['digest_exclude_files']
+    # def digest_new_files(
+    #         self,
+    #         directory,
+    #         exclude_directories=None,
+    #         exclude_filenames=None,
+    #         recurse=False,
+    #         commit=True
+    #     ):
+    #     '''
+    #     Walk the directory and add new files as Photos.
+    #     Does NOT create or modify any albums like `digest_directory` does.
+    #     '''
+    #     if not os.path.isdir(directory):
+    #         raise ValueError('Not a directory: %s' % directory)
+    #     if exclude_directories is None:
+    #         exclude_directories = self.config['digest_exclude_dirs']
+    #     if exclude_filenames is None:
+    #         exclude_filenames = self.config['digest_exclude_files']
 
-        directory = spinal.str_to_fp(directory)
-        generator = spinal.walk_generator(
-            directory,
-            exclude_directories=exclude_directories,
-            exclude_filenames=exclude_filenames,
-            recurse=recurse,
-            yield_style='flat',
-        )
-        for filepath in generator:
-            filepath = filepath.absolute_path
-            try:
-                self.get_photo_by_path(filepath)
-            except exceptions.NoSuchPhoto:
-                # This is what we want.
-                pass
-            else:
-                continue
-            photo = self.new_photo(filepath, commit=False)
-        if commit:
-            self.log.debug('Committing - digest_new_files')
-            self.commit()
+    #     directory = spinal.str_to_fp(directory)
+    #     generator = spinal.walk_generator(
+    #         directory,
+    #         exclude_directories=exclude_directories,
+    #         exclude_filenames=exclude_filenames,
+    #         recurse=recurse,
+    #         yield_style='flat',
+    #     )
+    #     for filepath in generator:
+    #         filepath = filepath.absolute_path
+    #         try:
+    #             self.get_photo_by_path(filepath)
+    #         except exceptions.NoSuchPhoto:
+    #             # This is what we want.
+    #             pass
+    #         else:
+    #             continue
+    #         photo = self.new_photo(filepath, commit=False)
+    #     if commit:
+    #         self.log.debug('Committing - digest_new_files')
+    #         self.commit()
 
 
     def easybake(self, ebstring):
