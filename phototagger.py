@@ -320,8 +320,9 @@ class PDBAlbumMixin:
         Return the album with the `associated_directory` of this value, NOT case-sensitive.
         '''
         filepath = os.path.abspath(filepath)
-        self.cur.execute('SELECT * FROM albums WHERE associated_directory == ?', [filepath])
-        fetch = self.cur.fetchone()
+        cur = self.sql.cursor()
+        cur.execute('SELECT * FROM albums WHERE associated_directory == ?', [filepath])
+        fetch = cur.fetchone()
         if fetch is None:
             raise exceptions.NoSuchAlbum(filepath)
         return self.get_album(fetch[constants.SQL_ALBUM['id']])
@@ -363,7 +364,8 @@ class PDBAlbumMixin:
 
         (qmarks, bindings) = helpers.binding_filler(constants.SQL_ALBUM_COLUMNS, data)
         query = 'INSERT INTO albums VALUES(%s)' % qmarks
-        self.cur.execute(query, bindings)
+        cur = self.sql.cursor()
+        cur.execute(query, bindings)
 
         album = objects.Album(self, data)
         if photos:
@@ -383,8 +385,9 @@ class PDBPhotoMixin:
 
     def get_photo_by_path(self, filepath):
         filepath = os.path.abspath(filepath)
-        self.cur.execute('SELECT * FROM photos WHERE filepath == ?', [filepath])
-        fetch = self.cur.fetchone()
+        cur = self.sql.cursor()
+        cur.execute('SELECT * FROM photos WHERE filepath == ?', [filepath])
+        fetch = cur.fetchone()
         if fetch is None:
             raise_no_such_thing(exceptions.NoSuchPhoto, thing_name=filepath)
         photo = objects.Photo(self, fetch)
@@ -398,10 +401,10 @@ class PDBPhotoMixin:
             return
         # We're going to use a second cursor because the first one may
         # get used for something else, deactivating this query.
-        temp_cur = self.sql.cursor()
-        temp_cur.execute('SELECT * FROM photos ORDER BY created DESC')
+        cur = self.sql.cursor()
+        cur.execute('SELECT * FROM photos ORDER BY created DESC')
         while True:
-            fetch = temp_cur.fetchone()
+            fetch = cur.fetchone()
             if fetch is None:
                 break
             photo = objects.Photo(self, fetch)
@@ -485,7 +488,8 @@ class PDBPhotoMixin:
 
         (qmarks, bindings) = helpers.binding_filler(constants.SQL_PHOTO_COLUMNS, data)
         query = 'INSERT INTO photos VALUES(%s)' % qmarks
-        self.cur.execute(query, bindings)
+        cur = self.sql.cursor()
+        cur.execute(query, bindings)
         photo = objects.Photo(self, data)
 
         if do_metadata:
@@ -673,6 +677,10 @@ class PDBPhotoMixin:
         print(query)
         generator = helpers.select_generator(self.sql, query)
 
+        if orderby is None:
+            giveback_orderby = None
+        else:
+            giveback_orderby = [term.replace('RANDOM()', 'random') for term in orderby]
         if give_back_parameters:
             parameters = {
                 'area': area,
@@ -694,7 +702,7 @@ class PDBPhotoMixin:
                 'tag_expression': tag_expression,
                 'limit': limit,
                 'offset': offset,
-                'orderby': [term.replace('RANDOM()', 'random') for term in orderby],
+                'orderby': giveback_orderby,
             }
             yield parameters
 
@@ -851,15 +859,16 @@ class PDBTagMixin:
         tagname = tagname.split('.')[-1].split('+')[0]
         tagname = self.normalize_tagname(tagname)
 
+        cur = self.sql.cursor()
         while True:
             # Return if it's a toplevel, or resolve the synonym and try that.
-            self.cur.execute('SELECT * FROM tags WHERE name == ?', [tagname])
-            fetch = self.cur.fetchone()
+            cur.execute('SELECT * FROM tags WHERE name == ?', [tagname])
+            fetch = cur.fetchone()
             if fetch is not None:
                 return objects.Tag(self, fetch)
 
-            self.cur.execute('SELECT * FROM tag_synonyms WHERE name == ?', [tagname])
-            fetch = self.cur.fetchone()
+            cur.execute('SELECT * FROM tag_synonyms WHERE name == ?', [tagname])
+            fetch = cur.fetchone()
             if fetch is None:
                 # was not a top tag or synonym
                 raise_no_such_thing(exceptions.NoSuchTag, thing_name=tagname)
@@ -882,7 +891,8 @@ class PDBTagMixin:
 
         tagid = self.generate_id('tags')
         self._cached_frozen_children = None
-        self.cur.execute('INSERT INTO tags VALUES(?, ?)', [tagid, tagname])
+        cur = self.sql.cursor()
+        cur.execute('INSERT INTO tags VALUES(?, ?)', [tagid, tagname])
         if commit:
             self.log.debug('Commiting - new_tag')
             self.commit()
@@ -916,12 +926,13 @@ class PDBUserMixin:
         so they get their own method.
         '''
         possible = string.digits + string.ascii_uppercase
+        cur = self.sql.cursor()
         for retry in range(20):
             user_id = [random.choice(possible) for x in range(self.config['id_length'])]
             user_id = ''.join(user_id)
 
-            self.cur.execute('SELECT * FROM users WHERE id == ?', [user_id])
-            if self.cur.fetchone() is None:
+            cur.execute('SELECT * FROM users WHERE id == ?', [user_id])
+            if cur.fetchone() is None:
                 break
         else:
             raise Exception('Failed to create user id after 20 tries.')
@@ -932,20 +943,22 @@ class PDBUserMixin:
         if not helpers.is_xor(id, username):
             raise exceptions.NotExclusive('One and only one of `id`, `username` must be passed.')
 
+        cur = self.sql.cursor()
         if username is not None:
-            self.cur.execute('SELECT * FROM users WHERE username == ?', [username])
+            cur.execute('SELECT * FROM users WHERE username == ?', [username])
         else:
-            self.cur.execute('SELECT * FROM users WHERE id == ?', [id])
+            cur.execute('SELECT * FROM users WHERE id == ?', [id])
 
-        fetch = self.cur.fetchone()
+        fetch = cur.fetchone()
         if fetch is not None:
             return objects.User(self, fetch)
         else:
             raise exceptions.NoSuchUser(username)
 
     def login(self, user_id, password):
-        self.cur.execute('SELECT * FROM users WHERE id == ?', [user_id])
-        fetch = self.cur.fetchone()
+        cur = self.sql.cursor()
+        cur.execute('SELECT * FROM users WHERE id == ?', [user_id])
+        fetch = cur.fetchone()
 
         if fetch is None:
             raise exceptions.WrongLogin()
@@ -978,8 +991,9 @@ class PDBUserMixin:
         if len(password) < self.config['min_password_length']:
             raise exceptions.PasswordTooShort
 
-        self.cur.execute('SELECT * FROM users WHERE username == ?', [username])
-        if self.cur.fetchone() is not None:
+        cur = self.sql.cursor()
+        cur.execute('SELECT * FROM users WHERE username == ?', [username])
+        if cur.fetchone() is not None:
             raise exceptions.UserExists(username)
 
         user_id = self.generate_user_id()
@@ -995,7 +1009,7 @@ class PDBUserMixin:
 
         (qmarks, bindings) = helpers.binding_filler(constants.SQL_USER_COLUMNS, data)
         query = 'INSERT INTO users VALUES(%s)' % qmarks
-        self.cur.execute(query, bindings)
+        cur.execute(query, bindings)
 
         if commit:
             self.log.debug('Committing - register user')
@@ -1069,6 +1083,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
         statements = DB_INIT.split(';')
         for statement in statements:
             self.cur.execute(statement)
+        self.sql.commit()
 
         # CONFIG
         self.config_file = self.data_directory.with_child('config.json')
@@ -1088,6 +1103,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
 
         # OTHER
         self.log = logging.getLogger(__name__)
+        self.log.setLevel(self.config['log_level'])
         self.on_commit_queue = []
         self._cached_frozen_children = None
 
@@ -1305,8 +1321,9 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
         if table not in ['photos', 'tags', 'groups']:
             raise ValueError('Invalid table requested: %s.', table)
 
-        self.cur.execute('SELECT * FROM id_numbers WHERE tab == ?', [table])
-        fetch = self.cur.fetchone()
+        cur = self.sql.cursor()
+        cur.execute('SELECT * FROM id_numbers WHERE tab == ?', [table])
+        fetch = cur.fetchone()
         if fetch is None:
             # Register new value
             new_id_int = 1
@@ -1318,9 +1335,9 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
 
         new_id = str(new_id_int).rjust(self.config['id_length'], '0')
         if do_insert:
-            self.cur.execute('INSERT INTO id_numbers VALUES(?, ?)', [table, new_id])
+            cur.execute('INSERT INTO id_numbers VALUES(?, ?)', [table, new_id])
         else:
-            self.cur.execute('UPDATE id_numbers SET last_id = ? WHERE tab == ?', [new_id, table])
+            cur.execute('UPDATE id_numbers SET last_id = ? WHERE tab == ?', [new_id, table])
         return new_id
 
     def get_thing_by_id(self, thing_type, thing_id):
@@ -1330,8 +1347,9 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
             thing_id = thing_id.id
 
         query = 'SELECT * FROM %s WHERE id == ?' % thing_map['table']
-        self.cur.execute(query, [thing_id])
-        thing = self.cur.fetchone()
+        cur = self.sql.cursor()
+        cur.execute(query, [thing_id])
+        thing = cur.fetchone()
         if thing is None:
             return raise_no_such_thing(thing_map['exception'], thing_id=thing_id)
         thing = thing_map['class'](self, thing)
@@ -1340,12 +1358,13 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
     def get_things(self, thing_type, orderby=None):
         thing_map = _THING_CLASSES[thing_type]
 
+        cur = self.sql.cursor()
         if orderby:
-            self.cur.execute('SELECT * FROM %s ORDER BY %s' % (thing_map['table'], orderby))
+            cur.execute('SELECT * FROM %s ORDER BY %s' % (thing_map['table'], orderby))
         else:
-            self.cur.execute('SELECT * FROM %s' % thing_map['table'])
+            cur.execute('SELECT * FROM %s' % thing_map['table'])
 
-        things = self.cur.fetchall()
+        things = cur.fetchall()
         for thing in things:
             thing = thing_map['class'](self, row_tuple=thing)
             yield thing

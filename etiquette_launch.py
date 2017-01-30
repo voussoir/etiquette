@@ -13,14 +13,14 @@ else:
 
 if port == 443:
     http = gevent.pywsgi.WSGIServer(
-        listener=('', port),
+        listener=('0.0.0.0', port),
         application=etiquette.site,
         keyfile='C:\\git\\etiquette\\etiquette\\https\\etiquette.key',
         certfile='C:\\git\\etiquette\\etiquette\\https\\etiquette.crt',
     )
 else:
     http = gevent.pywsgi.WSGIServer(
-        listener=('', port),
+        listener=('0.0.0.0', port),
         application=etiquette.site,
     )
 

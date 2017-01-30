@@ -43,8 +43,9 @@ class GroupableMixin:
 
         # Groupables are only allowed to have 1 parent.
         # Unlike photos which can exist in multiple albums.
-        self.photodb.cur.execute('SELECT * FROM tag_group_rel WHERE memberid == ?', [member.id])
-        fetch = self.photodb.cur.fetchone()
+        cur = self.photodb.sql.cursor()
+        cur.execute('SELECT * FROM tag_group_rel WHERE memberid == ?', [member.id])
+        fetch = cur.fetchone()
         if fetch is not None:
             parent_id = fetch[constants.SQL_TAGGROUP['parentid']]
             if parent_id == self.id:
@@ -58,14 +59,15 @@ class GroupableMixin:
                 raise exceptions.RecursiveGrouping('%s is an ancestor of %s' % (member.name, self.name))
 
         self.photodb._cached_frozen_children = None
-        self.photodb.cur.execute('INSERT INTO tag_group_rel VALUES(?, ?)', [self.id, member.id])
+        cur.execute('INSERT INTO tag_group_rel VALUES(?, ?)', [self.id, member.id])
         if commit:
             self.photodb.log.debug('Commiting - add to group')
             self.photodb.commit()
 
     def children(self):
-        self.photodb.cur.execute('SELECT * FROM tag_group_rel WHERE parentid == ?', [self.id])
-        fetch = self.photodb.cur.fetchall()
+        cur = self.photodb.sql.cursor()
+        cur.execute('SELECT * FROM tag_group_rel WHERE parentid == ?', [self.id])
+        fetch = cur.fetchall()
         results = []
         for f in fetch:
             memberid = f[constants.SQL_TAGGROUP['memberid']]
@@ -91,6 +93,7 @@ class GroupableMixin:
             Otherwise they'll just be raised up one level.
         '''
         self.photodb._cached_frozen_children = None
+        cur = self.photodb.sql.cursor()
         if delete_children:
             for child in self.children():
                 child.delete(delete_children=delete_children, commit=False)
@@ -99,15 +102,15 @@ class GroupableMixin:
             parent = self.parent()
             if parent is None:
                 # Since this group was a root, children become roots by removing the row.
-                self.photodb.cur.execute('DELETE FROM tag_group_rel WHERE parentid == ?', [self.id])
+                cur.execute('DELETE FROM tag_group_rel WHERE parentid == ?', [self.id])
             else:
                 # Since this group was a child, its parent adopts all its children.
-                self.photodb.cur.execute(
+                cur.execute(
                     'UPDATE tag_group_rel SET parentid == ? WHERE parentid == ?',
                     [parent.id, self.id]
                 )
         # Note that this part comes after the deletion of children to prevent issues of recursion.
-        self.photodb.cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
+        cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
         if commit:
             self.photodb.log.debug('Committing - delete tag')
             self.photodb.commit()
@@ -117,8 +120,9 @@ class GroupableMixin:
         Return the group of which this is a member, or None.
         Returned object will be of the same type as calling object.
         '''
-        self.photodb.cur.execute('SELECT * FROM tag_group_rel WHERE memberid == ?', [self.id])
-        fetch = self.photodb.cur.fetchone()
+        cur = self.photodb.sql.cursor()
+        cur.execute('SELECT * FROM tag_group_rel WHERE memberid == ?', [self.id])
+        fetch = cur.fetchone()
         if fetch is None:
             return None
 
@@ -144,8 +148,9 @@ class GroupableMixin:
         '''
         Leave the current group and become independent.
         '''
+        cur = self.photodb.sql.cursor()
         self.photodb._cached_frozen_children = None
-        self.photodb.cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
+        cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
         if commit:
             self.photodb.log.debug('Committing - leave group')
             self.photodb.commit()
@@ -184,7 +189,8 @@ class Album(ObjectBase, GroupableMixin):
             raise ValueError('Not the same PhotoDB')
         if self.has_photo(photo):
             return
-        self.photodb.cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
+        cur = self.photodb.sql.cursor()
+        cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
         if commit:
             self.photodb.log.debug('Committing - add photo to album')
             self.photodb.commit()
@@ -205,8 +211,9 @@ class Album(ObjectBase, GroupableMixin):
     def delete(self, *, delete_children=False, commit=True):
         self.photodb.log.debug('Deleting album {album:r}'.format(album=self))
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
-        self.photodb.cur.execute('DELETE FROM albums WHERE id == ?', [self.id])
-        self.photodb.cur.execute('DELETE FROM album_photo_rel WHERE albumid == ?', [self.id])
+        cur = self.photodb.sql.cursor()
+        cur.execute('DELETE FROM albums WHERE id == ?', [self.id])
+        cur.execute('DELETE FROM album_photo_rel WHERE albumid == ?', [self.id])
         if commit:
             self.photodb.log.debug('Committing - delete album')
             self.photodb.commit()
@@ -216,7 +223,7 @@ class Album(ObjectBase, GroupableMixin):
             title = self.title
         if description is None:
             description = self.description
-        self.photodb.cur.execute(
+        cur.execute(
             'UPDATE albums SET title=?, description=? WHERE id == ?',
             [title, description, self.id]
         )
@@ -229,11 +236,12 @@ class Album(ObjectBase, GroupableMixin):
     def has_photo(self, photo):
         if not isinstance(photo, Photo):
             raise TypeError('Must be a %s' % Photo)
-        self.photodb.cur.execute(
+        cur = self.photodb.sql.cursor()
+        cur.execute(
             'SELECT * FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
             [self.id, photo.id]
         )
-        return self.photodb.cur.fetchone() is not None
+        return cur.fetchone() is not None
 
     def photos(self):
         photos = []
@@ -252,7 +260,8 @@ class Album(ObjectBase, GroupableMixin):
     def remove_photo(self, photo, *, commit=True):
         if not self.has_photo(photo):
             return
-        self.photodb.cur.execute(
+        cur = self.photodb.sql.cursor()
+        cur.execute(
             'DELETE FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
             [self.id, photo.id]
         )
@@ -309,8 +318,9 @@ class Photo(ObjectBase):
         '''
         Reload the row from the database and do __init__ with them.
         '''
-        self.photodb.cur.execute('SELECT * FROM photos WHERE id == ?', [self.id])
-        row = self.photodb.cur.fetchone()
+        cur = self.photodb.sql.cursor()
+        cur.execute('SELECT * FROM photos WHERE id == ?', [self.id])
+        row = cur.fetchone()
         self.__init__(self.photodb, row)
 
     def __repr__(self):
@@ -338,8 +348,9 @@ class Photo(ObjectBase):
 
         self.photodb.log.debug('Applying tag {tag:s} to photo {pho:s}'.format(tag=tag, pho=self))
         now = int(helpers.now())
-        self.photodb.cur.execute('INSERT INTO photo_tag_rel VALUES(?, ?)', [self.id, tag.id])
-        self.photodb.cur.execute('UPDATE photos SET tagged_at = ? WHERE id == ?', [now, self.id])
+        cur = self.photodb.sql.cursor()
+        cur.execute('INSERT INTO photo_tag_rel VALUES(?, ?)', [self.id, tag.id])
+        cur.execute('UPDATE photos SET tagged_at = ? WHERE id == ?', [now, self.id])
         if commit:
             self.photodb.log.debug('Committing - add photo tag')
             self.photodb.commit()
@@ -348,8 +359,9 @@ class Photo(ObjectBase):
         '''
         Return the albums of which this photo is a member.
         '''
-        self.photodb.cur.execute('SELECT albumid FROM album_photo_rel WHERE photoid == ?', [self.id])
-        fetch = self.photodb.cur.fetchall()
+        cur = self.photodb.sql.cursor()
+        cur.execute('SELECT albumid FROM album_photo_rel WHERE photoid == ?', [self.id])
+        fetch = cur.fetchall()
         albums = [self.photodb.get_album(f[0]) for f in fetch]
         return albums
 
@@ -368,9 +380,10 @@ class Photo(ObjectBase):
         Delete the Photo and its relation to any tags and albums.
         '''
         self.photodb.log.debug('Deleting photo {photo:r}'.format(photo=self))
-        self.photodb.cur.execute('DELETE FROM photos WHERE id == ?', [self.id])
-        self.photodb.cur.execute('DELETE FROM photo_tag_rel WHERE photoid == ?', [self.id])
-        self.photodb.cur.execute('DELETE FROM album_photo_rel WHERE photoid == ?', [self.id])
+        cur = self.photodb.sql.cursor()
+        cur.execute('DELETE FROM photos WHERE id == ?', [self.id])
+        cur.execute('DELETE FROM photo_tag_rel WHERE photoid == ?', [self.id])
+        cur.execute('DELETE FROM album_photo_rel WHERE photoid == ?', [self.id])
 
         if delete_file:
             path = self.real_path.absolute_path
@@ -453,7 +466,8 @@ class Photo(ObjectBase):
 
 
         if return_filepath != self.thumbnail:
-            self.photodb.cur.execute(
+            cur = self.photodb.sql.cursor()
+            cur.execute(
                 'UPDATE photos SET thumbnail = ? WHERE id == ?',
                 [return_filepath, self.id]
             )
@@ -480,12 +494,13 @@ class Photo(ObjectBase):
         else:
             tags = [tag]
 
+        cur = self.photodb.sql.cursor()
         for tag in tags:
-            self.photodb.cur.execute(
+            cur.execute(
                 'SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid == ?',
                 [self.id, tag.id]
             )
-            if self.photodb.cur.fetchone() is not None:
+            if cur.fetchone() is not None:
                 return tag
 
         return False
@@ -545,7 +560,8 @@ class Photo(ObjectBase):
             self.area = self.width * self.height
             self.ratio = round(self.width / self.height, 2)
 
-        self.photodb.cur.execute(
+        cur = self.photodb.sql.cursor()
+        cur.execute(
             'UPDATE photos SET width=?, height=?, area=?, ratio=?, duration=?, bytes=? WHERE id==?',
             [self.width, self.height, self.area, self.ratio, self.duration, self.bytes, self.id],
         )
@@ -558,13 +574,15 @@ class Photo(ObjectBase):
 
         self.photodb.log.debug('Removing tag {t} from photo {p}'.format(t=repr(tag), p=repr(self)))
         tags = list(tag.walk_children())
+
+        cur = self.photodb.sql.cursor()
         for tag in tags:
-            self.photodb.cur.execute(
+            cur.execute(
                 'DELETE FROM photo_tag_rel WHERE photoid == ? AND tagid == ?',
                 [self.id, tag.id]
             )
         now = int(helpers.now())
-        self.photodb.cur.execute('UPDATE photos SET tagged_at = ? WHERE id == ?', [now, self.id])
+        cur.execute('UPDATE photos SET tagged_at = ? WHERE id == ?', [now, self.id])
         if commit:
             self.photodb.log.debug('Committing - remove photo tag')
             self.photodb.commit()
@@ -604,7 +622,8 @@ class Photo(ObjectBase):
             except OSError:
                 spinal.copy_file(old_path, new_path)
 
-        self.photodb.cur.execute(
+        cur = self.photodb.sql.cursor()
+        cur.execute(
             'UPDATE photos SET filepath = ? WHERE filepath == ?',
             [new_path.absolute_path, old_path.absolute_path]
         )
@@ -687,7 +706,8 @@ class Tag(ObjectBase, GroupableMixin):
             raise exceptions.TagExists(synname)
 
         self.photodb._cached_frozen_children = None
-        self.photodb.cur.execute('INSERT INTO tag_synonyms VALUES(?, ?)', [synname, self.name])
+        cur = self.photodb.sql.cursor()
+        cur.execute('INSERT INTO tag_synonyms VALUES(?, ?)', [synname, self.name])
 
         if commit:
             self.photodb.log.debug('Committing - add synonym')
@@ -707,7 +727,8 @@ class Tag(ObjectBase, GroupableMixin):
         # Migrate the old tag's synonyms to the new one
         # UPDATE is safe for this operation because there is no chance of duplicates.
         self.photodb._cached_frozen_children = None
-        self.photodb.cur.execute(
+        cur = self.photodb.sql.cursor()
+        cur.execute(
             'UPDATE tag_synonyms SET mastername = ? WHERE mastername == ?',
             [mastertag.name, self.name]
         )
@@ -722,10 +743,10 @@ class Tag(ObjectBase, GroupableMixin):
         for relationship in generator:
             photoid = relationship[constants.SQL_PHOTOTAG['photoid']]
             query = 'SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid == ?'
-            self.photodb.cur.execute(query, [photoid, mastertag.id])
-            if self.photodb.cur.fetchone() is None:
+            cur.execute(query, [photoid, mastertag.id])
+            if cur.fetchone() is None:
                 query = 'INSERT INTO photo_tag_rel VALUES(?, ?)'
-                self.photodb.cur.execute(query, [photoid, mastertag.id])
+                cur.execute(query, [photoid, mastertag.id])
 
         # Then delete the relationships with the old tag
         self.delete()
@@ -740,9 +761,10 @@ class Tag(ObjectBase, GroupableMixin):
         self.photodb.log.debug('Deleting tag {tag:r}'.format(tag=self))
         self.photodb._cached_frozen_children = None
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
-        self.photodb.cur.execute('DELETE FROM tags WHERE id == ?', [self.id])
-        self.photodb.cur.execute('DELETE FROM photo_tag_rel WHERE tagid == ?', [self.id])
-        self.photodb.cur.execute('DELETE FROM tag_synonyms WHERE mastername == ?', [self.name])
+        cur = self.photodb.sql.cursor()
+        cur.execute('DELETE FROM tags WHERE id == ?', [self.id])
+        cur.execute('DELETE FROM photo_tag_rel WHERE tagid == ?', [self.id])
+        cur.execute('DELETE FROM tag_synonyms WHERE mastername == ?', [self.name])
         if commit:
             self.photodb.log.debug('Committing - delete tag')
             self.photodb.commit()
@@ -766,13 +788,14 @@ class Tag(ObjectBase, GroupableMixin):
         they always resolve to the master tag before application.
         '''
         synname = self.photodb.normalize_tagname(synname)
-        self.photodb.cur.execute('SELECT * FROM tag_synonyms WHERE name == ?', [synname])
-        fetch = self.photodb.cur.fetchone()
+        cur = self.photodb.sql.cursor()
+        cur.execute('SELECT * FROM tag_synonyms WHERE name == ?', [synname])
+        fetch = cur.fetchone()
         if fetch is None:
             raise exceptions.NoSuchSynonym(synname)
 
         self.photodb._cached_frozen_children = None
-        self.photodb.cur.execute('DELETE FROM tag_synonyms WHERE name == ?', [synname])
+        cur.execute('DELETE FROM tag_synonyms WHERE name == ?', [synname])
         if commit:
             self.photodb.log.debug('Committing - remove synonym')
             self.photodb.commit()
@@ -794,9 +817,10 @@ class Tag(ObjectBase, GroupableMixin):
 
         self._cached_qualified_name = None
         self.photodb._cached_frozen_children = None
-        self.photodb.cur.execute('UPDATE tags SET name = ? WHERE id == ?', [new_name, self.id])
+        cur = self.photodb.sql.cursor()
+        cur.execute('UPDATE tags SET name = ? WHERE id == ?', [new_name, self.id])
         if apply_to_synonyms:
-            self.photodb.cur.execute(
+            cur.execute(
                 'UPDATE tag_synonyms SET mastername = ? WHERE mastername = ?',
                 [new_name, self.name]
             )
@@ -807,8 +831,9 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.commit()
 
     def synonyms(self):
-        self.photodb.cur.execute('SELECT name FROM tag_synonyms WHERE mastername == ?', [self.name])
-        fetch = self.photodb.cur.fetchall()
+        cur = self.photodb.sql.cursor()
+        cur.execute('SELECT name FROM tag_synonyms WHERE mastername == ?', [self.name])
+        fetch = cur.fetchall()
         fetch = [f[0] for f in fetch]
         fetch.sort()
         return fetch
