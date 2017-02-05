@@ -1,9 +1,9 @@
 import shlex
 
-import constants
-import exceptions
-import helpers
-import objects
+from . import constants
+from . import exceptions
+from . import helpers
+from . import objects
 
 def build_query(orderby):
     query = 'SELECT * FROM photos'

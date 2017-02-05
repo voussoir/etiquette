@@ -1,8 +1,9 @@
 import flask
 from flask import request
 import functools
-import helpers
 import uuid
+
+from . import helpers
 
 def _generate_token():
     token = str(uuid.uuid4())

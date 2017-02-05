@@ -9,12 +9,12 @@ import sqlite3
 import string
 import time
 
-import constants
-import decorators
-import exceptions
-import helpers
-import objects
-import searchhelpers
+from . import constants
+from . import decorators
+from . import exceptions
+from . import helpers
+from . import objects
+from . import searchhelpers
 
 from voussoirkit import pathclass
 from voussoirkit import safeprint
@@ -551,11 +551,16 @@ class PDBPhotoMixin:
             self.commit()
         return photo
 
-    def purge_deleted_files(self, *, commit=True):
+    def purge_deleted_files(self, photos=None, *, commit=True):
         '''
         Remove Photo entries if their corresponding file is no longer found.
+
+        photos: An iterable of Photo objects to check.
+        If not provided, everything is checked.
         '''
-        photos = self.get_photos_by_recent()
+        if photos is None:
+            photos = self.get_photos_by_recent()
+
         for photo in photos:
             if os.path.exists(photo.real_filepath):
                 continue

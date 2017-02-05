@@ -8,17 +8,25 @@ import urllib.parse
 import warnings
 import zipstream
 
-import constants
-import decorators
-import exceptions
-import helpers
-import jsonify
-import objects
-import phototagger
-import searchhelpers
-import sessions
+from etiquette import constants
+from etiquette import decorators
+from etiquette import exceptions
+from etiquette import helpers
+from etiquette import jsonify
+from etiquette import objects
+from etiquette import phototagger
+from etiquette import searchhelpers
+from etiquette import sessions
 
-site = flask.Flask(__name__)
+
+TEMPLATE_DIR = 'C:\\git\\Etiquette\\templates'
+STATIC_DIR = 'C:\\git\\Etiquette\\static'
+
+site = flask.Flask(
+    __name__,
+    template_folder=TEMPLATE_DIR,
+    static_folder=STATIC_DIR,
+)
 site.config.update(
     SEND_FILE_MAX_AGE_DEFAULT=180,
     TEMPLATES_AUTO_RELOAD=True,
@@ -249,7 +257,7 @@ def logout():
 @site.route('/favicon.ico')
 @site.route('/favicon.png')
 def favicon():
-    filename = os.path.join('static', 'favicon.png')
+    filename = os.path.join(STATIC_DIR, 'favicon.png')
     return flask.send_file(filename)
 
 
@@ -547,14 +555,6 @@ def get_search_json():
     search_results = get_search_core()
     search_results['photos'] = [jsonify.photo(photo, include_albums=False) for photo in search_results['photos']]
     return jsonify.make_json_response(search_results)
-
-
-@site.route('/static/<filename>')
-def geft_static(filename):
-    filename = filename.replace('\\', os.sep)
-    filename = filename.replace('/', os.sep)
-    filename = os.path.join('static', filename)
-    return flask.send_file(filename)
 
 
 def get_tags_core(specific_tag=None):

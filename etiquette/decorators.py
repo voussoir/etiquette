@@ -4,7 +4,7 @@ import functools
 import time
 import warnings
 
-import jsonify
+from . import jsonify
 
 
 def required_fields(fields):

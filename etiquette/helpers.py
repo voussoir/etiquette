@@ -3,8 +3,8 @@ import math
 import mimetypes
 import os
 
-import constants
-import exceptions
+from . import constants
+from . import exceptions
 
 from voussoirkit import bytestring
 

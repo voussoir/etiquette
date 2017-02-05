@@ -100,7 +100,7 @@ SQL_USER = _sql_dictify(SQL_USER_COLUMNS)
 
 
 # Errors and warnings
-ERROR_DATABASE_OUTOFDATE = 'Database is out-of-date. {current} should be {new}. Please use etiquette_upgrader.py'
+ERROR_DATABASE_OUTOFDATE = 'Database is out-of-date. {current} should be {new}. Please use utilities\\etiquette_upgrader.py'
 ERROR_INVALID_ACTION = 'Invalid action'
 ERROR_NO_SUCH_TAG = 'Doesn\'t exist'
 ERROR_NO_TAG_GIVEN = 'No tag name supplied'

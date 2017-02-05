@@ -2,10 +2,10 @@ import os
 import PIL.Image
 import traceback
 
-import constants
-import decorators
-import exceptions
-import helpers
+from . import constants
+from . import decorators
+from . import exceptions
+from . import helpers
 
 from voussoirkit import bytestring
 from voussoirkit import pathclass

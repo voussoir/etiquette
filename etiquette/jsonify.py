@@ -1,6 +1,7 @@
 import flask
-import helpers
 import json
+
+from . import helpers
 
 def make_json_response(j, *args, **kwargs):
     dumped = json.dumps(j)
