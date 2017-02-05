@@ -1,10 +1,10 @@
 # Use with
 # py -i etiquette_easy.py
 
-import etiquette.phototagger
+import etiquette.photodb
 import os
 import sys
-P = etiquette.phototagger.PhotoDB()
+P = etiquette.photodb.PhotoDB()
 import traceback
 
 def easytagger():

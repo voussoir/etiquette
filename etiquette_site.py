@@ -14,7 +14,7 @@ from etiquette import exceptions
 from etiquette import helpers
 from etiquette import jsonify
 from etiquette import objects
-from etiquette import phototagger
+from etiquette import photodb
 from etiquette import searchhelpers
 from etiquette import sessions
 
@@ -36,7 +36,7 @@ site.jinja_env.trim_blocks = True
 site.jinja_env.lstrip_blocks = True
 site.debug = True
 
-P = phototagger.PhotoDB()
+P = photodb.PhotoDB()
 
 session_manager = sessions.SessionManager()
 
@@ -534,7 +534,7 @@ def get_search_core():
 def get_search_html():
     search_results = get_search_core()
     search_kwargs = search_results['search_kwargs']
-    qualname_map = P.export_tags(exporter=phototagger.tag_export_qualname_map)
+    qualname_map = P.export_tags(exporter=photodb.tag_export_qualname_map)
     session = session_manager.get(request)
     response = flask.render_template(
         'search.html',
@@ -559,7 +559,7 @@ def get_search_json():
 
 def get_tags_core(specific_tag=None):
     try:
-        tags = P.export_tags(phototagger.tag_export_easybake, specific_tag=specific_tag)
+        tags = P.export_tags(photodb.tag_export_easybake, specific_tag=specific_tag)
     except exceptions.NoSuchTag:
         flask.abort(404, 'That tag doesnt exist')
     tags = tags.split('\n')

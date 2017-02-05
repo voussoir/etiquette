@@ -3,7 +3,7 @@ import os
 import sqlite3
 import sys
 
-import phototagger
+import etiquette.photodb
 
 def upgrade_1_to_2(sql):
     '''
@@ -68,7 +68,7 @@ def upgrade_all(database_filename):
 
     cur.execute('PRAGMA user_version')
     current_version = cur.fetchone()[0]
-    needed_version = phototagger.DATABASE_VERSION
+    needed_version = etiquette.photodb.DATABASE_VERSION
 
     if current_version == needed_version:
         print('Already up-to-date with version %d.' % needed_version)
