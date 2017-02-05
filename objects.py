@@ -61,7 +61,7 @@ class GroupableMixin:
         self.photodb._cached_frozen_children = None
         cur.execute('INSERT INTO tag_group_rel VALUES(?, ?)', [self.id, member.id])
         if commit:
-            self.photodb.log.debug('Commiting - add to group')
+            self.photodb.log.debug('Committing - add to group')
             self.photodb.commit()
 
     def children(self):
@@ -266,6 +266,7 @@ class Album(ObjectBase, GroupableMixin):
             [self.id, photo.id]
         )
         if commit:
+            self.photodb.log.debug('Committing - remove photo from album')
             self.photodb.commit()
 
     def walk_photos(self):
@@ -276,6 +277,44 @@ class Album(ObjectBase, GroupableMixin):
         for child in children:
             print(child)
             yield from child.walk_photos()
+
+
+class Bookmark(ObjectBase):
+    def __init__(self, photodb, row_tuple):
+        self.photodb = photodb
+        if isinstance(row_tuple, (list, tuple)):
+            row_tuple = {constants.SQL_BOOKMARK_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
+
+        self.id = row_tuple['id']
+        self.title = row_tuple['title']
+        self.url = row_tuple['url']
+        self.author_id = row_tuple['author_id']
+
+    def __repr__(self):
+        return 'Bookmark:{id}'.format(id=self.id)
+
+    def delete(self, *, commit=True):
+        cur = self.photodb.sql.cursor()
+        cur.execute('DELETE FROM bookmarks WHERE id == ?', [self.id])
+        if commit:
+            self.photodb.sql.commit()
+
+    def edit(self, title=None, url=None, *, commit=True):
+        if title is None and url is None:
+            return
+
+        if title is not None:
+            self.title = title
+
+        if url is not None:
+            self.url = url
+
+        cur = self.photodb.sql.cursor()
+        cur.execute('UPDATE bookmarks SET title = ?, url = ? WHERE id == ?', [self.title, self.url, self.id])
+        if commit:
+            self.photodb.log.debug('Committing - edit bookmark')
+            self.photodb.sql.commit()
+
 
 class Photo(ObjectBase):
     '''
@@ -527,6 +566,8 @@ class Photo(ObjectBase):
         self.area = None
         self.ratio = None
         self.duration = None
+
+        self.photodb.log.debug('Reloading metadata for {photo:r}'.format(photo=self))
 
         if self.mimetype == 'image':
             try:

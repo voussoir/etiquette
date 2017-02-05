@@ -37,6 +37,12 @@ SQL_ALBUM_COLUMNS = [
     'description',
     'associated_directory',
 ]
+SQL_BOOKMARK_COLUMNS = [
+    'id',
+    'title',
+    'url',
+    'author_id',
+]
 SQL_PHOTO_COLUMNS = [
     'id',
     'filepath',
@@ -82,6 +88,7 @@ SQL_USER_COLUMNS = [
 
 _sql_dictify = lambda columns: {key:index for (index, key) in enumerate(columns)}
 SQL_ALBUM = _sql_dictify(SQL_ALBUM_COLUMNS)
+SQL_BOOKMARK = _sql_dictify(SQL_BOOKMARK_COLUMNS)
 SQL_ALBUMPHOTO = _sql_dictify(SQL_ALBUMPHOTO_COLUMNS)
 SQL_LASTID = _sql_dictify(SQL_LASTID_COLUMNS)
 SQL_PHOTO = _sql_dictify(SQL_PHOTO_COLUMNS)

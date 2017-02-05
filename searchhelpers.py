@@ -26,6 +26,17 @@ def build_query(orderby):
     query += ' ORDER BY %s' % orderby
     return query
 
+def get_user(photodb, username_or_id):
+    try:
+        user = photodb.get_user(username=username_or_id)
+    except exceptions.NoSuchUser:
+        try:
+            user = photodb.get_user(id=username_or_id)
+        except exceptions.NoSuchUser:
+            raise
+
+    return user
+
 def minmax(key, value, minimums, maximums, warning_bag=None):
     '''
     Dissects a hyphenated range string and inserts the correct k:v pair into
@@ -69,6 +80,14 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
         maximums[key] = high
 
 def normalize_authors(authors, photodb, warning_bag=None):
+    '''
+    Either:
+    - A string, where the usernames are separated by commas
+    - An iterable containing usernames
+    - An iterable containing User objects.
+
+    Returns: A set of user IDs.
+    '''
     if not authors:
         return None
 
@@ -84,7 +103,7 @@ def normalize_authors(authors, photodb, warning_bag=None):
                 requested_author = requested_author.username
 
         try:
-            user = photodb.get_user(username=requested_author)
+            user = get_user(photodb, requested_author)
         except exceptions.NoSuchUser:
             if warning_bag:
                 warning_bag.add(constants.WARNING_NO_SUCH_USER.format(username=requested_author))

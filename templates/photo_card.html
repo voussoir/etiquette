@@ -45,7 +45,7 @@
         {% if photo.duration %}
             {{photo.duration_string()}},
         {% endif %}
-        {{photo.bytestring()}}
+        <a target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
         </span>
         <span class="photo_card_grid_tags">
             {% set tags = photo.tags() %}

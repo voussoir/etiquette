@@ -8,6 +8,26 @@
     <script src="/static/common.js"></script>
 
 <style>
+#bookmarks
+{
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+}
+.bookmark_card
+{
+    background-color: #ffffd4;
+    display: inline-flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    padding: 8px;
+    margin: 8px;
+    border-radius: 8px;
+}
+.bookmark_card .bookmark_url
+{
+    color: #aaa;
+}
 </style>
 </head>
 
@@ -15,7 +35,20 @@
 <body>
     {{header.make_header(session=session)}}
     <div id="content_body">
-        <a href="/search?has_tags=no&orderby=random-desc&mimetype=image">Needs tagging</a>
+        <div id="bookmarks">
+            {% for bookmark in bookmarks %}
+            <div class="bookmark_card">
+                <a href="{{bookmark.url}}" class="bookmark_title">
+                {% if bookmark.title %}
+                    {{bookmark.title}}
+                {% else %}
+                    {{bookmark.id}}
+                {% endif %}
+                </a>
+                <a href="{{bookmark.url}}" class="bookmark_url">{{bookmark.url}}</a>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </body>
 

@@ -24,6 +24,8 @@ site.config.update(
     TEMPLATES_AUTO_RELOAD=True,
 )
 site.jinja_env.add_extension('jinja2.ext.do')
+site.jinja_env.trim_blocks = True
+site.jinja_env.lstrip_blocks = True
 site.debug = True
 
 P = phototagger.PhotoDB()
@@ -82,6 +84,12 @@ def P_tag(tagname):
         return P.get_tag(tagname)
     except exceptions.NoSuchTag as e:
         flask.abort(404, 'That tag doesnt exist: %s' % e)
+
+def P_user(username):
+    try:
+        return P.get_user(username=username)
+    except exceptions.NoSuchUser as e:
+        flask.abort(404, 'That user doesnt exist: %s' % e)
 
 def send_file(filepath):
     '''
@@ -279,12 +287,14 @@ def get_album_zip(albumid):
 
     recursive = request.args.get('recursive', True)
     recursive = helpers.truthystring(recursive)
+
     arcnames = helpers.album_zip_filenames(album, recursive=recursive)
 
     streamed_zip = zipstream.ZipFile()
     for (real_filepath, arcname) in arcnames.items():
         streamed_zip.write(real_filepath, arcname=arcname)
 
+    # Add the album metadata as an {id}.txt file within each directory.
     directories = helpers.album_zip_directories(album, recursive=recursive)
     for (inner_album, directory) in directories.items():
         text = []
@@ -337,7 +347,8 @@ def get_albums_json():
 @session_manager.give_token
 def get_bookmarks():
     session = session_manager.get(request)
-    return flask.render_template('bookmarks.html', session=session)
+    bookmarks = list(P.get_bookmarks())
+    return flask.render_template('bookmarks.html', bookmarks=bookmarks, session=session)
 
 
 @site.route('/file/<photoid>')
@@ -582,6 +593,26 @@ def get_thumbnail(photoid):
     else:
         flask.abort(404, 'That file doesnt have a thumbnail')
     return send_file(path)
+
+
+def get_user_core(username):
+    user = P_user(username)
+    return user
+
+@site.route('/user/<username>', methods=['GET'])
+@session_manager.give_token
+def get_user_html(username):
+    user = get_user_core(username)
+    session = session_manager.get(request)
+    return flask.render_template('user.html', user=user, session=session)
+
+@site.route('/user/<username>.json', methods=['GET'])
+@session_manager.give_token
+def get_user_json(username):
+    user = get_user_core(username)
+    user = jsonify.user(user)
+    user = jsonify.make_json_response(user)
+    return user
 
 
 @site.route('/album/<albumid>', methods=['POST'])

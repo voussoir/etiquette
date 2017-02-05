@@ -2,6 +2,9 @@
 class NoSuchAlbum(Exception):
     pass
 
+class NoSuchBookmark(Exception):
+    pass
+
 class NoSuchGroup(Exception):
     pass
 

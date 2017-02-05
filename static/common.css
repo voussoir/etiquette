@@ -138,16 +138,6 @@ li
     right: 8px;
     font-size: 0.8em;
 }
-.photo_card_grid_info a
-{
-    position: absolute;
-    max-height: 30px;
-    overflow: hidden;
-}
-.photo_card_grid_info a:hover
-{
-    max-height: 100%;
-}
 .photo_card_grid_file_metadata
 {
     position: absolute;
@@ -156,7 +146,14 @@ li
 }
 .photo_card_grid_filename
 {
+    position: absolute;
+    max-height: 30px;
+    overflow: hidden;
     word-break:break-word;
+}
+.photo_card_grid_filename:hover
+{
+    max-height: 100%;
 }
 .photo_card_grid_tags
 {

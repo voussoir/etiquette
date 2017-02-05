@@ -28,7 +28,7 @@ logging.getLogger('PIL.PngImagePlugin').setLevel(logging.WARNING)
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
-DATABASE_VERSION = 4
+DATABASE_VERSION = 5
 DB_INIT = '''
 PRAGMA count_changes = OFF;
 PRAGMA cache_size = 10000;
@@ -38,6 +38,12 @@ CREATE TABLE IF NOT EXISTS albums(
     title TEXT,
     description TEXT,
     associated_directory TEXT COLLATE NOCASE
+);
+CREATE TABLE IF NOT EXISTS bookmarks(
+    id TEXT,
+    title TEXT,
+    url TEXT,
+    author_id TEXT
 );
 CREATE TABLE IF NOT EXISTS photos(
     id TEXT,
@@ -90,6 +96,10 @@ CREATE TABLE IF NOT EXISTS users(
 CREATE INDEX IF NOT EXISTS index_album_id on albums(id);
 CREATE INDEX IF NOT EXISTS index_albumrel_albumid on album_photo_rel(albumid);
 CREATE INDEX IF NOT EXISTS index_albumrel_photoid on album_photo_rel(photoid);
+
+-- Bookmark
+CREATE INDEX IF NOT EXISTS index_bookmark_id on bookmarks(id);
+CREATE INDEX IF NOT EXISTS index_bookmark_author on bookmarks(author_id);
 
 -- Photo
 CREATE INDEX IF NOT EXISTS index_photo_id on photos(id);
@@ -379,6 +389,48 @@ class PDBAlbumMixin:
         return album
 
 
+class PDBBookmarkMixin:
+    def get_bookmark(self, id):
+        cur = self.sql.cursor()
+        cur.execute('SELECT * FROM bookmarks WHERE id == ?', [id])
+        fetch = cur.fetchone()
+        if fetch is None:
+            raise exceptions.NoSuchBookmark(id)
+        bookmark = objects.Bookmark(self, fetch)
+        return bookmark
+
+    def get_bookmarks(self):
+        yield from self.get_things(thing_type='bookmark')
+
+    def new_bookmark(self, url, title=None, *, author=None, commit=True):
+        if not url:
+            raise ValueError('Must provide a URL')
+
+        bookmark_id = self.generate_id('bookmarks')
+        title = title or None
+        author_id = self.get_user_id_or_none(author)
+
+        # To do: NORMALIZATION AND VALIDATION
+
+        data = {
+            'author_id': author_id,
+            'id': bookmark_id,
+            'title': title,
+            'url': url,
+        }
+
+        (qmarks, bindings) = helpers.binding_filler(constants.SQL_BOOKMARK_COLUMNS, data)
+        query = 'INSERT INTO bookmarks VALUES(%s)' % qmarks
+        cur = self.sql.cursor()
+        cur.execute(query, bindings)
+
+        bookmark = objects.Bookmark(self, data)
+        if commit:
+            self.log.debug('Committing - new Bookmark')
+            self.sql.commit()
+        return bookmark
+
+
 class PDBPhotoMixin:
     def get_photo(self, photoid):
         return self.get_thing_by_id('photo', photoid)
@@ -452,15 +504,7 @@ class PDBPhotoMixin:
                 exc.photo = existing
                 raise exc
 
-        if isinstance(author, objects.User):
-            if author.photodb != self:
-                raise ValueError('That user does not belong to this photodb')
-            author_id = author.id
-        elif author is not None:
-            # Just to confirm
-            author_id = self.get_user(id=author).id
-        else:
-            author_id = None
+        author_id = self.get_user_id_or_none(author)
 
         extension = os.path.splitext(filename)[1]
         extension = extension.replace('.', '')
@@ -503,11 +547,11 @@ class PDBPhotoMixin:
             photo.add_tag(tag, commit=False)
 
         if commit:
-            self.log.debug('Commiting - new_photo')
+            self.log.debug('Committing - new_photo')
             self.commit()
         return photo
 
-    def purge_deleted_files(self):
+    def purge_deleted_files(self, *, commit=True):
         '''
         Remove Photo entries if their corresponding file is no longer found.
         '''
@@ -515,14 +559,20 @@ class PDBPhotoMixin:
         for photo in photos:
             if os.path.exists(photo.real_filepath):
                 continue
-            photo.delete()
+            photo.delete(commit=False)
+        if commit:
+            self.log.debug('Committing - purge deleted photos')
+            self.sql.commit()
 
-    def purge_empty_albums(self):
+    def purge_empty_albums(self, *, commit=True):
         albums = self.get_albums()
         for album in albums:
             if album.children() or album.photos():
                 continue
-            album.delete()
+            album.delete(commit=False)
+        if commit:
+            self.log.debug('Committing - purge empty albums')
+            self.sql.commit()
 
     def search(
             self,
@@ -559,7 +609,7 @@ class PDBPhotoMixin:
 
         TAGS AND FILTERS
         authors:
-            A list of User object or users IDs.
+            A list of User objects, or usernames, or user ids.
 
         created:
             A hyphen_range string respresenting min and max. Or just a number for lower bound.
@@ -813,7 +863,7 @@ class PDBPhotoMixin:
             photos_received += 1
             yield photo
 
-        if warning_bag.warnings:
+        if warning_bag and warning_bag.warnings:
             yield warning_bag
 
         end_time = time.time()
@@ -894,7 +944,7 @@ class PDBTagMixin:
         cur = self.sql.cursor()
         cur.execute('INSERT INTO tags VALUES(?, ?)', [tagid, tagname])
         if commit:
-            self.log.debug('Commiting - new_tag')
+            self.log.debug('Committing - new_tag')
             self.commit()
         tag = objects.Tag(self, [tagid, tagname])
         return tag
@@ -954,6 +1004,23 @@ class PDBUserMixin:
             return objects.User(self, fetch)
         else:
             raise exceptions.NoSuchUser(username)
+
+    def get_user_id_or_none(self, user):
+        '''
+        For methods that create photos, albums, etc., we sometimes associate
+        them with an author but sometimes not. This method hides validation
+        that those methods would otherwise have to duplicate.
+        '''
+        if isinstance(user, objects.User):
+            if user.photodb != self:
+                raise ValueError('That user does not belong to this photodb')
+            author_id = user.id
+        elif user is not None:
+            # Confirm that this string is an ID and not junk.
+            author_id = self.get_user(id=user).id
+        else:
+            author_id = None
+        return author_id
 
     def login(self, user_id, password):
         cur = self.sql.cursor()
@@ -1018,7 +1085,7 @@ class PDBUserMixin:
         return objects.User(self, data)
 
 
-class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
+class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
     '''
     This class represents an SQLite3 database containing the following tables:
 
@@ -1189,7 +1256,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
                 current_album.add_photo(photo, commit=False)
 
         if commit:
-            self.log.debug('Commiting - digest')
+            self.log.debug('Committing - digest')
             self.commit()
         return album
 
@@ -1318,7 +1385,7 @@ class PhotoDB(PDBAlbumMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
         ID is actually used.
         '''
         table = table.lower()
-        if table not in ['photos', 'tags', 'groups']:
+        if table not in ['photos', 'tags', 'groups', 'bookmarks']:
             raise ValueError('Invalid table requested: %s.', table)
 
         cur = self.sql.cursor()
@@ -1376,6 +1443,12 @@ _THING_CLASSES = {
         'class': objects.Album,
         'exception': exceptions.NoSuchAlbum,
         'table': 'albums',
+    },
+    'bookmark':
+    {
+        'class': objects.Bookmark,
+        'exception': exceptions.NoSuchBookmark,
+        'table': 'bookmarks',
     },
     'photo':
     {

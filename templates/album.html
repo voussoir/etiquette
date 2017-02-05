@@ -36,7 +36,7 @@ p
     {% if sub_albums %}
     <h3>Sub-albums</h3>
     <ul>
-        {% for sub_album in sub_albums %}
+        {% for sub_album in sub_albums|sort(attribute='title') %}
         <li><a href="/album/{{sub_album.id}}">
             {% if sub_album.title %}
             {{sub_album.title}}

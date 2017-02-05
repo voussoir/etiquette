@@ -55,3 +55,11 @@ def tag(t):
         'qualified_name': t.qualified_name(),
     }
     return j
+
+def user(u):
+    j = {
+        'id': u.id,
+        'username': u.username,
+        'created': u.created,
+    }
+    return j

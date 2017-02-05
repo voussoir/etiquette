@@ -39,6 +39,22 @@ def upgrade_3_to_4(sql):
     cur.execute('ALTER TABLE photos ADD COLUMN author_id TEXT')
     cur.execute('CREATE INDEX IF NOT EXISTS index_photo_author on photos(author_id)')
 
+def upgrade_4_to_5(sql):
+    '''
+    Add table `bookmarks` and its indices.
+    '''
+    cur = sql.cursor()
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS bookmarks(
+        id TEXT,
+        title TEXT,
+        url TEXT,
+        author_id TEXT
+    )
+    ''')
+    cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_id on bookmarks(id)')
+    cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_author on bookmarks(author_id)')
+
 def upgrade_all(database_filename):
     '''
     Given the filename of a phototagger database, apply all of the needed
