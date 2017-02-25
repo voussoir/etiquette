@@ -5,18 +5,27 @@ from . import exceptions
 from . import helpers
 from . import objects
 
-def build_query(orderby):
+def build_query(orderby, notnulls):
     query = 'SELECT * FROM photos'
+
+    if orderby:
+        orderby = [o.split('-') for o in orderby]
+        orderby_columns = [column for (column, sorter) in orderby if column != 'RANDOM()']
+    else:
+        orderby_columns = []
+
+    if notnulls:
+        notnulls.extend(orderby_columns)
+    elif orderby_columns:
+        notnulls = orderby_columns
+
+    if notnulls:
+        notnulls = [x + ' IS NOT NULL' for x in notnulls]
+        notnulls = ' AND '.join(notnulls)
+        query += ' WHERE ' + notnulls
     if not orderby:
         query += ' ORDER BY created DESC'
         return query
-
-    orderby = [o.split('-') for o in orderby]
-    whereable_columns = [column for (column, sorter) in orderby if column != 'RANDOM()']
-    if whereable_columns:
-        query += ' WHERE '
-        whereable_columns = [column + ' IS NOT NULL' for column in whereable_columns]
-        query += ' AND '.join(whereable_columns)
 
     # Combine each column+sorter
     orderby = [' '.join(o) for o in orderby]
@@ -207,7 +216,6 @@ def normalize_offset(offset, warning_bag=None):
 
     return offset
 
-
 def normalize_orderby(orderby, warning_bag=None):
     if not orderby:
         return None
@@ -309,3 +317,28 @@ def normalize_tag_mmf(tags, photodb, warning_bag=None):
         return None
 
     return tagset
+
+def tag_expression_matcher_builder(frozen_children, warning_bag=None):
+    def matcher(photo_tags, tagname):
+        '''
+        Used as the `match_function` for the ExpressionTree evaluation.
+
+        photo:
+            The set of tag names owned by the photo in question.
+        tagname:
+            The tag which the ExpressionTree wants it to have.
+        '''
+        if not photo_tags:
+            return False
+
+        try:
+            options = frozen_children[tagname]
+        except KeyError:
+            if warning_bag is not None:
+                warning_bag.add(constants.WARNING_NO_SUCH_TAG.format(tag=tagname))
+                return False
+            else:
+                raise exceptions.NoSuchTag(tagname)
+
+        return any(option in photo_tags for option in options)
+    return matcher

@@ -50,8 +50,16 @@ p
     {% set photos = album.photos() %}
     <span>
         Download:
-        {% if photos %}<a href="/album/{{album.id}}.zip?recursive=no">These files</a>{% endif %}
-        {% if sub_albums %}<a href="/album/{{album.id}}.zip?recursive=yes">Include children</a>{% endif %}
+        {% if photos %}
+            <a href="/album/{{album.id}}.zip?recursive=no">
+                These files ({{album.sum_bytes(recurse=False, string=True)}})
+            </a>
+        {% endif %}
+        {% if sub_albums %}
+            <a href="/album/{{album.id}}.zip?recursive=yes">
+                Include children ({{album.sum_bytes(recurse=True, string=True)}})
+            </a>
+        {% endif %}
     </span>
     {% if photos %}
     <h3>Photos</h3>

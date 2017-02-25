@@ -711,8 +711,10 @@ def post_edit_tags():
         status = 400
         try:
             response = method(tag)
+        except exceptions.TagTooLong:
+            response = {'error': constants.ERROR_TAG_TOO_LONG.format(tag=tag), 'tagname': tag}
         except exceptions.TagTooShort:
-            response = {'error': constants.ERROR_TAG_TOO_SHORT, 'tagname': tag}
+            response = {'error': constants.ERROR_TAG_TOO_SHORT.format(tag=tag), 'tagname': tag}
         except exceptions.CantSynonymSelf:
             response = {'error': constants.ERROR_SYNONYM_ITSELF, 'tagname': tag}
         except exceptions.NoSuchTag as e:

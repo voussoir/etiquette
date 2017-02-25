@@ -11,6 +11,7 @@ from voussoirkit import bytestring
 from voussoirkit import pathclass
 from voussoirkit import spinal
 
+
 class ObjectBase:
     def __eq__(self, other):
         return (
@@ -101,7 +102,8 @@ class GroupableMixin:
             # Lift children
             parent = self.parent()
             if parent is None:
-                # Since this group was a root, children become roots by removing the row.
+                # Since this group was a root, children become roots by removing
+                # the row.
                 cur.execute('DELETE FROM tag_group_rel WHERE parentid == ?', [self.id])
             else:
                 # Since this group was a child, its parent adopts all its children.
@@ -109,7 +111,8 @@ class GroupableMixin:
                     'UPDATE tag_group_rel SET parentid == ? WHERE parentid == ?',
                     [parent.id, self.id]
                 )
-        # Note that this part comes after the deletion of children to prevent issues of recursion.
+        # Note that this part comes after the deletion of children to prevent
+        # issues of recursion.
         cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
         if commit:
             self.photodb.log.debug('Committing - delete tag')
@@ -268,6 +271,20 @@ class Album(ObjectBase, GroupableMixin):
         if commit:
             self.photodb.log.debug('Committing - remove photo from album')
             self.photodb.commit()
+
+    def sum_bytes(self, recurse=True, string=False):
+        if recurse:
+            photos = self.walk_photos()
+        else:
+            photos = self.photos()
+
+        total = sum(photo.bytes for photo in photos)
+
+        if string:
+            return bytestring.bytestring(total)
+        else:
+            return total
+
 
     def walk_photos(self):
         yield from self.photos()
@@ -642,7 +659,7 @@ class Photo(ObjectBase):
             new_path = old_path.parent.with_child(new_filename)
         else:
             new_path = pathclass.Path(new_filename)
-        new_path.correct_case()
+        #new_path.correct_case()
 
         self.photodb.log.debug(old_path)
         self.photodb.log.debug(new_path)
@@ -655,9 +672,11 @@ class Photo(ObjectBase):
         os.makedirs(new_path.parent.absolute_path, exist_ok=True)
 
         if new_path != old_path:
-            # This is different than the absolute == absolute check above, because this normalizes
-            # the paths. It's possible on case-insensitive systems to have the paths point to the
-            # same place while being differently cased, thus we couldn't make the intermediate link.
+            # This is different than the absolute == absolute check above,
+            # because this normalizes the paths. It's possible on
+            # case-insensitive systems to have the paths point to the same place
+            # while being differently cased, thus we couldn't make the
+            # intermediate link.
             try:
                 os.link(old_path.absolute_path, new_path.absolute_path)
             except OSError:
@@ -671,7 +690,8 @@ class Photo(ObjectBase):
 
         if commit:
             if new_path == old_path:
-                # If they are equivalent but differently cased paths, just rename.
+                # If they are equivalent but differently cased paths, just
+                # rename.
                 os.rename(old_path.absolute_path, new_path.absolute_path)
             else:
                 # Delete the original hardlink or copy.
@@ -899,6 +919,7 @@ class User(ObjectBase):
     def __str__(self):
         rep = 'User:{username}'.format(username=self.username)
         return rep
+
 
 class WarningBag:
     def __init__(self):

@@ -88,13 +88,15 @@ li
     display: block;
     padding: 4px;
     margin: 8px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
 }
 .photo_card_grid
 {
-    vertical-align: middle;
-    position: relative;
+    display: inline-flex;
+    flex-direction: column;
     box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.25);
-    display: inline-block;
     min-width: 150px;
     max-width: 300px;
     height: 200px;
@@ -102,6 +104,7 @@ li
     padding: 8px;
     margin: 8px;
     border-radius: 8px;
+    vertical-align: middle;
 }
 .photo_card_grid_thumb
 {
@@ -131,35 +134,32 @@ li
 }
 .photo_card_grid_info
 {
-    position: absolute;
-    top: 160px;
-    bottom: 0px;
-    left: 8px;
-    right: 8px;
+    display: flex;
+    flex: 1;
+    justify-content: space-between;
+    flex-direction: column;
     font-size: 0.8em;
 }
 .photo_card_grid_file_metadata
 {
-    position: absolute;
-    bottom: 0;
-    right: 0;
+    display: flex;
+    justify-content: space-between;
 }
 .photo_card_grid_filename
 {
-    position: absolute;
+    /*position: absolute;*/
     max-height: 30px;
     overflow: hidden;
+    align-self: flex-start;
     word-break:break-word;
 }
 .photo_card_grid_filename:hover
 {
-    max-height: 100%;
+    overflow: visible;
 }
 .photo_card_grid_tags
 {
-    position: absolute;
-    bottom: 0;
-    left: 0;
+    align-self: flex-start;
 }
 .tag_object
 {

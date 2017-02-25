@@ -17,6 +17,7 @@
 {% if view == "list" %}
 <div class="photo_card_list">
     <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
+    <a target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
 </div>
 
 {% else %}
@@ -34,29 +35,32 @@
                 %}
                 src="/static/basic_thumbnails/{{choice}}.png"
             {% endif %}
+            >
         </a>
     </div>
     <div class="photo_card_grid_info">
         <a target="_blank" class="photo_card_grid_filename" href="/photo/{{photo.id}}">{{photo.basename}}</a>
-        <span class="photo_card_grid_file_metadata">
-        {% if photo.width %}
-            {{photo.width}}x{{photo.height}},
-        {% endif %}
-        {% if photo.duration %}
-            {{photo.duration_string()}},
-        {% endif %}
-        <a target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
-        </span>
-        <span class="photo_card_grid_tags">
-            {% set tags = photo.tags() %}
-            {% set tag_names = [] %}
-            {% for tag in tags %}
-            {% do tag_names.append(tag.name) %}
-            {% endfor %}
-            {% if tags %}
-                <span title="{{", ".join(tag_names)}}">T</span>
+        <div class="photo_card_grid_file_metadata">
+            <div class="photo_card_grid_tags">
+                {% set tags = photo.tags() %}
+                {% set tag_names = [] %}
+                {% for tag in tags %}
+                {% do tag_names.append(tag.name) %}
+                {% endfor %}
+                {% if tags %}
+                    <span title="{{", ".join(tag_names)}}">T</span>
+                {% endif %}
+            </div>
+            <span>
+            {% if photo.width %}
+                {{photo.width}}x{{photo.height}},
             {% endif %}
-        </span>
+            {% if photo.duration %}
+                {{photo.duration_string()}},
+            {% endif %}
+            <a target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
+            </span>
+        </div>
     </div>
 </div>
 {% endif %}

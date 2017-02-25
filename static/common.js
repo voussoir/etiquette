@@ -81,6 +81,7 @@ function entry_with_history_hook(box, button)
             box.entry_history_pos -= 1;
         }
         box.value = box.entry_history[box.entry_history_pos];
+        setTimeout(function(){box.selectionStart = box.value.length;}, 0);
     }
     else if (event.keyCode == 27)
     {

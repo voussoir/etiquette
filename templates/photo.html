@@ -13,9 +13,10 @@
 #content_body
 {
     /* Override common.css */
+    flex-direction: row;
     flex: 1;
-    height: 100%;
-    width: 100%;
+    /*height: 100%;
+    width: 100%;*/
 }
 #left
 {
@@ -24,13 +25,41 @@
     flex-direction: column;
     justify-content: flex-start;
     background-color: rgba(0, 0, 0, 0.1);
-    width: 300px;
+    max-width: 300px;
 }
 #right
 {
-    display: flex;
     flex: 1;
-    height: 100%;
+    display: flex;
+}
+@media screen and (max-width: 800px)
+{
+    #content_body
+    {
+        /*
+        When flexing, it tries to contain itself entirely in the screen,
+        forcing #left and #right to squish together.
+        */
+        flex: none;
+        flex-direction: column-reverse;
+    }
+    #left
+    {
+        /*
+        Display: None will be overridden as soon as the page detects that the
+        screen is in narrow mode and turns off the tag box's autofocus
+        */
+        display: none;
+        flex-direction: row;
+        width: initial;
+        max-width: none;
+        margin-top: 8px;
+    }
+    #right
+    {
+        flex: none;
+        height: calc(100% - 20px);
+    }
 }
 #editor_area
 {
@@ -49,8 +78,8 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100%;
-    width: 100%;
+/*    height: 100%;
+    width: 100%;*/
 }
 .photo_viewer a
 {
@@ -67,7 +96,7 @@
     align-items: center;
     background-repeat: no-repeat;
 }
-.photo_viewer img
+#photo_img_holder img
 {
     max-height: 100%;
     max-width: 100%;
@@ -146,7 +175,6 @@
     <div class="photo_viewer">
         {% if photo.mimetype == "image" %}
         <div id="photo_img_holder"><img id="photo_img" src="{{link}}" onclick="toggle_hoverzoom()" onload="this.style.opacity=0.99"></div>
-        <!-- <img src="{{link}}"> -->
         {% elif photo.mimetype == "video" %}
         <video src="{{link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
         {% elif photo.mimetype == "audio" %}
@@ -161,6 +189,7 @@
 
 
 <script type="text/javascript">
+var content_body = document.getElementById('content_body');
 var add_tag_box = document.getElementById('add_tag_textbox');
 var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
@@ -239,7 +268,10 @@ function disable_hoverzoom()
     div.style.backgroundImage = "none";
     div.onmousemove = null;
     div.onclick = null;
-    add_tag_box.focus();
+    if (getComputedStyle(content_body).flexDirection != "column-reverse")
+    {
+        add_tag_box.focus();
+    }
 }
 function toggle_hoverzoom()
 {
@@ -299,5 +331,23 @@ function move_hoverzoom(event)
     //console.log(x);
     photo_img_holder.style.backgroundPosition=(-x)+"px "+(-y)+"px";
 }
+
+setTimeout(
+    /*
+    When the screen is in column mode, the autofocusing of the tag box snaps the
+    screen down to it, which is annoying. By starting the #left hidden, we have
+    an opportunity to unset the autofocus before showing it.
+    */
+    function()
+    {
+        var left = document.getElementById("left");
+        if (getComputedStyle(content_body).flexDirection == "column-reverse")
+        {
+            add_tag_box.autofocus = false;
+        }
+        left.style.display = "flex";
+    },
+    0
+);
 </script>
 </html>

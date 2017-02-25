@@ -39,13 +39,27 @@ form
 {
     background-color: rgba(0, 0, 0, 0.1);
     width: 300px;
+    max-width: 300px;
+    min-width: 300px;
     padding: 8px;
+    flex: 1;
 }
 #right
 {
     flex: 1;
     padding: 8px;
     width: auto;
+}
+@media screen and (max-width: 800px) {
+    #content_body
+    {
+        flex-direction: column-reverse;
+    }
+    #left
+    {
+        max-width: none;
+        width: initial;
+    }
 }
 .prev_next_holder
 {
@@ -396,7 +410,7 @@ function submit_search()
     var expression = document.getElementsByName("tag_expression")[0].value;
     if (expression)
     {
-        expression = expression.replace(new RegExp(" ", 'g'), "-");
+        //expression = expression.replace(new RegExp(" ", 'g'), "-");
         parameters.push("tag_expression=" + expression);
         has_tag_params=true;
     }

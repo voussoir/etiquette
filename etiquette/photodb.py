@@ -16,6 +16,7 @@ from . import helpers
 from . import objects
 from . import searchhelpers
 
+from voussoirkit import expressionmatch
 from voussoirkit import pathclass
 from voussoirkit import safeprint
 from voussoirkit import spinal
@@ -160,76 +161,6 @@ def raise_no_such_thing(exception_class, thing_id=None, thing_name=None, comment
     else:
         message = ''
     raise exception_class(message)
-
-def searchfilter_expression(photo_tags, expression, frozen_children, token_normalizer, warning_bag=None):
-    photo_tags = set(tag.name for tag in photo_tags)
-    operator_stack = collections.deque()
-    operand_stack = collections.deque()
-
-    expression = expression.replace('-', ' ')
-    expression = expression.strip()
-    if not expression:
-        return False
-    expression = expression.replace('(', ' ( ')
-    expression = expression.replace(')', ' ) ')
-    while '  ' in expression:
-        expression = expression.replace('  ', ' ')
-    tokens = [token for token in expression.split(' ') if token]
-    has_operand = False
-    can_shortcircuit = False
-
-    for token in tokens:
-        #print(token, end=' ', flush=True)
-        if can_shortcircuit and token != ')':
-            continue
-
-        if token not in constants.EXPRESSION_OPERATORS:
-            try:
-                token = token_normalizer(token)
-                value = any(option in photo_tags for option in frozen_children[token])
-            except KeyError:
-                if warning_bag:
-                    warning_bag.add(constants.WARNING_NO_SUCH_TAG.format(tag=token))
-                else:
-                    raise exceptions.NoSuchTag(token)
-                return False
-            operand_stack.append(value)
-            if has_operand:
-                operate(operand_stack, operator_stack)
-            has_operand = True
-            continue
-
-        if token == '(':
-            has_operand = False
-
-        if token == ')':
-            if not can_shortcircuit:
-                while operator_stack[-1] != '(':
-                    operate(operand_stack, operator_stack)
-                operator_stack.pop()
-            has_operand = True
-            continue
-
-        can_shortcircuit = (
-            has_operand and
-            (
-                (operand_stack[-1] == 0 and token == 'AND') or
-                (operand_stack[-1] == 1 and token == 'OR')
-            )
-        )
-        if can_shortcircuit:
-            if operator_stack and operator_stack[-1] == '(':
-                operator_stack.pop()
-            continue
-
-        operator_stack.append(token)
-        #time.sleep(.3)
-    #print()
-    while len(operand_stack) > 1 or len(operator_stack) > 0:
-        operate(operand_stack, operator_stack)
-    #print(operand_stack)
-    success = operand_stack.pop()
-    return success
 
 def searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, frozen_children):
     if tag_musts and not all(any(option in photo_tags for option in frozen_children[must]) for must in tag_musts):
@@ -728,7 +659,16 @@ class PDBPhotoMixin:
         searchhelpers.minmax('duration', duration, minimums, maximums, warning_bag=warning_bag)
 
         orderby = searchhelpers.normalize_orderby(orderby)
-        query = searchhelpers.build_query(orderby)
+        notnulls = []
+        if extension or mimetype:
+            notnulls.append('extension')
+        if width or height or ratio or area:
+            notnulls.append('width')
+        if bytes:
+            notnulls.append('bytes')
+        if duration:
+            notnulls.append('duration')
+        query = searchhelpers.build_query(orderby, notnulls)
         print(query)
         generator = helpers.select_generator(self.sql, query)
 
@@ -774,6 +714,12 @@ class PDBPhotoMixin:
             else:
                 frozen_children = self.export_tags(tag_export_totally_flat)
                 self._cached_frozen_children = frozen_children
+
+        if tag_expression:
+            expression_tree = expressionmatch.ExpressionTree.parse(tag_expression)
+            expression_tree.map(self.normalize_tagname)
+            expression_matcher = searchhelpers.tag_expression_matcher_builder(frozen_children, warning_bag)
+
         photos_received = 0
 
         # LET'S GET STARTED
@@ -791,7 +737,7 @@ class PDBPhotoMixin:
                     (photo.extension in extension_not)
                 )
             )
-            if (ext_fail):
+            if ext_fail:
                 #print('Failed extension_not')
                 continue
 
@@ -822,7 +768,7 @@ class PDBPhotoMixin:
                 continue
 
             if (has_tags is not None) or is_tagsearch:
-                photo_tags = photo.tags()
+                photo_tags = set(photo.tags())
 
                 if has_tags is False and len(photo_tags) > 0:
                     #print('Failed has_tags=False')
@@ -832,15 +778,11 @@ class PDBPhotoMixin:
                     #print('Failed has_tags=True')
                     continue
 
-                photo_tags = set(photo_tags)
 
                 if tag_expression:
-                    success = searchfilter_expression(
-                        photo_tags=photo_tags,
-                        expression=tag_expression,
-                        frozen_children=frozen_children,
-                        token_normalizer=self.normalize_tagname,
-                        warning_bag=warning_bag,
+                    success = expression_tree.evaluate(
+                        photo_tags,
+                        match_function=expression_matcher,
                     )
                     if not success:
                         #print('Failed tag expression')
@@ -872,7 +814,7 @@ class PDBPhotoMixin:
             yield warning_bag
 
         end_time = time.time()
-        print(end_time - start_time)
+        print('Search results took:', end_time - start_time)
 
 
 class PDBTagMixin:
@@ -954,7 +896,7 @@ class PDBTagMixin:
         tag = objects.Tag(self, [tagid, tagname])
         return tag
 
-    def normalize_tagname(self, tagname):
+    def normalize_tagname(self, tagname, warning_bag=None):
         '''
         Tag names can only consist of characters defined in the config.
         The given tagname is lowercased, gets its spaces and hyphens
@@ -968,11 +910,19 @@ class PDBTagMixin:
         tagname = ''.join(tagname)
 
         if len(tagname) < self.config['min_tag_name_length']:
-            raise exceptions.TagTooShort(tagname)
-        if len(tagname) > self.config['max_tag_name_length']:
-            raise exceptions.TagTooLong(tagname)
+            if warning_bag is not None:
+                warning_bag.add(constants.WARNING_TAG_TOO_SHORT.format(tag=tagname))
+            else:
+                raise exceptions.TagTooShort(tagname)
 
-        return tagname
+        elif len(tagname) > self.config['max_tag_name_length']:
+            if warning_bag is not None:
+                warning_bag.add(constants.WARNING_TAG_TOO_LONG.format(tag=tagname))
+            else:
+                raise exceptions.TagTooLong(tagname)
+
+        else:
+            return tagname
 
 class PDBUserMixin:
     def generate_user_id(self):
@@ -1200,6 +1150,8 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             *,
             exclude_directories=None,
             exclude_filenames=None,
+            make_albums=True,
+            recurse=True,
             commit=True,
         ):
         '''
@@ -1220,19 +1172,31 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             directory,
             exclude_directories=exclude_directories,
             exclude_filenames=exclude_filenames,
+            recurse=recurse,
             yield_style='nested',
         )
-        try:
-            album = self.get_album_by_path(directory.absolute_path)
-        except exceptions.NoSuchAlbum:
-            album = self.new_album(
-                associated_directory=directory.absolute_path,
-                commit=False,
-                title=directory.basename,
-            )
 
-        albums = {directory.absolute_path: album}
+        if make_albums:
+            try:
+                album = self.get_album_by_path(directory.absolute_path)
+            except exceptions.NoSuchAlbum:
+                album = self.new_album(
+                    associated_directory=directory.absolute_path,
+                    commit=False,
+                    title=directory.basename,
+                )
+            albums = {directory.absolute_path: album}
+
         for (current_location, directories, files) in generator:
+            for filepath in files:
+                try:
+                    photo = self.new_photo(filepath.absolute_path, commit=False)
+                except exceptions.PhotoExists as e:
+                    photo = e.photo
+
+            if not make_albums:
+                continue
+
             current_album = albums.get(current_location.absolute_path, None)
             if current_album is None:
                 try:
@@ -1253,17 +1217,16 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
                     #safeprint.safeprint('Added to %s' % parent.title)
                 except exceptions.GroupExists:
                     pass
-            for filepath in files:
-                try:
-                    photo = self.new_photo(filepath.absolute_path, commit=False)
-                except exceptions.PhotoExists as e:
-                    photo = e.photo
                 current_album.add_photo(photo, commit=False)
 
         if commit:
             self.log.debug('Committing - digest')
             self.commit()
-        return album
+
+        if make_albums:
+            return album
+        else:
+            return None
 
     # def digest_new_files(
     #         self,
