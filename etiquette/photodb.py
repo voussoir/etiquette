@@ -719,6 +719,19 @@ class PDBPhotoMixin:
             expression_tree = expressionmatch.ExpressionTree.parse(tag_expression)
             expression_tree.map(self.normalize_tagname)
             expression_matcher = searchhelpers.tag_expression_matcher_builder(frozen_children, warning_bag)
+            for node in expression_tree.walk_leaves():
+                if node.token in frozen_children:
+                    continue
+                if warning_bag is not None:
+                    warning_bag.add(constants.WARNING_NO_SUCH_TAG.format(tag=node.token))
+                    node.token = None
+                else:
+                    raise_no_such_thing(exceptions.NoSuchTag, thing_name=node.token)
+            expression_tree.prune()
+
+        if filename:
+            filename_tree = expressionmatch.ExpressionTree.parse(filename)
+            filename_tree.map(lambda x: x.lower())
 
         photos_received = 0
 
@@ -749,7 +762,7 @@ class PDBPhotoMixin:
                 #print('Failed author')
                 continue
 
-            if filename and not _helper_filenamefilter(subject=photo.basename, terms=filename):
+            if filename and not filename_tree.evaluate(photo.basename.lower()):
                 #print('Failed filename')
                 continue
 
@@ -923,6 +936,7 @@ class PDBTagMixin:
 
         else:
             return tagname
+
 
 class PDBUserMixin:
     def generate_user_id(self):
@@ -1227,48 +1241,6 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             return album
         else:
             return None
-
-    # def digest_new_files(
-    #         self,
-    #         directory,
-    #         exclude_directories=None,
-    #         exclude_filenames=None,
-    #         recurse=False,
-    #         commit=True
-    #     ):
-    #     '''
-    #     Walk the directory and add new files as Photos.
-    #     Does NOT create or modify any albums like `digest_directory` does.
-    #     '''
-    #     if not os.path.isdir(directory):
-    #         raise ValueError('Not a directory: %s' % directory)
-    #     if exclude_directories is None:
-    #         exclude_directories = self.config['digest_exclude_dirs']
-    #     if exclude_filenames is None:
-    #         exclude_filenames = self.config['digest_exclude_files']
-
-    #     directory = spinal.str_to_fp(directory)
-    #     generator = spinal.walk_generator(
-    #         directory,
-    #         exclude_directories=exclude_directories,
-    #         exclude_filenames=exclude_filenames,
-    #         recurse=recurse,
-    #         yield_style='flat',
-    #     )
-    #     for filepath in generator:
-    #         filepath = filepath.absolute_path
-    #         try:
-    #             self.get_photo_by_path(filepath)
-    #         except exceptions.NoSuchPhoto:
-    #             # This is what we want.
-    #             pass
-    #         else:
-    #             continue
-    #         photo = self.new_photo(filepath, commit=False)
-    #     if commit:
-    #         self.log.debug('Committing - digest_new_files')
-    #         self.commit()
-
 
     def easybake(self, ebstring):
         '''

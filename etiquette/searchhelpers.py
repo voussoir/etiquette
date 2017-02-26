@@ -153,7 +153,7 @@ def normalize_filename(filename_terms):
         filename_terms = ' '.join(filename_terms)
 
     filename_terms = filename_terms.strip()
-    filename_terms = [term.lower() for term in shlex.split(filename_terms)]
+    filename_terms = shlex.split(filename_terms)
 
     if not filename_terms:
         return None
@@ -331,14 +331,7 @@ def tag_expression_matcher_builder(frozen_children, warning_bag=None):
         if not photo_tags:
             return False
 
-        try:
-            options = frozen_children[tagname]
-        except KeyError:
-            if warning_bag is not None:
-                warning_bag.add(constants.WARNING_NO_SUCH_TAG.format(tag=tagname))
-                return False
-            else:
-                raise exceptions.NoSuchTag(tagname)
-
+        options = frozen_children[tagname]
         return any(option in photo_tags for option in options)
+
     return matcher

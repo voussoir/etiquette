@@ -15,8 +15,6 @@
     /* Override common.css */
     flex-direction: row;
     flex: 1;
-    /*height: 100%;
-    width: 100%;*/
 }
 #left
 {
@@ -78,8 +76,6 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-/*    height: 100%;
-    width: 100%;*/
 }
 .photo_viewer a
 {
@@ -174,7 +170,15 @@
     <!-- THE PHOTO ITSELF -->
     <div class="photo_viewer">
         {% if photo.mimetype == "image" %}
-        <div id="photo_img_holder"><img id="photo_img" src="{{link}}" onclick="toggle_hoverzoom()" onload="this.style.opacity=0.99"></div>
+        <div id="photo_img_holder">
+            <img
+            id="photo_img"
+            src="{{link}}"
+            alt="{{photo.basename}}"
+            onclick="toggle_hoverzoom()"
+            onload="this.style.opacity=0.99"
+            >
+        </div>
         {% elif photo.mimetype == "video" %}
         <video src="{{link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
         {% elif photo.mimetype == "audio" %}

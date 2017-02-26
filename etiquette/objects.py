@@ -606,7 +606,7 @@ class Photo(ObjectBase):
             except:
                 traceback.print_exc()
 
-        elif self.mimetype == 'audio':
+        elif self.mimetype == 'audio' and constants.ffmpeg:
             try:
                 probe = constants.ffmpeg.probe(self.real_filepath)
                 if probe and probe.audio:
@@ -671,12 +671,11 @@ class Photo(ObjectBase):
 
         os.makedirs(new_path.parent.absolute_path, exist_ok=True)
 
-        if new_path != old_path:
-            # This is different than the absolute == absolute check above,
-            # because this normalizes the paths. It's possible on
-            # case-insensitive systems to have the paths point to the same place
-            # while being differently cased, thus we couldn't make the
-            # intermediate link.
+        if new_path.normcase != old_path.normcase:
+            # It's possible on case-insensitive systems to have the paths point
+            # to the same place while being differently cased, thus we couldn't
+            # make the intermediate link.
+            # Instead, we will do a simple rename in just a moment.
             try:
                 os.link(old_path.absolute_path, new_path.absolute_path)
             except OSError:
@@ -688,18 +687,21 @@ class Photo(ObjectBase):
             [new_path.absolute_path, old_path.absolute_path]
         )
 
+        if new_path.normcase == old_path.normcase:
+            # If they are equivalent but differently cased, just rename.
+            action = os.rename
+            args = [old_path.absolute_path, new_path.absolute_path]
+        else:
+            # Delete the original, leaving only the new copy / hardlink.
+            action = os.remove
+            args = [old_path.absolute_path]
+        
         if commit:
-            if new_path == old_path:
-                # If they are equivalent but differently cased paths, just
-                # rename.
-                os.rename(old_path.absolute_path, new_path.absolute_path)
-            else:
-                # Delete the original hardlink or copy.
-                os.remove(old_path.absolute_path)
+            action(*args)
             self.photodb.log.debug('Committing - rename file')
             self.photodb.commit()
         else:
-            queue_action = {'action': os.remove, 'args': [old_path.absolute_path]}
+            queue_action = {'action': args, 'args': args}
             self.photodb.on_commit_queue.append(queue_action)
 
         self.__reinit__()
