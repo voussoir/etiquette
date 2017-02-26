@@ -851,8 +851,11 @@ class Tag(ObjectBase, GroupableMixin):
         they always resolve to the master tag before application.
         '''
         synname = self.photodb.normalize_tagname(synname)
+        if synname == self.name:
+            raise exceptions.NoSuchSynonym(synname)
+
         cur = self.photodb.sql.cursor()
-        cur.execute('SELECT * FROM tag_synonyms WHERE name == ?', [synname])
+        cur.execute('SELECT * FROM tag_synonyms WHERE mastername == ? AND name == ?', [self.name, synname])
         fetch = cur.fetchone()
         if fetch is None:
             raise exceptions.NoSuchSynonym(synname)

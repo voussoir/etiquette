@@ -32,8 +32,12 @@ function post(url, data, callback)
             if (callback != null)
             {
                 var text = request.responseText;
+                console.log(request);
                 console.log(text);
-                callback(JSON.parse(text));
+                var response = JSON.parse(text);
+                response["_request_url"] = url;
+                response["_status"] = status;
+                callback(response);
             }
         }
     };

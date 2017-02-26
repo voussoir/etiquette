@@ -64,40 +64,53 @@ def delete_tag(tag):
 def delete_synonym(synonym):
     synonym = synonym.split('+')[-1].split('.')[-1]
     synonym = P.normalize_tagname(synonym)
-    try:
-        master_tag = P.get_tag(synonym)
-    except exceptions.NoSuchTag:
-        flask.abort(404, 'That synonym doesnt exist')
 
-    if synonym not in master_tag.synonyms():
-        flask.abort(400, 'That name is not a synonym')
-
+    master_tag = P.get_tag(synonym)
     master_tag.remove_synonym(synonym)
+
     return {'action':'delete_synonym', 'synonym': synonym}
 
+def P_wrapper(function):
+    def P_wrapped(thingid, response_type='html'):
+        ret = function(thingid)
+        if not isinstance(ret, str):
+            return ret
+
+        if response_type == 'html':
+            flask.abort(404, ret)
+        else:
+            response = jsonify.make_json_response({'error': ret})
+            flask.abort(response)
+
+    return P_wrapped
+
+@P_wrapper
 def P_album(albumid):
     try:
         return P.get_album(albumid)
     except exceptions.NoSuchAlbum:
-        flask.abort(404, 'That album doesnt exist')
+        return 'That album doesnt exist'
 
+@P_wrapper
 def P_photo(photoid):
     try:
         return P.get_photo(photoid)
     except exceptions.NoSuchPhoto:
-        flask.abort(404, 'That photo doesnt exist')
+        return 'That photo doesnt exist'
 
+@P_wrapper
 def P_tag(tagname):
     try:
         return P.get_tag(tagname)
     except exceptions.NoSuchTag as e:
-        flask.abort(404, 'That tag doesnt exist: %s' % e)
+        return 'That tag doesnt exist: %s' % e
 
+@P_wrapper
 def P_user(username):
     try:
         return P.get_user(username=username)
     except exceptions.NoSuchUser as e:
-        flask.abort(404, 'That user doesnt exist: %s' % e)
+        return 'That user doesnt exist: %s' % e
 
 def send_file(filepath):
     '''
@@ -615,10 +628,9 @@ def get_user_json(username):
     return user
 
 
-@site.route('/album/<albumid>', methods=['POST'])
-@site.route('/album/<albumid>.json', methods=['POST'])
+@site.route('/album/<albumid>/add_tag', methods=['POST'])
 @session_manager.give_token
-def post_edit_album(albumid):
+def post_album_add_tag(albumid):
     '''
     Edit the album's title and description.
     Apply a tag to every photo in the album.
@@ -626,109 +638,101 @@ def post_edit_album(albumid):
     response = {}
     album = P_album(albumid)
 
-    if 'add_tag' in request.form:
-        action = 'add_tag'
-
-        tag = request.form[action].strip()
-        try:
-            tag = P_tag(tag)
-        except exceptions.NoSuchTag:
-            response = {'error': 'That tag doesnt exist', 'tagname': tag}
-            return jsonify.make_json_response(response, status=404)
-        recursive = request.form.get('recursive', False)
-        recursive = helpers.truthystring(recursive)
-        album.add_tag_to_all(tag, nested_children=recursive)
-        response['action'] = action
-        response['tagname'] = tag.name
-        return jsonify.make_json_response(response)
-
-
-@site.route('/photo/<photoid>', methods=['POST'])
-@site.route('/photo/<photoid>.json', methods=['POST'])
-@session_manager.give_token
-def post_edit_photo(photoid):
-    '''
-    Add and remove tags from photos.
-    '''
-    response = {}
-    photo = P_photo(photoid)
-
-    if 'add_tag' in request.form:
-        action = 'add_tag'
-        method = photo.add_tag
-    elif 'remove_tag' in request.form:
-        action = 'remove_tag'
-        method = photo.remove_tag
-    else:
-        flask.abort(400, 'Invalid action')
-
-    tag = request.form[action].strip()
-    if tag == '':
-        flask.abort(400, 'No tag supplied')
-
+    tag = request.form['tagname'].strip()
     try:
-        tag = P.get_tag(tag)
+        tag = P_tag(tag)
     except exceptions.NoSuchTag:
         response = {'error': 'That tag doesnt exist', 'tagname': tag}
         return jsonify.make_json_response(response, status=404)
-
-    method(tag)
-    response['action'] = action
-    #response['tagid'] = tag.id
+    recursive = request.form.get('recursive', False)
+    recursive = helpers.truthystring(recursive)
+    album.add_tag_to_all(tag, nested_children=recursive)
+    response['action'] = 'add_tag'
     response['tagname'] = tag.name
     return jsonify.make_json_response(response)
 
 
-@site.route('/tags', methods=['POST'])
-@session_manager.give_token
-def post_edit_tags():
+def post_photo_add_remove_tag_core(photoid, tagname, add_or_remove):
+    photo = P_photo(photoid, response_type='json')
+    tag = P_tag(tagname, response_type='json')
+
+    if add_or_remove == 'add':
+        photo.add_tag(tag)
+    elif add_or_remove == 'remove':
+        photo.remove_tag(tag)
+
+    response = {'tagname': tagname}
+    return jsonify.make_json_response(response)    
+
+@site.route('/photo/<photoid>/add_tag', methods=['POST'])
+@decorators.required_fields(['tagname'], forbid_whitespace=True)
+def post_photo_add_tag(photoid):
     '''
-    Create and delete tags and synonyms.
+    Add a tag to this photo.
     '''
-    #print(request.form)
-    status = 200
-    if 'create_tag' in request.form:
-        action = 'create_tag'
-        method = create_tag
-    elif 'delete_tag_synonym' in request.form:
-        action = 'delete_tag_synonym'
-        method = delete_synonym
-    elif 'delete_tag' in request.form:
-        action = 'delete_tag'
-        method = delete_tag
+    return post_photo_add_remove_tag_core(photoid, request.form['tagname'], 'add')
+
+@site.route('/photo/<photoid>/remove_tag', methods=['POST'])
+@decorators.required_fields(['tagname'], forbid_whitespace=True)
+def post_photo_remove_tag(photoid):
+    '''
+    Remove a tag from this photo.
+    '''
+    return post_photo_add_remove_tag_core(photoid, request.form['tagname'], 'remove')
+
+
+def post_tag_create_delete_core(tagname, function):
+    try:
+        response = function(tagname)
+    except exceptions.TagTooLong:
+        error_type = 'TAG_TOO_LONG'
+        error_message = constants.ERROR_TAG_TOO_LONG.format(tag=tagname)
+    except exceptions.TagTooShort:
+        error_type = 'TAG_TOO_SHORT'
+        error_message = constants.ERROR_TAG_TOO_SHORT.format(tag=tagname)
+    except exceptions.CantSynonymSelf:
+        error_type = 'TAG_SYNONYM_ITSELF'
+        error_message = constants.ERROR_SYNONYM_ITSELF
+    except exceptions.RecursiveGrouping as e:
+        error_type = 'RECURSIVE_GROUPING'
+        error_message = constants.ERROR_RECURSIVE_GROUPING
+    except exceptions.NoSuchTag as e:
+        error_type = 'NO_SUCH_TAG'
+        error_message = constants.ERROR_NO_SUCH_TAG.format(tag=tagname)
     else:
+        error_type = None
+    
+    if error_type is not None:
         status = 400
-        response = {'error': constants.ERROR_INVALID_ACTION}
+        response = {'error_type': error_type, 'error_message': error_message}
+    else:
+        status = 200
 
-    if status == 200:
-        tag = request.form[action].strip()
-        if tag == '':
-            response = {'error': constants.ERROR_NO_TAG_GIVEN}
-            status = 400
+    return jsonify.make_json_response(response, status=status)
 
-    if status == 200:
-        # expect the worst
-        status = 400
-        try:
-            response = method(tag)
-        except exceptions.TagTooLong:
-            response = {'error': constants.ERROR_TAG_TOO_LONG.format(tag=tag), 'tagname': tag}
-        except exceptions.TagTooShort:
-            response = {'error': constants.ERROR_TAG_TOO_SHORT.format(tag=tag), 'tagname': tag}
-        except exceptions.CantSynonymSelf:
-            response = {'error': constants.ERROR_SYNONYM_ITSELF, 'tagname': tag}
-        except exceptions.NoSuchTag as e:
-            response = {'error': constants.ERROR_NO_SUCH_TAG, 'tagname': tag}
-        except exceptions.RecursiveGrouping as e:
-            response = {'error': constants.ERROR_RECURSIVE_GROUPING, 'tagname': tag}
-        except ValueError as e:
-            response = {'error': e.args[0], 'tagname': tag}
-        else:
-            status = 200
+@site.route('/tags/create_tag', methods=['POST'])
+@decorators.required_fields(['tagname'], forbid_whitespace=True)
+def post_tag_create():
+    '''
+    Create a tag.
+    '''
+    return post_tag_create_delete_core(request.form['tagname'], create_tag)
 
-    response = json.dumps(response)
-    response = flask.Response(response, status=status)
-    return response
+@site.route('/tags/delete_tag', methods=['POST'])
+@decorators.required_fields(['tagname'], forbid_whitespace=True)
+def post_tag_delete():
+    '''
+    Delete a tag.
+    '''
+    return post_tag_create_delete_core(request.form['tagname'], delete_tag)
+
+@site.route('/tags/delete_synonym', methods=['POST'])
+@decorators.required_fields(['tagname'], forbid_whitespace=True)
+def post_tag_delete_synonym():
+    '''
+    Delete a synonym.
+    '''
+    return post_tag_create_delete_core(request.form['tagname'], delete_synonym)
 
 
 @site.route('/apitest')

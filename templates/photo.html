@@ -202,17 +202,17 @@ add_tag_box.onkeydown = function(){entry_with_history_hook(add_tag_box, add_tag_
 function add_photo_tag(photoid, tagname, callback)
 {
     if (tagname === ""){return}
-    var url = "/photo/" + photoid;
+    var url = "/photo/" + photoid + "/add_tag";
     data = new FormData();
-    data.append("add_tag", tagname);
+    data.append("tagname", tagname);
     return post(url, data, callback);
 }
 function remove_photo_tag(photoid, tagname, callback)
 {
     if (tagname === ""){return}
-    var url = "/photo/" + photoid;
+    var url = "/photo/" + photoid + "/remove_tag";
     data = new FormData();
-    data.append("remove_tag", tagname);
+    data.append("tagname", tagname);
     return post(url, data, callback);
 }
 function submit_tag(callback)
@@ -228,17 +228,21 @@ function receive_callback(response)
         message_positivity = "message_negative";
         message_text = '"' + tagname + '" ' + response["error"];
     }
-    else if ("action" in response)
+    else
     {
-        var action = response["action"];
+        var action;
         message_positivity = "message_positive";
-        if (action == "add_tag")
+        if (response["_request_url"].includes("add_tag"))
         {
             message_text = "Added tag " + tagname;
         }
-        else if (action == "remove_tag")
+        else if (response["_request_url"].includes("remove_tag"))
         {
             message_text = "Removed tag " + tagname;
+        }
+        else
+        {
+            return;
         }
     }
     create_message_bubble(message_area, message_positivity, message_text, 8000);

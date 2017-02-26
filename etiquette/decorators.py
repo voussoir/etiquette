@@ -7,21 +7,36 @@ import warnings
 from . import jsonify
 
 
-def required_fields(fields):
+def required_fields(fields, forbid_whitespace=False):
     '''
     Declare that the endpoint requires certain POST body fields. Without them,
     we respond with 400 and a message.
+
+    forbid_whitespace:
+        If True, then providing the field is not good enough. It must also
+        contain at least some non-whitespace characters.
     '''
-    def with_required_fields(function):
+    def wrapper(function):
         @functools.wraps(function)
         def wrapped(*args, **kwargs):
-            if not all(field in request.form for field in fields):
-                response = {'error': 'Required fields: %s' % ', '.join(fields)}
-                response = jsonify.make_json_response(response, status=400)
-                return response
+            for requirement in fields:
+                if (
+                    requirement not in request.form or
+                    (
+                        forbid_whitespace and
+                        request.form[requirement].strip() == ''
+                    )
+                ):
+                    response = {
+                        'error_type': 'MISSING_FIELDS',
+                        'error_message': 'Required fields: %s' % ', '.join(fields),
+                    }
+                    response = jsonify.make_json_response(response, status=400)
+                    return response
+
             return function(*args, **kwargs)
         return wrapped
-    return with_required_fields
+    return wrapper
 
 def not_implemented(function):
     '''

@@ -102,14 +102,14 @@ function submit_tag(callback)
 function edit_tags(action, tagname, callback)
 {
     if (tagname === ""){return}
-    var url = "/tags";
+    var url = "/tags/" + action;
     data = new FormData();
-    data.append(action, tagname);
+    data.append("tagname", tagname);
     return post(url, data, callback);
 }
 function delete_tag_synonym(tagname, callback)
 {
-    return edit_tags("delete_tag_synonym", tagname, callback);
+    return edit_tags("delete_synonym", tagname, callback);
 }
 function delete_tag(tagname, callback)
 {
