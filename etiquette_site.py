@@ -239,21 +239,12 @@ def post_register():
 
     try:
         user = P.register_user(username, password_1)
-    except exceptions.UsernameTooShort as e:
-        error = 'Username shorter than minimum of %d' % P.config['min_username_length']
-    except exceptions.UsernameTooLong as e:
-        error = 'Username longer than maximum of %d' % P.config['max_username_length']
-    except exceptions.InvalidUsernameChars as e:
-        error = 'Username contains invalid characters %s' % e.args[0]
-    except exceptions.PasswordTooShort as e:
-        error = 'Password is shorter than minimum of %d' % P.config['min_password_length']
-    except exceptions.UserExists as e:
-        error = 'User %s already exists' % e.args[0]
-    else:
-        error = None
-
-    if error is not None:
-        return jsonify.make_json_response({'error': error}, status=422)
+    except EtiquetteException as e:
+        response = {
+            'error_type': e.error_type,
+            'error_message': e.error_message,
+        }
+        return jsonify.make_json_response(response, status=400)
 
     session = sessions.Session(request, user)
     session_manager.add(session)
@@ -684,29 +675,13 @@ def post_photo_remove_tag(photoid):
 def post_tag_create_delete_core(tagname, function):
     try:
         response = function(tagname)
-    except exceptions.TagTooLong:
-        error_type = 'TAG_TOO_LONG'
-        error_message = constants.ERROR_TAG_TOO_LONG.format(tag=tagname)
-    except exceptions.TagTooShort:
-        error_type = 'TAG_TOO_SHORT'
-        error_message = constants.ERROR_TAG_TOO_SHORT.format(tag=tagname)
-    except exceptions.CantSynonymSelf:
-        error_type = 'TAG_SYNONYM_ITSELF'
-        error_message = constants.ERROR_SYNONYM_ITSELF
-    except exceptions.RecursiveGrouping as e:
-        error_type = 'RECURSIVE_GROUPING'
-        error_message = constants.ERROR_RECURSIVE_GROUPING
-    except exceptions.NoSuchTag as e:
-        error_type = 'NO_SUCH_TAG'
-        error_message = constants.ERROR_NO_SUCH_TAG.format(tag=tagname)
-    else:
-        error_type = None
-    
-    if error_type is not None:
-        status = 400
-        response = {'error_type': error_type, 'error_message': error_message}
-    else:
         status = 200
+    except exceptions.EtiquetteException as e:
+        response = {
+            'error_type': e.error_type,
+            'error_message': e.error_message,
+        }
+        status = 400
 
     return jsonify.make_json_response(response, status=status)
 

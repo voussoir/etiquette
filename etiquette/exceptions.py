@@ -1,80 +1,117 @@
+class EtiquetteException(Exception):
+    pass
+
 # NO SUCH
-class NoSuchAlbum(Exception):
+class NoSuchAlbum(EtiquetteException):
+    error_type = 'NO_SUCH_ALBUM'
+    error_message = 'Album "{album}" does not exist.'
     pass
 
-class NoSuchBookmark(Exception):
+class NoSuchBookmark(EtiquetteException):
+    error_type = 'NO_SUCH_BOOKMARK'
+    error_message = 'Bookmark "{bookmark}" does not exist.'
     pass
 
-class NoSuchGroup(Exception):
+class NoSuchGroup(EtiquetteException):
+    error_type = 'NO_SUCH_GROUP'
+    error_message = 'Group "{group}" does not exist.'
     pass
 
-class NoSuchPhoto(Exception):
+class NoSuchPhoto(EtiquetteException):
+    error_type = 'NO_SUCH_PHOTO'
+    error_message = 'Photo "{photo}" does not exist.'
     pass
 
-class NoSuchSynonym(Exception):
+class NoSuchSynonym(EtiquetteException):
+    error_type = 'NO_SUCH_SYNONYM'
+    error_message = 'Synonym "{synonym}" does not exist.'
     pass
 
-class NoSuchTag(Exception):
+class NoSuchTag(EtiquetteException):
+    error_type = 'NO_SUCH_TAG'
+    error_message = 'Tag "{tag}" does not exist.'
     pass
 
-class NoSuchUser(Exception):
+class NoSuchUser(EtiquetteException):
+    error_type = 'NO_SUCH_User'
+    error_message = 'User "{user}" does not exist.'
     pass
 
 
 # EXISTS
-class GroupExists(Exception):
+class GroupExists(EtiquetteException):
     pass
 
-class PhotoExists(Exception):
+class PhotoExists(EtiquetteException):
     pass
 
-class TagExists(Exception):
+class TagExists(EtiquetteException):
     pass
 
-class UserExists(Exception):
+class UserExists(EtiquetteException):
+    error_type = 'USER_EXISTS'
+    error_message = 'Username "{username}" already exists.'
     pass
 
 
 # TAG ERRORS
-class CantSynonymSelf(Exception):
+class CantSynonymSelf(EtiquetteException):
+    error_type = 'TAG_SYNONYM_ITSELF'
+    error_message = 'Cannot apply synonym to self.'
     pass
 
-class RecursiveGrouping(Exception):
+class RecursiveGrouping(EtiquetteException):
+    error_type = 'RECURSIVE_GROUPING'
+    error_message = 'Cannot create a group within itself.'
     pass
 
-class TagTooLong(Exception):
+class TagTooLong(EtiquetteException):
+    error_type = 'TAG_TOO_LONG'
+    error_message = 'Tag "{tag}" is too long.'
     pass
 
-class TagTooShort(Exception):
+class TagTooShort(EtiquetteException):
+    error_type = 'TAG_TOO_SHORT'
+    error_message = 'Tag "{tag}" has too few valid characters.'
     pass
 
 
 # USER ERRORS
-class InvalidUsernameChars(Exception):
+class InvalidUsernameChars(EtiquetteException):
+    error_type = 'INVALID_USERNAME_CHARACTERS'
+    error_message = 'Username "{username}" contains invalid characters: {badchars}'
     pass
 
-class PasswordTooShort(Exception):
+class PasswordTooShort(EtiquetteException):
+    error_type = 'PASSWORD_TOO_SHORT'
+    error_message = 'Password is shorter than the minimum of {min_length}'
     pass
 
-class UsernameTooLong(Exception):
+class UsernameTooLong(EtiquetteException):
+    error_type = 'USERNAME_TOO_LONG'
+    error_message = 'Username "{username}" is longer than maximum of {max_length}'
     pass
 
-class UsernameTooShort(Exception):
+class UsernameTooShort(EtiquetteException):
+    error_type = 'USERNAME_TOO_SHORT'
+    error_message = 'Username "{username}" is shorter than minimum of {min_length}'
     pass
 
-class WrongLogin(Exception):
+class WrongLogin(EtiquetteException):
     pass
 
 
 # GENERAL ERRORS
-class NotExclusive(Exception):
+class NotExclusive(EtiquetteException):
     '''
     For when two or more mutually exclusive actions have been requested.
     '''
     pass
 
-class OutOfOrder(Exception):
+class OutOfOrder(EtiquetteException):
     '''
-    For when a requested range (a, b) has b > a
+    For when a requested minmax range (a, b) has b > a
     '''
+    error_type = 'OUT_OF_ORDER'
+    error_message = 'Field "{field}": minimum "{min}" and maximum "{max}" are out of order.'
     pass

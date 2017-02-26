@@ -723,7 +723,7 @@ class PDBPhotoMixin:
                 if node.token in frozen_children:
                     continue
                 if warning_bag is not None:
-                    warning_bag.add(constants.WARNING_NO_SUCH_TAG.format(tag=node.token))
+                    warning_bag.add(exceptions.NoSuchTag.error_message.format(tag=node.token))
                     node.token = None
                 else:
                     raise_no_such_thing(exceptions.NoSuchTag, thing_name=node.token)
@@ -924,13 +924,15 @@ class PDBTagMixin:
 
         if len(tagname) < self.config['min_tag_name_length']:
             if warning_bag is not None:
-                warning_bag.add(constants.WARNING_TAG_TOO_SHORT.format(tag=tagname))
+                warning_bag.add(exceptions.TagTooShort.error_message.format(tag=tagname))
+                return None
             else:
                 raise exceptions.TagTooShort(tagname)
 
         elif len(tagname) > self.config['max_tag_name_length']:
             if warning_bag is not None:
-                warning_bag.add(constants.WARNING_TAG_TOO_LONG.format(tag=tagname))
+                warning_bag.add(exceptions.TagTooLong.format(tag=tagname))
+                return None
             else:
                 raise exceptions.TagTooLong(tagname)
 

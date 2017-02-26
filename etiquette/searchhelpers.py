@@ -73,14 +73,14 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
             warning_bag.add(constants.WARNING_MINMAX_INVALID.format(field=key, value=value))
             return
         else:
-            raise e
+            raise
 
     except exceptions.OutOfOrder as e:
         if warning_bag:
-            warning_bag.add(constants.WARNING_MINMAX_OOO.format(field=key, min=e.args[1], max=e.args[2]))
+            warning_bag.add(e.error_message.format(field=key, min=e.args[1], max=e.args[2]))
             return
         else:
-            raise e
+            raise
 
     if low is not None:
         minimums[key] = low
@@ -115,7 +115,7 @@ def normalize_authors(authors, photodb, warning_bag=None):
             user = get_user(photodb, requested_author)
         except exceptions.NoSuchUser:
             if warning_bag:
-                warning_bag.add(constants.WARNING_NO_SUCH_USER.format(username=requested_author))
+                warning_bag.add(exceptions.NoSuchUser.format(username=requested_author))
             else:
                 raise
         else:
@@ -307,7 +307,7 @@ def normalize_tag_mmf(tags, photodb, warning_bag=None):
             tag = photodb.get_tag(name=tag)
         except exceptions.NoSuchTag:
             if warning_bag:
-                warning_bag.add(constants.WARNING_NO_SUCH_TAG.format(tag=tag))
+                warning_bag.add(exceptions.NoSuchTag.format(tag=tag))
                 continue
             else:
                 raise
