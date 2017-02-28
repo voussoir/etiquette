@@ -1,6 +1,8 @@
 {% set thumbnails =
     {
         "audio": "audio",
+        "application/zip": "archive",
+        "application/x-tar": "archive",
         "archive": "archive",
         "txt": "txt",
         "svg": "svg",
@@ -26,7 +28,8 @@
                 {% set choice =
                     thumbnails.get(photo.extension,
                     thumbnails.get(photo.mimetype,
-                    'other'))
+                    thumbnails.get(photo.simple_mimetype,
+                    'other')))
                 %}
                 src="/static/basic_thumbnails/{{choice}}.png"
             {% endif %}

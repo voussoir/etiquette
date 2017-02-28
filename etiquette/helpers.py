@@ -138,8 +138,6 @@ def get_mimetype(filepath):
     if extension in constants.ADDITIONAL_MIMETYPES:
         return constants.ADDITIONAL_MIMETYPES[extension]
     mimetype = mimetypes.guess_type(filepath)[0]
-    if mimetype is not None:
-        mimetype = mimetype.split('/')[0]
     return mimetype
 
 def hyphen_range(s):

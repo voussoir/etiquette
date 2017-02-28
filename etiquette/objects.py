@@ -369,6 +369,10 @@ class Photo(ObjectBase):
         self.thumbnail = row_tuple['thumbnail']
 
         self.mimetype = helpers.get_mimetype(self.real_filepath)
+        if self.mimetype is None:
+            self.simple_mimetype = None
+        else:
+            self.simple_mimetype = self.mimetype.split('/')[0]
 
     def __reinit__(self):
         '''
@@ -457,7 +461,7 @@ class Photo(ObjectBase):
             return None
         return helpers.seconds_to_hms(self.duration)
 
-    @decorators.time_me
+    #@decorators.time_me
     def generate_thumbnail(self, *, commit=True, **special):
         '''
         special:
@@ -468,7 +472,7 @@ class Photo(ObjectBase):
         #print(hopeful_filepath)
         return_filepath = None
 
-        if self.mimetype == 'image':
+        if self.simple_mimetype == 'image':
             self.photodb.log.debug('Thumbnailing %s' % self.real_filepath)
             try:
                 image = PIL.Image.open(self.real_filepath)
@@ -488,7 +492,7 @@ class Photo(ObjectBase):
                 image.save(hopeful_filepath, quality=50)
                 return_filepath = hopeful_filepath
 
-        elif self.mimetype == 'video' and constants.ffmpeg:
+        elif self.simple_mimetype == 'video' and constants.ffmpeg:
             #print('video')
             probe = constants.ffmpeg.probe(self.real_filepath)
             try:
@@ -572,7 +576,7 @@ class Photo(ObjectBase):
         hopeful_filepath = folder.with_child(basename + '.jpg')
         return hopeful_filepath
 
-    @decorators.time_me
+    #@decorators.time_me
     def reload_metadata(self, *, commit=True):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
@@ -586,7 +590,7 @@ class Photo(ObjectBase):
 
         self.photodb.log.debug('Reloading metadata for {photo:r}'.format(photo=self))
 
-        if self.mimetype == 'image':
+        if self.simple_mimetype == 'image':
             try:
                 image = PIL.Image.open(self.real_filepath)
             except (OSError, ValueError):
@@ -594,9 +598,9 @@ class Photo(ObjectBase):
             else:
                 (self.width, self.height) = image.size
                 image.close()
-                self.photodb.log.debug('Loaded image data for {photo:r}'.format(photo=self))
+                #self.photodb.log.debug('Loaded image data for {photo:r}'.format(photo=self))
 
-        elif self.mimetype == 'video' and constants.ffmpeg:
+        elif self.simple_mimetype == 'video' and constants.ffmpeg:
             try:
                 probe = constants.ffmpeg.probe(self.real_filepath)
                 if probe and probe.video:
@@ -606,7 +610,7 @@ class Photo(ObjectBase):
             except:
                 traceback.print_exc()
 
-        elif self.mimetype == 'audio' and constants.ffmpeg:
+        elif self.simple_mimetype == 'audio' and constants.ffmpeg:
             try:
                 probe = constants.ffmpeg.probe(self.real_filepath)
                 if probe and probe.audio:

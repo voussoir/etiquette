@@ -169,7 +169,7 @@
 <div id="right">
     <!-- THE PHOTO ITSELF -->
     <div class="photo_viewer">
-        {% if photo.mimetype == "image" %}
+        {% if photo.simple_mimetype == "image" %}
         <div id="photo_img_holder">
             <img
             id="photo_img"
@@ -179,9 +179,9 @@
             onload="this.style.opacity=0.99"
             >
         </div>
-        {% elif photo.mimetype == "video" %}
+        {% elif photo.simple_mimetype == "video" %}
         <video src="{{link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
-        {% elif photo.mimetype == "audio" %}
+        {% elif photo.simple_mimetype == "audio" %}
         <audio src="{{link}}" controls></audio>
         {% else %}
         <a href="{{link}}">View {{filename}}</a>

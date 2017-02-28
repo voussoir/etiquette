@@ -122,10 +122,12 @@ def send_file(filepath, override_mimetype=None):
         flask.abort(404)
 
     outgoing_headers = {}
+    print(override_mimetype)
     if override_mimetype is not None:
         mimetype = override_mimetype
     else:
         mimetype = mimetypes.guess_type(filepath)[0]
+
     if mimetype is not None:
         if 'text/' in mimetype:
             mimetype += '; charset=utf-8'

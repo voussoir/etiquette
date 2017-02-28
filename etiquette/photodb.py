@@ -421,7 +421,7 @@ class PDBPhotoMixin:
         Returns the Photo object.
         '''
         filename = os.path.abspath(filename)
-        safeprint.safeprint('Processing %s' % filename)
+        self.log.debug('New Photo: %s' % filename)
         if not os.path.isfile(filename):
             raise FileNotFoundError(filename)
 
@@ -754,7 +754,7 @@ class PDBPhotoMixin:
                 #print('Failed extension_not')
                 continue
 
-            if mimetype and photo.mimetype not in mimetype:
+            if mimetype and photo.simple_mimetype not in mimetype:
                 #print('Failed mimetype')
                 continue
 
@@ -1204,11 +1204,13 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             albums = {directory.absolute_path: album}
 
         for (current_location, directories, files) in generator:
+            new_photos = []
             for filepath in files:
                 try:
                     photo = self.new_photo(filepath.absolute_path, commit=False)
                 except exceptions.PhotoExists as e:
                     photo = e.photo
+                new_photos.append(photo)
 
             if not make_albums:
                 continue
@@ -1223,17 +1225,19 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
                         commit=False,
                         title=current_location.basename,
                     )
-                    safeprint.safeprint('Created %s' % current_album.title)
+                    self.log.debug('Created %s' % current_album.title)
                 albums[current_location.absolute_path] = current_album
 
             parent = albums.get(current_location.parent.absolute_path, None)
             if parent is not None:
                 try:
                     parent.add(current_album, commit=False)
-                    #safeprint.safeprint('Added to %s' % parent.title)
+                    self.log.debug('Added child album to %s' % parent.title)
                 except exceptions.GroupExists:
                     pass
-                current_album.add_photo(photo, commit=False)
+                self.log.debug('Added photo to %s' % current_album)
+                for photo in new_photos:
+                    current_album.add_photo(photo, commit=False)
 
         if commit:
             self.log.debug('Committing - digest')

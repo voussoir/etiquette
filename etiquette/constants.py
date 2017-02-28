@@ -109,17 +109,18 @@ WARNING_ORDERBY_BADDIRECTION = 'You can\'t order "{column}" by "{direction}". De
 # Operational info
 EXPRESSION_OPERATORS = {'(', ')', 'OR', 'AND', 'NOT'}
 ADDITIONAL_MIMETYPES = {
-    'srt': 'text',
-
-    'mkv': 'video',
-
-    'm4a': 'audio',
-
     '7z': 'archive',
     'gz': 'archive',
     'rar': 'archive',
-    'tar': 'archive',
-    'zip': 'archive',
+
+    'aac': 'audio/aac',
+    'ac3': 'audio/ac3',
+    'dts': 'audio/dts',
+    'm4a': 'audio/mp4',
+
+    'mkv': 'video/x-matroska',
+
+    'srt': 'text/plain',
 }
 
 DEFAULT_DATADIR = '.\\_etiquette'
