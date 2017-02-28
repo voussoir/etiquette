@@ -1,15 +1,10 @@
 {% set thumbnails =
     {
         "audio": "audio",
+        "archive": "archive",
         "txt": "txt",
         "svg": "svg",
         "video": "video",
-
-        "7z": "archive",
-        "gz": "archive",
-        "rar": "archive",
-        "tar": "archive",
-        "zip": "archive",
     }
 %}
 {% macro create_photo_card(photo, view="grid") %}
@@ -39,7 +34,9 @@
         </a>
     </div>
     <div class="photo_card_grid_info">
-        <a target="_blank" class="photo_card_grid_filename" href="/photo/{{photo.id}}">{{photo.basename}}</a>
+        <div class="photo_card_grid_filename">
+            <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
+        </div>
         <div class="photo_card_grid_file_metadata">
             <div class="photo_card_grid_tags">
                 {% set tags = photo.tags() %}
@@ -53,7 +50,7 @@
             </div>
             <span>
             {% if photo.width %}
-                {{photo.width}}x{{photo.height}},
+                {{photo.width}}&times;{{photo.height}},
             {% endif %}
             {% if photo.duration %}
                 {{photo.duration_string()}},

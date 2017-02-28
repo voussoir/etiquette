@@ -124,7 +124,7 @@ li
     align-items: center;
 
     width: 100%;
-    height: 150px;
+    height: 100%;
 }
 .photo_card_grid_thumb img
 {
@@ -136,26 +136,45 @@ li
 {
     display: flex;
     flex: 1;
-    justify-content: space-between;
     flex-direction: column;
-    font-size: 0.8em;
-}
-.photo_card_grid_file_metadata
-{
-    display: flex;
     justify-content: space-between;
+    font-size: 12.8px;
+    background-color: inherit;
+
+    /*
+    The width of photo cards should be based on the aspect ratio of the
+    thumbnail image. Previously, I had problems where the card would be wider
+    than necessary because the file had a long name.
+    These min-width:100% + width:0 prevent the info div from controlling
+    card size, prioritizing the thumbnail.
+    */
+    min-width: 100%;
+    width: 0;
 }
 .photo_card_grid_filename
 {
-    /*position: absolute;*/
+    background-color: inherit;
     max-height: 30px;
     overflow: hidden;
     align-self: flex-start;
     word-break:break-word;
+    z-index: 1;
+}
+.photo_card_grid_filename a
+{
+    background-color: inherit;
 }
 .photo_card_grid_filename:hover
 {
     overflow: visible;
+}
+.photo_card_grid_file_metadata
+{
+    font-family: monospace;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 0;
 }
 .photo_card_grid_tags
 {

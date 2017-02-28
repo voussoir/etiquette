@@ -4,6 +4,7 @@ Etiquette
 This is the readme file.
 
 ### To do list
+- Make the wording between "new", "create", "add" and "remove", "delete" more consistent.
 - At the moment I don't like the way that warnings and exceptions are so far apart, and need to be updated individually. Consider moving the warning strings to be class properties of the matching exceptions.
 - User account system, permission levels, private pages.
 - Generalize the filename expression filter so it can work with any strings.

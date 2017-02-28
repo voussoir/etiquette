@@ -110,7 +110,16 @@ WARNING_ORDERBY_BADDIRECTION = 'You can\'t order "{column}" by "{direction}". De
 EXPRESSION_OPERATORS = {'(', ')', 'OR', 'AND', 'NOT'}
 ADDITIONAL_MIMETYPES = {
     'srt': 'text',
+
     'mkv': 'video',
+
+    'm4a': 'audio',
+
+    '7z': 'archive',
+    'gz': 'archive',
+    'rar': 'archive',
+    'tar': 'archive',
+    'zip': 'archive',
 }
 
 DEFAULT_DATADIR = '.\\_etiquette'

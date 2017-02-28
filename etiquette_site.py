@@ -112,7 +112,7 @@ def P_user(username):
     except exceptions.NoSuchUser as e:
         return 'That user doesnt exist: %s' % e
 
-def send_file(filepath):
+def send_file(filepath, override_mimetype=None):
     '''
     Range-enabled file sending.
     '''
@@ -122,7 +122,10 @@ def send_file(filepath):
         flask.abort(404)
 
     outgoing_headers = {}
-    mimetype = mimetypes.guess_type(filepath)[0]
+    if override_mimetype is not None:
+        mimetype = override_mimetype
+    else:
+        mimetype = mimetypes.guess_type(filepath)[0]
     if mimetype is not None:
         if 'text/' in mimetype:
             mimetype += '; charset=utf-8'
@@ -385,7 +388,7 @@ def get_file(photoid):
         response.headers['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % download_as
         return response
     else:
-        return send_file(photo.real_filepath)
+        return send_file(photo.real_filepath, override_mimetype=photo.mimetype)
 
 
 def get_photo_core(photoid):
