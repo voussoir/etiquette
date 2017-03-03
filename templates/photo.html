@@ -226,7 +226,7 @@ function receive_callback(response)
     if ("error" in response)
     {
         message_positivity = "message_negative";
-        message_text = '"' + tagname + '" ' + response["error"];
+        message_text = response["error"];
     }
     else
     {

@@ -421,7 +421,6 @@ class PDBPhotoMixin:
         Returns the Photo object.
         '''
         filename = os.path.abspath(filename)
-        self.log.debug('New Photo: %s' % filename)
         if not os.path.isfile(filename):
             raise FileNotFoundError(filename)
 
@@ -435,6 +434,7 @@ class PDBPhotoMixin:
                 exc.photo = existing
                 raise exc
 
+        self.log.debug('New Photo: %s' % filename)
         author_id = self.get_user_id_or_none(author)
 
         extension = os.path.splitext(filename)[1]
@@ -1204,6 +1204,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             albums = {directory.absolute_path: album}
 
         for (current_location, directories, files) in generator:
+            # Create the photo object
             new_photos = []
             for filepath in files:
                 try:
@@ -1215,6 +1216,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             if not make_albums:
                 continue
 
+            # Ensure that the current directory is an album.
             current_album = albums.get(current_location.absolute_path, None)
             if current_album is None:
                 try:
@@ -1228,6 +1230,8 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
                     self.log.debug('Created %s' % current_album.title)
                 albums[current_location.absolute_path] = current_album
 
+            # Add the current directory album to the parent directory album.
+            # Add the photos to the current album.
             parent = albums.get(current_location.parent.absolute_path, None)
             if parent is not None:
                 try:

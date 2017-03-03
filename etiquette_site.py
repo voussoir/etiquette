@@ -103,7 +103,7 @@ def P_tag(tagname):
     try:
         return P.get_tag(tagname)
     except exceptions.NoSuchTag as e:
-        return 'That tag doesnt exist: %s' % e
+        return 'That tag doesnt exist: %s' % tagname
 
 @P_wrapper
 def P_user(username):
@@ -122,7 +122,6 @@ def send_file(filepath, override_mimetype=None):
         flask.abort(404)
 
     outgoing_headers = {}
-    print(override_mimetype)
     if override_mimetype is not None:
         mimetype = override_mimetype
     else:
