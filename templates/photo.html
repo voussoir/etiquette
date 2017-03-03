@@ -107,6 +107,10 @@
     max-height: 100%;
     width: 100%;
 }
+#refresh_metadata_button
+{
+    font-size: 11px;
+}
 </style>
 </head>
 
@@ -133,7 +137,10 @@
         </ul>
 
         <!-- METADATA & DOWNLOAD -->
-        <h4>File info</h4>
+        <h4>
+            File info
+            <button id="refresh_metadata_button" class="add_tag_button" onclick="refresh_metadata('{{photo.id}}');">refresh</button>
+        </h4>
         <ul id="metadata">
         {% if photo.author_id %}
             {% set author = photo.author() %}
@@ -203,7 +210,7 @@ function add_photo_tag(photoid, tagname, callback)
 {
     if (tagname === ""){return}
     var url = "/photo/" + photoid + "/add_tag";
-    data = new FormData();
+    var data = new FormData();
     data.append("tagname", tagname);
     return post(url, data, callback);
 }
@@ -211,7 +218,7 @@ function remove_photo_tag(photoid, tagname, callback)
 {
     if (tagname === ""){return}
     var url = "/photo/" + photoid + "/remove_tag";
-    data = new FormData();
+    var data = new FormData();
     data.append("tagname", tagname);
     return post(url, data, callback);
 }
@@ -222,6 +229,8 @@ function submit_tag(callback)
 }
 function receive_callback(response)
 {
+    var message_text;
+    var message_positivity;
     var tagname = response["tagname"];
     if ("error" in response)
     {
@@ -246,6 +255,14 @@ function receive_callback(response)
         }
     }
     create_message_bubble(message_area, message_positivity, message_text, 8000);
+}
+
+function refresh_metadata(photoid)
+{
+    var url= "/photo/" + photoid + "/refresh_metadata";
+    var data = new FormData();
+    post(url, data);
+    setTimeout(function(){location.reload();}, 2000);
 }
 
 function enable_hoverzoom()

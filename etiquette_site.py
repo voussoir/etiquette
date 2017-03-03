@@ -675,6 +675,14 @@ def post_photo_remove_tag(photoid):
     '''
     return post_photo_add_remove_tag_core(photoid, request.form['tagname'], 'remove')
 
+@site.route('/photo/<photoid>/refresh_metadata', methods=['POST'])
+def post_photo_refresh_metadata(photoid):
+    '''
+    Refresh the file metadata.
+    '''
+    photo = P_photo(photoid, response_type='json')
+    photo.reload_metadata()
+    return jsonify.make_json_response({})
 
 def post_tag_create_delete_core(tagname, function):
     try:
