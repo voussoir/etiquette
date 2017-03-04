@@ -42,6 +42,7 @@ class GroupableMixin:
         if not isinstance(member, type(self)):
             raise TypeError('Member must be of type %s' % type(self))
 
+        self.photodb.log.debug('Adding child %s to %s' % (member, self))
         # Groupables are only allowed to have 1 parent.
         # Unlike photos which can exist in multiple albums.
         cur = self.photodb.sql.cursor()
@@ -192,6 +193,7 @@ class Album(ObjectBase, GroupableMixin):
             raise ValueError('Not the same PhotoDB')
         if self.has_photo(photo):
             return
+        self.photodb.log.debug('Adding photo %s to %s' % (photo, self))
         cur = self.photodb.sql.cursor()
         cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
         if commit:
@@ -226,6 +228,7 @@ class Album(ObjectBase, GroupableMixin):
             title = self.title
         if description is None:
             description = self.description
+        cur = self.photodb.sql.cursor()
         cur.execute(
             'UPDATE albums SET title=?, description=? WHERE id == ?',
             [title, description, self.id]

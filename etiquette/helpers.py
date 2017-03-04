@@ -16,9 +16,9 @@ def album_zip_directories(album, recursive=True):
     '''
     directories = {}
     if album.title:
-        root_folder = '%s - %s' % (album.id, normalize_filepath(album.title))
+        root_folder = 'album %s - %s' % (album.id, normalize_filepath(album.title))
     else:
-        root_folder = '%s' % album.id
+        root_folder = 'album %s' % album.id
 
     directories[album] = root_folder
     if recursive:

@@ -315,21 +315,23 @@ def get_album_zip(albumid):
     for (inner_album, directory) in directories.items():
         text = []
         if inner_album.title:
-            text.append(inner_album.title)
+            text.append('Title: ' + inner_album.title)
         if inner_album.description:
-            text.append(inner_album.description)
+            text.append('Description: ' + inner_album.description)
         if not text:
             continue
         text = '\r\n\r\n'.join(text)
         streamed_zip.writestr(
-            arcname=os.path.join(directory, '%s.txt' % inner_album.id),
+            arcname=os.path.join(directory, 'album %s.txt' % inner_album.id),
             data=text.encode('utf-8'),
         )
 
     if album.title:
-        download_as = '%s - %s.zip' % (album.id, album.title)
+        download_as = 'album %s - %s.zip' % (album.id, album.title)
     else:
-        download_as = '%s.zip' % album.id
+        download_as = 'album %s.zip' % album.id
+
+    download_as = helpers.normalize_filepath(download_as)
     download_as = urllib.parse.quote(download_as)
     outgoing_headers = {
         'Content-Type': 'application/octet-stream',
@@ -384,6 +386,7 @@ def get_file(photoid):
         else:
             download_as = photo.id + photo.dot_extension
 
+        download_as = helpers.normalize_filepath(download_as)
         download_as =  urllib.parse.quote(download_as)
         response = flask.make_response(send_file(photo.real_filepath))
         response.headers['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % download_as

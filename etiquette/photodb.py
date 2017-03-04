@@ -296,6 +296,7 @@ class PDBAlbumMixin:
         if not isinstance(description, str):
             raise TypeError('Description must be string, not %s' % type(description))
 
+        self.log.debug('New Album: %s' % title)
         data = {
             'id': albumid,
             'title': title,
@@ -1236,21 +1237,16 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
                         commit=False,
                         title=current_location.basename,
                     )
-                    self.log.debug('Created %s' % current_album.title)
                 albums[current_location.absolute_path] = current_album
 
-            # Add the current directory album to the parent directory album.
-            # Add the photos to the current album.
             parent = albums.get(current_location.parent.absolute_path, None)
             if parent is not None:
                 try:
                     parent.add(current_album, commit=False)
-                    self.log.debug('Added child album to %s' % parent.title)
                 except exceptions.GroupExists:
                     pass
-                self.log.debug('Added photo to %s' % current_album)
-                for photo in new_photos:
-                    current_album.add_photo(photo, commit=False)
+            for photo in new_photos:
+                current_album.add_photo(photo, commit=False)
 
         if commit:
             self.log.debug('Committing - digest')
