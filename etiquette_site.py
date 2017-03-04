@@ -516,13 +516,19 @@ def get_search_core():
     # PREV-NEXT PAGE URLS
     offset = search_kwargs['offset'] or 0
     original_params = request.args.to_dict()
+    original_params['limit'] = limit
     if len(photos) == limit:
-        next_params = helpers.edit_params(original_params, {'offset': offset + limit})
+        next_params = original_params.copy()
+        next_params['offset'] = offset + limit
+        next_params = helpers.dict_to_params(next_params)
         next_page_url = '/search' + next_params
     else:
         next_page_url = None
+
     if offset > 0:
-        prev_params = helpers.edit_params(original_params, {'offset': max(0, offset - limit)})
+        prev_params = original_params.copy()
+        prev_params['offset'] = max(0, offset - limit)
+        prev_params = helpers.dict_to_params(prev_params)
         prev_page_url = '/search' + prev_params
     else:
         prev_page_url = None

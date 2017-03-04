@@ -103,22 +103,19 @@ def comma_split(s):
     s = [x for x in s if x]
     return s
 
-def edit_params(original, modifications):
+def dict_to_params(d):
     '''
-    Given a dictionary representing URL parameters,
-    apply the modifications and return a URL parameter string.
+    Given a dictionary representing URL parameters, return a URL parameter string.
 
-    {'a':1, 'b':2}, {'b':3} => ?a=1&b=3
+    {'a':1, 'b':2} => ?a=1&b=2
     '''
-    new_params = original.copy()
-    new_params.update(modifications)
-    if not new_params:
+    if not d:
         return ''
-    new_params = ['%s=%s' % (k, v) for (k, v) in new_params.items() if v]
-    new_params = '&'.join(new_params)
-    if new_params:
-        new_params = '?' + new_params
-    return new_params
+    params = ['%s=%s' % (k, v) for (k, v) in d.items() if v]
+    params = '&'.join(params)
+    if params:
+        params = '?' + params
+    return params
 
 def fit_into_bounds(image_width, image_height, frame_width, frame_height):
     '''
