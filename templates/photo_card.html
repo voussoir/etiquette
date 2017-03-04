@@ -1,12 +1,16 @@
+{# Specific extensions, then specific mimetypes, then general mimtypes #}
 {% set thumbnails =
     {
-        "audio": "audio",
+        "svg": "svg",
+
         "application/zip": "archive",
         "application/x-tar": "archive",
+
         "archive": "archive",
-        "txt": "txt",
-        "svg": "svg",
+        "audio": "audio",
         "video": "video",
+        "text": "txt",
+
     }
 %}
 {% macro create_photo_card(photo, view="grid") %}
