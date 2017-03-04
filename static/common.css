@@ -52,7 +52,7 @@ li
 .remove_tag_button,
 .remove_tag_button_perm
 {
-    position: absolute;
+    /*position: absolute;*/
     top: 3px;
     width:  18px;
     height: 14px;
@@ -202,10 +202,11 @@ li
     align-items: center;
     flex: 2;
 }
-.message_positive, .message_negative
+.message_bubble
 {
     width: 80%;
     margin: 4px;
+    word-wrap: break-word;
 }
 .message_positive
 {

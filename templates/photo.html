@@ -62,6 +62,7 @@
 #editor_area
 {
     flex: 3;
+    word-wrap: break-word;
 }
 #message_area
 {
@@ -126,8 +127,11 @@
             {% set tags = photo.sorted_tags() %}
             {% for tag in tags %}
             <li>
-                <a class="tag_object" href="/search?tag_musts={{tag.name}}">{{tag.qualified_name()}}</a>
-                <button class="remove_tag_button" onclick="remove_photo_tag('{{photo.id}}', '{{tag.name}}', receive_callback);"></button>
+                <a class="tag_object" href="/search?tag_musts={{tag.name}}">{{tag.qualified_name()}}</a><!-- 
+                --><button
+                class="remove_tag_button"
+                onclick="remove_photo_tag('{{photo.id}}', '{{tag.name}}', receive_callback);">
+                </button>
             </li>
             {% endfor %}
             <li>

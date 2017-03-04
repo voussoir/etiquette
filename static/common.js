@@ -5,7 +5,7 @@ function create_message_bubble(message_area, message_positivity, message_text, l
         lifespan = 8000;
     }
     var message = document.createElement("div");
-    message.className = message_positivity;
+    message.className = "message_bubble " + message_positivity;
     var span = document.createElement("span");
     span.innerHTML = message_text;
     message.appendChild(span);
