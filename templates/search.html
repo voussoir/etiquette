@@ -228,9 +228,19 @@ form
             name="extension_not" placeholder="Forbid extension(s)">
             
             <select name="limit" class="basic_param">
-                <option value="20"  {%if search_kwargs['limit'] == 20%}selected{%endif%}>20 items</option>
-                <option value="50"  {%if search_kwargs['limit'] == 50%}selected{%endif%}>50 items</option>
-                <option value="100" {%if search_kwargs['limit'] == 100%}selected{%endif%}>100 items</option>
+                {% set limit_options = [20, 50, 100] %}
+                {% if search_kwargs['limit'] not in limit_options %}
+                    {% do limit_options.append(search_kwargs['limit']) %}
+                    {% do limit_options.sort() %}
+                {% endif %}
+                {% for limit_option in limit_options %}
+                <option
+                value="{{limit_option}}"
+                {{"selected" if search_kwargs['limit'] == limit_option else ""}}
+                >
+                {{limit_option}} items
+                </option>
+                {% endfor %}
             </select>
             <select name="has_tags" class="basic_param">
                 <option value=""   {%if search_kwargs['has_tags'] == None %}selected{%endif%}>Tagged and untagged</option>
