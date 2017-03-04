@@ -541,14 +541,16 @@ class PDBPhotoMixin:
         '''
         PHOTO PROPERTIES
         area, width, height, ratio, bytes, duration:
-            A hyphen_range string representing min and max. Or just a number for lower bound.
+            A hyphen_range string representing min and max. Or just a number
+            for lower bound.
 
         TAGS AND FILTERS
         authors:
             A list of User objects, or usernames, or user ids.
 
         created:
-            A hyphen_range string respresenting min and max. Or just a number for lower bound.
+            A hyphen_range string respresenting min and max. Or just a number
+            for lower bound.
 
         extension:
             A string or list of strings of acceptable file extensions.
@@ -558,16 +560,20 @@ class PDBPhotoMixin:
             Including '*' will forbid all extensions
 
         filename:
-            A string or list of strings which will be split into words. The file's basename
-            must include every word, NOT case-sensitive.
+            A string or list of strings in the form of an expression.
+            Match is CASE-INSENSITIVE.
+            Examples:
+            '.pdf AND (programming OR "survival guide")'
+            '.pdf programming python' (implicitly AND each term)
 
         has_tags:
             If True, require that the Photo has >=1 tag.
             If False, require that the Photo has no tags.
-            If None, not considered.
+            If None, any amount is okay.
 
         mimetype:
-            A string or list of strings of acceptable mimetypes. 'image', 'video', ...
+            A string or list of strings of acceptable mimetypes.
+            'image', 'video', ...
 
         tag_musts:
             A list of tag names or Tag objects.
@@ -582,8 +588,11 @@ class PDBPhotoMixin:
             Photos MUST NOT have ANY tag in the list.
 
         tag_expression:
-            A string like 'family AND (animals OR vacation)' to filter by.
+            A string or list of strings in the form of an expression.
             Can NOT be used with the must, may, forbid style search.
+            Examples:
+            'family AND (animals OR vacation)'
+            'family vacation outdoors' (implicitly AND each term)
 
         QUERY OPTIONS
         limit:
@@ -598,13 +607,15 @@ class PDBPhotoMixin:
             Descending is assumed if not provided.
 
         warning_bag:
-            Invalid search queries will add a warning to the bag and try their best to continue.
-            Otherwise they may raise exceptions.
+            If provided, invalid search queries will add a warning to the bag
+            and try their best to continue. The generator will yield the bag
+            back to you as the final object.
+            Without the bag, exceptions may be raised.
 
         give_back_parameters:
-            If True, the generator's first yield will be a dictionary of all the cleaned up, normalized
-            parameters. The user may have given us loads of trash, so we should show them the formatting
-            we want.
+            If True, the generator's first yield will be a dictionary of all the
+            cleaned up, normalized parameters. The user may have given us loads
+            of trash, so we should show them the formatting we want.
         '''
         start_time = time.time()
 
@@ -791,7 +802,6 @@ class PDBPhotoMixin:
                     #print('Failed has_tags=True')
                     continue
 
-
                 if tag_expression:
                     success = expression_tree.evaluate(
                         photo_tags,
@@ -818,7 +828,6 @@ class PDBPhotoMixin:
 
             if limit is not None and photos_received >= limit:
                 break
-
 
             photos_received += 1
             yield photo
@@ -1383,7 +1392,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
 
         things = cur.fetchall()
         for thing in things:
-            thing = thing_map['class'](self, row_tuple=thing)
+            thing = thing_map['class'](self, db_row=thing)
             yield thing
 
 

@@ -171,13 +171,13 @@ class GroupableMixin:
 
 
 class Album(ObjectBase, GroupableMixin):
-    def __init__(self, photodb, row_tuple):
+    def __init__(self, photodb, db_row):
         self.photodb = photodb
-        if isinstance(row_tuple, (list, tuple)):
-            row_tuple = {constants.SQL_ALBUM_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
-        self.id = row_tuple['id']
-        self.title = row_tuple['title']
-        self.description = row_tuple['description']
+        if isinstance(db_row, (list, tuple)):
+            db_row = {constants.SQL_ALBUM_COLUMNS[index]: value for (index, value) in enumerate(db_row)}
+        self.id = db_row['id']
+        self.title = db_row['title']
+        self.description = db_row['description']
         self.name = 'Album %s' % self.id
         self.group_getter = self.photodb.get_album
 
@@ -285,27 +285,25 @@ class Album(ObjectBase, GroupableMixin):
         else:
             return total
 
-
     def walk_photos(self):
         yield from self.photos()
         children = self.walk_children()
         # The first yield is itself
         next(children)
         for child in children:
-            print(child)
             yield from child.walk_photos()
 
 
 class Bookmark(ObjectBase):
-    def __init__(self, photodb, row_tuple):
+    def __init__(self, photodb, db_row):
         self.photodb = photodb
-        if isinstance(row_tuple, (list, tuple)):
-            row_tuple = {constants.SQL_BOOKMARK_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
+        if isinstance(db_row, (list, tuple)):
+            db_row = {constants.SQL_BOOKMARK_COLUMNS[index]: value for (index, value) in enumerate(db_row)}
 
-        self.id = row_tuple['id']
-        self.title = row_tuple['title']
-        self.url = row_tuple['url']
-        self.author_id = row_tuple['author_id']
+        self.id = db_row['id']
+        self.title = db_row['title']
+        self.url = db_row['url']
+        self.author_id = db_row['author_id']
 
     def __repr__(self):
         return 'Bookmark:{id}'.format(id=self.id)
@@ -339,34 +337,34 @@ class Photo(ObjectBase):
     Photo objects cannot exist without a corresponding PhotoDB object, because
     Photos are not the actual image data, just the database entry.
     '''
-    def __init__(self, photodb, row_tuple):
+    def __init__(self, photodb, db_row):
         self.photodb = photodb
-        if isinstance(row_tuple, (list, tuple)):
-            row_tuple = {constants.SQL_PHOTO_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
+        if isinstance(db_row, (list, tuple)):
+            db_row = {constants.SQL_PHOTO_COLUMNS[index]: value for (index, value) in enumerate(db_row)}
 
-        self.real_filepath = helpers.normalize_filepath(row_tuple['filepath'], allowed=':\\/')
+        self.real_filepath = helpers.normalize_filepath(db_row['filepath'], allowed=':\\/')
         self.real_path = pathclass.Path(self.real_filepath)
 
-        self.id = row_tuple['id']
-        self.created = row_tuple['created']
-        self.author_id = row_tuple['author_id']
-        self.filepath = row_tuple['override_filename'] or self.real_path.absolute_path
-        self.basename = row_tuple['override_filename'] or self.real_path.basename
-        self.extension = row_tuple['extension']
-        self.tagged_at = row_tuple['tagged_at']
+        self.id = db_row['id']
+        self.created = db_row['created']
+        self.author_id = db_row['author_id']
+        self.filepath = db_row['override_filename'] or self.real_path.absolute_path
+        self.basename = db_row['override_filename'] or self.real_path.basename
+        self.extension = db_row['extension']
+        self.tagged_at = db_row['tagged_at']
 
         if self.extension == '':
             self.dot_extension = ''
         else:
             self.dot_extension = '.' + self.extension
 
-        self.area = row_tuple['area']
-        self.bytes = row_tuple['bytes']
-        self.duration = row_tuple['duration']
-        self.width = row_tuple['width']
-        self.height = row_tuple['height']
-        self.ratio = row_tuple['ratio']
-        self.thumbnail = row_tuple['thumbnail']
+        self.area = db_row['area']
+        self.bytes = db_row['bytes']
+        self.duration = db_row['duration']
+        self.width = db_row['width']
+        self.height = db_row['height']
+        self.ratio = db_row['ratio']
+        self.thumbnail = db_row['thumbnail']
 
         self.mimetype = helpers.get_mimetype(self.real_filepath)
         if self.mimetype is None:
@@ -736,12 +734,12 @@ class Tag(ObjectBase, GroupableMixin):
     '''
     A Tag, which can be applied to Photos for organization.
     '''
-    def __init__(self, photodb, row_tuple):
+    def __init__(self, photodb, db_row):
         self.photodb = photodb
-        if isinstance(row_tuple, (list, tuple)):
-            row_tuple = {constants.SQL_TAG_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
-        self.id = row_tuple['id']
-        self.name = row_tuple['name']
+        if isinstance(db_row, (list, tuple)):
+            db_row = {constants.SQL_TAG_COLUMNS[index]: value for (index, value) in enumerate(db_row)}
+        self.id = db_row['id']
+        self.name = db_row['name']
         self.group_getter = self.photodb.get_tag
         self._cached_qualified_name = None
 
@@ -913,13 +911,13 @@ class User(ObjectBase):
     '''
     A dear friend of ours.
     '''
-    def __init__(self, photodb, row_tuple):
+    def __init__(self, photodb, db_row):
         self.photodb = photodb
-        if isinstance(row_tuple, (list, tuple)):
-            row_tuple = {constants.SQL_USER_COLUMNS[index]: value for (index, value) in enumerate(row_tuple)}
-        self.id = row_tuple['id']
-        self.username = row_tuple['username']
-        self.created = row_tuple['created']
+        if isinstance(db_row, (list, tuple)):
+            db_row = {constants.SQL_USER_COLUMNS[index]: value for (index, value) in enumerate(db_row)}
+        self.id = db_row['id']
+        self.username = db_row['username']
+        self.created = db_row['created']
 
     def __repr__(self):
         rep = 'User:{id}:{username}'.format(id=self.id, username=self.username)

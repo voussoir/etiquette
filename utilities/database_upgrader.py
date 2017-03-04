@@ -37,7 +37,7 @@ def upgrade_3_to_4(sql):
     '''
     cur = sql.cursor()
     cur.execute('ALTER TABLE photos ADD COLUMN author_id TEXT')
-    cur.execute('CREATE INDEX IF NOT EXISTS index_photo_author on photos(author_id)')
+    cur.execute('CREATE INDEX IF NOT EXISTS index_photo_author ON photos(author_id)')
 
 def upgrade_4_to_5(sql):
     '''
@@ -52,8 +52,8 @@ def upgrade_4_to_5(sql):
         author_id TEXT
     )
     ''')
-    cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_id on bookmarks(id)')
-    cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_author on bookmarks(author_id)')
+    cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_id ON bookmarks(id)')
+    cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_author ON bookmarks(author_id)')
 
 def upgrade_all(database_filename):
     '''

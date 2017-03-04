@@ -153,7 +153,6 @@ def normalize_filename(filename_terms):
         filename_terms = ' '.join(filename_terms)
 
     filename_terms = filename_terms.strip()
-    filename_terms = shlex.split(filename_terms)
 
     if not filename_terms:
         return None
@@ -279,6 +278,11 @@ def normalize_tag_expression(expression):
 
     if not isinstance(expression, str):
         expression = ' '.join(expression)
+
+    expression = expression.strip()
+
+    if not expression:
+        return None
 
     return expression
 

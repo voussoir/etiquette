@@ -484,15 +484,18 @@ def get_search_core():
     # The search has converted many arguments into sets or other types.
     # Convert them back into something that will display nicely on the search form.
     join_helper = lambda x: ', '.join(x) if x else None
-    tagname_helper = lambda tags: [tag.qualified_name() for tag in tags] if tags else None
-    filename_helper = lambda fn: ' '.join('"%s"' % part if ' ' in part else part for part in fn) if fn else None
     search_kwargs['extension'] = join_helper(search_kwargs['extension'])
     search_kwargs['extension_not'] = join_helper(search_kwargs['extension_not'])
     search_kwargs['mimetype'] = join_helper(search_kwargs['mimetype'])
-    search_kwargs['filename'] = filename_helper(search_kwargs['filename'])
+
+    tagname_helper = lambda tags: [tag.qualified_name() for tag in tags] if tags else None
     search_kwargs['tag_musts'] = tagname_helper(search_kwargs['tag_musts'])
     search_kwargs['tag_mays'] = tagname_helper(search_kwargs['tag_mays'])
     search_kwargs['tag_forbids'] = tagname_helper(search_kwargs['tag_forbids'])
+
+    #quoted_helper = lambda text: '"%s"' % text if ' ' in text else text
+    #filename_helper = lambda fn: ' '.join(quoted_helper(part) for part in fn) if fn else None
+    #search_kwargs['filename'] = filename_helper(search_kwargs['filename'])
 
     search_results = list(search_generator)
     warnings = set()
