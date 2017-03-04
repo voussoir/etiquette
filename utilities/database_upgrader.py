@@ -55,6 +55,54 @@ def upgrade_4_to_5(sql):
     cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_id ON bookmarks(id)')
     cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_author ON bookmarks(author_id)')
 
+def upgrade_5_to_6(sql):
+    '''
+    When Albums were first introduced, they shared the ID counter and
+    relationship table with tags, because they were mostly identical at the time.
+    However this is very ugly and confusing and it's time to finally change it.
+    - Renames old indices `index_grouprel_*` to `index_taggroup_*`
+    - Creates new indices `index_albumgroup_*`
+    - Creates new table `album_group_rel`
+    - Moves all album group relationships out of `tag_group_rel` and
+      into `album_group_rel`
+    - Gives albums their own last_id value, starting with the current tag value.
+    '''
+    # 1. Start the id_numbers.albums value at the tags value so that the number
+    # can continue to increment safely and separately, instead of starting at
+    # zero and bumping into existing albums.
+    cur = sql.cursor()
+    cur.execute('SELECT * FROM id_numbers WHERE tab == "tags"')
+    last_id = cur.fetchone()[1]
+    cur.execute('INSERT INTO id_numbers VALUES("albums", ?)', [last_id])
+
+    # 2. Now's a good chance to rename 'index_grouprel' to 'index_taggroup'.
+    cur.execute('DROP INDEX index_grouprel_parentid')
+    cur.execute('DROP INDEX index_grouprel_memberid')
+    cur.execute('CREATE INDEX index_taggroup_parentid ON tag_group_rel(parentid)')
+    cur.execute('CREATE INDEX index_taggroup_memberid ON tag_group_rel(memberid)')
+
+    # 3. All of the album group relationships need to be moved into their
+    # own table, out of tag_group_rel
+    cur.execute('CREATE TABLE album_group_rel(parentid TEXT, memberid TEXT)')
+    cur.execute('CREATE INDEX index_albumgroup_parentid ON tag_group_rel(parentid)')
+    cur.execute('CREATE INDEX index_albumgroup_memberid ON tag_group_rel(memberid)')
+    cur.execute('SELECT id FROM albums')
+    album_ids = [f[0] for f in cur.fetchall()]
+    for album_id in album_ids:
+        cur.execute(
+            'SELECT * FROM tag_group_rel WHERE parentid == ? OR memberid == ?',
+            [album_id, album_id]
+        )
+        f = cur.fetchall()
+        if f == []:
+            continue
+        for grouprel in f:
+            cur.execute('INSERT INTO album_group_rel VALUES(?, ?)', grouprel)
+        cur.execute(
+            'DELETE FROM tag_group_rel WHERE parentid == ? OR memberid == ?',
+            [album_id, album_id]
+        )
+
 def upgrade_all(database_filename):
     '''
     Given the filename of a phototagger database, apply all of the needed

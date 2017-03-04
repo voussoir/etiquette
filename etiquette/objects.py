@@ -31,6 +31,10 @@ class ObjectBase:
 
 
 class GroupableMixin:
+    group_getter = None
+    group_sql_index = None
+    group_table = None
+
     def add(self, member, *, commit=True):
         '''
         Add a child object to this group.
@@ -46,33 +50,43 @@ class GroupableMixin:
         # Groupables are only allowed to have 1 parent.
         # Unlike photos which can exist in multiple albums.
         cur = self.photodb.sql.cursor()
-        cur.execute('SELECT * FROM tag_group_rel WHERE memberid == ?', [member.id])
+        cur.execute(
+            'SELECT * FROM %s WHERE memberid == ?' % self.group_table,
+            [member.id]
+        )
         fetch = cur.fetchone()
         if fetch is not None:
-            parent_id = fetch[constants.SQL_TAGGROUP['parentid']]
+            parent_id = fetch[self.group_sql_index['parentid']]
             if parent_id == self.id:
                 that_group = self
             else:
                 that_group = self.group_getter(id=parent_id)
-            raise exceptions.GroupExists('%s already in group %s' % (member.name, that_group.name))
+            raise exceptions.GroupExists('%s already in group %s' % (member, that_group))
 
         for parent in self.walk_parents():
-            if parent.id == member.id:
-                raise exceptions.RecursiveGrouping('%s is an ancestor of %s' % (member.name, self.name))
+            if parent == member:
+                raise exceptions.RecursiveGrouping('%s is an ancestor of %s' % (member, self))
 
         self.photodb._cached_frozen_children = None
-        cur.execute('INSERT INTO tag_group_rel VALUES(?, ?)', [self.id, member.id])
+        cur.execute(
+            'INSERT INTO %s VALUES(?, ?)' % self.group_table,
+            [self.id, member.id]
+        )
         if commit:
             self.photodb.log.debug('Committing - add to group')
             self.photodb.commit()
 
     def children(self):
         cur = self.photodb.sql.cursor()
-        cur.execute('SELECT * FROM tag_group_rel WHERE parentid == ?', [self.id])
+        
+        cur.execute(
+            'SELECT * FROM %s WHERE parentid == ?' % self.group_table,
+            [self.id]
+        )
         fetch = cur.fetchall()
         results = []
         for f in fetch:
-            memberid = f[constants.SQL_TAGGROUP['memberid']]
+            memberid = f[self.group_sql_index['memberid']]
             child = self.group_getter(id=memberid)
             results.append(child)
         if isinstance(self, Tag):
@@ -105,16 +119,22 @@ class GroupableMixin:
             if parent is None:
                 # Since this group was a root, children become roots by removing
                 # the row.
-                cur.execute('DELETE FROM tag_group_rel WHERE parentid == ?', [self.id])
+                cur.execute(
+                    'DELETE FROM %s WHERE parentid == ?' % self.group_table,
+                    [self.id]
+                )
             else:
                 # Since this group was a child, its parent adopts all its children.
                 cur.execute(
-                    'UPDATE tag_group_rel SET parentid == ? WHERE parentid == ?',
+                    'UPDATE %s SET parentid == ? WHERE parentid == ?' % self.group_table,
                     [parent.id, self.id]
                 )
         # Note that this part comes after the deletion of children to prevent
         # issues of recursion.
-        cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
+        cur.execute(
+            'DELETE FROM %s WHERE memberid == ?' % self.group_table,
+            [self.id]
+        )
         if commit:
             self.photodb.log.debug('Committing - delete tag')
             self.photodb.commit()
@@ -125,12 +145,15 @@ class GroupableMixin:
         Returned object will be of the same type as calling object.
         '''
         cur = self.photodb.sql.cursor()
-        cur.execute('SELECT * FROM tag_group_rel WHERE memberid == ?', [self.id])
+        cur.execute(
+            'SELECT * FROM %s WHERE memberid == ?' % self.group_table,
+            [self.id]
+        )
         fetch = cur.fetchone()
         if fetch is None:
             return None
 
-        parentid = fetch[constants.SQL_TAGGROUP['parentid']]
+        parentid = fetch[self.group_sql_index['parentid']]
         return self.group_getter(id=parentid)
 
     def join_group(self, group, *, commit=True):
@@ -154,7 +177,10 @@ class GroupableMixin:
         '''
         cur = self.photodb.sql.cursor()
         self.photodb._cached_frozen_children = None
-        cur.execute('DELETE FROM tag_group_rel WHERE memberid == ?', [self.id])
+        cur.execute(
+            'DELETE FROM %s WHERE memberid == ?' % self.group_table,
+            [self.id]
+        )
         if commit:
             self.photodb.log.debug('Committing - leave group')
             self.photodb.commit()
@@ -172,6 +198,9 @@ class GroupableMixin:
 
 
 class Album(ObjectBase, GroupableMixin):
+    group_sql_index = constants.SQL_ALBUMGROUP
+    group_table = 'album_group_rel'
+
     def __init__(self, photodb, db_row):
         self.photodb = photodb
         if isinstance(db_row, (list, tuple)):
@@ -737,6 +766,9 @@ class Tag(ObjectBase, GroupableMixin):
     '''
     A Tag, which can be applied to Photos for organization.
     '''
+    group_sql_index = constants.SQL_TAGGROUP
+    group_table = 'tag_group_rel'
+
     def __init__(self, photodb, db_row):
         self.photodb = photodb
         if isinstance(db_row, (list, tuple)):

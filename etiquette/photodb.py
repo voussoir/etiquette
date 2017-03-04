@@ -29,7 +29,7 @@ logging.getLogger('PIL.PngImagePlugin').setLevel(logging.WARNING)
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
-DATABASE_VERSION = 5
+DATABASE_VERSION = 6
 DB_INIT = '''
 PRAGMA count_changes = OFF;
 PRAGMA cache_size = 10000;
@@ -70,6 +70,10 @@ CREATE TABLE IF NOT EXISTS album_photo_rel(
     albumid TEXT,
     photoid TEXT
 );
+CREATE TABLE IF NOT EXISTS album_group_rel(
+    parentid TEXT,
+    memberid TEXT
+);
 CREATE TABLE IF NOT EXISTS photo_tag_rel(
     photoid TEXT,
     tagid TEXT
@@ -95,8 +99,14 @@ CREATE TABLE IF NOT EXISTS users(
 
 -- Album
 CREATE INDEX IF NOT EXISTS index_album_id on albums(id);
+
+-- Album-photo relation
 CREATE INDEX IF NOT EXISTS index_albumrel_albumid on album_photo_rel(albumid);
 CREATE INDEX IF NOT EXISTS index_albumrel_photoid on album_photo_rel(photoid);
+
+-- Album-group relation
+CREATE INDEX IF NOT EXISTS index_albumgroup_parentid on tag_group_rel(parentid);
+CREATE INDEX IF NOT EXISTS index_albumgroup_memberid on tag_group_rel(memberid);
 
 -- Bookmark
 CREATE INDEX IF NOT EXISTS index_bookmark_id on bookmarks(id);
@@ -122,8 +132,8 @@ CREATE INDEX IF NOT EXISTS index_tagrel_tagid on photo_tag_rel(tagid);
 CREATE INDEX IF NOT EXISTS index_tagsyn_name on tag_synonyms(name);
 
 -- Tag-group relation
-CREATE INDEX IF NOT EXISTS index_grouprel_parentid on tag_group_rel(parentid);
-CREATE INDEX IF NOT EXISTS index_grouprel_memberid on tag_group_rel(memberid);
+CREATE INDEX IF NOT EXISTS index_taggroup_parentid on tag_group_rel(parentid);
+CREATE INDEX IF NOT EXISTS index_taggroup_memberid on tag_group_rel(memberid);
 
 -- User
 CREATE INDEX IF NOT EXISTS index_user_id on users(id);
@@ -283,8 +293,7 @@ class PDBAlbumMixin:
         '''
         Create a new album. Photos can be added now or later.
         '''
-        # Albums share the tag table's ID counter
-        albumid = self.generate_id('tags')
+        albumid = self.generate_id('albums')
         title = title or ''
         description = description or ''
         if associated_directory is not None:
@@ -1340,7 +1349,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         ID is actually used.
         '''
         table = table.lower()
-        if table not in ['photos', 'tags', 'groups', 'bookmarks']:
+        if table not in ['photos', 'tags', 'albums', 'bookmarks']:
             raise ValueError('Invalid table requested: %s.', table)
 
         cur = self.sql.cursor()
