@@ -578,19 +578,19 @@ def get_search_json():
 
 
 def get_tags_core(specific_tag=None):
-    try:
-        tags = P.export_tags(photodb.tag_export_easybake, specific_tag=specific_tag)
-    except exceptions.NoSuchTag:
-        flask.abort(404, 'That tag doesnt exist')
-    tags = tags.split('\n')
-    tags = [t for t in tags if t != '']
-    tags = [(t, t.split('.')[-1].split('+')[0]) for t in tags]
+    if specific_tag is None:
+        tags = P.get_tags()
+    else:
+        tags = specific_tag.walk_children()
+    tags = list(tags)
     return tags
 
 @site.route('/tags')
 @site.route('/tags/<specific_tag>')
 @session_manager.give_token
 def get_tags_html(specific_tag=None):
+    if specific_tag is not None:
+        specific_tag = P_tag(specific_tag, response_type='html')
     tags = get_tags_core(specific_tag)
     session = session_manager.get(request)
     return flask.render_template('tags.html', tags=tags, session=session)
@@ -599,8 +599,10 @@ def get_tags_html(specific_tag=None):
 @site.route('/tags/<specific_tag>.json')
 @session_manager.give_token
 def get_tags_json(specific_tag=None):
+    if specific_tag is not None:
+        specific_tag = P_tag(specific_tag, response_type='json')
     tags = get_tags_core(specific_tag)
-    tags = [t[0] for t in tags]
+    tags = [jsonify.tag(tag, include_synonyms=True) for tag in tags]
     return jsonify.make_json_response(tags)
 
 

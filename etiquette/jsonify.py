@@ -49,12 +49,14 @@ def photo(p, include_albums=True, include_tags=True):
 
     return j
 
-def tag(t):
+def tag(t, include_synonyms=False):
     j = {
         'id': t.id,
         'name': t.name,
         'qualified_name': t.qualified_name(),
     }
+    if include_synonyms:
+        j['synonyms'] = list(t.synonyms())
     return j
 
 def user(u):
