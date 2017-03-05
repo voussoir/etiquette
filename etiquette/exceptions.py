@@ -1,104 +1,100 @@
+import re
+
+def pascal_to_loudsnakes(text):
+    match = re.findall('[A-Z][a-z]*', text)
+    text = '_'.join(match)
+    text = text.upper()
+    return text
+
 class EtiquetteException(Exception):
-    pass
+    error_message = ''
+    def __init__(self, *args):
+        self.error_type = pascal_to_loudsnakes(type(self).__name__)
+        Exception.__init__(self, *args)
+
+class WithFormat(EtiquetteException):
+    def __init__(self, *args, **kwargs):
+        self.error_message = self.error_message.format(*args, **kwargs)
+        EtiquetteException.__init__(self, self.error_message)
 
 # NO SUCH
-class NoSuchAlbum(EtiquetteException):
-    error_type = 'NO_SUCH_ALBUM'
-    error_message = 'Album "{album}" does not exist.'
+class NoSuch(WithFormat):
     pass
 
-class NoSuchBookmark(EtiquetteException):
-    error_type = 'NO_SUCH_BOOKMARK'
-    error_message = 'Bookmark "{bookmark}" does not exist.'
-    pass
+class NoSuchAlbum(NoSuch):
+    error_message = 'Album "{}" does not exist.'
 
-class NoSuchGroup(EtiquetteException):
-    error_type = 'NO_SUCH_GROUP'
-    error_message = 'Group "{group}" does not exist.'
-    pass
+class NoSuchBookmark(NoSuch):
+    error_message = 'Bookmark "{}" does not exist.'
 
-class NoSuchPhoto(EtiquetteException):
-    error_type = 'NO_SUCH_PHOTO'
-    error_message = 'Photo "{photo}" does not exist.'
-    pass
+class NoSuchGroup(NoSuch):
+    error_message = 'Group "{}" does not exist.'
 
-class NoSuchSynonym(EtiquetteException):
-    error_type = 'NO_SUCH_SYNONYM'
-    error_message = 'Synonym "{synonym}" does not exist.'
-    pass
+class NoSuchPhoto(NoSuch):
+    error_message = 'Photo "{}" does not exist.'
 
-class NoSuchTag(EtiquetteException):
-    error_type = 'NO_SUCH_TAG'
-    error_message = 'Tag "{tag}" does not exist.'
-    pass
+class NoSuchSynonym(NoSuch):
+    error_message = 'Synonym "{}" does not exist.'
 
-class NoSuchUser(EtiquetteException):
-    error_type = 'NO_SUCH_User'
-    error_message = 'User "{user}" does not exist.'
-    pass
+class NoSuchTag(NoSuch):
+    error_message = 'Tag "{}" does not exist.'
+
+class NoSuchUser(NoSuch):
+    error_message = 'User "{}" does not exist.'
 
 
 # EXISTS
-class GroupExists(EtiquetteException):
-    pass
+class GroupExists(WithFormat):
+    error_message = '{member} already in group {group}'
 
-class PhotoExists(EtiquetteException):
-    pass
+class PhotoExists(WithFormat):
+    error_message = 'Photo "{}" already exists.'
+    def __init__(self, photo):
+        self.photo = photo
+        WithFormat.__init__(self, photo.id)
 
-class TagExists(EtiquetteException):
-    pass
+class TagExists(WithFormat):
+    error_message = 'Tag "{}" already exists.'
+    def __init__(self, tag):
+        self.tag = tag
+        WithFormat.__init__(self, tag.name)
 
-class UserExists(EtiquetteException):
-    error_type = 'USER_EXISTS'
-    error_message = 'Username "{username}" already exists.'
-    pass
+class UserExists(WithFormat):
+    error_message = 'User "{}" already exists.'
+    def __init__(self, user):
+        self.user = user
+        WithFormat.__init__(self, user.username)
 
 
 # TAG ERRORS
 class CantSynonymSelf(EtiquetteException):
-    error_type = 'TAG_SYNONYM_ITSELF'
     error_message = 'Cannot apply synonym to self.'
-    pass
 
 class RecursiveGrouping(EtiquetteException):
-    error_type = 'RECURSIVE_GROUPING'
-    error_message = 'Cannot create a group within itself.'
-    pass
+    error_message = '{group} is an ancestor of {member}.'
 
-class TagTooLong(EtiquetteException):
-    error_type = 'TAG_TOO_LONG'
-    error_message = 'Tag "{tag}" is too long.'
-    pass
+class TagTooLong(WithFormat):
+    error_message = 'Tag "{}" is too long.'
 
-class TagTooShort(EtiquetteException):
-    error_type = 'TAG_TOO_SHORT'
-    error_message = 'Tag "{tag}" has too few valid characters.'
-    pass
+class TagTooShort(WithFormat):
+    error_message = 'Tag "{}" has too few valid characters.'
 
 
 # USER ERRORS
-class InvalidUsernameChars(EtiquetteException):
-    error_type = 'INVALID_USERNAME_CHARACTERS'
-    error_message = 'Username "{username}" contains invalid characters: {badchars}'
-    pass
+class InvalidUsernameChars(WithFormat):
+    error_message = 'Username "{username}" contains invalid characters: {badchars}.'
 
-class PasswordTooShort(EtiquetteException):
-    error_type = 'PASSWORD_TOO_SHORT'
-    error_message = 'Password is shorter than the minimum of {min_length}'
-    pass
+class PasswordTooShort(WithFormat):
+    error_message = 'Password is shorter than the minimum of {min_length}.'
 
-class UsernameTooLong(EtiquetteException):
-    error_type = 'USERNAME_TOO_LONG'
-    error_message = 'Username "{username}" is longer than maximum of {max_length}'
-    pass
+class UsernameTooLong(WithFormat):
+    error_message = 'Username "{username}" is longer than maximum of {max_length}.'
 
-class UsernameTooShort(EtiquetteException):
-    error_type = 'USERNAME_TOO_SHORT'
-    error_message = 'Username "{username}" is shorter than minimum of {min_length}'
-    pass
+class UsernameTooShort(WithFormat):
+    error_message = 'Username "{username}" is shorter than minimum of {min_length}.'
 
 class WrongLogin(EtiquetteException):
-    pass
+    error_message = 'Wrong username-password combination.'
 
 
 # GENERAL ERRORS
@@ -108,10 +104,8 @@ class NotExclusive(EtiquetteException):
     '''
     pass
 
-class OutOfOrder(EtiquetteException):
+class OutOfOrder(WithFormat):
     '''
     For when a requested minmax range (a, b) has b > a
     '''
-    error_type = 'OUT_OF_ORDER'
-    error_message = 'Field "{field}": minimum "{min}" and maximum "{max}" are out of order.'
-    pass
+    error_message = 'Range "{range}": minimum "{min}" and maximum "{max}" are out of order.'

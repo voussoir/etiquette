@@ -76,11 +76,16 @@ def P_wrapper(function):
             return function(thingid)
 
         except exceptions.EtiquetteException as e:
+            if isinstance(e, exceptions.NoSuch):
+                status = 404
+            else:
+                status = 400
+
             if response_type == 'html':
-                flask.abort(404, e.error_message)
+                flask.abort(status, e.error_message)
             else:
                 response = {'error_type': e.error_type, 'error_message': e.error_message}
-                response = jsonify.make_json_response(response, status=404)
+                response = jsonify.make_json_response(response, status=status)
                 flask.abort(response)
 
         except Exception as e:
@@ -390,21 +395,17 @@ def get_file(photoid):
         return send_file(photo.real_filepath, override_mimetype=photo.mimetype)
 
 
-def get_photo_core(photoid):
-    photo = P_photo(photoid)
-    return photo
-
 @site.route('/photo/<photoid>', methods=['GET'])
 @session_manager.give_token
 def get_photo_html(photoid):
-    photo = get_photo_core(photoid)
+    photo = P_photo(photoid, response_type='html')
     session = session_manager.get(request)
     return flask.render_template('photo.html', photo=photo, session=session)
 
 @site.route('/photo/<photoid>.json', methods=['GET'])
 @session_manager.give_token
 def get_photo_json(photoid):
-    photo = get_photo_core(photoid)
+    photo = P_photo(photoid, response_type='json')
     photo = jsonify.photo(photo)
     photo = jsonify.make_json_response(photo)
     return photo

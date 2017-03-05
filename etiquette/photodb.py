@@ -163,14 +163,14 @@ def operate(operand_stack, operator_stack):
     operand_stack.append(value)
     #print('after:', operand_stack, operator_stack)
 
-def raise_no_such_thing(exception_class, thing_id=None, thing_name=None, comment=''):
-    if thing_id is not None:
-        message = 'ID: %s. %s' % (thing_id, comment)
-    elif thing_name is not None:
-        message = 'Name: %s. %s' % (thing_name, comment)
-    else:
-        message = ''
-    raise exception_class(message)
+# def raise_no_such_thing(exception_class, thing_id=None, thing_name=None, comment=''):
+#     if thing_id is not None:
+#         message = 'ID: %s. %s' % (thing_id, comment)
+#     elif thing_name is not None:
+#         message = 'Name: %s. %s' % (thing_name, comment)
+#     else:
+#         message = ''
+#     raise exception_class(message)
 
 def searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, frozen_children):
     if tag_musts and not all(any(option in photo_tags for option in frozen_children[must]) for must in tag_musts):
@@ -382,7 +382,7 @@ class PDBPhotoMixin:
         cur.execute('SELECT * FROM photos WHERE filepath == ?', [filepath])
         fetch = cur.fetchone()
         if fetch is None:
-            raise_no_such_thing(exceptions.NoSuchPhoto, thing_name=filepath)
+            raise exceptions.NoSuchPhoto(filepath)
         photo = objects.Photo(self, fetch)
         return photo
 
@@ -440,9 +440,7 @@ class PDBPhotoMixin:
             except exceptions.NoSuchPhoto:
                 pass
             else:
-                exc = exceptions.PhotoExists(filename, existing)
-                exc.photo = existing
-                raise exc
+                raise exceptions.PhotoExists(existing)
 
         self.log.debug('New Photo: %s' % filename)
         author_id = self.get_user_id_or_none(author)
@@ -743,11 +741,14 @@ class PDBPhotoMixin:
             for node in expression_tree.walk_leaves():
                 if node.token in frozen_children:
                     continue
+
+                exc = exceptions.NoSuchTag(node.token)
                 if warning_bag is not None:
-                    warning_bag.add(exceptions.NoSuchTag.error_message.format(tag=node.token))
+                    warning_bag.add(exc.error_message)
                     node.token = None
                 else:
-                    raise_no_such_thing(exceptions.NoSuchTag, thing_name=node.token)
+                    raise exc
+
             expression_tree.prune()
 
         if filename:
@@ -873,10 +874,8 @@ class PDBTagMixin:
 
         if id is not None:
             return self.get_tag_by_id(id)
-        elif name is not None:
-            return self.get_tag_by_name(name)
         else:
-            raise_no_such_thing(exceptions.NoSuchTag, thing_id=id, thing_name=name)
+            return self.get_tag_by_name(name)
 
     def get_tag_by_id(self, id):
         return self.get_thing_by_id('tag', thing_id=id)
@@ -890,17 +889,18 @@ class PDBTagMixin:
 
         cur = self.sql.cursor()
         while True:
-            # Return if it's a toplevel, or resolve the synonym and try that.
+            # Return if it's a toplevel...
             cur.execute('SELECT * FROM tags WHERE name == ?', [tagname])
             fetch = cur.fetchone()
             if fetch is not None:
                 return objects.Tag(self, fetch)
 
+            # ...or resolve the synonym and try again.
             cur.execute('SELECT * FROM tag_synonyms WHERE name == ?', [tagname])
             fetch = cur.fetchone()
             if fetch is None:
-                # was not a top tag or synonym
-                raise_no_such_thing(exceptions.NoSuchTag, thing_name=tagname)
+                # was not a master tag or synonym
+                raise exceptions.NoSuchTag(tagname)
             tagname = fetch[constants.SQL_SYN['master']]
 
     def get_tags(self):
@@ -935,6 +935,7 @@ class PDBTagMixin:
         replaced by underscores, and is stripped of any not-whitelisted
         characters.
         '''
+        original_tagname = tagname
         tagname = tagname.lower()
         tagname = tagname.replace('-', '_')
         tagname = tagname.replace(' ', '_')
@@ -942,18 +943,20 @@ class PDBTagMixin:
         tagname = ''.join(tagname)
 
         if len(tagname) < self.config['min_tag_name_length']:
+            exc = exceptions.TagTooShort(original_tagname)
             if warning_bag is not None:
-                warning_bag.add(exceptions.TagTooShort.error_message.format(tag=tagname))
+                warning_bag.add(exc.error_message)
                 return None
             else:
-                raise exceptions.TagTooShort(tagname)
+                raise exc
 
         elif len(tagname) > self.config['max_tag_name_length']:
+            exc = exceptions.TagTooLong(tagname)
             if warning_bag is not None:
-                warning_bag.add(exceptions.TagTooLong.format(tag=tagname))
+                warning_bag.add(exc.error_message)
                 return None
             else:
-                raise exceptions.TagTooLong(tagname)
+                raise exc
 
         else:
             return tagname
@@ -1033,20 +1036,20 @@ class PDBUserMixin:
 
     def register_user(self, username, password, commit=True):
         if len(username) < self.config['min_username_length']:
-            raise exceptions.UsernameTooShort(username)
+            raise exceptions.UsernameTooShort(username=username, min_length=self.config['min_username_length'])
 
         if len(username) > self.config['max_username_length']:
-            raise exceptions.UsernameTooLong(username)
+            raise exceptions.UsernameTooLong(username=username, max_length=self.config['max_username_length'])
 
         badchars = [c for c in username if c not in self.config['valid_username_chars']]
         if badchars:
-            raise exceptions.InvalidUsernameChars(badchars)
+            raise exceptions.InvalidUsernameChars(username=username, badchars=badchars)
 
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
 
         if len(password) < self.config['min_password_length']:
-            raise exceptions.PasswordTooShort
+            raise exceptions.PasswordTooShort(min_length=self.config['min_password_length'])
 
         cur = self.sql.cursor()
         cur.execute('SELECT * FROM users WHERE username == ?', [username])
@@ -1288,7 +1291,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         ebstring = ebstring.strip()
         ebstring = ebstring.strip('.+=')
         if ebstring == '':
-            return
+            return output_notes
 
         if '=' in ebstring and '+' in ebstring:
             raise ValueError('Cannot rename and assign snynonym at once')
@@ -1312,7 +1315,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             raise ValueError('Too many plus signs')
 
         if not tag:
-            return None
+            return output_notes
 
         if rename_to:
             tag = self.get_tag(tag)
@@ -1382,7 +1385,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         cur.execute(query, [thing_id])
         thing = cur.fetchone()
         if thing is None:
-            return raise_no_such_thing(thing_map['exception'], thing_id=thing_id)
+            raise thing_map['exception'](thing_id)
         thing = thing_map['class'](self, thing)
         return thing
 

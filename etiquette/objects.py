@@ -61,11 +61,11 @@ class GroupableMixin:
                 that_group = self
             else:
                 that_group = self.group_getter(id=parent_id)
-            raise exceptions.GroupExists('%s already in group %s' % (member, that_group))
+            raise exceptions.GroupExists(member=member, group=that_group)
 
         for parent in self.walk_parents():
             if parent == member:
-                raise exceptions.RecursiveGrouping('%s is an ancestor of %s' % (member, self))
+                raise exceptions.RecursiveGrouping(member=member, group=self)
 
         self.photodb._cached_frozen_children = None
         cur.execute(
@@ -808,8 +808,9 @@ class Tag(ObjectBase, GroupableMixin):
     def add_synonym(self, synname, *, commit=True):
         synname = self.photodb.normalize_tagname(synname)
 
+        print(synname, self.name)
         if synname == self.name:
-            raise ValueError('Cannot assign synonym to itself.')
+            raise exceptions.CantSynonymSelf()
 
         try:
             self.photodb.get_tag_by_name(synname)

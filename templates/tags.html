@@ -133,10 +133,10 @@ function receive_callback(responses)
     {
         var response = responses[index];
         var tagname = response["tagname"];
-        if ("error" in response)
+        if ("error_type" in response)
         {
             message_positivity = "message_negative";
-            message_text = '"' + tagname + '" ' + response["error"];
+            message_text = '"' + tagname + '" ' + response["error_message"];
         }
         else if ("action" in response)
         {

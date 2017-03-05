@@ -151,7 +151,7 @@ def get_mimetype(filepath):
 
 def hyphen_range(s):
     '''
-    Given a string like '1-3', return ints (1, 3) representing lower
+    Given a string like '1-3', return numbers (1, 3) representing lower
     and upper bounds.
 
     Supports bytestring.parsebytes and hh:mm:ss format.
@@ -173,7 +173,7 @@ def hyphen_range(s):
     low = _unitconvert(low)
     high = _unitconvert(high)
     if low is not None and high is not None and low > high:
-        raise exceptions.OutOfOrder(s, low, high)
+        raise exceptions.OutOfOrder(range=s, min=low, max=high)
     return low, high
 
 def hms_to_seconds(hms):
