@@ -72,45 +72,40 @@ def delete_synonym(synonym):
 
 def P_wrapper(function):
     def P_wrapped(thingid, response_type='html'):
-        ret = function(thingid)
-        if not isinstance(ret, str):
-            return ret
+        try:
+            return function(thingid)
 
-        if response_type == 'html':
-            flask.abort(404, ret)
-        else:
-            response = jsonify.make_json_response({'error': ret})
-            flask.abort(response)
+        except exceptions.EtiquetteException as e:
+            if response_type == 'html':
+                flask.abort(404, e.error_message)
+            else:
+                response = {'error_type': e.error_type, 'error_message': e.error_message}
+                response = jsonify.make_json_response(response, status=404)
+                flask.abort(response)
+
+        except Exception as e:
+                if response_type == 'html':
+                    flask.abort(500)
+                else:
+                    flask.abort(jsonify.make_response({}, status=500))
 
     return P_wrapped
 
 @P_wrapper
 def P_album(albumid):
-    try:
-        return P.get_album(albumid)
-    except exceptions.NoSuchAlbum:
-        return 'That album doesnt exist'
+    return P.get_album(albumid)
 
 @P_wrapper
 def P_photo(photoid):
-    try:
-        return P.get_photo(photoid)
-    except exceptions.NoSuchPhoto:
-        return 'That photo doesnt exist'
+    return P.get_photo(photoid)
 
 @P_wrapper
 def P_tag(tagname):
-    try:
-        return P.get_tag(tagname)
-    except exceptions.NoSuchTag as e:
-        return 'That tag doesnt exist: %s' % tagname
+    return P.get_tag(tagname)
 
 @P_wrapper
 def P_user(username):
-    try:
-        return P.get_user(username=username)
-    except exceptions.NoSuchUser as e:
-        return 'That user doesnt exist: %s' % e
+    return P.get_user(username=username)
 
 def send_file(filepath, override_mimetype=None):
     '''
