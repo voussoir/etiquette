@@ -1061,6 +1061,7 @@ class PDBUserMixin:
 
         (qmarks, bindings) = helpers.binding_filler(constants.SQL_USER_COLUMNS, data)
         query = 'INSERT INTO users VALUES(%s)' % qmarks
+        cur = self.sql.cursor()
         cur.execute(query, bindings)
 
         if commit:

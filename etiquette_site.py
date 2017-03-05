@@ -245,7 +245,7 @@ def post_register():
 
     try:
         user = P.register_user(username, password_1)
-    except EtiquetteException as e:
+    except exceptions.EtiquetteException as e:
         response = {
             'error_type': e.error_type,
             'error_message': e.error_message,
