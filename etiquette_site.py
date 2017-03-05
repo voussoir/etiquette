@@ -65,7 +65,10 @@ def delete_synonym(synonym):
     synonym = synonym.split('+')[-1].split('.')[-1]
     synonym = P.normalize_tagname(synonym)
 
-    master_tag = P.get_tag(synonym)
+    try:
+        master_tag = P.get_tag(synonym)
+    except exceptions.NoSuchTag as e:
+        raise exceptions.NoSuchSynonym(*e.given_args, **e.given_kwargs)
     master_tag.remove_synonym(synonym)
 
     return {'action':'delete_synonym', 'synonym': synonym}
@@ -694,6 +697,7 @@ def post_photo_refresh_metadata(photoid):
     photo.reload_metadata()
     return jsonify.make_json_response({})
 
+
 def post_tag_create_delete_core(tagname, function):
     try:
         response = function(tagname)
@@ -704,6 +708,7 @@ def post_tag_create_delete_core(tagname, function):
             'error_message': e.error_message,
         }
         status = 400
+    print(response)
 
     return jsonify.make_json_response(response, status=status)
 

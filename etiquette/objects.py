@@ -813,11 +813,11 @@ class Tag(ObjectBase, GroupableMixin):
             raise exceptions.CantSynonymSelf()
 
         try:
-            self.photodb.get_tag_by_name(synname)
+            existing_tag = self.photodb.get_tag_by_name(synname)
         except exceptions.NoSuchTag:
             pass
         else:
-            raise exceptions.TagExists(synname)
+            raise exceptions.TagExists(existing_tag)
 
         self.photodb._cached_frozen_children = None
         cur = self.photodb.sql.cursor()
@@ -926,11 +926,11 @@ class Tag(ObjectBase, GroupableMixin):
             return
 
         try:
-            self.photodb.get_tag(new_name)
+            existing_tag = self.photodb.get_tag(new_name)
         except exceptions.NoSuchTag:
             pass
         else:
-            raise exceptions.TagExists(new_name)
+            raise exceptions.TagExists(existing_tag)
 
         self._cached_qualified_name = None
         self.photodb._cached_frozen_children = None

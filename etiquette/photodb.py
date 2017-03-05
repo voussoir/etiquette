@@ -912,11 +912,11 @@ class PDBTagMixin:
         '''
         tagname = self.normalize_tagname(tagname)
         try:
-            self.get_tag_by_name(tagname)
+            existing_tag = self.get_tag_by_name(tagname)
         except exceptions.NoSuchTag:
             pass
         else:
-            raise exceptions.TagExists(tagname)
+            raise exceptions.TagExists(existing_tag)
 
         tagid = self.generate_id('tags')
         self._cached_frozen_children = None
@@ -1051,10 +1051,12 @@ class PDBUserMixin:
         if len(password) < self.config['min_password_length']:
             raise exceptions.PasswordTooShort(min_length=self.config['min_password_length'])
 
-        cur = self.sql.cursor()
-        cur.execute('SELECT * FROM users WHERE username == ?', [username])
-        if cur.fetchone() is not None:
-            raise exceptions.UserExists(username)
+        try:
+            existing_user = self.get_user(username=username)
+        except exceptions.NoSuchUser:
+            pass
+        else:
+            raise exceptions.UserExists(existing_user)
 
         user_id = self.generate_user_id()
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
@@ -1291,10 +1293,10 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         ebstring = ebstring.strip()
         ebstring = ebstring.strip('.+=')
         if ebstring == '':
-            return output_notes
+            raise exceptions.EasyBakeError('No tag supplied')
 
         if '=' in ebstring and '+' in ebstring:
-            raise ValueError('Cannot rename and assign snynonym at once')
+            raise exceptions.EasyBakeError('Cannot rename and assign snynonym at once')
 
         rename_parts = ebstring.split('=')
         if len(rename_parts) == 2:
@@ -1303,7 +1305,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             ebstring = rename_parts[0]
             rename_to = None
         else:
-            raise ValueError('Too many equals signs')
+            raise exceptions.EasyBakeError('Too many equals signs')
 
         create_parts = ebstring.split('+')
         if len(create_parts) == 2:
@@ -1312,10 +1314,10 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             tag = create_parts[0]
             synonym = None
         else:
-            raise ValueError('Too many plus signs')
+            raise exceptions.EasyBakeError('Too many plus signs')
 
         if not tag:
-            return output_notes
+            raise exceptions.EasyBakeError('No tag supplied')
 
         if rename_to:
             tag = self.get_tag(tag)
@@ -1335,13 +1337,10 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             tag = tags[-1]
 
         if synonym:
-            try:
-                tag.add_synonym(synonym)
-                note = ('new_synonym', '%s+%s' % (tag.name, synonym))
-                output_notes.append(note)
-                print('New syn %s' % synonym)
-            except exceptions.TagExists:
-                pass
+            tag.add_synonym(synonym)
+            note = ('new_synonym', '%s+%s' % (tag.name, synonym))
+            output_notes.append(note)
+            print('New syn %s' % synonym)
         return output_notes
 
     def generate_id(self, table):

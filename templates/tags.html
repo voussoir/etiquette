@@ -67,13 +67,13 @@ body
             {% for tag in tags %}
             {% set qualname = tag.qualified_name() %}
             <li>
-                <a target="_blank" class="tag_object" href="/search?tag_musts={{tag[1]}}">{{qualname}}</a><!--
-                --><button class="remove_tag_button" onclick="delete_tag('{{tag[0]}}', receive_callback);"></button>
+                <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualname}}</a><!--
+                --><button class="remove_tag_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
             </li>
             {% for synonym in tag.synonyms() %}
             <li>
-                <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualname + "+" + synonym}}</a>
-                <button class="remove_tag_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
+                <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualname + "+" + synonym}}</a><!--
+                --><button class="remove_tag_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
             </li>
             {% endfor %}
             {% endfor %}
@@ -136,7 +136,7 @@ function receive_callback(responses)
         if ("error_type" in response)
         {
             message_positivity = "message_negative";
-            message_text = '"' + tagname + '" ' + response["error_message"];
+            message_text = response["error_message"];
         }
         else if ("action" in response)
         {
