@@ -63,7 +63,6 @@ def delete_tag(tag):
 
 def delete_synonym(synonym):
     synonym = synonym.split('+')[-1].split('.')[-1]
-    synonym = P.normalize_tagname(synonym)
 
     try:
         master_tag = P.get_tag(synonym)
@@ -708,7 +707,7 @@ def post_tag_create_delete_core(tagname, function):
             'error_message': e.error_message,
         }
         status = 400
-    print(response)
+    #print(response)
 
     return jsonify.make_json_response(response, status=status)
 

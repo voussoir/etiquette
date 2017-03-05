@@ -928,7 +928,7 @@ class PDBTagMixin:
         tag = objects.Tag(self, [tagid, tagname])
         return tag
 
-    def normalize_tagname(self, tagname, warning_bag=None):
+    def normalize_tagname(self, tagname):
         '''
         Tag names can only consist of characters defined in the config.
         The given tagname is lowercased, gets its spaces and hyphens
@@ -943,20 +943,10 @@ class PDBTagMixin:
         tagname = ''.join(tagname)
 
         if len(tagname) < self.config['min_tag_name_length']:
-            exc = exceptions.TagTooShort(original_tagname)
-            if warning_bag is not None:
-                warning_bag.add(exc.error_message)
-                return None
-            else:
-                raise exc
+            raise exceptions.TagTooShort(original_tagname)
 
         elif len(tagname) > self.config['max_tag_name_length']:
-            exc = exceptions.TagTooLong(tagname)
-            if warning_bag is not None:
-                warning_bag.add(exc.error_message)
-                return None
-            else:
-                raise exc
+            raise exceptions.TagTooLong(tagname)
 
         else:
             return tagname
@@ -1280,7 +1270,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         '''
         output_notes = []
         def create_or_get(name):
-            print('cog', name)
+            #print('cog', name)
             try:
                 item = self.get_tag(name)
                 note = ('existing_tag', item.qualified_name())
