@@ -506,7 +506,6 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Thumbnailing %s' % self.real_filepath)
             try:
                 image = PIL.Image.open(self.real_filepath)
-                image = image.convert('RGB')
             except (OSError, ValueError):
                 pass
             else:
@@ -519,6 +518,20 @@ class Photo(ObjectBase):
                 )
                 if new_width < width:
                     image = image.resize((new_width, new_height))
+
+                if image.mode == 'RGBA':
+                    background = helpers.checkerboard_image(
+                        color_1=(256, 256, 256),
+                        color_2=(128, 128, 128),
+                        image_size=image.size,
+                        checker_size=8,
+                    )
+                    # Thanks Yuji Tomita
+                    # http://stackoverflow.com/a/9459208
+                    background.paste(image, mask=image.split()[3])
+                    image = background
+
+                image = image.convert('RGB')
                 image.save(hopeful_filepath, quality=50)
                 return_filepath = hopeful_filepath
 

@@ -2,6 +2,7 @@ import datetime
 import math
 import mimetypes
 import os
+import PIL.Image
 
 from . import constants
 from . import exceptions
@@ -67,6 +68,17 @@ def binding_filler(column_names, values, require_all=True):
     qmarks = ', '.join(qmarks)
     bindings = [values[column] for column in column_names]
     return (qmarks, bindings)
+
+def checkerboard_image(color_1, color_2, image_size, checker_size):
+    image = PIL.Image.new('RGB', image_size, color_1)
+    checker = PIL.Image.new('RGB', (checker_size, checker_size), color_2)
+    offset = True
+    for y in range(0, image_size[1], checker_size):
+        for x in range(0, image_size[0], checker_size * 2):
+            x += offset * checker_size
+            image.paste(checker, (x, y))
+        offset = not offset
+    return image
 
 def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
     '''
