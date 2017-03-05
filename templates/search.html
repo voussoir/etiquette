@@ -149,8 +149,8 @@ form
                 {% if search_kwargs[key] %}
                 {% for tagname in search_kwargs[key] %}
                 <li class="search_builder_{{tagtype}}_inputted">
-                    <span class="tag_object">{{tagname}}</span>
-                    <button class="remove_tag_button"
+                    <span class="tag_object">{{tagname}}</span><!--
+                    --><button class="remove_tag_button"
                     onclick="remove_searchtag(this, '{{tagname}}', inputted_{{tagtype}});"></button>
                 </li>
                 {% endfor %}
