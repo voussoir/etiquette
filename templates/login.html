@@ -103,7 +103,7 @@ function submit_login()
     var password = document.getElementById("login_input_password").value;
     if (username == "" || password == "")
     {
-        create_message_bubble(message_area, "message_negative", "Fill out the form yo", 8000);
+        create_message_bubble(message_area, "message_negative", "Fill out the form, yo.", 8000);
         return;
     }
     var url = "/login";
@@ -119,7 +119,7 @@ function submit_register()
     var password_2 = document.getElementById("register_input_password_2").value;
     if (username == "" || password_1 == "" || password_2 == "")
     {
-        create_message_bubble(message_area, "message_negative", "Fill out the form yo", 8000);
+        create_message_bubble(message_area, "message_negative", "Fill out the form, yo.", 8000);
         return;
     }
     var url = "/register";
@@ -131,9 +131,9 @@ function submit_register()
 }
 function receive_callback(response)
 {
-    if ("error" in response)
+    if ("error_type" in response)
     {
-        create_message_bubble(message_area, "message_negative", response["error"], 8000);
+        create_message_bubble(message_area, "message_negative", response["error_message"], 8000);
     }
     else
     {

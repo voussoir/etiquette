@@ -241,7 +241,11 @@ def post_register():
     password_2 = request.form['password_2']
 
     if password_1 != password_2:
-        return jsonify.make_json_response({'error': 'Passwords do not match'}, status=422)
+        response = {
+            'error_type': 'PASSWORDS_DONT_MATCH',
+            'error_message': 'Passwords do not match.',
+        }
+        return jsonify.make_json_response(response, status=422)
 
     try:
         user = P.register_user(username, password_1)
