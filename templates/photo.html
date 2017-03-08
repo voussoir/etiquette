@@ -19,45 +19,19 @@
 #left
 {
     display: flex;
-    padding: 8px;
     flex-direction: column;
-    justify-content: flex-start;
-    background-color: rgba(0, 0, 0, 0.1);
-    max-width: 300px;
 }
 #right
 {
     flex: 1;
     display: flex;
 }
-@media screen and (max-width: 800px)
+#editor_holder
 {
-    #content_body
-    {
-        /*
-        When flexing, it tries to contain itself entirely in the screen,
-        forcing #left and #right to squish together.
-        */
-        flex: none;
-        flex-direction: column-reverse;
-    }
-    #left
-    {
-        /*
-        Display: None will be overridden as soon as the page detects that the
-        screen is in narrow mode and turns off the tag box's autofocus
-        */
-        display: none;
-        flex-direction: row;
-        width: initial;
-        max-width: none;
-        margin-top: 8px;
-    }
-    #right
-    {
-        flex: none;
-        height: calc(100% - 20px);
-    }
+    max-width: 300px;
+    padding: 8px;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.1);
 }
 #editor_area
 {
@@ -66,9 +40,7 @@
 }
 #message_area
 {
-    overflow-y: auto;
     flex: 1;
-    background-color: rgba(0, 0, 0, 0.1);
 }
 .photo_viewer
 {
@@ -112,6 +84,46 @@
 {
     font-size: 11px;
 }
+@media screen and (max-width: 800px)
+{
+    #content_body
+    {
+        /*
+        When flexing, it tries to contain itself entirely in the screen,
+        forcing #left and #right to squish together.
+        */
+        flex: none;
+        flex-direction: column-reverse;
+    }
+    #left
+    {
+        /*
+        Display: None will be overridden as soon as the page detects that the
+        screen is in narrow mode and turns off the tag box's autofocus
+        */
+        display: none;
+        width: initial;
+        max-width: none;
+        margin-top: 8px;
+    }
+    #right
+    {
+        flex: none;
+        height: calc(100% - 20px);
+    }
+    #editor_holder
+    {
+        display: flex;
+        flex-direction: row;
+        max-width: none;
+    }
+    #message_area
+    {
+        flex: 2;
+        height: initial;
+        max-height: none;
+    }
+}
 </style>
 </head>
 
@@ -120,6 +132,7 @@
 {{header.make_header(session=session)}}
 <div id="content_body">
 <div id="left">
+    <div id="editor_holder">
     <div id="editor_area">
         <!-- TAG INFO -->
         <h4>Tags</h4>
@@ -148,7 +161,7 @@
         <ul id="metadata">
         {% if photo.author_id %}
             {% set author = photo.author() %}
-            <li>Author: <a href="/user/{{author.username}}">{{author.username}}</a>
+            <li>Author: <a href="/user/{{author.username}}">{{author.username}}</a></li>
         {% endif %}
         {% if photo.width %}
             <li>Dimensions: {{photo.width}}x{{photo.height}} px</li>
@@ -174,6 +187,7 @@
         </ul>
     </div>
     <div id="message_area">
+    </div>
     </div>
 </div>
 
@@ -236,10 +250,10 @@ function receive_callback(response)
     var message_text;
     var message_positivity;
     var tagname = response["tagname"];
-    if ("error" in response)
+    if ("error_type" in response)
     {
         message_positivity = "message_negative";
-        message_text = response["error"];
+        message_text = response["error_message"];
     }
     else
     {
