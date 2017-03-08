@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/static/common.css">
     <script src="/static/common.js"></script>
     {% set filename = photo.id + photo.dot_extension %}
-    {% set link = "/file/" + filename %}
+    {% set file_link = "/file/" + filename %}
 
 <style>
 #content_body
@@ -198,18 +198,18 @@
         <div id="photo_img_holder">
             <img
             id="photo_img"
-            src="{{link}}"
+            src="{{file_link}}"
             alt="{{photo.basename}}"
             onclick="toggle_hoverzoom()"
             onload="this.style.opacity=0.99"
             >
         </div>
         {% elif photo.simple_mimetype == "video" %}
-        <video src="{{link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
+        <video src="{{file_link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
         {% elif photo.simple_mimetype == "audio" %}
-        <audio src="{{link}}" controls></audio>
+        <audio src="{{file_link}}" controls></audio>
         {% else %}
-        <a href="{{link}}">View {{filename}}</a>
+        <a href="{{file_link}}">View {{filename}}</a>
         {% endif %}
     </div>
 </div>
@@ -295,7 +295,7 @@ function enable_hoverzoom()
     img.style.opacity = 0;
     img.style.display = "none";
     div.style.cursor = "zoom-out";
-    div.style.backgroundImage = "url('{{link}}')";
+    div.style.backgroundImage = "url('{{file_link}}')";
     div.onmousemove = move_hoverzoom;
     setTimeout(function(){div.onclick = disable_hoverzoom;}, 100);
     return true;
