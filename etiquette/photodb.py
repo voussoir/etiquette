@@ -884,6 +884,7 @@ class PDBTagMixin:
         if isinstance(tagname, objects.Tag):
             tagname = tagname.name
 
+        tagname = tagname.strip('.+')
         tagname = tagname.split('.')[-1].split('+')[0]
         tagname = self.normalize_tagname(tagname)
 

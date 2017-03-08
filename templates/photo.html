@@ -124,6 +124,10 @@
         <!-- TAG INFO -->
         <h4>Tags</h4>
         <ul id="this_tags">
+            <li>
+                <input id="add_tag_textbox" type="text" autofocus>
+                <button id="add_tag_button" class="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
+            </li>
             {% set tags = photo.sorted_tags() %}
             {% for tag in tags %}
             <li>
@@ -134,10 +138,6 @@
                 </button>
             </li>
             {% endfor %}
-            <li>
-                <input id="add_tag_textbox" type="text" autofocus>
-                <button id="add_tag_button" class="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
-            </li>
         </ul>
 
         <!-- METADATA & DOWNLOAD -->

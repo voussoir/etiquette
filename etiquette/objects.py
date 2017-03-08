@@ -357,7 +357,10 @@ class Bookmark(ObjectBase):
             self.url = url
 
         cur = self.photodb.sql.cursor()
-        cur.execute('UPDATE bookmarks SET title = ?, url = ? WHERE id == ?', [self.title, self.url, self.id])
+        cur.execute(
+            'UPDATE bookmarks SET title = ?, url = ? WHERE id == ?',
+            [self.title, self.url, self.id]
+        )
         if commit:
             self.photodb.log.debug('Committing - edit bookmark')
             self.photodb.sql.commit()
@@ -422,15 +425,15 @@ class Photo(ObjectBase):
         if self.has_tag(tag, check_children=False):
             return
 
-        # If the tag is above one we already have, keep our current one.
+        # If the new tag is less specific than one we already have,
+        # keep our current one.
         existing = self.has_tag(tag, check_children=True)
         if existing:
             message = 'Preferring existing {exi:s} over {tag:s}'.format(exi=existing, tag=tag)
             self.photodb.log.debug(message)
             return
 
-        # If the tag is beneath one we already have, remove our current one
-        # in favor of the new, more specific tag.
+        # If the new tag is more specific, remove our current one for it.
         for parent in tag.walk_parents():
             if self.has_tag(parent, check_children=False):
                 self.photodb.log.debug('Preferring new {tag:s} over {par:s}'.format(tag=tag, par=parent))
@@ -585,10 +588,11 @@ class Photo(ObjectBase):
 
     def has_tag(self, tag, *, check_children=True):
         '''
-        Return the Tag object if this photo contains that tag. Otherwise return False.
+        Return the Tag object if this photo contains that tag.
+        Otherwise return False.
 
         check_children:
-            If True, children of the requested tag are counted
+            If True, children of the requested tag are accepted.
         '''
         tag = self.photodb.get_tag(tag)
 
@@ -609,6 +613,9 @@ class Photo(ObjectBase):
         return False
 
     def make_thumbnail_filepath(self):
+        '''
+        Create the filepath that should be the location of our thumbnail.
+        '''
         chunked_id = helpers.chunk_sequence(self.id, 3)
         basename = chunked_id[-1]
         folder = chunked_id[:-1]
@@ -695,8 +702,10 @@ class Photo(ObjectBase):
     def rename_file(self, new_filename, *, move=False, commit=True):
         '''
         Rename the file on the disk as well as in the database.
-        If `move` is True, allow this operation to move the file.
-        Otherwise, slashes will be considered an error.
+
+        move:
+            If True, allow the file to be moved into another directory.
+            Otherwise, the rename must be local.
         '''
         old_path = self.real_path
         old_path.correct_case()
@@ -856,11 +865,15 @@ class Tag(ObjectBase, GroupableMixin):
         )
         for relationship in generator:
             photoid = relationship[constants.SQL_PHOTOTAG['photoid']]
-            query = 'SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid == ?'
-            cur.execute(query, [photoid, mastertag.id])
+            cur.execute(
+                'SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid == ?',
+                [photoid, mastertag.id]
+            )
             if cur.fetchone() is None:
-                query = 'INSERT INTO photo_tag_rel VALUES(?, ?)'
-                cur.execute(query, [photoid, mastertag.id])
+                cur.execute(
+                    'INSERT INTO photo_tag_rel VALUES(?, ?)',
+                    [photoid, mastertag.id]
+                )
 
         # Then delete the relationships with the old tag
         self.delete()
@@ -906,7 +919,10 @@ class Tag(ObjectBase, GroupableMixin):
             raise exceptions.NoSuchSynonym(synname)
 
         cur = self.photodb.sql.cursor()
-        cur.execute('SELECT * FROM tag_synonyms WHERE mastername == ? AND name == ?', [self.name, synname])
+        cur.execute(
+            'SELECT * FROM tag_synonyms WHERE mastername == ? AND name == ?',
+            [self.name, synname]
+        )
         fetch = cur.fetchone()
         if fetch is None:
             raise exceptions.NoSuchSynonym(synname)
