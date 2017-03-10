@@ -673,7 +673,7 @@ def post_photo_add_remove_tag_core(photoid, tagname, add_or_remove):
     elif add_or_remove == 'remove':
         photo.remove_tag(tag)
 
-    response = {'tagname': tagname}
+    response = {'tagname': tag.name}
     return jsonify.make_json_response(response)    
 
 @site.route('/photo/<photoid>/add_tag', methods=['POST'])

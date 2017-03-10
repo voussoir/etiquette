@@ -422,8 +422,9 @@ class Photo(ObjectBase):
     def add_tag(self, tag, *, commit=True):
         tag = self.photodb.get_tag(tag)
 
-        if self.has_tag(tag, check_children=False):
-            return
+        existing = self.has_tag(tag, check_children=False)
+        if existing:
+            return existing
 
         # If the new tag is less specific than one we already have,
         # keep our current one.
@@ -431,7 +432,7 @@ class Photo(ObjectBase):
         if existing:
             message = 'Preferring existing {exi:s} over {tag:s}'.format(exi=existing, tag=tag)
             self.photodb.log.debug(message)
-            return
+            return existing
 
         # If the new tag is more specific, remove our current one for it.
         for parent in tag.walk_parents():
@@ -447,6 +448,7 @@ class Photo(ObjectBase):
         if commit:
             self.photodb.log.debug('Committing - add photo tag')
             self.photodb.commit()
+        return tag
 
     def albums(self):
         '''
