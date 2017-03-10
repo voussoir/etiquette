@@ -21,7 +21,6 @@ class WithFormat(EtiquetteException):
         EtiquetteException.__init__(self, self.error_message)
 
 # NO SUCH
-@with_error_type
 class NoSuch(WithFormat):
     pass
 
@@ -94,7 +93,7 @@ class EasyBakeError(EtiquetteException):
         EtiquetteException.__init__(self)
 
 @with_error_type
-class RecursiveGrouping(EtiquetteException):
+class RecursiveGrouping(WithFormat):
     error_message = '{group} is an ancestor of {member}.'
 
 @with_error_type
