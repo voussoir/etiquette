@@ -230,6 +230,14 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.commit()
 
     def add_tag_to_all(self, tag, *, nested_children=True, commit=True):
+        '''
+        Add this tag to every photo in the album. Saves you from having to
+        write the for-loop yourself.
+
+        nested_children:
+            If True, add the tag to photos contained in sub-albums.
+            Otherwise, only local photos.
+        '''
         tag = self.photodb.get_tag(tag)
         if nested_children:
             photos = self.walk_photos()
@@ -253,6 +261,9 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.commit()
 
     def edit(self, title=None, description=None, *, commit=True):
+        '''
+        Change the title or description. Leave None to keep current value.
+        '''
         if title is None:
             title = self.title
         if description is None:
@@ -467,6 +478,9 @@ class Photo(ObjectBase):
         return bytestring.bytestring(self.bytes)
 
     def copy_tags(self, other_photo):
+        '''
+        Take all of the tags owned by other_photo and apply them to this photo.
+        '''
         for tag in other_photo.tags():
             self.add_tag(tag)
 

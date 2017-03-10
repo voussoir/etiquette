@@ -55,6 +55,17 @@ def binding_filler(column_names, values, require_all=True):
     Manually aligning question marks and bindings is annoying.
     Given the table's column names and a dictionary of {column: value},
     return the question marks and the list of bindings in the right order.
+
+    require_all:
+        If `values` does not contain one of the column names, should we raise
+        an exception?
+        Otherwise, that column will simply receive None.
+
+    Ex:
+    column_names=['id', 'name', 'score'],
+    values={'score': 20, 'id': '1111', 'name': 'James'}
+    ->
+    returns ('?, ?, ?, ?', ['1111', 'James', 20])
     '''
     values = values.copy()
     for column in column_names:
@@ -70,6 +81,19 @@ def binding_filler(column_names, values, require_all=True):
     return (qmarks, bindings)
 
 def checkerboard_image(color_1, color_2, image_size, checker_size):
+    '''
+    Generate a PIL Image with a checkerboard pattern.
+
+    color_1:
+        The color starting in the top left. Either RGB tuple or a string
+        that PIL understands.
+    color_2:
+        The alternate color
+    image_size:
+        Tuple of two integers, the image size in pixels.
+    checker_size:
+        Tuple of two integers, the size of each checker in pixels.
+    '''
     image = PIL.Image.new('RGB', image_size, color_1)
     checker = PIL.Image.new('RGB', (checker_size, checker_size), color_2)
     offset = True
@@ -143,6 +167,9 @@ def fit_into_bounds(image_width, image_height, frame_width, frame_height):
     return (new_width, new_height)
 
 def get_mimetype(filepath):
+    '''
+    Extension to mimetypes.guess_type which uses my constants.ADDITIONAL_MIMETYPES.
+    '''
     extension = os.path.splitext(filepath)[1].replace('.', '')
     if extension in constants.ADDITIONAL_MIMETYPES:
         return constants.ADDITIONAL_MIMETYPES[extension]
@@ -154,7 +181,8 @@ def hyphen_range(s):
     Given a string like '1-3', return numbers (1, 3) representing lower
     and upper bounds.
 
-    Supports bytestring.parsebytes and hh:mm:ss format.
+    Supports bytestring.parsebytes and hh:mm:ss format, for example
+    '1k-2k', '10:00-20:00', '4gib-'
     '''
     s = s.strip()
     s = s.replace(' ', '')
@@ -280,12 +308,19 @@ def select_generator(sql, query, bindings=None):
         yield fetch
 
 def truthystring(s):
+    '''
+    Convert strings to True, False, or None based on the options presented
+    in constants.TRUTHYSTRING_TRUE, constants.TRUTHYSTRING_NONE, or False
+    for all else.
+
+    Case insensitive.
+    '''
     if isinstance(s, (bool, int)) or s is None:
         return s
     s = s.lower()
-    if s in {'1', 'true', 't', 'yes', 'y', 'on'}:
+    if s in constants.TRUTHYSTRING_TRUE:
         return True
-    if s in {'null', 'none'}:
+    if s in constants.TRUTHYSTRING_NONE:
         return None
     return False
 

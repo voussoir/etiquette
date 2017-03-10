@@ -112,7 +112,9 @@ WARNING_ORDERBY_BADCOL = '"{column}" is not a sorting option. Ignored.'
 WARNING_ORDERBY_BADDIRECTION = 'You can\'t order "{column}" by "{direction}". Defaulting to descending.'
 
 # Operational info
-EXPRESSION_OPERATORS = {'(', ')', 'OR', 'AND', 'NOT'}
+TRUTHYSTRING_TRUE = {s.lower() for s in ('1', 'true', 't', 'yes', 'y', 'on')}
+TRUTHYSTRING_NONE = {s.lower() for s in ('null', 'none')}
+
 ADDITIONAL_MIMETYPES = {
     '7z': 'archive',
     'gz': 'archive',

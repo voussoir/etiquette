@@ -145,33 +145,6 @@ def _helper_filenamefilter(subject, terms):
     basename = subject.lower()
     return all(term in basename for term in terms)
 
-def operate(operand_stack, operator_stack):
-    #print('before:', operand_stack, operator_stack)
-    operator = operator_stack.pop()
-    if operator == 'NOT':
-        operand = operand_stack.pop()
-        value = operand ^ 1
-    else:
-        right = operand_stack.pop()
-        left = operand_stack.pop()
-        if operator == 'OR':
-            value = left | right
-        elif operator == 'AND':
-            value = left & right
-        else:
-            raise ValueError('werwer')
-    operand_stack.append(value)
-    #print('after:', operand_stack, operator_stack)
-
-# def raise_no_such_thing(exception_class, thing_id=None, thing_name=None, comment=''):
-#     if thing_id is not None:
-#         message = 'ID: %s. %s' % (thing_id, comment)
-#     elif thing_name is not None:
-#         message = 'Name: %s. %s' % (thing_name, comment)
-#     else:
-#         message = ''
-#     raise exception_class(message)
-
 def searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, frozen_children):
     if tag_musts and not all(any(option in photo_tags for option in frozen_children[must]) for must in tag_musts):
         #print('Failed musts')
