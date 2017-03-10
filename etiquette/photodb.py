@@ -987,7 +987,7 @@ class PDBUserMixin:
         if fetch is not None:
             return objects.User(self, fetch)
         else:
-            raise exceptions.NoSuchUser(username)
+            raise exceptions.NoSuchUser(username or id)
 
     def get_user_id_or_none(self, user):
         '''
