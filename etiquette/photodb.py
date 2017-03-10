@@ -105,8 +105,8 @@ CREATE INDEX IF NOT EXISTS index_albumrel_albumid on album_photo_rel(albumid);
 CREATE INDEX IF NOT EXISTS index_albumrel_photoid on album_photo_rel(photoid);
 
 -- Album-group relation
-CREATE INDEX IF NOT EXISTS index_albumgroup_parentid on tag_group_rel(parentid);
-CREATE INDEX IF NOT EXISTS index_albumgroup_memberid on tag_group_rel(memberid);
+CREATE INDEX IF NOT EXISTS index_albumgroup_parentid on album_group_rel(parentid);
+CREATE INDEX IF NOT EXISTS index_albumgroup_memberid on album_group_rel(memberid);
 
 -- Bookmark
 CREATE INDEX IF NOT EXISTS index_bookmark_id on bookmarks(id);

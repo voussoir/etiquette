@@ -84,8 +84,8 @@ def upgrade_5_to_6(sql):
     # 3. All of the album group relationships need to be moved into their
     # own table, out of tag_group_rel
     cur.execute('CREATE TABLE album_group_rel(parentid TEXT, memberid TEXT)')
-    cur.execute('CREATE INDEX index_albumgroup_parentid ON tag_group_rel(parentid)')
-    cur.execute('CREATE INDEX index_albumgroup_memberid ON tag_group_rel(memberid)')
+    cur.execute('CREATE INDEX index_albumgroup_parentid ON album_group_rel(parentid)')
+    cur.execute('CREATE INDEX index_albumgroup_memberid ON album_group_rel(memberid)')
     cur.execute('SELECT id FROM albums')
     album_ids = [f[0] for f in cur.fetchall()]
     for album_id in album_ids:
