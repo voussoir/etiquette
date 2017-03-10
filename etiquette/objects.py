@@ -47,6 +47,7 @@ class GroupableMixin:
             raise TypeError('Member must be of type %s' % type(self))
 
         self.photodb.log.debug('Adding child %s to %s' % (member, self))
+
         # Groupables are only allowed to have 1 parent.
         # Unlike photos which can exist in multiple albums.
         cur = self.photodb.sql.cursor()
@@ -58,13 +59,12 @@ class GroupableMixin:
         if fetch is not None:
             parent_id = fetch[self.group_sql_index['parentid']]
             if parent_id == self.id:
-                that_group = self
-            else:
-                that_group = self.group_getter(id=parent_id)
+                return
+            that_group = self.group_getter(id=parent_id)
             raise exceptions.GroupExists(member=member, group=that_group)
 
-        for parent in self.walk_parents():
-            if parent == member:
+        for my_ancestor in self.walk_parents():
+            if my_ancestor == member:
                 raise exceptions.RecursiveGrouping(member=member, group=self)
 
         self.photodb._cached_frozen_children = None
