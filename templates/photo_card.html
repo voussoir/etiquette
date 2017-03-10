@@ -60,7 +60,7 @@
                 {{photo.width}}&times;{{photo.height}},
             {% endif %}
             {% if photo.duration %}
-                {{photo.duration_string()}},
+                {{photo.duration_string}},
             {% endif %}
             <a target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
             </span>

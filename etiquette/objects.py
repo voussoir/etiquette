@@ -505,6 +505,7 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Committing - delete photo')
             self.photodb.commit()
 
+    @property
     def duration_string(self):
         if self.duration is None:
             return None

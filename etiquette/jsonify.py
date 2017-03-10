@@ -33,7 +33,7 @@ def photo(p, include_albums=True, include_tags=True):
         'ratio': p.ratio,
         'area': p.area,
         'bytes': p.bytes,
-        'duration_str': p.duration_string(),
+        'duration_str': p.duration_string,
         'duration': p.duration,
         'bytes_str': p.bytestring(),
         'has_thumbnail': bool(p.thumbnail),
