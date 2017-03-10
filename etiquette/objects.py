@@ -757,7 +757,7 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Committing - rename file')
             self.photodb.commit()
         else:
-            queue_action = {'action': args, 'args': args}
+            queue_action = {'action': action, 'args': args}
             self.photodb.on_commit_queue.append(queue_action)
 
         self.__reinit__()

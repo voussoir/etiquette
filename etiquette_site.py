@@ -585,6 +585,7 @@ def get_tags_core(specific_tag=None):
     else:
         tags = specific_tag.walk_children()
     tags = list(tags)
+    tags.sort(key=lambda x: x.qualified_name())
     return tags
 
 @site.route('/tags')
