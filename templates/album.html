@@ -3,7 +3,7 @@
 <head>
     {% import "photo_card.html" as photo_card %}
     {% import "header.html" as header %}
-    <title>Album {{album.title}}</title>
+    <title>Album {{album.display_name}}</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
 
@@ -28,7 +28,7 @@ p
     <p>{{album.description}}</p>
     {% set parent=album.parent() %}
     {% if parent %}
-    <h3>Parent: <a href="/album/{{parent.id}}">{{parent.id + " " + parent.title}}</a></h3>
+    <h3>Parent: <a href="/album/{{parent.id}}">{{parent.display_name}}</a></h3>
     {% else %}
     <h3>Parent: <a href="/albums">Albums</a></h3>
     {% endif %}
@@ -37,12 +37,7 @@ p
     <h3>Sub-albums</h3>
     <ul>
         {% for sub_album in sub_albums|sort(attribute='title') %}
-        <li><a href="/album/{{sub_album.id}}">
-            {% if sub_album.title %}
-            {{sub_album.title}}
-            {% else %}
-            {{sub_album.id}}
-            {% endif %}</a>
+        <li><a href="/album/{{sub_album.id}}">{{sub_album.display_name}}</a>
         </li>
         {% endfor %}
     </ul>

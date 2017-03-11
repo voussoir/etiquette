@@ -181,7 +181,7 @@
         <h4>Albums containing this photo</h4>
         <ul id="containing albums">
             {% for album in albums %}
-            <li><a href="/album/{{album.id}}">{{album.title}}</a></li>
+            <li><a href="/album/{{album.id}}">{{album.display_name}}</a></li>
             {% endfor %}
         {% endif %}
         </ul>

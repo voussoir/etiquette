@@ -350,6 +350,7 @@ def get_album_zip(albumid):
 def get_albums_core():
     albums = P.get_albums()
     albums = [a for a in albums if a.parent() is None]
+    albums.sort(key=lambda x: x.display_name.lower())
     return albums
 
 @site.route('/albums')

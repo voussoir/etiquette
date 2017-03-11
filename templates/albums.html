@@ -19,12 +19,7 @@
 {{header.make_header(session=session)}}
 <div id="content_body">
     {% for album in albums %}
-    {% if album.title %}
-    {% set title=album.id + " " + album.title %}
-    {% else %}
-    {% set title=album.id %}
-    {% endif %}
-    <div><a href="/album/{{album.id}}">{{album.id + " " + album.title}}</a></div>
+    <div><a href="/album/{{album.id}}">{{album.display_name}}</a></div>
     {% endfor %}
 </div>
 </body>

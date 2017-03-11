@@ -260,6 +260,13 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - delete album')
             self.photodb.commit()
 
+    @property
+    def display_name(self):
+        if self.title:
+            return self.title
+        else:
+            return self.id
+
     def edit(self, title=None, description=None, *, commit=True):
         '''
         Change the title or description. Leave None to keep current value.
