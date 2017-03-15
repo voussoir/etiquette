@@ -576,7 +576,9 @@ def get_search_html():
 @session_manager.give_token
 def get_search_json():
     search_results = get_search_core()
-    search_results['photos'] = [jsonify.photo(photo, include_albums=False) for photo in search_results['photos']]
+    search_results['photos'] = [
+        jsonify.photo(photo, include_albums=False) for photo in search_results['photos']
+    ]
     return jsonify.make_json_response(search_results)
 
 

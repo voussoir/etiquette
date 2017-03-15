@@ -204,7 +204,7 @@ class Album(ObjectBase, GroupableMixin):
     def __init__(self, photodb, db_row):
         self.photodb = photodb
         if isinstance(db_row, (list, tuple)):
-            db_row = {constants.SQL_ALBUM_COLUMNS[index]: value for (index, value) in enumerate(db_row)}
+            db_row = helpers.parallel_to_dict(constants.SQL_ALBUM_COLUMNS, db_row)
         self.id = db_row['id']
         self.title = db_row['title']
         self.description = db_row['description']
@@ -348,7 +348,7 @@ class Bookmark(ObjectBase):
     def __init__(self, photodb, db_row):
         self.photodb = photodb
         if isinstance(db_row, (list, tuple)):
-            db_row = {constants.SQL_BOOKMARK_COLUMNS[index]: value for (index, value) in enumerate(db_row)}
+            db_row = helpers.parallel_to_dict(constants.SQL_BOOKMARK_COLUMNS, db_row)
 
         self.id = db_row['id']
         self.title = db_row['title']
@@ -393,7 +393,7 @@ class Photo(ObjectBase):
     def __init__(self, photodb, db_row):
         self.photodb = photodb
         if isinstance(db_row, (list, tuple)):
-            db_row = {constants.SQL_PHOTO_COLUMNS[index]: value for (index, value) in enumerate(db_row)}
+            db_row = helpers.parallel_to_dict(constants.SQL_PHOTO_COLUMNS, db_row)
 
         self.real_filepath = helpers.normalize_filepath(db_row['filepath'], allowed=':\\/')
         self.real_path = pathclass.Path(self.real_filepath)
@@ -455,7 +455,8 @@ class Photo(ObjectBase):
         # If the new tag is more specific, remove our current one for it.
         for parent in tag.walk_parents():
             if self.has_tag(parent, check_children=False):
-                self.photodb.log.debug('Preferring new {tag:s} over {par:s}'.format(tag=tag, par=parent))
+                message = 'Preferring new {tag:s} over {par:s}'.format(tag=tag, par=parent)
+                self.photodb.log.debug(message)
                 self.remove_tag(parent)
 
         self.photodb.log.debug('Applying tag {tag:s} to photo {pho:s}'.format(tag=tag, pho=self))
@@ -818,7 +819,7 @@ class Tag(ObjectBase, GroupableMixin):
     def __init__(self, photodb, db_row):
         self.photodb = photodb
         if isinstance(db_row, (list, tuple)):
-            db_row = {constants.SQL_TAG_COLUMNS[index]: value for (index, value) in enumerate(db_row)}
+            db_row = helpers.parallel_to_dict(constants.SQL_TAG_COLUMNS, db_row)
         self.id = db_row['id']
         self.name = db_row['name']
         self.group_getter = self.photodb.get_tag
@@ -1003,7 +1004,7 @@ class User(ObjectBase):
     def __init__(self, photodb, db_row):
         self.photodb = photodb
         if isinstance(db_row, (list, tuple)):
-            db_row = {constants.SQL_USER_COLUMNS[index]: value for (index, value) in enumerate(db_row)}
+            db_row = helpers.parallel_to_dict(constants.SQL_USER_COLUMNS, db_row)
         self.id = db_row['id']
         self.username = db_row['username']
         self.created = db_row['created']

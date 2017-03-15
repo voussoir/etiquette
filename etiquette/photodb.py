@@ -146,17 +146,32 @@ def _helper_filenamefilter(subject, terms):
     return all(term in basename for term in terms)
 
 def searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, frozen_children):
-    if tag_musts and not all(any(option in photo_tags for option in frozen_children[must]) for must in tag_musts):
-        #print('Failed musts')
-        return False
+    if tag_musts:
+        for must in tag_musts:
+            for option in frozen_children[must]:
+                if option in photo_tags:
+                    break
+            else:
+                # Fail when ANY of the tags fails to find an option.
+                return False
 
-    if tag_mays and not any(option in photo_tags for may in tag_mays for option in frozen_children[may]):
-        #print('Failed mays')
-        return False
+    if tag_mays:
+        for may in tag_mays:
+            for option in frozen_children[may]:
+                if option in photo_tags:
+                    break
+            else:
+                continue
+            break
+        else:
+            # Fail when ALL of the tags fail to find an option.
+            return False
 
-    if tag_forbids and any(option in photo_tags for forbid in tag_forbids for option in frozen_children[forbid]):
-        #print('Failed forbids')
-        return False
+    if tag_forbids:
+        for tag in tag_forbids:
+            for option in frozen_children[forbid]:
+                if option in photo_tags:
+                    return False
 
     return True
 
@@ -609,9 +624,14 @@ class PDBPhotoMixin:
             tag_forbids = None
             tag_expression = None    
         else:
-            tag_musts = searchhelpers.normalize_tag_mmf(photodb=self, tags=tag_musts, warning_bag=warning_bag)
-            tag_mays = searchhelpers.normalize_tag_mmf(photodb=self, tags=tag_mays, warning_bag=warning_bag)
-            tag_forbids = searchhelpers.normalize_tag_mmf(photodb=self, tags=tag_forbids, warning_bag=warning_bag)
+            _helper = lambda tagset: searchhelpers.normalize_tag_mmf(
+                photodb=self,
+                tags=tagset,
+                warning_bag=warning_bag
+            )
+            tag_musts = _helper(tag_musts)
+            tag_mays = _helper(tag_mays)
+            tag_forbids = _helper(tag_forbids)
             tag_expression = searchhelpers.normalize_tag_expression(tag_expression)
 
         #print(tag_musts, tag_mays, tag_forbids)
@@ -710,7 +730,10 @@ class PDBPhotoMixin:
         if tag_expression:
             expression_tree = expressionmatch.ExpressionTree.parse(tag_expression)
             expression_tree.map(self.normalize_tagname)
-            expression_matcher = searchhelpers.tag_expression_matcher_builder(frozen_children, warning_bag)
+            expression_matcher = searchhelpers.tag_expression_matcher_builder(
+                frozen_children,
+                warning_bag=warning_bag,
+            )
             for node in expression_tree.walk_leaves():
                 if node.token in frozen_children:
                     continue
@@ -1000,10 +1023,16 @@ class PDBUserMixin:
 
     def register_user(self, username, password, commit=True):
         if len(username) < self.config['min_username_length']:
-            raise exceptions.UsernameTooShort(username=username, min_length=self.config['min_username_length'])
+            raise exceptions.UsernameTooShort(
+                username=username,
+                min_length=self.config['min_username_length']
+            )
 
         if len(username) > self.config['max_username_length']:
-            raise exceptions.UsernameTooLong(username=username, max_length=self.config['max_username_length'])
+            raise exceptions.UsernameTooLong(
+                username=username,
+                max_length=self.config['max_username_length']
+            )
 
         badchars = [c for c in username if c not in self.config['valid_username_chars']]
         if badchars:

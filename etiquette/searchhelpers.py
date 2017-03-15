@@ -260,7 +260,10 @@ def normalize_orderby(orderby, warning_bag=None):
             column = 'RANDOM()'
 
         if direction not in ('asc', 'desc'):
-            message = constants.WARNING_ORDERBY_BADDIRECTION.format(column=column, direction=direction)
+            message = constants.WARNING_ORDERBY_BADDIRECTION.format(
+                column=column,
+                direction=direction,
+            )
             if warning_bag:
                 warning_bag.add(message)
             else:
