@@ -3,6 +3,15 @@ Etiquette
 
 I am currently running a demonstration copy of Etiquette at http://etiquette.voussoir.net where you can browse around. This is not yet permanent.
 
+### What am I looking at
+
+Etiquette is a tag-based file organization system with a web front-end.
+
+Documentation is still a work in progress. In general, I use:
+
+- `python etiquette_site_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
+- `python -i etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
+
 ### To do list
 - Make the wording between "new", "create", "add"; and "remove", "delete" more consistent.
 - User account system, permission levels, private pages.
