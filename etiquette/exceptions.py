@@ -6,155 +6,130 @@ def pascal_to_loudsnakes(text):
     text = text.upper()
     return text
 
-def with_error_type(cls):
-    cls.error_type = pascal_to_loudsnakes(cls.__name__)
-    return cls
 
-class EtiquetteException(Exception):
+class ErrorTypeAdder(type):
+    '''
+    Thanks Unutbu
+    http://stackoverflow.com/a/18126678
+    '''
+    def __init__(cls, name, bases, clsdict):
+        type.__init__(cls, name, bases, clsdict)
+        cls.error_type = pascal_to_loudsnakes(name)
+
+class EtiquetteException(Exception, metaclass=ErrorTypeAdder):
     error_message = ''
-
-class WithFormat(EtiquetteException):
     def __init__(self, *args, **kwargs):
         self.given_args = args
         self.given_kwargs = kwargs
         self.error_message = self.error_message.format(*args, **kwargs)
-        EtiquetteException.__init__(self, self.error_message)
+
 
 # NO SUCH
-class NoSuch(WithFormat):
+class NoSuch(EtiquetteException):
     pass
 
-@with_error_type
 class NoSuchAlbum(NoSuch):
     error_message = 'Album "{}" does not exist.'
 
-@with_error_type
 class NoSuchBookmark(NoSuch):
     error_message = 'Bookmark "{}" does not exist.'
 
-@with_error_type
 class NoSuchGroup(NoSuch):
     error_message = 'Group "{}" does not exist.'
 
-@with_error_type
 class NoSuchPhoto(NoSuch):
     error_message = 'Photo "{}" does not exist.'
 
-@with_error_type
 class NoSuchSynonym(NoSuch):
     error_message = 'Synonym "{}" does not exist.'
 
-@with_error_type
 class NoSuchTag(NoSuch):
     error_message = 'Tag "{}" does not exist.'
 
-@with_error_type
 class NoSuchUser(NoSuch):
     error_message = 'User "{}" does not exist.'
 
 
 # EXISTS
-@with_error_type
-class AlbumExists(WithFormat):
+class AlbumExists(EtiquetteException):
     error_message = 'Album "{}" already exists.'
     def __init__(self, album):
         self.album = album
-        WithFormat.__init__(self, album.id)
+        EtiquetteException.__init__(self, album.id)
 
-@with_error_type
-class GroupExists(WithFormat):
+class GroupExists(EtiquetteException):
     error_message = '{member} already in group {group}'
 
-@with_error_type
-class PhotoExists(WithFormat):
+class PhotoExists(EtiquetteException):
     error_message = 'Photo "{}" already exists.'
     def __init__(self, photo):
         self.photo = photo
-        WithFormat.__init__(self, photo.id)
+        EtiquetteException.__init__(self, photo.id)
 
-@with_error_type
-class TagExists(WithFormat):
+class TagExists(EtiquetteException):
     error_message = 'Tag "{}" already exists.'
     def __init__(self, tag):
         self.tag = tag
-        WithFormat.__init__(self, tag.name)
+        EtiquetteException.__init__(self, tag.name)
 
-@with_error_type
-class UserExists(WithFormat):
+class UserExists(EtiquetteException):
     error_message = 'User "{}" already exists.'
     def __init__(self, user):
         self.user = user
-        WithFormat.__init__(self, user.username)
+        EtiquetteException.__init__(self, user.username)
 
 
 # TAG ERRORS
-@with_error_type
 class CantSynonymSelf(EtiquetteException):
     error_message = 'Cannot apply synonym to self.'
 
-@with_error_type
 class EasyBakeError(EtiquetteException):
-    error_message = ''
-    def __init__(self, message):
-        self.error_message = message
-        EtiquetteException.__init__(self)
+    error_message = '{}'
 
-@with_error_type
-class RecursiveGrouping(WithFormat):
+class RecursiveGrouping(EtiquetteException):
     error_message = '{group} is an ancestor of {member}.'
 
-@with_error_type
-class TagTooLong(WithFormat):
+class TagTooLong(EtiquetteException):
     error_message = 'Tag "{}" is too long.'
 
-@with_error_type
-class TagTooShort(WithFormat):
+class TagTooShort(EtiquetteException):
     error_message = 'Tag "{}" has too few valid characters.'
 
 
 # USER ERRORS
-@with_error_type
 class AlreadySignedIn(EtiquetteException):
     error_message = 'You\'re already signed in.'
 
-@with_error_type
-class InvalidUsernameChars(WithFormat):
+class InvalidUsernameChars(EtiquetteException):
     error_message = 'Username "{username}" contains invalid characters: {badchars}.'
 
-@with_error_type
-class PasswordTooShort(WithFormat):
+class PasswordTooShort(EtiquetteException):
     error_message = 'Password is shorter than the minimum of {min_length}.'
 
-@with_error_type
-class UsernameTooLong(WithFormat):
+class UsernameTooLong(EtiquetteException):
     error_message = 'Username "{username}" is longer than maximum of {max_length}.'
 
-@with_error_type
-class UsernameTooShort(WithFormat):
+class UsernameTooShort(EtiquetteException):
     error_message = 'Username "{username}" is shorter than minimum of {min_length}.'
 
-@with_error_type
 class WrongLogin(EtiquetteException):
     error_message = 'Wrong username-password combination.'
 
 
 # GENERAL ERRORS
-@with_error_type
 class FeatureDisabled(EtiquetteException):
     '''
     For when features of the system have been disabled by the configuration.
     '''
     error_message = 'This feature has been disabled.'
 
-@with_error_type
 class NotExclusive(EtiquetteException):
     '''
     For when two or more mutually exclusive actions have been requested.
     '''
     pass
 
-@with_error_type
-class OutOfOrder(WithFormat):
+class OutOfOrder(EtiquetteException):
     '''
     For when a requested minmax range (a, b) has b > a
     '''
