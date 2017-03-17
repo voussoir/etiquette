@@ -281,6 +281,9 @@ class PDBAlbumMixin:
         '''
         Create a new album. Photos can be added now or later.
         '''
+        if not self.config['enable_new_album']:
+            raise exceptions.FeatureDisabled('new_album')
+
         albumid = self.generate_id('albums')
         title = title or ''
         description = description or ''
@@ -332,6 +335,9 @@ class PDBBookmarkMixin:
         yield from self.get_things(thing_type='bookmark')
 
     def new_bookmark(self, url, title=None, *, author=None, commit=True):
+        if not self.config['enable_new_bookmark']:
+            raise exceptions.FeatureDisabled('new_bookmark')
+
         if not url:
             raise ValueError('Must provide a URL')
 
@@ -418,6 +424,9 @@ class PDBPhotoMixin:
 
         Returns the Photo object.
         '''
+        if not self.config['enable_new_photo']:
+            raise exceptions.FeatureDisabled('new_photo')
+
         filename = os.path.abspath(filename)
         if not os.path.isfile(filename):
             raise FileNotFoundError(filename)
@@ -907,6 +916,9 @@ class PDBTagMixin:
         '''
         Register a new tag and return the Tag object.
         '''
+        if not self.config['enable_new_tag']:
+            raise exceptions.FeatureDisabled('new_tag')
+
         tagname = self.normalize_tagname(tagname)
         try:
             existing_tag = self.get_tag_by_name(tagname)
@@ -1022,6 +1034,9 @@ class PDBUserMixin:
         return objects.User(self, fetch)
 
     def register_user(self, username, password, commit=True):
+        if not self.config['enable_new_user']:
+            raise exceptions.FeatureDisabled('new_user')
+
         if len(username) < self.config['min_username_length']:
             raise exceptions.UsernameTooShort(
                 username=username,

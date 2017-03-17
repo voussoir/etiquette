@@ -142,6 +142,12 @@ DEFAULT_DATADIR = '.\\_etiquette'
 DEFAULT_CONFIGURATION = {
     'log_level': logging.DEBUG,
 
+    'enable_new_album': True,
+    'enable_new_bookmark': True,
+    'enable_new_photo': True,
+    'enable_new_tag': True,
+    'enable_new_user': True,
+
     'min_tag_name_length': 1,
     'max_tag_name_length': 32,
     'valid_tag_chars': string.ascii_lowercase + string.digits + '_',

@@ -129,6 +129,13 @@ class WrongLogin(EtiquetteException):
 
 # GENERAL ERRORS
 @with_error_type
+class FeatureDisabled(EtiquetteException):
+    '''
+    For when features of the system have been disabled by the configuration.
+    '''
+    error_message = 'This feature has been disabled.'
+
+@with_error_type
 class NotExclusive(EtiquetteException):
     '''
     For when two or more mutually exclusive actions have been requested.
