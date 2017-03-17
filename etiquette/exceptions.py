@@ -114,6 +114,10 @@ class TagTooShort(WithFormat):
 
 # USER ERRORS
 @with_error_type
+class AlreadySignedIn(EtiquetteException):
+    error_message = 'You\'re already signed in.'
+
+@with_error_type
 class InvalidUsernameChars(WithFormat):
     error_message = 'Username "{username}" contains invalid characters: {badchars}.'
 

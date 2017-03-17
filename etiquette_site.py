@@ -216,7 +216,9 @@ def get_register():
 @decorators.required_fields(['username', 'password'])
 def post_login():
     if session_manager.get(request):
-        return jsonify.make_json_response({'error': 'You\'re already signed in'}, status=403)
+        e = exceptions.AlreadySignedIn()
+        response = {'error_type': e.error_type, 'error_message': e.error_message}
+        return jsonify.make_json_response(response, status=403)
 
     username = request.form['username']
     password = request.form['password']
@@ -224,7 +226,9 @@ def post_login():
         user = P.get_user(username=username)
         user = P.login(user.id, password)
     except (exceptions.NoSuchUser, exceptions.WrongLogin):
-        return jsonify.make_json_response({'error': 'Wrong login'}, status=422)
+        e = exceptions.WrongLogin()
+        response = {'error_type': e.error_type, 'error_message': e.error_message}
+        return jsonify.make_json_response(response, status=422)
     session = sessions.Session(request, user)
     session_manager.add(session)
     return jsonify.make_json_response({})
@@ -234,7 +238,9 @@ def post_login():
 @decorators.required_fields(['username', 'password_1', 'password_2'])
 def post_register():
     if session_manager.get(request):
-        return jsonify.make_json_response({'error': 'You\'re already signed in'}, status=403)
+        e = exceptions.AlreadySignedIn()
+        response = {'error_type': e.error_type, 'error_message': e.error_message}
+        return jsonify.make_json_response(response, status=403)
 
     username = request.form['username']
     password_1 = request.form['password_1']
@@ -656,8 +662,8 @@ def post_album_add_tag(albumid):
     tag = request.form['tagname'].strip()
     try:
         tag = P_tag(tag)
-    except exceptions.NoSuchTag:
-        response = {'error': 'That tag doesnt exist', 'tagname': tag}
+    except exceptions.NoSuchTag as e:
+        response = {'error_type': e.error_type, 'error_message': e.error_message}
         return jsonify.make_json_response(response, status=404)
     recursive = request.form.get('recursive', False)
     recursive = helpers.truthystring(recursive)
