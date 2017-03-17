@@ -152,6 +152,8 @@ DEFAULT_CONFIGURATION = {
     'enable_new_tag': True,
     'enable_new_user': True,
     'enable_photo_add_remove_tag': True,
+    'enable_photo_reload_metadata': True,
+    'enable_photo_generate_thumbnail': True,
 
     'min_tag_name_length': 1,
     'max_tag_name_length': 32,

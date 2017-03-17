@@ -528,6 +528,9 @@ class Photo(ObjectBase):
         special:
             For videos, you can provide a `timestamp` to take the thumbnail from.
         '''
+        if not self.photodb.config['enable_photo_generate_thumbnail']:
+            raise exceptions.FeatureDisabled('photo.generate_thumbnail')
+
         hopeful_filepath = self.make_thumbnail_filepath()
         hopeful_filepath = hopeful_filepath.relative_path
         #print(hopeful_filepath)
@@ -659,6 +662,9 @@ class Photo(ObjectBase):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
         '''
+        if not self.photodb.config['enable_photo_reload_metadata']:
+            raise exceptions.FeatureDisabled('photo.reload_metadata')
+
         self.bytes = os.path.getsize(self.real_filepath)
         self.width = None
         self.height = None
