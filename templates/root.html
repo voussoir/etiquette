@@ -6,21 +6,24 @@
     <link rel="stylesheet" href="/static/common.css">
 
 <style>
-body, a
+body, .nice_link
 {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
 }
-a
+.nice_link, .plain_link
+{
+    margin: 8px;
+    height: 40px;
+}
+.nice_link
 {
     width: 50%;
-    height: 40px;
     background-color: rgba(0, 0, 0, 0.1);
-    margin: 8px;
 }
-a:hover
+.nice_link:hover
 {
     background-color: #ffffd4;
 }
@@ -30,15 +33,16 @@ a:hover
 
 <body>
     <span>{{motd}}</span>
-    <a href="/search">Search</a>
-    <a href="/tags">Browse tags</a>
-    <a href="/albums">Browse albums</a>
-    <a href="/bookmarks">Bookmarks</a>
+    <a class="nice_link" href="/search">Search</a>
+    <a class="nice_link" href="/tags">Browse tags</a>
+    <a class="nice_link" href="/albums">Browse albums</a>
+    <a class="nice_link" href="/bookmarks">Bookmarks</a>
     {% if session %}
-    <a href="/user/{{session.user.username}}">{{session.user.username}}</a>
+    <a class="nice_link" href="/user/{{session.user.username}}">{{session.user.username}}</a>
     {% else %}
-    <a href="/login">Log in</a>
+    <a class="nice_link" href="/login">Log in</a>
     {% endif %}
+    <a class="plain_link" href="http://www.github.com/voussoir/etiquette">GitHub</a>
 </body>
 
 
