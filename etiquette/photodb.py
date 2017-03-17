@@ -1175,16 +1175,21 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         self.sql.commit()
 
         # CONFIG
-        self.config_file = self.data_directory.with_child('config.json')
         self.config = copy.deepcopy(constants.DEFAULT_CONFIGURATION)
-        if self.config_file.is_file:
-            with open(self.config_file.absolute_path, 'r') as handle:
+        self.config_filepath = self.data_directory.with_child('config.json')
+        user_config_exists = self.config_filepath.is_file
+        if user_config_exists:
+            with open(self.config_filepath.absolute_path, 'r') as handle:
                 user_config = json.load(handle)
+            needs_dump = len(user_config) < len(self.config)
             self.config.update(user_config)
         else:
-            with open(self.config_file.absolute_path, 'w') as handle:
+            needs_dump = True
+
+        if (not user_config_exists) or needs_dump:
+            with open(self.config_filepath.absolute_path, 'w') as handle:
                 handle.write(json.dumps(self.config, indent=4, sort_keys=True))
-        #print(self.config)
+
 
         # THUMBNAIL DIRECTORY
         self.thumbnail_directory = self.data_directory.with_child('site_thumbnails')
