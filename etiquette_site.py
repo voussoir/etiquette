@@ -86,7 +86,7 @@ def P_wrapper(function):
             if response_type == 'html':
                 flask.abort(status, e.error_message)
             else:
-                response = {'error_type': e.error_type, 'error_message': e.error_message}
+                response = jsonify.exception(e)
                 response = jsonify.make_json_response(response, status=status)
                 flask.abort(response)
 
@@ -217,7 +217,7 @@ def get_register():
 def post_login():
     if session_manager.get(request):
         e = exceptions.AlreadySignedIn()
-        response = {'error_type': e.error_type, 'error_message': e.error_message}
+        response = jsonify.exception(e)
         return jsonify.make_json_response(response, status=403)
 
     username = request.form['username']
@@ -227,7 +227,7 @@ def post_login():
         user = P.login(user.id, password)
     except (exceptions.NoSuchUser, exceptions.WrongLogin):
         e = exceptions.WrongLogin()
-        response = {'error_type': e.error_type, 'error_message': e.error_message}
+        response = jsonify.exception(e)
         return jsonify.make_json_response(response, status=422)
     session = sessions.Session(request, user)
     session_manager.add(session)
@@ -239,7 +239,7 @@ def post_login():
 def post_register():
     if session_manager.get(request):
         e = exceptions.AlreadySignedIn()
-        response = {'error_type': e.error_type, 'error_message': e.error_message}
+        response = jsonify.exception(e)
         return jsonify.make_json_response(response, status=403)
 
     username = request.form['username']
@@ -256,10 +256,7 @@ def post_register():
     try:
         user = P.register_user(username, password_1)
     except exceptions.EtiquetteException as e:
-        response = {
-            'error_type': e.error_type,
-            'error_message': e.error_message,
-        }
+        response = jsonify.exception(e)
         return jsonify.make_json_response(response, status=400)
 
     session = sessions.Session(request, user)
@@ -663,7 +660,7 @@ def post_album_add_tag(albumid):
     try:
         tag = P_tag(tag)
     except exceptions.NoSuchTag as e:
-        response = {'error_type': e.error_type, 'error_message': e.error_message}
+        response = jsonify.exception(e)
         return jsonify.make_json_response(response, status=404)
     recursive = request.form.get('recursive', False)
     recursive = helpers.truthystring(recursive)
@@ -683,10 +680,7 @@ def post_photo_add_remove_tag_core(photoid, tagname, add_or_remove):
         elif add_or_remove == 'remove':
             photo.remove_tag(tag)
     except exceptions.EtiquetteException as e:
-        response = {
-            'error_type': e.error_type,
-            'error_message': e.error_message,
-        }
+        response = jsonify.exception(e)
         response = jsonify.make_json_response(response, status=400)
         flask.abort(response)
 
@@ -724,10 +718,7 @@ def post_tag_create_delete_core(tagname, function):
         response = function(tagname)
         status = 200
     except exceptions.EtiquetteException as e:
-        response = {
-            'error_type': e.error_type,
-            'error_message': e.error_message,
-        }
+        response = jsonify.exception(e)
         status = 400
     #print(response)
 

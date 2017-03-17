@@ -22,6 +22,13 @@ def album(a, minimal=False):
 
     return j
 
+def exception(e):
+    j = {
+        'error_type': e.error_type,
+        'error_message': e.error_message,
+    }
+    return j
+
 def photo(p, include_albums=True, include_tags=True):
     tags = p.tags()
     tags.sort(key=lambda x: x.name)
