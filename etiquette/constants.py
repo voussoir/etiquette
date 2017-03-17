@@ -31,11 +31,14 @@ SQL_LASTID_COLUMNS = [
     'table',
     'last_id',
 ]
+SQL_ALBUM_DIRECTORY_COLUMNS = [
+    'albumid',
+    'directory',
+]
 SQL_ALBUM_COLUMNS = [
     'id',
     'title',
     'description',
-    'associated_directory',
 ]
 SQL_BOOKMARK_COLUMNS = [
     'id',
@@ -92,6 +95,7 @@ SQL_USER_COLUMNS = [
 
 _sql_dictify = lambda columns: {key:index for (index, key) in enumerate(columns)}
 SQL_ALBUM = _sql_dictify(SQL_ALBUM_COLUMNS)
+SQL_ALBUM_DIRECTORY = _sql_dictify(SQL_ALBUM_DIRECTORY_COLUMNS)
 SQL_ALBUMGROUP = _sql_dictify(SQL_ALBUMGROUP_COLUMNS)
 SQL_BOOKMARK = _sql_dictify(SQL_BOOKMARK_COLUMNS)
 SQL_ALBUMPHOTO = _sql_dictify(SQL_ALBUMPHOTO_COLUMNS)

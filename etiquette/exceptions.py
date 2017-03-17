@@ -55,6 +55,13 @@ class NoSuchUser(NoSuch):
 
 # EXISTS
 @with_error_type
+class AlbumExists(WithFormat):
+    error_message = 'Album "{}" already exists.'
+    def __init__(self, album):
+        self.album = album
+        WithFormat.__init__(self, album.id)
+
+@with_error_type
 class GroupExists(WithFormat):
     error_message = '{member} already in group {group}'
 

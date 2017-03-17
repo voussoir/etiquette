@@ -29,23 +29,64 @@ logging.getLogger('PIL.PngImagePlugin').setLevel(logging.WARNING)
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
-DATABASE_VERSION = 6
+DATABASE_VERSION = 7
 DB_INIT = '''
 PRAGMA count_changes = OFF;
 PRAGMA cache_size = 10000;
 PRAGMA user_version = {user_version};
+
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS album_associated_directories(
+    albumid TEXT,
+    directory TEXT COLLATE NOCASE
+);
+CREATE INDEX IF NOT EXISTS index_album_associated_directories_albumid on
+    album_associated_directories(albumid);
+CREATE INDEX IF NOT EXISTS index_album_associated_directories_directory on
+    album_associated_directories(directory);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS album_group_rel(
+    parentid TEXT,
+    memberid TEXT
+);
+CREATE INDEX IF NOT EXISTS index_album_group_rel_parentid on album_group_rel(parentid);
+CREATE INDEX IF NOT EXISTS index_album_group_rel_memberid on album_group_rel(memberid);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS album_photo_rel(
+    albumid TEXT,
+    photoid TEXT
+);
+CREATE INDEX IF NOT EXISTS index_album_photo_rel_albumid on album_photo_rel(albumid);
+CREATE INDEX IF NOT EXISTS index_album_photo_rel_photoid on album_photo_rel(photoid);
+----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS albums(
     id TEXT,
     title TEXT,
-    description TEXT,
-    associated_directory TEXT COLLATE NOCASE
+    description TEXT
 );
+CREATE INDEX IF NOT EXISTS index_albums_id on albums(id);
+----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS bookmarks(
     id TEXT,
     title TEXT,
     url TEXT,
     author_id TEXT
 );
+CREATE INDEX IF NOT EXISTS index_bookmarks_id on bookmarks(id);
+CREATE INDEX IF NOT EXISTS index_bookmarks_author on bookmarks(author_id);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS id_numbers(
+    tab TEXT,
+    last_id TEXT
+);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS photo_tag_rel(
+    photoid TEXT,
+    tagid TEXT
+);
+CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid on photo_tag_rel(photoid);
+CREATE INDEX IF NOT EXISTS index_photo_tag_rel_tagid on photo_tag_rel(tagid);
+----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS photos(
     id TEXT,
     filepath TEXT COLLATE NOCASE,
@@ -62,82 +103,42 @@ CREATE TABLE IF NOT EXISTS photos(
     tagged_at INT,
     author_id TEXT
 );
-CREATE TABLE IF NOT EXISTS tags(
-    id TEXT,
-    name TEXT
-);
-CREATE TABLE IF NOT EXISTS album_photo_rel(
-    albumid TEXT,
-    photoid TEXT
-);
-CREATE TABLE IF NOT EXISTS album_group_rel(
-    parentid TEXT,
-    memberid TEXT
-);
-CREATE TABLE IF NOT EXISTS photo_tag_rel(
-    photoid TEXT,
-    tagid TEXT
-);
+CREATE INDEX IF NOT EXISTS index_photos_id on photos(id);
+CREATE INDEX IF NOT EXISTS index_photos_filepath on photos(filepath COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS index_photos_override_filename on
+    photos(override_filename COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS index_photos_created on photos(created);
+CREATE INDEX IF NOT EXISTS index_photos_extension on photos(extension);
+CREATE INDEX IF NOT EXISTS index_photos_author_id on photos(author_id);
+----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tag_group_rel(
     parentid TEXT,
     memberid TEXT
 );
+CREATE INDEX IF NOT EXISTS index_tag_group_rel_parentid on tag_group_rel(parentid);
+CREATE INDEX IF NOT EXISTS index_tag_group_rel_memberid on tag_group_rel(memberid);
+----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tag_synonyms(
     name TEXT,
     mastername TEXT
 );
-CREATE TABLE IF NOT EXISTS id_numbers(
-    tab TEXT,
-    last_id TEXT
+CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tags(
+    id TEXT,
+    name TEXT
 );
+CREATE INDEX IF NOT EXISTS index_tags_id on tags(id);
+CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
+----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users(
     id TEXT,
     username TEXT COLLATE NOCASE,
     password BLOB,
     created INT
 );
-
--- Album
-CREATE INDEX IF NOT EXISTS index_album_id on albums(id);
-
--- Album-photo relation
-CREATE INDEX IF NOT EXISTS index_albumrel_albumid on album_photo_rel(albumid);
-CREATE INDEX IF NOT EXISTS index_albumrel_photoid on album_photo_rel(photoid);
-
--- Album-group relation
-CREATE INDEX IF NOT EXISTS index_albumgroup_parentid on album_group_rel(parentid);
-CREATE INDEX IF NOT EXISTS index_albumgroup_memberid on album_group_rel(memberid);
-
--- Bookmark
-CREATE INDEX IF NOT EXISTS index_bookmark_id on bookmarks(id);
-CREATE INDEX IF NOT EXISTS index_bookmark_author on bookmarks(author_id);
-
--- Photo
-CREATE INDEX IF NOT EXISTS index_photo_id on photos(id);
-CREATE INDEX IF NOT EXISTS index_photo_path on photos(filepath COLLATE NOCASE);
-CREATE INDEX IF NOT EXISTS index_photo_fakepath on photos(override_filename COLLATE NOCASE);
-CREATE INDEX IF NOT EXISTS index_photo_created on photos(created);
-CREATE INDEX IF NOT EXISTS index_photo_extension on photos(extension);
-CREATE INDEX IF NOT EXISTS index_photo_author on photos(author_id);
-
--- Tag
-CREATE INDEX IF NOT EXISTS index_tag_id on tags(id);
-CREATE INDEX IF NOT EXISTS index_tag_name on tags(name);
-
--- Photo-tag relation
-CREATE INDEX IF NOT EXISTS index_tagrel_photoid on photo_tag_rel(photoid);
-CREATE INDEX IF NOT EXISTS index_tagrel_tagid on photo_tag_rel(tagid);
-
--- Tag-synonym relation
-CREATE INDEX IF NOT EXISTS index_tagsyn_name on tag_synonyms(name);
-
--- Tag-group relation
-CREATE INDEX IF NOT EXISTS index_taggroup_parentid on tag_group_rel(parentid);
-CREATE INDEX IF NOT EXISTS index_taggroup_memberid on tag_group_rel(memberid);
-
--- User
-CREATE INDEX IF NOT EXISTS index_user_id on users(id);
-CREATE INDEX IF NOT EXISTS index_user_username on users(username COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS index_users_id on users(id);
+CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE);
 '''.format(user_version=DATABASE_VERSION)
 
 
@@ -260,11 +261,12 @@ class PDBAlbumMixin:
         '''
         filepath = os.path.abspath(filepath)
         cur = self.sql.cursor()
-        cur.execute('SELECT * FROM albums WHERE associated_directory == ?', [filepath])
+        cur.execute('SELECT * FROM album_associated_directories WHERE directory == ?', [filepath])
         fetch = cur.fetchone()
         if fetch is None:
             raise exceptions.NoSuchAlbum(filepath)
-        return self.get_album(fetch[constants.SQL_ALBUM['id']])
+        album_id = fetch[constants.SQL_ALBUM_DIRECTORY['albumid']]
+        return self.get_album(album_id)
 
     def get_albums(self):
         yield from self.get_things(thing_type='album')
@@ -287,29 +289,45 @@ class PDBAlbumMixin:
         albumid = self.generate_id('albums')
         title = title or ''
         description = description or ''
-        if associated_directory is not None:
-            associated_directory = os.path.abspath(associated_directory)
-
         if not isinstance(title, str):
             raise TypeError('Title must be string, not %s' % type(title))
 
         if not isinstance(description, str):
             raise TypeError('Description must be string, not %s' % type(description))
 
+        cur = self.sql.cursor()
+        if associated_directory is not None:
+            associated_directory = os.path.abspath(associated_directory)
+            cur.execute(
+                'SELECT * FROM album_associated_directories WHERE directory == ?',
+                [associated_directory]
+            )
+            fetch = cur.fetchone()
+            if fetch is not None:
+                album = self.get_album(fetch[constants.SQL_ALBUM_DIRECTORY['albumid']])
+                raise exceptions.AlbumExists(album)
+
         self.log.debug('New Album: %s' % title)
         data = {
             'id': albumid,
             'title': title,
             'description': description,
-            'associated_directory': associated_directory,
         }
 
         (qmarks, bindings) = helpers.binding_filler(constants.SQL_ALBUM_COLUMNS, data)
         query = 'INSERT INTO albums VALUES(%s)' % qmarks
-        cur = self.sql.cursor()
         cur.execute(query, bindings)
-
         album = objects.Album(self, data)
+
+        if associated_directory is not None:
+            data = {
+                'albumid': albumid,
+                'directory': associated_directory,
+            }
+            (qmarks, bindings) = helpers.binding_filler(constants.SQL_ALBUM_DIRECTORY_COLUMNS, data)
+            query = 'INSERT INTO album_associated_directories VALUES(%s)' % qmarks
+            cur.execute(query, bindings)
+
         if photos:
             for photo in photos:
                 photo = self.get_photo(photo)

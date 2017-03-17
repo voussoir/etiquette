@@ -103,6 +103,41 @@ def upgrade_5_to_6(sql):
             [album_id, album_id]
         )
 
+def upgrade_6_to_7(sql):
+    '''
+    Most of the indices were renamed, so delete them and let them regenerate
+    next time.
+
+    Albums lost their `associated_directory` column, and it has been moved to a
+    separate table `album_associated_directories`, so that we can have albums
+    which load from multiple directories.
+    '''
+    cur = sql.cursor()
+    cur.execute('SELECT name FROM sqlite_master WHERE type == "index"')
+    indices = [x[0] for x in cur.fetchall()]
+    for index in indices:
+        cur.execute('DROP INDEX %s' % index)
+
+
+    cur.execute('''
+    CREATE TABLE album_associated_directories(
+        albumid TEXT,
+        directory TEXT COLLATE NOCASE
+    )''')
+    cur.execute('ALTER TABLE albums RENAME TO deleting_albums')
+    cur.execute('''
+    CREATE TABLE albums(
+        id TEXT,
+        title TEXT,
+        description TEXT
+    )''')
+    cur.execute('INSERT INTO albums SELECT id, title, description FROM deleting_albums')
+    cur.execute('''
+    INSERT INTO album_associated_directories SELECT id, associated_directory FROM deleting_albums
+    ''')
+    cur.execute('DROP TABLE deleting_albums')
+
+
 def upgrade_all(database_filename):
     '''
     Given the filename of a phototagger database, apply all of the needed
