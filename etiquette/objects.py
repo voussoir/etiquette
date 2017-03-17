@@ -438,6 +438,9 @@ class Photo(ObjectBase):
         return 'Photo:{id}'.format(id=self.id)
 
     def add_tag(self, tag, *, commit=True):
+        if not self.photodb.config['enable_photo_add_remove_tag']:
+            raise exceptions.FeatureDisabled('photo.add_tag, photo.remove_tag')
+
         tag = self.photodb.get_tag(tag)
 
         existing = self.has_tag(tag, check_children=False)
@@ -707,6 +710,9 @@ class Photo(ObjectBase):
             self.photodb.commit()
 
     def remove_tag(self, tag, *, commit=True):
+        if not self.photodb.config['enable_photo_add_remove_tag']:
+            raise exceptions.FeatureDisabled('photo.add_tag, photo.remove_tag')
+
         tag = self.photodb.get_tag(tag)
 
         self.photodb.log.debug('Removing tag {t} from photo {p}'.format(t=repr(tag), p=repr(self)))

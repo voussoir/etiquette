@@ -671,10 +671,18 @@ def post_photo_add_remove_tag_core(photoid, tagname, add_or_remove):
     photo = P_photo(photoid, response_type='json')
     tag = P_tag(tagname, response_type='json')
 
-    if add_or_remove == 'add':
-        photo.add_tag(tag)
-    elif add_or_remove == 'remove':
-        photo.remove_tag(tag)
+    try:
+        if add_or_remove == 'add':
+            photo.add_tag(tag)
+        elif add_or_remove == 'remove':
+            photo.remove_tag(tag)
+    except exceptions.EtiquetteException as e:
+        response = {
+            'error_type': e.error_type,
+            'error_message': e.error_message,
+        }
+        response = jsonify.make_json_response(response, status=400)
+        flask.abort(response)
 
     response = {'tagname': tag.name}
     return jsonify.make_json_response(response)    
