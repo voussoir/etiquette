@@ -709,7 +709,12 @@ def post_photo_refresh_metadata(photoid):
     Refresh the file metadata.
     '''
     photo = P_photo(photoid, response_type='json')
-    photo.reload_metadata()
+    try:
+        photo.reload_metadata()
+    except exceptions.EtiquetteException as e:
+        response = jsonify.exception(e)
+        response = jsonify.make_json_response(response, status=400)
+        flask.abort(response)
     return jsonify.make_json_response({})
 
 
