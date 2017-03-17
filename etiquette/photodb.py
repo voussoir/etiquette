@@ -362,7 +362,7 @@ class PDBBookmarkMixin:
         bookmark = objects.Bookmark(self, data)
         if commit:
             self.log.debug('Committing - new Bookmark')
-            self.sql.commit()
+            self.commit()
         return bookmark
 
 
@@ -503,7 +503,7 @@ class PDBPhotoMixin:
             photo.delete(commit=False)
         if commit:
             self.log.debug('Committing - purge deleted photos')
-            self.sql.commit()
+            self.commit()
 
     def purge_empty_albums(self, *, commit=True):
         albums = self.get_albums()
@@ -513,7 +513,7 @@ class PDBPhotoMixin:
             album.delete(commit=False)
         if commit:
             self.log.debug('Committing - purge empty albums')
-            self.sql.commit()
+            self.commit()
 
     def search(
             self,

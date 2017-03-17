@@ -362,7 +362,7 @@ class Bookmark(ObjectBase):
         cur = self.photodb.sql.cursor()
         cur.execute('DELETE FROM bookmarks WHERE id == ?', [self.id])
         if commit:
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
     def edit(self, title=None, url=None, *, commit=True):
         if title is None and url is None:
@@ -381,7 +381,7 @@ class Bookmark(ObjectBase):
         )
         if commit:
             self.photodb.log.debug('Committing - edit bookmark')
-            self.photodb.sql.commit()
+            self.photodb.commit()
 
 
 class Photo(ObjectBase):
