@@ -169,7 +169,7 @@ def searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, f
             return False
 
     if tag_forbids:
-        for tag in tag_forbids:
+        for forbid in tag_forbids:
             for option in frozen_children[forbid]:
                 if option in photo_tags:
                     return False
