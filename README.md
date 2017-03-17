@@ -1,7 +1,7 @@
 Etiquette
 =========
 
-This is the readme file.
+I am currently running a demonstration copy of Etiquette at http://etiquette.voussoir.net where you can browse around. This is not yet permanent.
 
 ### To do list
 - Make the wording between "new", "create", "add"; and "remove", "delete" more consistent.
