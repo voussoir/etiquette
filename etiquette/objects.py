@@ -256,6 +256,7 @@ class Album(ObjectBase, GroupableMixin):
         cur = self.photodb.sql.cursor()
         cur.execute('DELETE FROM albums WHERE id == ?', [self.id])
         cur.execute('DELETE FROM album_photo_rel WHERE albumid == ?', [self.id])
+        cur.execute('DELETE FROM album_associated_directories WHERE albumid == ?', [self.id])
         if commit:
             self.photodb.log.debug('Committing - delete album')
             self.photodb.commit()
