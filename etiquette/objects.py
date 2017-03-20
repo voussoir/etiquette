@@ -526,7 +526,7 @@ class Photo(ObjectBase):
     def generate_thumbnail(self, *, commit=True, **special):
         '''
         special:
-            For videos, you can provide a `timestamp` to take the thumbnail from.
+            For videos, you can provide a `timestamp` to take the thumbnail at.
         '''
         if not self.photodb.config['enable_photo_generate_thumbnail']:
             raise exceptions.FeatureDisabled('photo.generate_thumbnail')
@@ -875,9 +875,9 @@ class Tag(ObjectBase, GroupableMixin):
 
     def convert_to_synonym(self, mastertag, *, commit=True):
         '''
-        Convert an independent tag into a synonym for a different independent tag.
-        All photos which possess the current tag will have it replaced
-        with the new master tag.
+        Convert this tag into a synonym for a different tag.
+        All photos which possess the current tag will have it replaced with the
+        new master tag.
         All synonyms of the old tag will point to the new tag.
 
         Good for when two tags need to be merged under a single name.

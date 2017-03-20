@@ -257,7 +257,8 @@ class PDBAlbumMixin:
 
     def get_album_by_path(self, filepath):
         '''
-        Return the album with the `associated_directory` of this value, NOT case-sensitive.
+        Return the album with the `associated_directory` of this value,
+        NOT case-sensitive.
         '''
         filepath = os.path.abspath(filepath)
         cur = self.sql.cursor()
@@ -434,11 +435,11 @@ class PDBPhotoMixin:
             tags=None,
         ):
         '''
-        Given a filepath, determine its attributes and create a new Photo object in the
-        database. Tags may be applied now or later.
+        Given a filepath, determine its attributes and create a new Photo object
+        in the database. Tags may be applied now or later.
 
-        If `allow_duplicates` is False, we will first check the database for any files
-        with the same path and raise exceptions.PhotoExists if found.
+        If `allow_duplicates` is False, we will first check the database for any
+        files with the same path and raise exceptions.PhotoExists if found.
 
         Returns the Photo object.
         '''
@@ -1108,41 +1109,6 @@ class PDBUserMixin:
 
 
 class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
-    '''
-    This class represents an SQLite3 database containing the following tables:
-
-    albums:
-        Rows represent the inclusion of a photo in an album
-
-    photos:
-        Rows represent image files on the local disk.
-        Entries contain a unique ID, the image's filepath, and metadata
-        like dimensions and filesize.
-
-    tags:
-        Rows represent labels, which can be applied to an arbitrary number of
-        photos. Photos may be selected by which tags they contain.
-        Entries contain a unique ID and a name.
-
-    photo_tag_rel:
-        Rows represent a Photo's ownership of a particular Tag.
-
-    tag_synonyms:
-        Rows represent relationships between two tag names, so that they both
-        resolve to the same Tag object when selected. Entries contain the
-        subordinate name and master name.
-        The master name MUST also exist in the `tags` table.
-        If a new synonym is created referring to another synoym, the master name
-        will be resolved and used instead, so a synonym never points to another synonym.
-        Tag objects will ALWAYS represent the master tag.
-
-        Note that the entries in this table do not contain ID numbers.
-        The rationale here is that "coco" is a synonym for "chocolate" regardless
-        of the "chocolate" tag's ID, and that if a tag is renamed, its synonyms
-        do not necessarily follow.
-        The `rename` method of Tag objects includes a parameter
-        `apply_to_synonyms` if you do want them to follow.
-    '''
     def __init__(
             self,
             data_directory=None,
@@ -1229,7 +1195,8 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         '''
         Create an album, and add the directory's contents to it recursively.
 
-        If a Photo object already exists for a file, it will be added to the correct album.
+        If a Photo object already exists for a file, it will be added to the
+        correct album.
         '''
         if not os.path.isdir(directory):
             raise ValueError('Not a directory: %s' % directory)

@@ -32,8 +32,8 @@ def album_zip_directories(album, recursive=True):
     
 def album_zip_filenames(album, recursive=True):
     '''
-    Given an album, produce a dictionary mapping local filepaths to the filenames
-    that will appear inside the zip archive.
+    Given an album, produce a dictionary mapping local filepaths to the
+    filenames that will appear inside the zip archive.
     This includes creating subfolders for sub albums.
 
     If a photo appears in multiple albums, only the first is used.
@@ -141,7 +141,7 @@ def comma_split(s):
 
 def dict_to_params(d):
     '''
-    Given a dictionary representing URL parameters, return a URL parameter string.
+    Given a dictionary of URL parameters, return a URL parameter string.
 
     {'a':1, 'b':2} => ?a=1&b=2
     '''
@@ -168,7 +168,8 @@ def fit_into_bounds(image_width, image_height, frame_width, frame_height):
 
 def get_mimetype(filepath):
     '''
-    Extension to mimetypes.guess_type which uses my constants.ADDITIONAL_MIMETYPES.
+    Extension to mimetypes.guess_type which uses my
+    constants.ADDITIONAL_MIMETYPES.
     '''
     extension = os.path.splitext(filepath)[1].replace('.', '')
     if extension in constants.ADDITIONAL_MIMETYPES:

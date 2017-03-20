@@ -50,7 +50,9 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
     '''
     Dissects a hyphenated range string and inserts the correct k:v pair into
     both minimums and maximums.
-    ('area', '100-200', {}, {}) --> {'area': 100}, {'area': 200} (MODIFIED IN PLACE)
+    ('area', '100-200', {}, {})
+    -->
+    {'area': 100}, {'area': 200} (MODIFIED IN PLACE)
     '''
     if value is None:
         return
