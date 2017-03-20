@@ -272,6 +272,11 @@ class PDBAlbumMixin:
     def get_albums(self):
         yield from self.get_things(thing_type='album')
 
+    def get_root_albums(self):
+        for album in self.get_albums():
+            if album.parent() is None:
+                yield album
+
     def new_album(
             self,
             title=None,
