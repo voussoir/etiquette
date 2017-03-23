@@ -407,9 +407,9 @@ class PDBPhotoMixin:
         return self.get_thing_by_id('photo', photoid)
 
     def get_photo_by_path(self, filepath):
-        filepath = os.path.abspath(filepath)
+        filepath = pathclass.Path(filepath)
         cur = self.sql.cursor()
-        cur.execute('SELECT * FROM photos WHERE filepath == ?', [filepath])
+        cur.execute('SELECT * FROM photos WHERE filepath == ?', [filepath.absolute_path])
         fetch = cur.fetchone()
         if fetch is None:
             raise exceptions.NoSuchPhoto(filepath)
@@ -442,7 +442,7 @@ class PDBPhotoMixin:
 
     def new_photo(
             self,
-            filename,
+            filepath,
             *,
             allow_duplicates=False,
             author=None,
@@ -463,32 +463,29 @@ class PDBPhotoMixin:
         if not self.config['enable_new_photo']:
             raise exceptions.FeatureDisabled('new_photo')
 
-        filename = os.path.abspath(filename)
-        if not os.path.isfile(filename):
-            raise FileNotFoundError(filename)
+        filepath = pathclass.Path(filepath)
+        if not filepath.is_file:
+            raise FileNotFoundError(filepath.absolute_path)
 
         if not allow_duplicates:
             try:
-                existing = self.get_photo_by_path(filename)
+                existing = self.get_photo_by_path(filepath)
             except exceptions.NoSuchPhoto:
                 pass
             else:
                 raise exceptions.PhotoExists(existing)
 
-        self.log.debug('New Photo: %s' % filename)
+        self.log.debug('New Photo: %s' % filepath.absolute_path)
         author_id = self.get_user_id_or_none(author)
 
-        extension = os.path.splitext(filename)[1]
-        extension = extension.replace('.', '')
-        #extension = self.normalize_tagname(extension)
         created = int(helpers.now())
         photoid = self.generate_id('photos')
 
         data = {
             'id': photoid,
-            'filepath': filename,
+            'filepath': filepath.absolute_path,
             'override_filename': None,
-            'extension': extension,
+            'extension': filepath.extension,
             'created': created,
             'tagged_at': None,
             'author_id': author_id,
