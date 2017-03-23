@@ -797,7 +797,14 @@ class PDBPhotoMixin:
         for fetch in generator:
             photo = objects.Photo(self, fetch)
 
-            if extension and photo.extension not in extension:
+            ext_okay = (
+                not extension or
+                (
+                    ('*' in extension and photo.extension) or
+                    photo.extension in extension
+                )
+            )
+            if not ext_okay:
                 #print('Failed extension')
                 continue
 
@@ -805,7 +812,7 @@ class PDBPhotoMixin:
                 extension_not and
                 (
                     ('*' in extension_not and photo.extension) or
-                    (photo.extension in extension_not)
+                    photo.extension in extension_not
                 )
             )
             if ext_fail:
