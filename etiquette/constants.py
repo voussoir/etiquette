@@ -146,6 +146,11 @@ DEFAULT_DATADIR = '.\\_etiquette'
 DEFAULT_CONFIGURATION = {
     'log_level': logging.DEBUG,
 
+    'cache_size_album': 200,
+    'cache_size_photo': 1000,
+    'cache_size_tag': 1000,
+    'cache_size_user': 200,
+
     'enable_new_album': True,
     'enable_new_bookmark': True,
     'enable_new_photo': True,

@@ -16,6 +16,7 @@ from . import helpers
 from . import objects
 from . import searchhelpers
 
+from voussoirkit import cacheclass
 from voussoirkit import expressionmatch
 from voussoirkit import pathclass
 from voussoirkit import safeprint
@@ -252,6 +253,10 @@ def tag_export_totally_flat(tags):
 
 
 class PDBAlbumMixin:
+    def __init__(self):
+        super().__init__()
+        self._album_cache = cacheclass.Cache()
+
     def get_album(self, id):
         return self.get_thing_by_id('album', id)
 
@@ -346,6 +351,9 @@ class PDBAlbumMixin:
 
 
 class PDBBookmarkMixin:
+    def __init__(self):
+        super().__init__()
+
     def get_bookmark(self, id):
         cur = self.sql.cursor()
         cur.execute('SELECT * FROM bookmarks WHERE id == ?', [id])
@@ -391,6 +399,10 @@ class PDBBookmarkMixin:
 
 
 class PDBPhotoMixin:
+    def __init__(self):
+        super().__init__()
+        self._photo_cache = cacheclass.Cache()
+
     def get_photo(self, photoid):
         return self.get_thing_by_id('photo', photoid)
 
@@ -880,6 +892,10 @@ class PDBPhotoMixin:
 
 
 class PDBTagMixin:
+    def __init__(self):
+        super().__init__()
+        self._tag_cache = cacheclass.Cache()
+
     def export_tags(self, exporter=tag_export_stdout, specific_tag=None):
         '''
         Send the top-level tags to function `exporter`.
@@ -986,6 +1002,10 @@ class PDBTagMixin:
 
 
 class PDBUserMixin:
+    def __init__(self):
+        super().__init__()
+        self._user_cache = cacheclass.Cache()
+
     def generate_user_id(self):
         '''
         User IDs are randomized instead of integers like the other objects,
@@ -1118,6 +1138,8 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             self,
             data_directory=None,
         ):
+        super().__init__()
+
         if data_directory is None:
             data_directory = constants.DEFAULT_DATADIR
 
@@ -1171,6 +1193,11 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         self.log.setLevel(self.config['log_level'])
         self.on_commit_queue = []
         self._cached_frozen_children = None
+
+        self._album_cache.maxlen = self.config['cache_size_album']
+        self._photo_cache.maxlen = self.config['cache_size_photo']
+        self._tag_cache.maxlen = self.config['cache_size_tag']
+        self._user_cache.maxlen = self.config['cache_size_user']
 
     def __repr__(self):
         return 'PhotoDB(data_directory={datadir})'.format(datadir=repr(self.data_directory))
