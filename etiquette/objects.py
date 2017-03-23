@@ -219,6 +219,11 @@ class Album(ObjectBase, GroupableMixin):
     def __repr__(self):
         return 'Album:{id}'.format(id=self.id)
 
+    def _uncache(self):
+        self.photodb.caches['album'].remove(self.id)
+        self._sum_bytes_photos = None
+        self._sum_bytes_albums = None
+
     def add_photo(self, photo, *, commit=True):
         if self.photodb != photo.photodb:
             raise ValueError('Not the same PhotoDB')
@@ -227,6 +232,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.log.debug('Adding photo %s to %s' % (photo, self))
         cur = self.photodb.sql.cursor()
         cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - add photo to album')
             self.photodb.commit()
@@ -259,6 +265,7 @@ class Album(ObjectBase, GroupableMixin):
         cur.execute('DELETE FROM albums WHERE id == ?', [self.id])
         cur.execute('DELETE FROM album_photo_rel WHERE albumid == ?', [self.id])
         cur.execute('DELETE FROM album_associated_directories WHERE albumid == ?', [self.id])
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - delete album')
             self.photodb.commit()
@@ -285,6 +292,7 @@ class Album(ObjectBase, GroupableMixin):
         )
         self.title = title
         self.description = description
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - edit album')
             self.photodb.commit()
@@ -321,6 +329,7 @@ class Album(ObjectBase, GroupableMixin):
             'DELETE FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
             [self.id, photo.id]
         )
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - remove photo from album')
             self.photodb.commit()
@@ -442,6 +451,9 @@ class Photo(ObjectBase):
     def __repr__(self):
         return 'Photo:{id}'.format(id=self.id)
 
+    def _uncache(self):
+        self.photodb.caches['photo'].remove(self.id)
+
     def add_tag(self, tag, *, commit=True):
         if not self.photodb.config['enable_photo_add_remove_tag']:
             raise exceptions.FeatureDisabled('photo.add_tag, photo.remove_tag')
@@ -517,6 +529,7 @@ class Photo(ObjectBase):
             else:
                 queue_action = {'action': os.remove, 'args': [path]}
                 self.photodb.on_commit_queue.append(queue_action)
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - delete photo')
             self.photodb.commit()
@@ -615,6 +628,7 @@ class Photo(ObjectBase):
             )
             self.thumbnail = return_filepath
 
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - generate thumbnail')
             self.photodb.commit()
@@ -716,6 +730,7 @@ class Photo(ObjectBase):
             'UPDATE photos SET width=?, height=?, area=?, ratio=?, duration=?, bytes=? WHERE id==?',
             [self.width, self.height, self.area, self.ratio, self.duration, self.bytes, self.id],
         )
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - reload metadata')
             self.photodb.commit()
@@ -747,6 +762,7 @@ class Photo(ObjectBase):
             'UPDATE photos SET filepath = ? WHERE id == ?',
             [new_filepath.absolute_path, self.id]
         )
+        self._uncache()
         if commit:
             self.photodb.log.debug('Commit - relocate photo')
             self.photodb.commit()
@@ -824,7 +840,8 @@ class Photo(ObjectBase):
             # Delete the original, leaving only the new copy / hardlink.
             action = os.remove
             args = [old_path.absolute_path]
-        
+
+        self._uncache()
         if commit:
             action(*args)
             self.photodb.log.debug('Committing - rename file')
@@ -886,6 +903,9 @@ class Tag(ObjectBase, GroupableMixin):
     def __str__(self):
         rep = 'Tag:{name}'.format(name=self.name)
         return rep
+
+    def _uncache(self):
+        self.photodb.caches['tag'].remove(self.id)
 
     def add_synonym(self, synname, *, commit=True):
         synname = self.photodb.normalize_tagname(synname)
@@ -965,6 +985,7 @@ class Tag(ObjectBase, GroupableMixin):
         cur.execute('DELETE FROM tags WHERE id == ?', [self.id])
         cur.execute('DELETE FROM photo_tag_rel WHERE tagid == ?', [self.id])
         cur.execute('DELETE FROM tag_synonyms WHERE mastername == ?', [self.name])
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - delete tag')
             self.photodb.commit()
@@ -1032,6 +1053,7 @@ class Tag(ObjectBase, GroupableMixin):
             )
 
         self.name = new_name
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - rename tag')
             self.photodb.commit()

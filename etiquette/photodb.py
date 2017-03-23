@@ -1195,6 +1195,12 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         self._photo_cache.maxlen = self.config['cache_size_photo']
         self._tag_cache.maxlen = self.config['cache_size_tag']
         self._user_cache.maxlen = self.config['cache_size_user']
+        self.caches = {
+            'album': self._album_cache,
+            'photo': self._photo_cache,
+            'tag': self._tag_cache,
+            'user': self._user_cache,
+        }
 
     def __repr__(self):
         return 'PhotoDB(data_directory={datadir})'.format(datadir=repr(self.data_directory))
