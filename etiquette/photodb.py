@@ -825,14 +825,16 @@ class PDBPhotoMixin:
                 continue
 
             if any(
-                    not fetch[constants.SQL_PHOTO[key]] or fetch[constants.SQL_PHOTO[key]] > value
+                    fetch[constants.SQL_PHOTO[key]] is None or
+                    fetch[constants.SQL_PHOTO[key]] > value
                     for (key, value) in maximums.items()
                 ):
                 #print('Failed maximums')
                 continue
 
             if any(
-                    not fetch[constants.SQL_PHOTO[key]] or fetch[constants.SQL_PHOTO[key]] < value
+                    fetch[constants.SQL_PHOTO[key]] is None or
+                    fetch[constants.SQL_PHOTO[key]] < value
                     for (key, value) in minimums.items()
                 ):
                 #print('Failed minimums')
