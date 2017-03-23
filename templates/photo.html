@@ -170,9 +170,10 @@
         <li>Size: {{photo.bytestring()}}</li>
         {% if photo.duration %}
             <li>Duration: {{photo.duration_string}}</li>
+            <li>Overall Bitrate: {{((photo.bytes / 128) / photo.duration)|int}} kbps</li>
         {% endif %}
-            <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=1">Download as {{photo.id}}.{{photo.extension}}</a></li>
-            <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=1&original_filename=1">Download as "{{photo.basename}}"</a></li>
+        <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=1">Download as {{photo.id}}.{{photo.extension}}</a></li>
+        <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=1&original_filename=1">Download as "{{photo.basename}}"</a></li>
         </ul>
 
         <!-- CONTAINING ALBUMS -->
