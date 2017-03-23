@@ -20,13 +20,11 @@ def required_fields(fields, forbid_whitespace=False):
         @functools.wraps(function)
         def wrapped(*args, **kwargs):
             for requirement in fields:
-                if (
-                    requirement not in request.form or
-                    (
-                        forbid_whitespace and
-                        request.form[requirement].strip() == ''
-                    )
-                ):
+                missing = (
+                    requirement not in request.form or 
+                    (forbid_whitespace and request.form[requirement].strip() == '')
+                )
+                if missing:
                     response = {
                         'error_type': 'MISSING_FIELDS',
                         'error_message': 'Required fields: %s' % ', '.join(fields),
