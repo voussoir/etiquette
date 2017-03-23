@@ -133,7 +133,10 @@ def upgrade_6_to_7(sql):
     )''')
     cur.execute('INSERT INTO albums SELECT id, title, description FROM deleting_albums')
     cur.execute('''
-    INSERT INTO album_associated_directories SELECT id, associated_directory FROM deleting_albums
+    INSERT INTO album_associated_directories
+    SELECT id, associated_directory
+    FROM deleting_albums
+    WHERE associated_directory IS NOT NULL
     ''')
     cur.execute('DROP TABLE deleting_albums')
 
