@@ -29,7 +29,7 @@ def album_zip_directories(album, recursive=True):
                 child_directory = os.path.join(root_folder, child_directory)
                 directories[child_album] = child_directory
     return directories
-    
+
 def album_zip_filenames(album, recursive=True):
     '''
     Given an album, produce a dictionary mapping local filepaths to the

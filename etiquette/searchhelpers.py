@@ -1,5 +1,3 @@
-import shlex
-
 from . import constants
 from . import exceptions
 from . import helpers
@@ -186,7 +184,7 @@ def normalize_limit(limit, warning_bag=None):
         limit = int(limit)
 
     if not isinstance(limit, int):
-        message = 'Invalid limit "%s%"' % limit
+        message = 'Invalid limit "%s"' % limit
         if warning_bag:
             warning_bag.add(message)
             limit = None
@@ -208,7 +206,7 @@ def normalize_offset(offset, warning_bag=None):
         offset = int(offset)
 
     if not isinstance(offset, int):
-        message = 'Invalid offset "%s%"' % offset
+        message = 'Invalid offset "%s"' % offset
         if warning_bag:
             warning_bag.add(message)
             offset = None
@@ -269,7 +267,7 @@ def normalize_orderby(orderby, warning_bag=None):
             if warning_bag:
                 warning_bag.add(message)
             else:
-                raise ValueError(message)            
+                raise ValueError(message)
             direction = 'desc'
 
         requested_order = '%s-%s' % (column, direction)

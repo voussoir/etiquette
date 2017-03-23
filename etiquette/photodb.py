@@ -1,5 +1,4 @@
 import bcrypt
-import collections
 import copy
 import json
 import logging
@@ -19,7 +18,6 @@ from . import searchhelpers
 from voussoirkit import cacheclass
 from voussoirkit import expressionmatch
 from voussoirkit import pathclass
-from voussoirkit import safeprint
 from voussoirkit import spinal
 
 
@@ -664,7 +662,7 @@ class PDBPhotoMixin:
             tag_musts = None
             tag_mays = None
             tag_forbids = None
-            tag_expression = None    
+            tag_expression = None
         else:
             _helper = lambda tagset: searchhelpers.normalize_tag_mmf(
                 photodb=self,
@@ -827,15 +825,15 @@ class PDBPhotoMixin:
                 continue
 
             if any(
-                not fetch[constants.SQL_PHOTO[key]] or
-                fetch[constants.SQL_PHOTO[key]] > value for (key, value) in maximums.items()
+                    not fetch[constants.SQL_PHOTO[key]] or fetch[constants.SQL_PHOTO[key]] > value
+                    for (key, value) in maximums.items()
                 ):
                 #print('Failed maximums')
                 continue
 
             if any(
-                not fetch[constants.SQL_PHOTO[key]] or
-                fetch[constants.SQL_PHOTO[key]] < value for (key, value) in minimums.items()
+                    not fetch[constants.SQL_PHOTO[key]] or fetch[constants.SQL_PHOTO[key]] < value
+                    for (key, value) in minimums.items()
                 ):
                 #print('Failed minimums')
                 continue
