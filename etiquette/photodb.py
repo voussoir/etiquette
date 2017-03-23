@@ -1410,6 +1410,17 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         if isinstance(thing_id, thing_map['class']):
             thing_id = thing_id.id
 
+        cache = {
+            'album': self._album_cache,
+            'photo': self._photo_cache,
+            'tag': self._tag_cache,
+        }[thing_type]
+        try:
+            val = cache[thing_id]
+            return val
+        except KeyError:
+            pass
+
         query = 'SELECT * FROM %s WHERE id == ?' % thing_map['table']
         cur = self.sql.cursor()
         cur.execute(query, [thing_id])
@@ -1417,6 +1428,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         if thing is None:
             raise thing_map['exception'](thing_id)
         thing = thing_map['class'](self, thing)
+        cache[thing_id] = thing
         return thing
 
     def get_things(self, thing_type, orderby=None):

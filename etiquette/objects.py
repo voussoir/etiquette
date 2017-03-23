@@ -210,6 +210,8 @@ class Album(ObjectBase, GroupableMixin):
         self.description = db_row['description']
         self.name = 'Album %s' % self.id
         self.group_getter = self.photodb.get_album
+        self._sum_bytes_photos = None
+        self._sum_bytes_albums = None
 
     def __hash__(self):
         return hash(self.id)
@@ -324,12 +326,14 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.commit()
 
     def sum_bytes(self, recurse=True, string=False):
-        if recurse:
-            photos = self.walk_photos()
-        else:
-            photos = self.photos()
+        if self._sum_bytes_photos is None:
+            self._sum_bytes_photos = sum(photo.bytes for photo in self.photos())
+        total = self._sum_bytes_photos
 
-        total = sum(photo.bytes for photo in photos)
+        if recurse:
+            if self._sum_bytes_albums is None:
+                self._sum_bytes_albums = sum(a.sum_bytes(recurse=True) for a in self.children())
+            total += self._sum_bytes_albums
 
         if string:
             return bytestring.bytestring(total)
