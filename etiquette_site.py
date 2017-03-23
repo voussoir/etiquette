@@ -4,6 +4,7 @@ import json
 import mimetypes
 import os
 import random
+import traceback
 import urllib.parse
 import warnings
 import zipstream
@@ -91,10 +92,11 @@ def P_wrapper(function):
                 flask.abort(response)
 
         except Exception as e:
-                if response_type == 'html':
-                    flask.abort(500)
-                else:
-                    flask.abort(jsonify.make_response({}, status=500))
+            traceback.print_exc()
+            if response_type == 'html':
+                flask.abort(500)
+            else:
+                flask.abort(jsonify.make_response({}, status=500))
 
     return P_wrapped
 
