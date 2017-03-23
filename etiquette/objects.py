@@ -720,6 +720,37 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Committing - reload metadata')
             self.photodb.commit()
 
+    def relocate(self, new_filepath, *, allow_duplicates=False, commit=True):
+        '''
+        Point the Photo object to a different filepath.
+
+        DOES NOT MOVE THE FILE, only acknowledges a move that was performed
+        outside of the system.
+        To rename or move the file, use `rename_file`.
+
+        allow_duplicates:
+            Allow even if there is another Photo for that path.
+        '''
+        new_filepath = pathclass.Path(new_filepath)
+        if not new_filepath.is_file:
+            raise FileNotFoundError(new_filepath.absolute_path)
+        cur = self.photodb.sql.cursor()
+        if not allow_duplicates:
+            try:
+                existing = self.photodb.get_photo_by_path(new_filepath)
+            except exceptions.NoSuchPhoto:
+                # Good.
+                pass
+            else:
+                raise exceptions.PhotoExists(existing)
+        cur.execute(
+            'UPDATE photos SET filepath = ? WHERE id == ?',
+            [new_filepath.absolute_path, self.id]
+        )
+        if commit:
+            self.photodb.log.debug('Commit - relocate photo')
+            self.photodb.commit()
+
     def remove_tag(self, tag, *, commit=True):
         if not self.photodb.config['enable_photo_add_remove_tag']:
             raise exceptions.FeatureDisabled('photo.add_tag, photo.remove_tag')
