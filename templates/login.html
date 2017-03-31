@@ -20,10 +20,11 @@ button
 #content_body
 {
     display: flex;
+    flex: 1;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    flex: 1;
+
     max-width: 900px;
     margin-left: auto;
     margin-right: auto;
@@ -38,12 +39,14 @@ button
 #login_form,
 #register_form
 {
-    padding: 10px;
-    border-radius: 5px;
     display: flex;
     flex-direction: column;
-    border: 1px solid black;
+
+    padding: 10px;
     margin: 10px;
+
+    border-radius: 5px;
+    border: 1px solid black;
 }
 #login_form > *,
 #register_form > *

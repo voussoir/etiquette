@@ -13,8 +13,8 @@
 #content_body
 {
     /* Override common.css */
-    flex-direction: row;
     flex: 1;
+    flex-direction: row;
 }
 #left
 {
@@ -23,14 +23,16 @@
 }
 #right
 {
-    flex: 1;
     display: flex;
+    flex: 1;
 }
 #editor_holder
 {
+    flex-direction: column;
+
     max-width: 300px;
     padding: 8px;
-    flex-direction: column;
+
     background-color: rgba(0, 0, 0, 0.1);
 }
 #editor_area
@@ -58,11 +60,13 @@
 }
 #photo_img_holder
 {
-    height: 100%;
-    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
+
+    height: 100%;
+    width: 100%;
+
     background-repeat: no-repeat;
 }
 #photo_img_holder img
