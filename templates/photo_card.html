@@ -55,6 +55,8 @@
                     {% set tag_names = ", ".join(tag_names) %}
                     <span title="{{tag_names}}">T</span>
                 </div>
+            {% else %}
+                <div></div>
             {% endif %}
             <span>
             {% if photo.width %}
