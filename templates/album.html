@@ -57,12 +57,17 @@ p
         {% endif %}
     </span>
     {% if photos %}
-    <h3>Photos</h3>
-    <ul>
+        <h3>Photos</h3>
+        {% if view != "list" %}
+            <a href="?view=list">List view</a>
+        {% else %}
+            <a href="?view=grid">Grid view</a>
+        {% endif %}
+        <ul>
         {% for photo in photos %}
-        {{photo_card.create_photo_card(photo, view=view)}}
+            {{photo_card.create_photo_card(photo, view=view)}}
         {% endfor %}
-    </ul>
+        </ul>
     {% endif %}
 </div>
 </body>
