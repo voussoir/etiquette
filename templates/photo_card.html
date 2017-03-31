@@ -45,16 +45,17 @@
             <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
         </div>
         <div class="photo_card_grid_file_metadata">
-            <div class="photo_card_grid_tags">
-                {% set tags = photo.tags() %}
-                {% set tag_names = [] %}
-                {% for tag in tags %}
-                {% do tag_names.append(tag.name) %}
-                {% endfor %}
-                {% if tags %}
-                    <span title="{{", ".join(tag_names)}}">T</span>
-                {% endif %}
-            </div>
+            {% set tags = photo.tags() %}
+            {% set tag_names = [] %}
+            {% for tag in tags %}
+            {% do tag_names.append(tag.name) %}
+            {% endfor %}
+            {% if tag_names %}
+                <div class="photo_card_grid_tags">
+                    {% set tag_names = ", ".join(tag_names) %}
+                    <span title="{{tag_names}}">T</span>
+                </div>
+            {% endif %}
             <span>
             {% if photo.width %}
                 {{photo.width}}&times;{{photo.height}},
