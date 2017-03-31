@@ -140,6 +140,15 @@ li
     justify-content: space-between;
     font-size: 12.8px;
     background-color: inherit;
+}
+.photo_card_grid_filename
+{
+    background-color: inherit;
+    max-height: 30px;
+    overflow: hidden;
+    align-self: flex-start;
+    word-break:break-word;
+    z-index: 1;
 
     /*
     The width of photo cards should be based on the aspect ratio of the
@@ -150,15 +159,6 @@ li
     */
     min-width: 100%;
     width: 0;
-}
-.photo_card_grid_filename
-{
-    background-color: inherit;
-    max-height: 30px;
-    overflow: hidden;
-    align-self: flex-start;
-    word-break:break-word;
-    z-index: 1;
 }
 .photo_card_grid_filename a
 {
@@ -179,6 +179,11 @@ li
 .photo_card_grid_tags
 {
     align-self: flex-start;
+    /*
+    When the metadata is long it tends to squish against the T, so give it
+    some breathing room.
+    */
+    margin-right: 8px;
 }
 .tag_object
 {
