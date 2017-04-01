@@ -768,24 +768,17 @@ class PDBPhotoMixin:
                 self._cached_frozen_children = frozen_children
 
         if tag_expression:
-            expression_tree = expressionmatch.ExpressionTree.parse(tag_expression)
-            expression_tree.map(self.normalize_tagname)
-            expression_matcher = searchhelpers.tag_expression_matcher_builder(
-                frozen_children,
+            tag_expression_tree = searchhelpers.tag_expression_tree_builder(
+                tag_expression=tag_expression,
+                photodb=self,
+                frozen_children=frozen_children,
                 warning_bag=warning_bag,
             )
-            for node in expression_tree.walk_leaves():
-                if node.token in frozen_children:
-                    continue
-
-                exc = exceptions.NoSuchTag(node.token)
-                if warning_bag is not None:
-                    warning_bag.add(exc.error_message)
-                    node.token = None
-                else:
-                    raise exc
-
-            expression_tree.prune()
+            if tag_expression_tree is None:
+                tag_expression = None
+            else:
+                print(tag_expression_tree)
+                tag_match_function = searchhelpers.tag_expression_matcher_builder(frozen_children)
 
         if filename:
             filename_tree = expressionmatch.ExpressionTree.parse(filename)
@@ -859,9 +852,9 @@ class PDBPhotoMixin:
                     continue
 
                 if tag_expression:
-                    success = expression_tree.evaluate(
+                    success = tag_expression_tree.evaluate(
                         photo_tags,
-                        match_function=expression_matcher,
+                        match_function=tag_match_function,
                     )
                     if not success:
                         #print('Failed tag expression')

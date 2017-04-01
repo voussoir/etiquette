@@ -3,6 +3,8 @@ from . import exceptions
 from . import helpers
 from . import objects
 
+from voussoirkit import expressionmatch
+
 def build_query(orderby, notnulls):
     query = 'SELECT * FROM photos'
 
@@ -330,8 +332,48 @@ def normalize_tag_mmf(tags, photodb, warning_bag=None):
 
     return tagset
 
-def tag_expression_matcher_builder(frozen_children, warning_bag=None):
-    def matcher(photo_tags, tagname):
+def tag_expression_tree_builder(
+        tag_expression,
+        photodb,
+        frozen_children,
+        warning_bag=None
+    ):
+    try:
+        expression_tree = expressionmatch.ExpressionTree.parse(tag_expression)
+    except expressionmatch.NoTokens:
+        return None
+    except Exception as exc:
+        warning_bag.add('Bad expression "%s"' % tag_expression)
+        return None
+
+    for node in expression_tree.walk_leaves():
+        try:
+            node.token = photodb.normalize_tagname(node.token)
+        except (exceptions.TagTooShort, exceptions.TagTooLong) as exc:
+            if warning_bag is not None:
+                warning_bag.add(exc.error_message)
+                node.token = None
+            else:
+                raise
+
+        if node.token is None:
+            continue
+
+        if node.token not in frozen_children:
+            exc = exceptions.NoSuchTag(node.token)
+            if warning_bag is not None:
+                warning_bag.add(exc.error_message)
+                node.token = None
+            else:
+                raise exc
+
+    expression_tree.prune()
+    if expression_tree.token is None:
+        return None
+    return expression_tree
+
+def tag_expression_matcher_builder(frozen_children):
+    def match_function(photo_tags, tagname):
         '''
         Used as the `match_function` for the ExpressionTree evaluation.
 
@@ -346,4 +388,4 @@ def tag_expression_matcher_builder(frozen_children, warning_bag=None):
         options = frozen_children[tagname]
         return any(option in photo_tags for option in options)
 
-    return matcher
+    return match_function
