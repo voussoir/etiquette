@@ -676,15 +676,15 @@ class PDBPhotoMixin:
 
         #print(tag_musts, tag_mays, tag_forbids)
         if (tag_musts or tag_mays or tag_forbids) and tag_expression:
-            message = 'Expression filter cannot be used with musts, mays, forbids'
+            exc = exceptions.NotExclusive(['tag_musts+mays+forbids', 'tag_expression'])
             if warning_bag:
-                warning_bag.add(message)
+                warning_bag.add(exc.error_message)
                 tag_musts = None
                 tag_mays = None
                 tag_forbids = None
                 tag_expression = None
             else:
-                raise exceptions.NotExclusive(message)
+                raise exc
 
         extension = searchhelpers.normalize_extensions(extension)
         extension_not = searchhelpers.normalize_extensions(extension_not)
@@ -912,7 +912,7 @@ class PDBTagMixin:
         Redirect to get_tag_by_id or get_tag_by_name after xor-checking the parameters.
         '''
         if not helpers.is_xor(id, name):
-            raise exceptions.NotExclusive('One and only one of `id`, `name` must be passed.')
+            raise exceptions.NotExclusive(['id', 'name'])
 
         if id is not None:
             return self.get_tag_by_id(id)
@@ -1024,7 +1024,7 @@ class PDBUserMixin:
 
     def get_user(self, username=None, id=None):
         if not helpers.is_xor(id, username):
-            raise exceptions.NotExclusive('One and only one of `id`, `username` must be passed.')
+            raise exceptions.NotExclusive(['id', 'username'])
 
         cur = self.sql.cursor()
         if username is not None:

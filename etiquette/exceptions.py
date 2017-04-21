@@ -127,7 +127,7 @@ class NotExclusive(EtiquetteException):
     '''
     For when two or more mutually exclusive actions have been requested.
     '''
-    pass
+    error_message = 'One and only one of {} must be passed.'
 
 class OutOfOrder(EtiquetteException):
     '''
