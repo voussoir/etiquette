@@ -1354,8 +1354,9 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
 
         if rename_to:
             tag = self.get_tag(tag)
-            note = ('rename', '%s=%s' % (tag.name, rename_to))
+            old_name = tag.name
             tag.rename(rename_to)
+            note = ('rename', '%s=%s' % (old_name, tag.name))
             output_notes.append(note)
         else:
             tag_parts = tag.split('.')
@@ -1370,7 +1371,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             tag = tags[-1]
 
         if synonym:
-            tag.add_synonym(synonym)
+            synonym = tag.add_synonym(synonym)
             note = ('new_synonym', '%s+%s' % (tag.name, synonym))
             output_notes.append(note)
             print('New syn %s' % synonym)

@@ -929,6 +929,8 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - add synonym')
             self.photodb.commit()
 
+        return synname
+
     def convert_to_synonym(self, mastertag, *, commit=True):
         '''
         Convert this tag into a synonym for a different tag.
