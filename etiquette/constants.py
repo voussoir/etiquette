@@ -142,6 +142,9 @@ ADDITIONAL_MIMETYPES = {
 }
 
 DEFAULT_DATADIR = '.\\_etiquette'
+DEFAULT_DBNAME = 'phototagger.db'
+DEFAULT_CONFIGNAME = 'config.json'
+DEFAULT_THUMBDIR = 'site_thumbnails'
 
 DEFAULT_CONFIGURATION = {
     'log_level': logging.DEBUG,
@@ -185,5 +188,4 @@ DEFAULT_CONFIGURATION = {
     'motd_strings': [
         'Good morning, Paul. What will your first sequence of the day be?',
     ],
-
 }

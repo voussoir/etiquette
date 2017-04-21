@@ -1146,7 +1146,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         os.makedirs(self.data_directory.absolute_path, exist_ok=True)
 
         # DATABASE
-        self.database_file = self.data_directory.with_child('phototagger.db')
+        self.database_file = self.data_directory.with_child(constants.DEFAULT_DBNAME)
         existing_database = self.database_file.exists
         self.sql = sqlite3.connect(self.database_file.absolute_path)
         self.cur = self.sql.cursor()
@@ -1166,7 +1166,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
 
         # CONFIG
         self.config = copy.deepcopy(constants.DEFAULT_CONFIGURATION)
-        self.config_filepath = self.data_directory.with_child('config.json')
+        self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
         user_config_exists = self.config_filepath.is_file
         if user_config_exists:
             with open(self.config_filepath.absolute_path, 'r') as handle:
@@ -1180,9 +1180,8 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             with open(self.config_filepath.absolute_path, 'w') as handle:
                 handle.write(json.dumps(self.config, indent=4, sort_keys=True))
 
-
         # THUMBNAIL DIRECTORY
-        self.thumbnail_directory = self.data_directory.with_child('site_thumbnails')
+        self.thumbnail_directory = self.data_directory.with_child(constants.DEFAULT_THUMBDIR)
         os.makedirs(self.thumbnail_directory.absolute_path, exist_ok=True)
 
         # OTHER
