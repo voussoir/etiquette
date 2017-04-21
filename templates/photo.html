@@ -320,10 +320,6 @@ function disable_hoverzoom()
     div.style.backgroundImage = "none";
     div.onmousemove = null;
     div.onclick = null;
-    if (getComputedStyle(content_body).flexDirection != "column-reverse")
-    {
-        add_tag_box.focus();
-    }
 }
 function toggle_hoverzoom()
 {
@@ -335,6 +331,10 @@ function toggle_hoverzoom()
     else
     {
         enable_hoverzoom();
+    }
+    if (getComputedStyle(content_body).flexDirection != "column-reverse")
+    {
+        add_tag_box.focus();
     }
 }
 
