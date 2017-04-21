@@ -301,6 +301,11 @@ function add_searchtag(box, value, inputted_list, li_class)
     Called by hitting Enter within a must/may/forbid field. Checks whether the tag exists
     and adds it to the query.
     */
+    if (box.offsetParent === null)
+    {
+        // The box is hidden probably because we're in Expression mode.
+        return;
+    }
     console.log("adding " + value);
     var already_have = false;
     // We're going to be doing some in-place splicing to remove,
