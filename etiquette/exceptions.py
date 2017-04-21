@@ -1,6 +1,9 @@
 import re
 
 def pascal_to_loudsnakes(text):
+    '''
+    NoSuchPhoto -> NO_SUCH_PHOTO
+    '''
     match = re.findall('[A-Z][a-z]*', text)
     text = '_'.join(match)
     text = text.upper()

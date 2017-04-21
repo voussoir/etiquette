@@ -148,7 +148,11 @@
             {% set tags = photo.sorted_tags() %}
             {% for tag in tags %}
             <li>
-                <a class="tag_object" href="/search?tag_musts={{tag.name}}">{{tag.qualified_name()}}</a><!-- 
+                {% set display_name=tag.qualified_name() %}
+                {% if display_name|length > 30 %}
+                {% set display_name = '...' + display_name[-27:] %}
+                {% endif %}
+                <a class="tag_object" href="/search?tag_musts={{tag.name}}">{{display_name}}</a><!-- 
                 --><button
                 class="remove_tag_button"
                 onclick="remove_photo_tag('{{photo.id}}', '{{tag.name}}', receive_callback);">

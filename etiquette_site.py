@@ -225,6 +225,10 @@ def post_login():
     username = request.form['username']
     password = request.form['password']
     try:
+        # Consideration: Should the server hash the password to discourage
+        # information (user exists) leak via response time?
+        # Currently I think not, because they can check if the account
+        # page 404s anyway.
         user = P.get_user(username=username)
         user = P.login(user.id, password)
     except (exceptions.NoSuchUser, exceptions.WrongLogin):

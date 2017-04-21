@@ -20,6 +20,8 @@ Documentation is still a work in progress. In general, I use:
 - Debate whether the `UserMixin.login` method should accept usernames or I should standardize the usage of IDs only internally.
 - Album size is calculated every time you refresh the page. For large albums this is very slow. Consider caching? Or saving to db?
 - Organize the tag exporter functions better.
+- Replace columns like area, ratio, bitrate by using [expression indices](https://sqlite.org/expridx.html) &mdash; `width * height` etc.
+- Add some way to support large image albums without flooding the search results. Considering a "hidden" property so that a handful of representative images can appear in the search results, and the rest can be found on the actual Album page.
 
 ### Changelog
 
