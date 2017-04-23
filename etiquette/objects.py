@@ -13,6 +13,10 @@ from voussoirkit import spinal
 
 
 class ObjectBase:
+    def __init__(self, photodb):
+        super().__init__()
+        self.photodb = photodb
+
     def __eq__(self, other):
         return (
             isinstance(other, type(self)) and
@@ -202,7 +206,7 @@ class Album(ObjectBase, GroupableMixin):
     group_table = 'album_group_rel'
 
     def __init__(self, photodb, db_row):
-        self.photodb = photodb
+        super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
             db_row = helpers.parallel_to_dict(constants.SQL_ALBUM_COLUMNS, db_row)
         self.id = db_row['id']
@@ -360,7 +364,7 @@ class Album(ObjectBase, GroupableMixin):
 
 class Bookmark(ObjectBase):
     def __init__(self, photodb, db_row):
-        self.photodb = photodb
+        super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
             db_row = helpers.parallel_to_dict(constants.SQL_BOOKMARK_COLUMNS, db_row)
 
@@ -405,7 +409,7 @@ class Photo(ObjectBase):
     Photos are not the actual image data, just the database entry.
     '''
     def __init__(self, photodb, db_row):
-        self.photodb = photodb
+        super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
             db_row = helpers.parallel_to_dict(constants.SQL_PHOTO_COLUMNS, db_row)
 
@@ -882,7 +886,7 @@ class Tag(ObjectBase, GroupableMixin):
     group_table = 'tag_group_rel'
 
     def __init__(self, photodb, db_row):
-        self.photodb = photodb
+        super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
             db_row = helpers.parallel_to_dict(constants.SQL_TAG_COLUMNS, db_row)
         self.id = db_row['id']
@@ -1074,7 +1078,7 @@ class User(ObjectBase):
     A dear friend of ours.
     '''
     def __init__(self, photodb, db_row):
-        self.photodb = photodb
+        super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
             db_row = helpers.parallel_to_dict(constants.SQL_USER_COLUMNS, db_row)
         self.id = db_row['id']
