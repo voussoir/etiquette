@@ -25,6 +25,7 @@ class EtiquetteException(Exception, metaclass=ErrorTypeAdder):
         self.given_args = args
         self.given_kwargs = kwargs
         self.error_message = self.error_message.format(*args, **kwargs)
+        self.args = (self.error_message, args, kwargs)
 
 
 # NO SUCH
@@ -58,7 +59,7 @@ class AlbumExists(EtiquetteException):
     error_message = 'Album "{}" already exists.'
     def __init__(self, album):
         self.album = album
-        EtiquetteException.__init__(self, album.id)
+        EtiquetteException.__init__(self, album)
 
 class GroupExists(EtiquetteException):
     error_message = '{member} already in group {group}'
@@ -67,19 +68,19 @@ class PhotoExists(EtiquetteException):
     error_message = 'Photo "{}" already exists.'
     def __init__(self, photo):
         self.photo = photo
-        EtiquetteException.__init__(self, photo.id)
+        EtiquetteException.__init__(self, photo)
 
 class TagExists(EtiquetteException):
     error_message = 'Tag "{}" already exists.'
     def __init__(self, tag):
         self.tag = tag
-        EtiquetteException.__init__(self, tag.name)
+        EtiquetteException.__init__(self, tag)
 
 class UserExists(EtiquetteException):
     error_message = 'User "{}" already exists.'
     def __init__(self, user):
         self.user = user
-        EtiquetteException.__init__(self, user.username)
+        EtiquetteException.__init__(self, user)
 
 
 # TAG ERRORS
