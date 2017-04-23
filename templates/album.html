@@ -6,6 +6,7 @@
     <title>Album {{album.display_name}}</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
+    <script src="/static/common.js"></script>
 
 <style>
 p
@@ -17,6 +18,25 @@ p
     /* overriding common.css here */
     display: block;
 }
+#title_editor,
+#description_editor
+{
+    width: 100%;
+    max-width: 800px;
+}
+#description_editor textarea
+{
+    width: 100%;
+    height: 100%;
+}
+#description_editor
+{
+    height: 100px;
+}
+.hidden
+{
+    display: none;
+}
 </style>
 </head>
 
@@ -24,15 +44,34 @@ p
 <body>
 {{header.make_header(session=session)}}
 <div id="content_body">
-    <h2>{{album.title}}</h2>
-    <p>{{album.description}}</p>
-    {% set parent=album.parent() %}
+    <h2>
+    {% if album.title %}
+        <span id="title_text">{{album.title}}</span>
+    {% else %}
+        <span id="title_text">Album {{album.id}}</span>
+    {% endif %}
+    <input id="title_editor" class="hidden" type="text" value="{{album.title}}" placeholder="title">
+    <button id="edit_button" class="green_button" onclick="start_editing()">edit</button>
+    </h2>
+
+    <p id="description_text">{{album.description}}</p>
+
+    <div id="description_editor" class="hidden">
+    <textarea id="description_editor_box" placeholder="description">{{album.description}}</textarea>
+    <span>
+        <button id="save_button" class="green_button" onclick="finish_editing(true)">Save</button>
+        <button id="cancel_button" class="red_button" onclick="finish_editing(false)">Cancel</button>
+    </span>
+    </div>
+
     {% set viewparam = "?view=list" if view == "list" else "" %}
+    {% set parent = album.parent() %}
     {% if parent %}
     <h3>Parent: <a href="/album/{{parent.id}}{{viewparam}}">{{parent.display_name}}</a></h3>
     {% else %}
     <h3>Parent: <a href="/albums">Albums</a></h3>
     {% endif %}
+
     {% set sub_albums = album.children() %}
     {% if sub_albums %}
     <h3>Sub-albums</h3>
@@ -43,7 +82,9 @@ p
         {% endfor %}
     </ul>
     {% endif %}
+
     {% set photos = album.photos() %}
+    {% if photos or sub_albums %}
     <span>
         Download:
         {% if photos %}
@@ -57,6 +98,8 @@ p
             </a>
         {% endif %}
     </span>
+    {% endif %}
+
     {% if photos %}
         <h3>Photos</h3>
         {% if view != "list" %}
@@ -75,10 +118,80 @@ p
 
 
 <script type="text/javascript">
+var edit_button = document.getElementById("edit_button");
+var save_button = document.getElementById("save_button");
+var cancel_button = document.getElementById("cancel_button");
+
+var title_text = document.getElementById("title_text");
+var title_editor = document.getElementById("title_editor");
+var description_text = document.getElementById("description_text");
+var description_editor = document.getElementById("description_editor");
+var description_editor_box = document.getElementById("description_editor_box");
+
+bind_box_to_button(title_editor, save_button);
+
+var title_is_blank = "{{album.title}}" === "";
+var blank_title_text = "Album {{album.id}}";
+
 function submit_tag(callback)
 {
     add_photo_tag('{{album.id}}', add_tag_box.value, callback);
     add_tag_box.value = "";
+}
+
+function start_editing()
+{
+    edit_button.classList.add("hidden");
+    title_text.classList.add("hidden");
+    title_editor.classList.remove("hidden");
+    description_text.classList.add("hidden");
+    description_editor.classList.remove("hidden");
+
+    if (title_is_blank)
+    {
+        title_editor.value = "";
+    }
+    else
+    {
+        title_editor.value = title_text.innerText;
+    }
+    title_editor.focus();
+    description_editor_box.value = description_text.innerText;
+}
+
+function finish_editing(do_save)
+{
+    if (do_save === true)
+    {
+        console.log("save");
+        var title = title_editor.value;
+        var description = description_editor_box.value;
+        if (title === "")
+        {
+            document.title = "Album {{album.id}}";
+            title_text.innerText = blank_title_text;
+            title_is_blank = true;
+        }
+        else
+        {
+            document.title = "Album " + title;
+            title_text.innerText = title;
+            title_is_blank = false;
+        }
+        description_text.innerText = description;
+
+        var url = "/album/{{album.id}}/edit";
+        var data = new FormData();
+        data.append("title", title);
+        data.append("description", description);
+        callback = function(){};
+        post(url, data, callback);
+    }
+    edit_button.classList.remove("hidden");
+    title_text.classList.remove("hidden");
+    title_editor.classList.add("hidden");
+    description_text.classList.remove("hidden");
+    description_editor.classList.add("hidden");
 }
 </script>
 </html>

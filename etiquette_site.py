@@ -665,7 +665,6 @@ def get_user_json(username):
 @session_manager.give_token
 def post_album_add_tag(albumid):
     '''
-    Edit the album's title and description.
     Apply a tag to every photo in the album.
     '''
     response = {}
@@ -682,6 +681,21 @@ def post_album_add_tag(albumid):
     album.add_tag_to_all(tag, nested_children=recursive)
     response['action'] = 'add_tag'
     response['tagname'] = tag.name
+    return jsonify.make_json_response(response)
+
+
+@site.route('/album/<albumid>/edit', methods=['POST'])
+@session_manager.give_token
+def post_album_edit(albumid):
+    '''
+    Edit the title / description.
+    '''
+    album = P_album(albumid)
+
+    title = request.form.get('title', None)
+    description = request.form.get('description', None)
+    album.edit(title=title, description=description)
+    response = {'title': album.title, 'description': album.description}
     return jsonify.make_json_response(response)
 
 
