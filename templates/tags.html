@@ -74,12 +74,14 @@ body
                 <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualname}}</a><!--
                 --><button class="remove_tag_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
             </li>
-            {% for synonym in tag.synonyms() %}
-            <li>
-                <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualname + "+" + synonym}}</a><!--
-                --><button class="remove_tag_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
-            </li>
-            {% endfor %}
+            {% if include_synonyms %}
+                {% for synonym in tag.synonyms() %}
+                <li>
+                    <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualname + "+" + synonym}}</a><!--
+                    --><button class="remove_tag_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
+                </li>
+                {% endfor %}
+            {% endif %}
             {% endfor %}
         </ul>
     </div>

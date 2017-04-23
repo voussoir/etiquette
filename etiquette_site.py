@@ -607,7 +607,15 @@ def get_tags_html(specific_tag=None):
         specific_tag = P_tag(specific_tag, response_type='html')
     tags = get_tags_core(specific_tag)
     session = session_manager.get(request)
-    return flask.render_template('tags.html', tags=tags, session=session)
+    include_synonyms = request.args.get('synonyms')
+    include_synonyms = include_synonyms is None or helpers.truthystring(include_synonyms)
+    response = flask.render_template(
+        'tags.html',
+        include_synonyms=include_synonyms,
+        session=session,
+        tags=tags,
+    )
+    return response
 
 @site.route('/tags.json')
 @site.route('/tags/<specific_tag>.json')
@@ -616,7 +624,9 @@ def get_tags_json(specific_tag=None):
     if specific_tag is not None:
         specific_tag = P_tag(specific_tag, response_type='json')
     tags = get_tags_core(specific_tag)
-    tags = [jsonify.tag(tag, include_synonyms=True) for tag in tags]
+    include_synonyms = request.args.get('synonyms')
+    include_synonyms = include_synonyms is None or helpers.truthystring(include_synonyms)
+    tags = [jsonify.tag(tag, include_synonyms=include_synonyms) for tag in tags]
     return jsonify.make_json_response(tags)
 
 
