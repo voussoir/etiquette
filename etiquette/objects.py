@@ -262,6 +262,16 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - add tag to all')
             self.photodb.commit()
 
+    def associated_directories(self):
+        cur = self.photodb.sql.cursor()
+        cur.execute(
+            'SELECT directory FROM album_associated_directories WHERE albumid == ?',
+            [self.id]
+        )
+        directories = [x[0] for x in cur.fetchall()]
+        directories = [pathclass.Path(x) for x in directories]
+        return directories
+
     def delete(self, *, delete_children=False, commit=True):
         self.photodb.log.debug('Deleting album {album:r}'.format(album=self))
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
