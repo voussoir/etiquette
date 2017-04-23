@@ -18,9 +18,12 @@
 <body>
 {{header.make_header(session=session)}}
 <div id="content_body">
-    {% for album in albums %}
-    <div><a href="/album/{{album.id}}">{{album.display_name}}</a></div>
-    {% endfor %}
+    <h2>Albums</h2>
+    <ul>
+        {% for album in albums %}
+        <li><a href="/album/{{album.id}}">{{album.display_name}}</a></li>
+        {% endfor %}
+    </ul>
 </div>
 </body>
 
