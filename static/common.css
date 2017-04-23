@@ -49,7 +49,9 @@ li
     flex: 0 0 auto;
     flex-direction: row;
 }
-.add_tag_button, #search_go_button
+#search_go_button,
+.add_tag_button,
+.green_button
 {
     border-top: 2px solid #c2ffc3;
     border-left: 2px solid #c2ffc3;
@@ -57,13 +59,36 @@ li
     border-bottom: 2px solid #259427;
     background-color: #6df16f;
 }
-.add_tag_button:active, #search_go_button:active
+#search_go_button:active,
+.add_tag_button:active,
+.green_button:active
 {
     border-top: 2px solid #259427;
     border-left: 2px solid #259427;
     border-right: 2px solid #c2ffc3;
     border-bottom: 2px solid #c2ffc3;
 }
+.remove_tag_button,
+.remove_tag_button_perm,
+.red_button
+{
+    border-top: 2px solid #ffacac;
+    border-left: 2px solid #ffacac;
+    border-right: 2px solid #bd1b1b;
+    border-bottom: 2px solid #bd1b1b;
+
+    background-color: #ff4949;
+}
+.remove_tag_button:active,
+.remove_tag_button_perm:active,
+.red_button:active
+{
+    border-top: 2px solid #bd1b1b;
+    border-left: 2px solid #bd1b1b;
+    border-right: 2px solid #ffacac;
+    border-bottom: 2px solid #ffacac;
+}
+
 .remove_tag_button,
 .remove_tag_button_perm
 {
@@ -75,13 +100,11 @@ li
     height: 14px;
     padding: 0;
 
-    border-top: 2px solid #ffacac;
-    border-left: 2px solid #ffacac;
-    border-right: 2px solid #bd1b1b;
-    border-bottom: 2px solid #bd1b1b;
-
-    background-color: #ff4949;
 }
+/*
+The Remove button will be display:none by default, but is shown when the tag
+is hovered over.
+*/
 .remove_tag_button
 {
     display: none;
@@ -92,14 +115,7 @@ li
 {
     display:inline;
 }
-.remove_tag_button:active,
-.remove_tag_button_perm:active
-{
-    border-top: 2px solid #bd1b1b;
-    border-left: 2px solid #bd1b1b;
-    border-right: 2px solid #ffacac;
-    border-bottom: 2px solid #ffacac;
-}
+
 .photo_card_list
 {
     display: flex;
