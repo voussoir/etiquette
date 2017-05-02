@@ -3,7 +3,7 @@ from flask import request
 import functools
 import uuid
 
-from . import helpers
+from etiquette import helpers
 
 def _generate_token():
     token = str(uuid.uuid4())
@@ -13,7 +13,8 @@ def _generate_token():
 def _normalize_token(token):
     if isinstance(token, flask.Request):
         token = token.cookies.get('etiquette_session', None)
-    
+
+
 class SessionManager:
     def __init__(self):
         self.sessions = {}
