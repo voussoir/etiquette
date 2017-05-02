@@ -85,6 +85,7 @@ class GroupableMixin:
             'INSERT INTO %s VALUES(?, ?)' % self.group_table,
             [self.id, member.id]
         )
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - add to group')
             self.photodb.commit()
@@ -149,6 +150,7 @@ class GroupableMixin:
             'DELETE FROM %s WHERE memberid == ?' % self.group_table,
             [self.id]
         )
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - delete tag')
             self.photodb.commit()
@@ -195,6 +197,7 @@ class GroupableMixin:
             'DELETE FROM %s WHERE memberid == ?' % self.group_table,
             [self.id]
         )
+        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - leave group')
             self.photodb.commit()
@@ -968,6 +971,7 @@ class Tag(ObjectBase, GroupableMixin):
 
     def _uncache(self):
         self.photodb.caches['tag'].remove(self.id)
+        self._cached_qualified_name = None
 
     @decorators.transaction
     def add_synonym(self, synname, *, commit=True):
