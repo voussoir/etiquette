@@ -307,16 +307,6 @@ class PDBAlbumMixin:
             raise TypeError('Description must be string, not %s' % type(description))
 
         cur = self.sql.cursor()
-        if associated_directory is not None:
-            associated_directory = os.path.abspath(associated_directory)
-            cur.execute(
-                'SELECT * FROM album_associated_directories WHERE directory == ?',
-                [associated_directory]
-            )
-            fetch = cur.fetchone()
-            if fetch is not None:
-                album = self.get_album(fetch[constants.SQL_ALBUM_DIRECTORY['albumid']])
-                raise exceptions.AlbumExists(album)
 
         self.log.debug('New Album: %s' % title)
         data = {
@@ -327,17 +317,12 @@ class PDBAlbumMixin:
 
         (qmarks, bindings) = helpers.binding_filler(constants.SQL_ALBUM_COLUMNS, data)
         query = 'INSERT INTO albums VALUES(%s)' % qmarks
+
         cur.execute(query, bindings)
         album = objects.Album(self, data)
 
         if associated_directory is not None:
-            data = {
-                'albumid': albumid,
-                'directory': associated_directory,
-            }
-            (qmarks, bindings) = helpers.binding_filler(constants.SQL_ALBUM_DIRECTORY_COLUMNS, data)
-            query = 'INSERT INTO album_associated_directories VALUES(%s)' % qmarks
-            cur.execute(query, bindings)
+            album.add_associated_directory(associated_directory, commit=False)
 
         if photos is not None:
             for photo in photos:
