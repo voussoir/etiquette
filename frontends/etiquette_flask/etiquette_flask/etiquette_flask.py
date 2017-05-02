@@ -10,13 +10,16 @@ import warnings
 import zipstream
 
 import etiquette
-import etiquette_flask
+
+from . import decorators
+from . import jsonify
+from . import sessions
 
 from voussoirkit import pathclass
 
 
-root_dir = pathclass.Path(__file__).parent
-
+root_dir = pathclass.Path(__file__).parent.parent
+print(root_dir)
 TEMPLATE_DIR = root_dir.with_child('templates')
 STATIC_DIR = root_dir.with_child('static')
 FAVICON_PATH = STATIC_DIR.with_child('favicon.png')
@@ -37,7 +40,7 @@ site.debug = True
 
 P = etiquette.photodb.PhotoDB()
 
-session_manager = etiquette_flask.sessions.SessionManager()
+session_manager = sessions.SessionManager()
 
 ####################################################################################################
 ####################################################################################################
@@ -86,7 +89,7 @@ def P_wrapper(function):
                 flask.abort(status, e.error_message)
             else:
                 response = etiquette.jsonify.exception(e)
-                response = etiquette_flask.jsonify.make_json_response(response, status=status)
+                response = jsonify.make_json_response(response, status=status)
                 flask.abort(response)
 
         except Exception as e:
@@ -213,12 +216,12 @@ def get_register():
 
 @site.route('/login', methods=['POST'])
 @session_manager.give_token
-@etiquette_flask.decorators.required_fields(['username', 'password'])
+@decorators.required_fields(['username', 'password'])
 def post_login():
     if session_manager.get(request):
         e = etiquette.exceptions.AlreadySignedIn()
         response = etiquette.jsonify.exception(e)
-        return etiquette_flask.jsonify.make_json_response(response, status=403)
+        return jsonify.make_json_response(response, status=403)
 
     username = request.form['username']
     password = request.form['password']
@@ -232,19 +235,19 @@ def post_login():
     except (etiquette.exceptions.NoSuchUser, etiquette.exceptions.WrongLogin):
         e = etiquette.exceptions.WrongLogin()
         response = etiquette.jsonify.exception(e)
-        return etiquette_flask.jsonify.make_json_response(response, status=422)
-    session = etiquette_flask.sessions.Session(request, user)
+        return jsonify.make_json_response(response, status=422)
+    session = sessions.Session(request, user)
     session_manager.add(session)
-    return etiquette_flask.jsonify.make_json_response({})
+    return jsonify.make_json_response({})
 
 @site.route('/register', methods=['POST'])
 @session_manager.give_token
-@etiquette_flask.decorators.required_fields(['username', 'password_1', 'password_2'])
+@decorators.required_fields(['username', 'password_1', 'password_2'])
 def post_register():
     if session_manager.get(request):
         e = etiquette.exceptions.AlreadySignedIn()
         response = etiquette.jsonify.exception(e)
-        return etiquette_flask.jsonify.make_json_response(response, status=403)
+        return jsonify.make_json_response(response, status=403)
 
     username = request.form['username']
     password_1 = request.form['password_1']
@@ -255,17 +258,17 @@ def post_register():
             'error_type': 'PASSWORDS_DONT_MATCH',
             'error_message': 'Passwords do not match.',
         }
-        return etiquette_flask.jsonify.make_json_response(response, status=422)
+        return jsonify.make_json_response(response, status=422)
 
     try:
         user = P.register_user(username, password_1)
     except etiquette.exceptions.EtiquetteException as e:
         response = etiquette.jsonify.exception(e)
-        return etiquette_flask.jsonify.make_json_response(response, status=400)
+        return jsonify.make_json_response(response, status=400)
 
-    session = etiquette_flask.sessions.Session(request, user)
+    session = sessions.Session(request, user)
     session_manager.add(session)
-    return etiquette_flask.jsonify.make_json_response({})
+    return jsonify.make_json_response({})
 
 @site.route('/logout', methods=['GET', 'POST'])
 @session_manager.give_token
@@ -306,7 +309,7 @@ def get_album_json(albumid):
     album['sub_albums'] = [P_album(x) for x in album['sub_albums']]
     album['sub_albums'].sort(key=lambda x: (x.title or x.id).lower())
     album['sub_albums'] = [etiquette.jsonify.album(x, minimal=True) for x in album['sub_albums']]
-    return etiquette_flask.jsonify.make_json_response(album)
+    return jsonify.make_json_response(album)
 
 
 @site.route('/album/<albumid>.zip')
@@ -370,7 +373,7 @@ def get_albums_html():
 def get_albums_json():
     albums = get_albums_core()
     albums = [etiquette.jsonify.album(album, minimal=True) for album in albums]
-    return etiquette_flask.jsonify.make_json_response(albums)
+    return jsonify.make_json_response(albums)
 
 
 @site.route('/bookmarks')
@@ -419,7 +422,7 @@ def get_photo_html(photoid):
 def get_photo_json(photoid):
     photo = P_photo(photoid, response_type='json')
     photo = etiquette.jsonify.photo(photo)
-    photo = etiquette_flask.jsonify.make_json_response(photo)
+    photo = jsonify.make_json_response(photo)
     return photo
 
 def get_search_core():
@@ -584,7 +587,7 @@ def get_search_json():
     search_results['photos'] = [
         etiquette.jsonify.photo(photo, include_albums=False) for photo in search_results['photos']
     ]
-    return etiquette_flask.jsonify.make_json_response(search_results)
+    return jsonify.make_json_response(search_results)
 
 
 def get_tags_core(specific_tag=None):
@@ -624,7 +627,7 @@ def get_tags_json(specific_tag=None):
     include_synonyms = request.args.get('synonyms')
     include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
     tags = [etiquette.jsonify.tag(tag, include_synonyms=include_synonyms) for tag in tags]
-    return etiquette_flask.jsonify.make_json_response(tags)
+    return jsonify.make_json_response(tags)
 
 
 @site.route('/thumbnail/<photoid>')
@@ -654,7 +657,7 @@ def get_user_html(username):
 def get_user_json(username):
     user = get_user_core(username)
     user = etiquette.jsonify.user(user)
-    user = etiquette_flask.jsonify.make_json_response(user)
+    user = jsonify.make_json_response(user)
     return user
 
 
@@ -672,13 +675,13 @@ def post_album_add_tag(albumid):
         tag = P_tag(tag)
     except etiquette.exceptions.NoSuchTag as e:
         response = etiquette.jsonify.exception(e)
-        return etiquette_flask.jsonify.make_json_response(response, status=404)
+        return jsonify.make_json_response(response, status=404)
     recursive = request.form.get('recursive', False)
     recursive = etiquette.helpers.truthystring(recursive)
     album.add_tag_to_all(tag, nested_children=recursive)
     response['action'] = 'add_tag'
     response['tagname'] = tag.name
-    return etiquette_flask.jsonify.make_json_response(response)
+    return jsonify.make_json_response(response)
 
 
 @site.route('/album/<albumid>/edit', methods=['POST'])
@@ -693,7 +696,7 @@ def post_album_edit(albumid):
     description = request.form.get('description', None)
     album.edit(title=title, description=description)
     response = {'title': album.title, 'description': album.description}
-    return etiquette_flask.jsonify.make_json_response(response)
+    return jsonify.make_json_response(response)
 
 
 def post_photo_add_remove_tag_core(photoid, tagname, add_or_remove):
@@ -707,14 +710,14 @@ def post_photo_add_remove_tag_core(photoid, tagname, add_or_remove):
             photo.remove_tag(tag)
     except etiquette.exceptions.EtiquetteException as e:
         response = etiquette.jsonify.exception(e)
-        response = etiquette_flask.jsonify.make_json_response(response, status=400)
+        response = jsonify.make_json_response(response, status=400)
         flask.abort(response)
 
     response = {'tagname': tag.name}
-    return etiquette_flask.jsonify.make_json_response(response)
+    return jsonify.make_json_response(response)
 
 @site.route('/photo/<photoid>/add_tag', methods=['POST'])
-@etiquette_flask.decorators.required_fields(['tagname'], forbid_whitespace=True)
+@decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_photo_add_tag(photoid):
     '''
     Add a tag to this photo.
@@ -722,7 +725,7 @@ def post_photo_add_tag(photoid):
     return post_photo_add_remove_tag_core(photoid, request.form['tagname'], 'add')
 
 @site.route('/photo/<photoid>/remove_tag', methods=['POST'])
-@etiquette_flask.decorators.required_fields(['tagname'], forbid_whitespace=True)
+@decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_photo_remove_tag(photoid):
     '''
     Remove a tag from this photo.
@@ -740,9 +743,9 @@ def post_photo_refresh_metadata(photoid):
         photo.reload_metadata()
     except etiquette.exceptions.EtiquetteException as e:
         response = etiquette.jsonify.exception(e)
-        response = etiquette_flask.jsonify.make_json_response(response, status=400)
+        response = jsonify.make_json_response(response, status=400)
         flask.abort(response)
-    return etiquette_flask.jsonify.make_json_response({})
+    return jsonify.make_json_response({})
 
 
 def post_tag_create_delete_core(tagname, function):
@@ -754,10 +757,10 @@ def post_tag_create_delete_core(tagname, function):
         status = 400
     #print(response)
 
-    return etiquette_flask.jsonify.make_json_response(response, status=status)
+    return jsonify.make_json_response(response, status=status)
 
 @site.route('/tags/create_tag', methods=['POST'])
-@etiquette_flask.decorators.required_fields(['tagname'], forbid_whitespace=True)
+@decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_tag_create():
     '''
     Create a tag.
@@ -765,7 +768,7 @@ def post_tag_create():
     return post_tag_create_delete_core(request.form['tagname'], create_tag)
 
 @site.route('/tags/delete_tag', methods=['POST'])
-@etiquette_flask.decorators.required_fields(['tagname'], forbid_whitespace=True)
+@decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_tag_delete():
     '''
     Delete a tag.
@@ -773,7 +776,7 @@ def post_tag_delete():
     return post_tag_create_delete_core(request.form['tagname'], delete_tag)
 
 @site.route('/tags/delete_synonym', methods=['POST'])
-@etiquette_flask.decorators.required_fields(['tagname'], forbid_whitespace=True)
+@decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_tag_delete_synonym():
     '''
     Delete a synonym.
