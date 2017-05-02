@@ -321,6 +321,9 @@ def select_generator(sql, query, bindings=None):
             break
         yield fetch
 
+def sql_listify(items):
+    return '(%s)' % ', '.join('"%s"' % item for item in items)
+
 def truthystring(s):
     '''
     Convert strings to True, False, or None based on the options presented

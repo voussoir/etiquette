@@ -707,38 +707,11 @@ class PDBPhotoMixin:
             notnulls.append('bytes')
         if duration:
             notnulls.append('duration')
-        query = searchhelpers.build_query(orderby, notnulls)
-        print(query)
-        generator = helpers.select_generator(self.sql, query)
 
         if orderby is None:
             giveback_orderby = None
         else:
             giveback_orderby = [term.replace('RANDOM()', 'random') for term in orderby]
-        if give_back_parameters:
-            parameters = {
-                'area': area,
-                'width': width,
-                'height': height,
-                'ratio': ratio,
-                'bytes': bytes,
-                'duration': duration,
-                'authors': authors,
-                'created': created,
-                'extension': extension,
-                'extension_not': extension_not,
-                'filename': filename,
-                'has_tags': has_tags,
-                'mimetype': mimetype,
-                'tag_musts': tag_musts,
-                'tag_mays': tag_mays,
-                'tag_forbids': tag_forbids,
-                'tag_expression': tag_expression,
-                'limit': limit,
-                'offset': offset,
-                'orderby': giveback_orderby,
-            }
-            yield parameters
 
         # FROZEN CHILDREN
         # To lighten the amount of database reading here, `frozen_children` is a dict where
@@ -772,6 +745,44 @@ class PDBPhotoMixin:
         if filename:
             filename_tree = expressionmatch.ExpressionTree.parse(filename)
             filename_tree.map(lambda x: x.lower())
+
+        if give_back_parameters:
+            parameters = {
+                'area': area,
+                'width': width,
+                'height': height,
+                'ratio': ratio,
+                'bytes': bytes,
+                'duration': duration,
+                'authors': authors,
+                'created': created,
+                'extension': extension,
+                'extension_not': extension_not,
+                'filename': filename,
+                'has_tags': has_tags,
+                'mimetype': mimetype,
+                'tag_musts': tag_musts,
+                'tag_mays': tag_mays,
+                'tag_forbids': tag_forbids,
+                'tag_expression': tag_expression,
+                'limit': limit,
+                'offset': offset,
+                'orderby': giveback_orderby,
+            }
+            yield parameters
+
+        if is_must_may_forbid:
+            mmf_results = searchhelpers.mmf_photoids(self, tag_musts, tag_mays, tag_forbids, frozen_children)
+            #print('mmf accept:', mmf_results)
+        else:
+            mmf_results = None
+
+        if mmf_results is not None and mmf_results['photoids'] == set():
+            generator = []
+        else:
+            query = searchhelpers.build_query(orderby, notnulls, minimums, maximums, mmf_results=mmf_results)
+            print(query[:200])
+            generator = helpers.select_generator(self.sql, query)
 
         photos_received = 0
 
@@ -813,21 +824,21 @@ class PDBPhotoMixin:
                 #print('Failed filename')
                 continue
 
-            if any(
-                    fetch[constants.SQL_PHOTO[key]] is None or
-                    fetch[constants.SQL_PHOTO[key]] > value
-                    for (key, value) in maximums.items()
-                ):
-                #print('Failed maximums')
-                continue
+            # if any(
+            #         fetch[constants.SQL_PHOTO[key]] is None or
+            #         fetch[constants.SQL_PHOTO[key]] > value
+            #         for (key, value) in maximums.items()
+            #     ):
+            #     #print('Failed maximums')
+            #     continue
 
-            if any(
-                    fetch[constants.SQL_PHOTO[key]] is None or
-                    fetch[constants.SQL_PHOTO[key]] < value
-                    for (key, value) in minimums.items()
-                ):
-                #print('Failed minimums')
-                continue
+            # if any(
+            #         fetch[constants.SQL_PHOTO[key]] is None or
+            #         fetch[constants.SQL_PHOTO[key]] < value
+            #         for (key, value) in minimums.items()
+            #     ):
+            #     #print('Failed minimums')
+            #     continue
 
             if (has_tags is not None) or is_tagsearch:
                 photo_tags = set(photo.tags())
@@ -848,17 +859,22 @@ class PDBPhotoMixin:
                     if not success:
                         #print('Failed tag expression')
                         continue
+
                 elif is_must_may_forbid:
-                    success = searchfilter_must_may_forbid(
-                        photo_tags=photo_tags,
-                        tag_musts=tag_musts,
-                        tag_mays=tag_mays,
-                        tag_forbids=tag_forbids,
-                        frozen_children=frozen_children,
-                    )
-                    if not success:
-                        #print('Failed tag mmf')
-                        continue
+                    pass
+                    # if photo.id not in mmf_results:
+                    #     #print('Failed tag mmf')
+                    #     continue
+                    # success = searchfilter_must_may_forbid(
+                    #     photo_tags=photo_tags,
+                    #     tag_musts=tag_musts,
+                    #     tag_mays=tag_mays,
+                    #     tag_forbids=tag_forbids,
+                    #     frozen_children=frozen_children,
+                    # )
+                    # if not success:
+                    #     #print('Failed tag mmf')
+                    #     continue
 
             if offset > 0:
                 offset -= 1

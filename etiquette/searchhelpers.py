@@ -5,34 +5,45 @@ from . import objects
 
 from voussoirkit import expressionmatch
 
-def build_query(orderby, notnulls):
-    query = 'SELECT * FROM photos'
+
+def build_query(orderby, notnulls, minimums, maximums, mmf_results=None):
+    query = ['SELECT * FROM photos']
+    wheres = []
+
+    if mmf_results:
+        wheres.append('id %s %s' % (mmf_results['operator'], helpers.sql_listify(mmf_results['photoids'])))
 
     if orderby:
         orderby = [o.split('-') for o in orderby]
-        orderby_columns = [column for (column, sorter) in orderby if column != 'RANDOM()']
     else:
-        orderby_columns = []
+        orderby = [('created', 'DESC')]
 
-    if notnulls:
-        notnulls.extend(orderby_columns)
-    elif orderby_columns:
-        notnulls = orderby_columns
+    for (column, direction) in orderby:
+        if column != 'RANDOM()':
+            notnulls.append(column)
 
-    if notnulls:
-        notnulls = [x + ' IS NOT NULL' for x in notnulls]
-        notnulls = ' AND '.join(notnulls)
-        query += ' WHERE ' + notnulls
-    if not orderby:
-        query += ' ORDER BY created DESC'
-        return query
+    for column in notnulls:
+        wheres.append(column + ' IS NOT NULL')
 
-    # Combine each column+sorter
-    orderby = [' '.join(o) for o in orderby]
+    for (column, value) in minimums.items():
+        wheres.append(column + ' >= ' + str(value))
 
-    # Combine everything
-    orderby = ', '.join(orderby)
-    query += ' ORDER BY %s' % orderby
+    for (column, value) in maximums.items():
+        wheres.append(column + ' <= ' + str(value))
+
+    ## Assemble
+
+    if wheres:
+        wheres = 'WHERE '  + ' AND '.join(wheres)
+        query.append(wheres)
+
+    if orderby:
+        orderby = [' '.join(o) for o in orderby]
+        orderby = ', '.join(orderby)
+        orderby = 'ORDER BY ' + orderby
+        query.append(orderby)
+
+    query = ' '.join(query)
     return query
 
 def get_user(photodb, username_or_id):
@@ -89,6 +100,58 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
 
     if high is not None:
         maximums[key] = high
+
+def mmf_photoids(photodb, tag_musts, tag_mays, tag_forbids, frozen_children):
+    if not(tag_musts or tag_mays or tag_forbids):
+        return None
+
+    cur = photodb.sql.cursor()
+
+    operator = 'IN'
+    first_time = True
+    no_results = False
+    results = set()
+
+    if tag_mays:
+        for tag in tag_mays:
+            choices = helpers.sql_listify(tag.id for tag in frozen_children[tag])
+            query = 'SELECT photoid FROM photo_tag_rel WHERE tagid in %s' % choices
+            cur.execute(query)
+            results.update(fetch[0] for fetch in cur.fetchall())
+        first_time = False
+
+    if tag_musts:
+        for tag in tag_musts:
+            choices = helpers.sql_listify(tag.id for tag in frozen_children[tag])
+            query = 'SELECT photoid FROM photo_tag_rel WHERE tagid in %s' % choices
+            cur.execute(query)
+            photo_ids = (fetch[0] for fetch in cur.fetchall())
+            if first_time:
+                results.update(photo_ids)
+                first_time = False
+            else:
+                results = results.intersection(photo_ids)
+                if not results:
+                    no_results = True
+                    break
+
+    if tag_forbids and not no_results:
+        if not results:
+            operator = 'NOT IN'
+        for tag in tag_forbids:
+            choices = helpers.sql_listify(tag.id for tag in frozen_children[tag])
+            query = 'SELECT photoid FROM photo_tag_rel WHERE tagid in %s' % choices
+            cur.execute(query)
+            photo_ids = (fetch[0] for fetch in cur.fetchall())
+            if operator == 'IN':
+                results = results.difference(photo_ids)
+                if not results:
+                    no_results = True
+                    break
+            else:
+                results.update(photo_ids)
+
+    return {'operator': operator, 'photoids': results}
 
 def normalize_authors(authors, photodb, warning_bag=None):
     '''
