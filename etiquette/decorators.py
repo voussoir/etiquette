@@ -55,3 +55,16 @@ def time_me(function):
         print('%s: %0.8f' % (function.__name__, end-start))
         return result
     return timed_function
+
+def transaction(method):
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        try:
+            ret = method(self, *args, **kwargs)
+            return ret
+        except Exception as e:
+            self.log.debug('Rolling back')
+            print(e)
+            self.sql.rollback()
+            raise
+    return wrapped

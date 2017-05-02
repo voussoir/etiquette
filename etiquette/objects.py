@@ -17,6 +17,14 @@ class ObjectBase:
         super().__init__()
         self.photodb = photodb
 
+    @property
+    def log(self):
+        return self.photodb.log
+
+    @property
+    def sql(self):
+        return self.photodb.sql
+
     def __eq__(self, other):
         return (
             isinstance(other, type(self)) and
@@ -39,6 +47,7 @@ class GroupableMixin:
     group_sql_index = None
     group_table = None
 
+    @decorators.transaction
     def add(self, member, *, commit=True):
         '''
         Add a child object to this group.
@@ -99,6 +108,7 @@ class GroupableMixin:
             results.sort(key=lambda x: x.id)
         return results
 
+    @decorators.transaction
     def delete(self, *, delete_children=False, commit=True):
         '''
         Delete this object's relationships to other groupables.
@@ -160,6 +170,7 @@ class GroupableMixin:
         parentid = fetch[self.group_sql_index['parentid']]
         return self.group_getter(id=parentid)
 
+    @decorators.transaction
     def join_group(self, group, *, commit=True):
         '''
         Leave the current group, then call `group.add(self)`.
@@ -175,6 +186,7 @@ class GroupableMixin:
         self.leave_group(commit=commit)
         group.add(self, commit=commit)
 
+    @decorators.transaction
     def leave_group(self, *, commit=True):
         '''
         Leave the current group and become independent.
@@ -228,6 +240,8 @@ class Album(ObjectBase, GroupableMixin):
         self._sum_bytes_photos = None
         self._sum_bytes_albums = None
 
+    @decorators.transaction
+    @decorators.transaction
     def add_photo(self, photo, *, commit=True):
         if self.photodb != photo.photodb:
             raise ValueError('Not the same PhotoDB')
@@ -241,6 +255,7 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - add photo to album')
             self.photodb.commit()
 
+    @decorators.transaction
     def add_tag_to_all(self, tag, *, nested_children=True, commit=True):
         '''
         Add this tag to every photo in the album. Saves you from having to
@@ -272,6 +287,7 @@ class Album(ObjectBase, GroupableMixin):
         directories = [pathclass.Path(x) for x in directories]
         return directories
 
+    @decorators.transaction
     def delete(self, *, delete_children=False, commit=True):
         self.photodb.log.debug('Deleting album {album:r}'.format(album=self))
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
@@ -291,6 +307,7 @@ class Album(ObjectBase, GroupableMixin):
         else:
             return self.id
 
+    @decorators.transaction
     def edit(self, title=None, description=None, *, commit=True):
         '''
         Change the title or description. Leave None to keep current value.
@@ -335,6 +352,7 @@ class Album(ObjectBase, GroupableMixin):
         photos.sort(key=lambda x: x.basename.lower())
         return photos
 
+    @decorators.transaction
     def remove_photo(self, photo, *, commit=True):
         if not self.has_photo(photo):
             return
@@ -386,12 +404,14 @@ class Bookmark(ObjectBase):
     def __repr__(self):
         return 'Bookmark:{id}'.format(id=self.id)
 
+    @decorators.transaction
     def delete(self, *, commit=True):
         cur = self.photodb.sql.cursor()
         cur.execute('DELETE FROM bookmarks WHERE id == ?', [self.id])
         if commit:
             self.photodb.commit()
 
+    @decorators.transaction
     def edit(self, title=None, url=None, *, commit=True):
         if title is None and url is None:
             return
@@ -468,6 +488,7 @@ class Photo(ObjectBase):
     def _uncache(self):
         self.photodb.caches['photo'].remove(self.id)
 
+    @decorators.transaction
     def add_tag(self, tag, *, commit=True):
         if not self.photodb.config['enable_photo_add_remove_tag']:
             raise exceptions.FeatureDisabled('photo.add_tag, photo.remove_tag')
@@ -526,6 +547,7 @@ class Photo(ObjectBase):
         for tag in other_photo.tags():
             self.add_tag(tag)
 
+    @decorators.transaction
     def delete(self, *, delete_file=False, commit=True):
         '''
         Delete the Photo and its relation to any tags and albums.
@@ -555,6 +577,7 @@ class Photo(ObjectBase):
         return helpers.seconds_to_hms(self.duration)
 
     #@decorators.time_me
+    @decorators.transaction
     def generate_thumbnail(self, *, commit=True, **special):
         '''
         special:
@@ -691,6 +714,7 @@ class Photo(ObjectBase):
         return hopeful_filepath
 
     #@decorators.time_me
+    @decorators.transaction
     def reload_metadata(self, *, commit=True):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
@@ -749,6 +773,7 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Committing - reload metadata')
             self.photodb.commit()
 
+    @decorators.transaction
     def relocate(self, new_filepath, *, allow_duplicates=False, commit=True):
         '''
         Point the Photo object to a different filepath.
@@ -781,6 +806,7 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Commit - relocate photo')
             self.photodb.commit()
 
+    @decorators.transaction
     def remove_tag(self, tag, *, commit=True):
         if not self.photodb.config['enable_photo_add_remove_tag']:
             raise exceptions.FeatureDisabled('photo.add_tag, photo.remove_tag')
@@ -802,6 +828,7 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Committing - remove photo tag')
             self.photodb.commit()
 
+    @decorators.transaction
     def rename_file(self, new_filename, *, move=False, commit=True):
         '''
         Rename the file on the disk as well as in the database.
@@ -921,6 +948,7 @@ class Tag(ObjectBase, GroupableMixin):
     def _uncache(self):
         self.photodb.caches['tag'].remove(self.id)
 
+    @decorators.transaction
     def add_synonym(self, synname, *, commit=True):
         synname = self.photodb.normalize_tagname(synname)
 
@@ -945,6 +973,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         return synname
 
+    @decorators.transaction
     def convert_to_synonym(self, mastertag, *, commit=True):
         '''
         Convert this tag into a synonym for a different tag.
@@ -993,6 +1022,7 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - convert to synonym')
             self.photodb.commit()
 
+    @decorators.transaction
     def delete(self, *, delete_children=False, commit=True):
         self.photodb.log.debug('Deleting tag {tag:r}'.format(tag=self))
         self.photodb._cached_frozen_children = None
@@ -1018,6 +1048,7 @@ class Tag(ObjectBase, GroupableMixin):
         self._cached_qualified_name = qualname
         return qualname
 
+    @decorators.transaction
     def remove_synonym(self, synname, *, commit=True):
         '''
         Delete a synonym.
@@ -1043,6 +1074,7 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - remove synonym')
             self.photodb.commit()
 
+    @decorators.transaction
     def rename(self, new_name, *, apply_to_synonyms=True, commit=True):
         '''
         Rename the tag. Does not affect its relation to Photos or tag groups.

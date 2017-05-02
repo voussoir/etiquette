@@ -280,6 +280,7 @@ class PDBAlbumMixin:
             if album.parent() is None:
                 yield album
 
+    @decorators.transaction
     def new_album(
             self,
             title=None,
@@ -364,6 +365,7 @@ class PDBBookmarkMixin:
     def get_bookmarks(self):
         yield from self.get_things(thing_type='bookmark')
 
+    @decorators.transaction
     def new_bookmark(self, url, title=None, *, author=None, commit=True):
         if not self.config['enable_new_bookmark']:
             raise exceptions.FeatureDisabled('new_bookmark')
@@ -438,6 +440,7 @@ class PDBPhotoMixin:
             if count <= 0:
                 break
 
+    @decorators.transaction
     def new_photo(
             self,
             filepath,
@@ -518,6 +521,7 @@ class PDBPhotoMixin:
             self.commit()
         return photo
 
+    @decorators.transaction
     def purge_deleted_files(self, photos=None, *, commit=True):
         '''
         Remove Photo entries if their corresponding file is no longer found.
@@ -536,6 +540,7 @@ class PDBPhotoMixin:
             self.log.debug('Committing - purge deleted photos')
             self.commit()
 
+    @decorators.transaction
     def purge_empty_albums(self, *, commit=True):
         albums = self.get_albums()
         for album in albums:
@@ -949,6 +954,7 @@ class PDBTagMixin:
     def get_tags(self):
         yield from self.get_things(thing_type='tag')
 
+    @decorators.transaction
     def new_tag(self, tagname, *, commit=True):
         '''
         Register a new tag and return the Tag object.
@@ -1074,6 +1080,7 @@ class PDBUserMixin:
 
         return objects.User(self, fetch)
 
+    @decorators.transaction
     def register_user(self, username, password, commit=True):
         if not self.config['enable_new_user']:
             raise exceptions.FeatureDisabled('new_user')
@@ -1216,6 +1223,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             task['action'](*args, **kwargs)
         self.sql.commit()
 
+    @decorators.transaction
     def digest_directory(
             self,
             directory,
