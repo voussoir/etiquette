@@ -69,15 +69,15 @@ body
     <div id="left">
         <ul>
             {% for tag in tags %}
-            {% set qualname = tag.qualified_name() %}
+            {% set qualified_name = tag.qualified_name() %}
             <li>
-                <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualname}}</a><!--
+                <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualified_name}}</a><!--
                 --><button class="remove_tag_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
             </li>
             {% if include_synonyms %}
                 {% for synonym in tag.synonyms() %}
                 <li>
-                    <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualname + "+" + synonym}}</a><!--
+                    <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualified_name + "+" + synonym}}</a><!--
                     --><button class="remove_tag_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
                 </li>
                 {% endfor %}

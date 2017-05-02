@@ -175,8 +175,6 @@ class GroupableMixin:
         '''
         Leave the current group, then call `group.add(self)`.
         '''
-        if isinstance(group, str):
-            group = self.photodb.get_tag(group)
         if not isinstance(group, type(self)):
             raise TypeError('Group must also be %s' % type(self))
 

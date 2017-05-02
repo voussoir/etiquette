@@ -263,13 +263,16 @@ class PDBAlbumMixin:
         Return the album with the `associated_directory` of this value,
         NOT case-sensitive.
         '''
-        filepath = os.path.abspath(filepath)
+        filepath = pathclass.Path(filepath).absolute_path
         cur = self.sql.cursor()
-        cur.execute('SELECT * FROM album_associated_directories WHERE directory == ?', [filepath])
+        cur.execute(
+            'SELECT albumid FROM album_associated_directories WHERE directory == ?',
+            [filepath]
+        )
         fetch = cur.fetchone()
         if fetch is None:
             raise exceptions.NoSuchAlbum(filepath)
-        album_id = fetch[constants.SQL_ALBUM_DIRECTORY['albumid']]
+        album_id = fetch[0]
         return self.get_album(album_id)
 
     def get_albums(self):
@@ -336,7 +339,7 @@ class PDBAlbumMixin:
             query = 'INSERT INTO album_associated_directories VALUES(%s)' % qmarks
             cur.execute(query, bindings)
 
-        if photos:
+        if photos is not None:
             for photo in photos:
                 photo = self.get_photo(photo)
                 album.add_photo(photo, commit=False)
@@ -666,7 +669,7 @@ class PDBPhotoMixin:
             _helper = lambda tagset: searchhelpers.normalize_tag_mmf(
                 photodb=self,
                 tags=tagset,
-                warning_bag=warning_bag
+                warning_bag=warning_bag,
             )
             tag_musts = _helper(tag_musts)
             tag_mays = _helper(tag_mays)
@@ -765,6 +768,8 @@ class PDBPhotoMixin:
             else:
                 frozen_children = self.export_tags(tag_export_totally_flat)
                 self._cached_frozen_children = frozen_children
+        else:
+            frozen_children = None
 
         if tag_expression:
             tag_expression_tree = searchhelpers.tag_expression_tree_builder(
@@ -1230,14 +1235,15 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         If a Photo object already exists for a file, it will be added to the
         correct album.
         '''
-        if not os.path.isdir(directory):
+        directory = pathclass.Path(directory)
+        if not directory.is_dir:
             raise ValueError('Not a directory: %s' % directory)
+
         if exclude_directories is None:
             exclude_directories = self.config['digest_exclude_dirs']
         if exclude_filenames is None:
             exclude_filenames = self.config['digest_exclude_files']
 
-        directory = spinal.str_to_fp(directory)
         directory.correct_case()
         generator = spinal.walk_generator(
             directory,
