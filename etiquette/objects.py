@@ -241,6 +241,36 @@ class Album(ObjectBase, GroupableMixin):
         self._sum_bytes_albums = None
 
     @decorators.transaction
+    def add_associated_directory(self, filepath, *, commit=True):
+        filepath = pathclass.Path(filepath)
+        if not filepath.is_dir:
+            raise ValueError('%s is not a directory' % filepath)
+
+        try:
+            existing = self.photodb.get_album_by_path(filepath)
+        except exceptions.NoSuchAlbum:
+            existing = None
+
+        if existing is None:
+            pass
+        elif existing == self:
+            return
+        else:
+            raise exceptions.AlbumExists(filepath)
+
+        data = {
+            'albumid': self.id,
+            'directory': filepath.absolute_path,
+        }
+        (qmarks, bindings) = helpers.binding_filler(constants.SQL_ALBUM_DIRECTORY_COLUMNS, data)
+        query = 'INSERT INTO album_associated_directories VALUES(%s)' % qmarks
+        cur = self.photodb.sql.cursor()
+        cur.execute(query, bindings)
+
+        if commit:
+            self.photodb.log.debug('Committing - add associated directory')
+            self.photodb.commit()
+
     @decorators.transaction
     def add_photo(self, photo, *, commit=True):
         if self.photodb != photo.photodb:
