@@ -307,6 +307,7 @@ class Album(ObjectBase, GroupableMixin):
         else:
             return self.id
 
+    @decorators.required_feature('enable_album_edit')
     @decorators.transaction
     def edit(self, title=None, description=None, *, commit=True):
         '''
@@ -488,11 +489,9 @@ class Photo(ObjectBase):
     def _uncache(self):
         self.photodb.caches['photo'].remove(self.id)
 
+    @decorators.required_feature('enable_photo_add_remove_tag')
     @decorators.transaction
     def add_tag(self, tag, *, commit=True):
-        if not self.photodb.config['enable_photo_add_remove_tag']:
-            raise exceptions.FeatureDisabled('photo.add_tag, photo.remove_tag')
-
         tag = self.photodb.get_tag(tag)
 
         existing = self.has_tag(tag, check_children=False)
@@ -577,15 +576,13 @@ class Photo(ObjectBase):
         return helpers.seconds_to_hms(self.duration)
 
     #@decorators.time_me
+    @decorators.required_feature('enable_photo_generate_thumbnail')
     @decorators.transaction
     def generate_thumbnail(self, *, commit=True, **special):
         '''
         special:
             For videos, you can provide a `timestamp` to take the thumbnail at.
         '''
-        if not self.photodb.config['enable_photo_generate_thumbnail']:
-            raise exceptions.FeatureDisabled('photo.generate_thumbnail')
-
         hopeful_filepath = self.make_thumbnail_filepath()
         hopeful_filepath = hopeful_filepath.relative_path
         #print(hopeful_filepath)
@@ -714,14 +711,12 @@ class Photo(ObjectBase):
         return hopeful_filepath
 
     #@decorators.time_me
+    @decorators.required_feature('enable_photo_reload_metadata')
     @decorators.transaction
     def reload_metadata(self, *, commit=True):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
         '''
-        if not self.photodb.config['enable_photo_reload_metadata']:
-            raise exceptions.FeatureDisabled('photo.reload_metadata')
-
         self.bytes = os.path.getsize(self.real_filepath)
         self.width = None
         self.height = None
@@ -806,11 +801,9 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Commit - relocate photo')
             self.photodb.commit()
 
+    @decorators.required_feature('enable_photo_add_remove_tag')
     @decorators.transaction
     def remove_tag(self, tag, *, commit=True):
-        if not self.photodb.config['enable_photo_add_remove_tag']:
-            raise exceptions.FeatureDisabled('photo.add_tag, photo.remove_tag')
-
         tag = self.photodb.get_tag(tag)
 
         self.photodb.log.debug('Removing tag {t} from photo {p}'.format(t=repr(tag), p=repr(self)))

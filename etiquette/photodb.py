@@ -280,6 +280,7 @@ class PDBAlbumMixin:
             if album.parent() is None:
                 yield album
 
+    @decorators.required_feature('enable_new_album')
     @decorators.transaction
     def new_album(
             self,
@@ -293,9 +294,6 @@ class PDBAlbumMixin:
         '''
         Create a new album. Photos can be added now or later.
         '''
-        if not self.config['enable_new_album']:
-            raise exceptions.FeatureDisabled('new_album')
-
         albumid = self.generate_id('albums')
         title = title or ''
         description = description or ''
@@ -365,11 +363,9 @@ class PDBBookmarkMixin:
     def get_bookmarks(self):
         yield from self.get_things(thing_type='bookmark')
 
+    @decorators.required_feature('enable_new_bookmark')
     @decorators.transaction
     def new_bookmark(self, url, title=None, *, author=None, commit=True):
-        if not self.config['enable_new_bookmark']:
-            raise exceptions.FeatureDisabled('new_bookmark')
-
         if not url:
             raise ValueError('Must provide a URL')
 
@@ -440,6 +436,7 @@ class PDBPhotoMixin:
             if count <= 0:
                 break
 
+    @decorators.required_feature('enable_new_photo')
     @decorators.transaction
     def new_photo(
             self,
@@ -461,9 +458,6 @@ class PDBPhotoMixin:
 
         Returns the Photo object.
         '''
-        if not self.config['enable_new_photo']:
-            raise exceptions.FeatureDisabled('new_photo')
-
         filepath = pathclass.Path(filepath)
         if not filepath.is_file:
             raise FileNotFoundError(filepath.absolute_path)
@@ -954,14 +948,12 @@ class PDBTagMixin:
     def get_tags(self):
         yield from self.get_things(thing_type='tag')
 
+    @decorators.required_feature('enable_new_tag')
     @decorators.transaction
     def new_tag(self, tagname, *, commit=True):
         '''
         Register a new tag and return the Tag object.
         '''
-        if not self.config['enable_new_tag']:
-            raise exceptions.FeatureDisabled('new_tag')
-
         tagname = self.normalize_tagname(tagname)
         try:
             existing_tag = self.get_tag_by_name(tagname)
@@ -1080,11 +1072,9 @@ class PDBUserMixin:
 
         return objects.User(self, fetch)
 
+    @decorators.required_feature('enable_new_user')
     @decorators.transaction
     def register_user(self, username, password, commit=True):
-        if not self.config['enable_new_user']:
-            raise exceptions.FeatureDisabled('new_user')
-
         if len(username) < self.config['min_username_length']:
             raise exceptions.UsernameTooShort(
                 username=username,

@@ -154,6 +154,7 @@ DEFAULT_CONFIGURATION = {
     'cache_size_tag': 1000,
     'cache_size_user': 200,
 
+    'enable_album_edit': True,
     'enable_new_album': True,
     'enable_new_bookmark': True,
     'enable_new_photo': True,
