@@ -1254,9 +1254,9 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             new_photos = []
             for filepath in files:
                 try:
+                    photo = self.get_photo_by_path(filepath)
+                except exceptions.NoSuchPhoto:
                     photo = self.new_photo(filepath.absolute_path, commit=False)
-                except exceptions.PhotoExists as e:
-                    photo = e.photo
                 new_photos.append(photo)
 
             if not make_albums:
