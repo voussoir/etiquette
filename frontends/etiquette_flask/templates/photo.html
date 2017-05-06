@@ -208,12 +208,11 @@
     <!-- THE PHOTO ITSELF -->
     <div class="photo_viewer">
         {% if photo.simple_mimetype == "image" %}
-        <div id="photo_img_holder">
+        <div id="photo_img_holder" onclick="toggle_hoverzoom(event)">
             <img
             id="photo_img"
             src="{{file_link}}"
             alt="{{photo.basename}}"
-            onclick="toggle_hoverzoom()"
             onload="this.style.opacity=0.99"
             >
         </div>
@@ -236,6 +235,9 @@ var add_tag_box = document.getElementById('add_tag_textbox');
 var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
 add_tag_box.onkeydown = function(){entry_with_history_hook(add_tag_box, add_tag_button)};
+
+photo_img_holder = document.getElementById("photo_img_holder");
+photo_img = document.getElementById("photo_img");
 
 function add_photo_tag(photoid, tagname, callback)
 {
@@ -292,49 +294,50 @@ function refresh_metadata(photoid)
 {
     var url= "/photo/" + photoid + "/refresh_metadata";
     var data = new FormData();
-    post(url, data);
-    setTimeout(function(){location.reload();}, 2000);
+    callback = function(){location.reload();};
+    post(url, data, callback);
 }
 
-function enable_hoverzoom()
+function enable_hoverzoom(event)
 {
-    console.log("enable zoom");
-    img_holder = document.getElementById("photo_img_holder");
-    img = document.getElementById("photo_img");
-    if (img.naturalWidth < img_holder.offsetWidth && img.naturalHeight < img_holder.offsetHeight)
+    //console.log("enable zoom");
+    photo_img_holder = document.getElementById("photo_img_holder");
+    photo_img = document.getElementById("photo_img");
+    if (
+        photo_img.naturalWidth < photo_img_holder.offsetWidth &&
+        photo_img.naturalHeight < photo_img_holder.offsetHeight
+    )
     {
         return;
     }
-    img.style.opacity = "0";
-    img.style.display = "none";
-    img_holder.style.cursor = "zoom-out";
-    img_holder.style.backgroundImage = "url('{{file_link}}')";
-    img_holder.onmousemove = move_hoverzoom;
-    setTimeout(function(){img_holder.onclick = toggle_hoverzoom;}, 100);
+    photo_img.style.opacity = "0";
+    photo_img.style.display = "none";
+    photo_img_holder.style.cursor = "zoom-out";
+    photo_img_holder.style.backgroundImage = "url('{{file_link}}')";
+    photo_img_holder.onmousemove = move_hoverzoom;
+    move_hoverzoom(event)
+    //setTimeout(function(){img_holder.onclick = toggle_hoverzoom;}, 100);
     return true;
 }
 function disable_hoverzoom()
 {
-    console.log("disable zoom");
-    img_holder = document.getElementById("photo_img_holder");
-    img = document.getElementById("photo_img");
-    img.style.opacity = "100";
-    img_holder.style.cursor = "";
-    img.style.display="";
-    img_holder.style.backgroundImage = "none";
-    img_holder.onmousemove = null;
-    img_holder.onclick = null;
+    //console.log("disable zoom");
+    photo_img.style.opacity = "100";
+    photo_img_holder.style.cursor = "";
+    photo_img.style.display = "";
+    photo_img_holder.style.backgroundImage = "none";
+    photo_img_holder.onmousemove = null;
+    //photo_img_holder.onclick = null;
 }
 function toggle_hoverzoom()
 {
-    img = document.getElementById("photo_img");
-    if (img.style.opacity === "0")
+    if (photo_img.style.opacity === "0")
     {
         disable_hoverzoom();
     }
     else
     {
-        enable_hoverzoom();
+        enable_hoverzoom(event);
     }
     if (getComputedStyle(content_body).flexDirection != "column-reverse")
     {
@@ -342,24 +345,40 @@ function toggle_hoverzoom()
     }
 }
 
-photo_img_holder = document.getElementById("photo_img_holder");
-photo_img = document.getElementById("photo_img");
 function move_hoverzoom(event)
 {
     var x;
     var y;
 
-    // Adding 5% to perceived position gives us a bit of padding around the image,
-    // so you don't need to navigate a 1px line to see the edge.
-    // We first subtract half of the image dimensions so that the 5% is applied
-    // to both left and right. Otherwise 105% of 0 is still 0 which doesn't
-    // apply padding on the left.
+    /*
+    When clicking on the image, the event handler takes the image as the event
+    target even though the handler was assigned to the holder. The coordinates
+    for the zoom need to be based on the holder, so when this happens we need
+    to adjust the numbers.
+    I'm not sure why the offset is the holder's offsetLeft. It seems that when
+    the event triggers on the holder, the event X is based on its bounding box,
+    but when it triggers on the image it's based on the viewport.
+    */
     var mouse_x = event.offsetX;
+    var mouse_y = event.offsetY;
+    if (event.target !== photo_img_holder)
+    {
+        mouse_x -= photo_img_holder.offsetLeft;
+        mouse_y -= photo_img_holder.offsetTop;
+    }
+    //console.log(mouse_x);
+
+    /*
+    Adding 5% to perceived position gives us a bit of padding around the image,
+    so you don't need to navigate a 1px line to see the edge.
+    We first subtract half of the image dimensions so that the 5% is applied
+    to both left and right. Otherwise 105% of 0 is still 0 which doesn't
+    apply padding on the left.
+    */
     mouse_x -= (photo_img_holder.offsetWidth / 2);
     mouse_x *= 1.05;
     mouse_x += (photo_img_holder.offsetWidth / 2);
 
-    var mouse_y = event.offsetY;
     mouse_y -= (photo_img_holder.offsetHeight / 2);
     mouse_y *= 1.05;
     mouse_y += (photo_img_holder.offsetHeight / 2);
