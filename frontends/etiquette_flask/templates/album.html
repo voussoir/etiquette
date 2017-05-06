@@ -57,11 +57,12 @@ p
     <p id="description_text">{{album.description}}</p>
 
     <div id="description_editor" class="hidden">
-    <textarea id="description_editor_box" placeholder="description">{{album.description}}</textarea>
-    <span>
-        <button id="save_button" class="green_button" onclick="finish_editing(true)">Save</button>
-        <button id="cancel_button" class="red_button" onclick="finish_editing(false)">Cancel</button>
-    </span>
+        <textarea id="description_editor_box" placeholder="description">{{album.description}}</textarea>
+        <span>
+            <button id="save_button" class="green_button" onclick="finish_editing(true)">Save</button>
+            <button id="cancel_button" class="red_button" onclick="finish_editing(false)">Cancel</button>
+        </span>
+        <span id="edit_submitting_spinner">Submitting...</span>
     </div>
 
     {% set viewparam = "?view=list" if view == "list" else "" %}
@@ -127,10 +128,11 @@ var title_editor = document.getElementById("title_editor");
 var description_text = document.getElementById("description_text");
 var description_editor = document.getElementById("description_editor");
 var description_editor_box = document.getElementById("description_editor_box");
+var edit_submitting_spinner = document.getElementById("edit_submitting_spinner");
 
 bind_box_to_button(title_editor, save_button);
 
-var title_is_blank = "{{album.title}}" === "";
+var title_is_blank = {{ (album.title == '')|int }};
 var blank_title_text = "Album {{album.id}}";
 
 function submit_tag(callback)
@@ -139,14 +141,37 @@ function submit_tag(callback)
     add_tag_box.value = "";
 }
 
-function start_editing()
+function show_editor()
 {
     edit_button.classList.add("hidden");
+    edit_submitting_spinner.classList.add("hidden");
+
     title_text.classList.add("hidden");
     title_editor.classList.remove("hidden");
+
     description_text.classList.add("hidden");
     description_editor.classList.remove("hidden");
+}
 
+function show_spinner()
+{
+    edit_submitting_spinner.classList.remove("hidden");
+}
+
+function hide_editor()
+{
+    edit_button.classList.remove("hidden");
+    edit_submitting_spinner.classList.add("hidden");
+
+    title_text.classList.remove("hidden");
+    title_editor.classList.add("hidden");
+
+    description_text.classList.remove("hidden");
+    description_editor.classList.add("hidden");
+}
+
+function start_editing()
+{
     if (title_is_blank)
     {
         title_editor.value = "";
@@ -155,6 +180,7 @@ function start_editing()
     {
         title_editor.value = title_text.innerText;
     }
+    show_editor();
     title_editor.focus();
     description_editor_box.value = description_text.innerText;
 }
@@ -163,10 +189,30 @@ function finish_editing(do_save)
 {
     if (do_save === true)
     {
-        console.log("save");
         var title = title_editor.value;
         var description = description_editor_box.value;
-        if (title === "")
+
+        var url = "/album/{{album.id}}/edit";
+        var data = new FormData();
+        data.append("title", title);
+        data.append("description", description);
+
+        show_spinner();
+        post(url, data, callback_edit);
+    }
+    else
+    {
+
+    }
+
+}
+
+function callback_edit(response)
+{
+    console.log(response);
+    if (response["_status"] == 200)
+    {
+        if (response["title"] === "")
         {
             document.title = "Album {{album.id}}";
             title_text.innerText = blank_title_text;
@@ -174,24 +220,13 @@ function finish_editing(do_save)
         }
         else
         {
-            document.title = "Album " + title;
-            title_text.innerText = title;
+            document.title = "Album " + response["title"];
+            title_text.innerText = response["title"];
             title_is_blank = false;
         }
-        description_text.innerText = description;
-
-        var url = "/album/{{album.id}}/edit";
-        var data = new FormData();
-        data.append("title", title);
-        data.append("description", description);
-        callback = function(){};
-        post(url, data, callback);
+        description_text.innerText = response["description"];
+        hide_editor();
     }
-    edit_button.classList.remove("hidden");
-    title_text.classList.remove("hidden");
-    title_editor.classList.add("hidden");
-    description_text.classList.remove("hidden");
-    description_editor.classList.add("hidden");
 }
 </script>
 </html>
