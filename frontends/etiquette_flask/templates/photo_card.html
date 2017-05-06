@@ -42,7 +42,9 @@
     </div>
     <div class="photo_card_grid_info">
         <div class="photo_card_grid_filename">
+            <div class="photo_card_grid_filename_hoverhelper">
             <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
+            </div>
         </div>
         <div class="photo_card_grid_file_metadata">
             {% set tags = photo.tags() %}

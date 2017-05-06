@@ -203,13 +203,13 @@ is hovered over.
 
     word-break:break-word;
 }
-.photo_card_grid_filename a
-{
-    background-color: inherit;
-}
 .photo_card_grid_filename:hover
 {
     overflow: visible;
+}
+.photo_card_grid_filename_hoverhelper:hover
+{
+    background-color: inherit;
 }
 .photo_card_grid_file_metadata
 {
