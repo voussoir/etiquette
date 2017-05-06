@@ -2,7 +2,7 @@
 <html>
 <head>
     {% import "header.html" as header %}
-    <title>Photo</title>
+    <title>Photo {{photo.basename}}</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
     <script src="/static/common.js"></script>
@@ -171,6 +171,7 @@
             <button id="refresh_metadata_button" class="add_tag_button" onclick="refresh_metadata('{{photo.id}}');">refresh</button>
         </h4>
         <ul id="metadata">
+        <li>Filename: {{photo.basename}}</li>
         {% if photo.author_id %}
             {% set author = photo.author() %}
             <li>Author: <a href="/user/{{author.username}}">{{author.username}}</a></li>
@@ -184,8 +185,8 @@
             <li>Duration: {{photo.duration_string}}</li>
             <li>Overall Bitrate: {{((photo.bytes / 128) / photo.duration)|int}} kbps</li>
         {% endif %}
-        <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=1">Download as {{photo.id}}.{{photo.extension}}</a></li>
-        <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=1&original_filename=1">Download as "{{photo.basename}}"</a></li>
+        <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=true&original_filename=true">Download as original filename</a></li>
+        <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
         </ul>
 
         <!-- CONTAINING ALBUMS -->
