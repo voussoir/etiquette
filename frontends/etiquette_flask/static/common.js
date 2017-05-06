@@ -24,7 +24,6 @@ function add_album_tag(albumid, tagname, callback)
 function post(url, data, callback)
 {
     var request = new XMLHttpRequest();
-    request.answer = null;
     request.onreadystatechange = function()
     {
         if (request.readyState == 4)
@@ -32,11 +31,9 @@ function post(url, data, callback)
             if (callback != null)
             {
                 var text = request.responseText;
-                console.log(request);
-                console.log(text);
                 var response = JSON.parse(text);
                 response["_request_url"] = url;
-                response["_status"] = status;
+                response["_status"] = request.status;
                 callback(response);
             }
         }
