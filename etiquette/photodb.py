@@ -743,8 +743,13 @@ class PDBPhotoMixin:
                 tag_match_function = searchhelpers.tag_expression_matcher_builder(frozen_children)
 
         if filename:
-            filename_tree = expressionmatch.ExpressionTree.parse(filename)
-            filename_tree.map(lambda x: x.lower())
+            try:
+                filename_tree = expressionmatch.ExpressionTree.parse(filename)
+                filename_tree.map(lambda x: x.lower())
+            except expressionmatch.NoTokens:
+                filename_tree = None
+        else:
+            filename_tree = None
 
         if give_back_parameters:
             parameters = {
@@ -820,7 +825,7 @@ class PDBPhotoMixin:
                 #print('Failed author')
                 continue
 
-            if filename and not filename_tree.evaluate(photo.basename.lower()):
+            if filename_tree and not filename_tree.evaluate(photo.basename.lower()):
                 #print('Failed filename')
                 continue
 
