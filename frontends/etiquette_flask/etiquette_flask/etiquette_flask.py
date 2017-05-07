@@ -19,7 +19,7 @@ from voussoirkit import pathclass
 
 
 root_dir = pathclass.Path(__file__).parent.parent
-print(root_dir)
+
 TEMPLATE_DIR = root_dir.with_child('templates')
 STATIC_DIR = root_dir.with_child('static')
 FAVICON_PATH = STATIC_DIR.with_child('favicon.png')

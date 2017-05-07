@@ -47,9 +47,8 @@
             </div>
         </div>
         <div class="photo_card_grid_file_metadata">
-            {% set tags = photo.tags() %}
             {% set tag_names = [] %}
-            {% for tag in tags %}
+            {% for tag in photo.tags() %}
             {% do tag_names.append(tag.name) %}
             {% endfor %}
             {% if tag_names %}
