@@ -221,7 +221,7 @@ class Album(ObjectBase, GroupableMixin):
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
-            db_row = helpers.parallel_to_dict(constants.SQL_ALBUM_COLUMNS, db_row)
+            db_row = dict(zip(constants.SQL_ALBUM_COLUMNS, db_row))
         self.id = db_row['id']
         self.title = db_row['title']
         self.description = db_row['description']
@@ -426,7 +426,7 @@ class Bookmark(ObjectBase):
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
-            db_row = helpers.parallel_to_dict(constants.SQL_BOOKMARK_COLUMNS, db_row)
+            db_row = dict(zip(constants.SQL_BOOKMARK_COLUMNS, db_row))
 
         self.id = db_row['id']
         self.title = db_row['title']
@@ -473,7 +473,7 @@ class Photo(ObjectBase):
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
-            db_row = helpers.parallel_to_dict(constants.SQL_PHOTO_COLUMNS, db_row)
+            db_row = dict(zip(constants.SQL_PHOTO_COLUMNS, db_row))
 
         self.real_filepath = helpers.normalize_filepath(db_row['filepath'], allowed=':\\/')
         self.real_path = pathclass.Path(self.real_filepath)
@@ -949,7 +949,7 @@ class Tag(ObjectBase, GroupableMixin):
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
-            db_row = helpers.parallel_to_dict(constants.SQL_TAG_COLUMNS, db_row)
+            db_row = dict(zip(constants.SQL_TAG_COLUMNS, db_row))
         self.id = db_row['id']
         self.name = db_row['name']
         self.group_getter = self.photodb.get_tag
@@ -1147,7 +1147,7 @@ class User(ObjectBase):
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
-            db_row = helpers.parallel_to_dict(constants.SQL_USER_COLUMNS, db_row)
+            db_row = dict(zip(constants.SQL_USER_COLUMNS, db_row))
         self.id = db_row['id']
         self.username = db_row['username']
         self.created = db_row['created']

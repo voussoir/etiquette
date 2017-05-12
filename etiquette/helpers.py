@@ -247,19 +247,6 @@ def now(timestamp=True):
         return n.timestamp()
     return n
 
-def parallel_to_dict(keys, values):
-    '''
-    Given two parallel sequences, return a dictionary where the keys are
-    elements of `keys` and their values are the element of `values` with the
-    same index.
-
-    ['test', 'toast'],
-    ['hello', 'world']
-    ->
-    {'test': 'hello', 'toast': 'world'}
-    '''
-    return {keys[index]: value for (index, value) in enumerate(values)}
-
 def read_filebytes(filepath, range_min, range_max, chunk_size=2 ** 20):
     '''
     Yield chunks of bytes from the file between the endpoints.
