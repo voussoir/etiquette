@@ -499,6 +499,8 @@ class Photo(ObjectBase):
         self.ratio = db_row['ratio']
         self.thumbnail = db_row['thumbnail']
 
+        if self.duration:
+            self.bitrate = (self.bytes / 128) / self.duration
         self.mimetype = helpers.get_mimetype(self.real_filepath)
         if self.mimetype is None:
             self.simple_mimetype = None
