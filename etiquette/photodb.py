@@ -778,7 +778,13 @@ class PDBPhotoMixin:
             yield parameters
 
         if is_must_may_forbid:
-            mmf_results = searchhelpers.mmf_photoids(self, tag_musts, tag_mays, tag_forbids, frozen_children)
+            mmf_results = searchhelpers.mmf_photoids(
+                self,
+                tag_musts,
+                tag_mays,
+                tag_forbids,
+                frozen_children,
+            )
             #print('mmf accept:', mmf_results)
         else:
             mmf_results = None
@@ -786,7 +792,13 @@ class PDBPhotoMixin:
         if mmf_results is not None and mmf_results['photoids'] == set():
             generator = []
         else:
-            query = searchhelpers.build_query(orderby, notnulls, minimums, maximums, mmf_results=mmf_results)
+            query = searchhelpers.build_query(
+                orderby,
+                notnulls,
+                minimums,
+                maximums,
+                mmf_results=mmf_results,
+            )
             print(query[:200])
             generator = helpers.select_generator(self.sql, query)
 

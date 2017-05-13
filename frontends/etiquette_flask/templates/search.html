@@ -291,6 +291,10 @@ form
 
 
 <script type="text/javascript">
+/*
+These are defined so that we know we don't need to include them in the
+constructed search URL, keeping it more tidy.
+*/
 PARAM_DEFAULTS = {
     'limit': 50,
     'view': 'grid',
@@ -298,8 +302,8 @@ PARAM_DEFAULTS = {
 function add_searchtag(box, value, inputted_list, li_class)
 {
     /*
-    Called by hitting Enter within a must/may/forbid field. Checks whether the tag exists
-    and adds it to the query.
+    Called by hitting Enter within a must/may/forbid field. Checks whether the
+    tag exists and adds it to the query.
     */
     if (box.offsetParent === null)
     {
