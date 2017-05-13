@@ -140,12 +140,6 @@ bind_box_to_button(description_editor_box, save_button, ctrl_enter);
 var title_is_blank = {{ (album.title == '')|int }};
 var blank_title_text = "Album {{album.id}}";
 
-function submit_tag(callback)
-{
-    add_photo_tag('{{album.id}}', add_tag_box.value, callback);
-    add_tag_box.value = "";
-}
-
 function show_editor()
 {
     edit_button.classList.add("hidden");
