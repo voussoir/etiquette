@@ -501,6 +501,8 @@ class Photo(ObjectBase):
 
         if self.duration:
             self.bitrate = (self.bytes / 128) / self.duration
+        else:
+            self.bitrate = None
 
         self.mimetype = helpers.get_mimetype(self.real_filepath)
         if self.mimetype is None:
