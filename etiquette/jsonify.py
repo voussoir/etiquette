@@ -9,7 +9,11 @@ def album(a, minimal=False):
     }
     if not minimal:
         j['photos'] = [photo(p) for p in a.photos()]
-        j['parent'] = a.parent()
+        parent = a.parent()
+        if parent is not None:
+            j['parent'] = album(parent, minimal=True)
+        else:
+            j['parent'] = None
         j['sub_albums'] = [child.id for child in a.children()]
 
     return j
