@@ -118,7 +118,6 @@ def upgrade_6_to_7(sql):
     for index in indices:
         cur.execute('DROP INDEX %s' % index)
 
-
     cur.execute('''
     CREATE TABLE album_associated_directories(
         albumid TEXT,
@@ -139,6 +138,13 @@ def upgrade_6_to_7(sql):
     WHERE associated_directory IS NOT NULL
     ''')
     cur.execute('DROP TABLE deleting_albums')
+
+def upgrade_7_to_8(sql):
+    '''
+    Give the Tags table a description field.
+    '''
+    cur = sql.cursor()
+    cur.execute('ALTER TABLE tags ADD COLUMN description TEXT')
 
 
 def upgrade_all(database_filename):

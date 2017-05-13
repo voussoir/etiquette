@@ -28,7 +28,7 @@ logging.getLogger('PIL.PngImagePlugin').setLevel(logging.WARNING)
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
-DATABASE_VERSION = 7
+DATABASE_VERSION = 8
 DB_INIT = '''
 PRAGMA count_changes = OFF;
 PRAGMA cache_size = 10000;
@@ -125,7 +125,8 @@ CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tags(
     id TEXT,
-    name TEXT
+    name TEXT,
+    description TEXT
 );
 CREATE INDEX IF NOT EXISTS index_tags_id on tags(id);
 CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
@@ -961,7 +962,7 @@ class PDBTagMixin:
 
     @decorators.required_feature('enable_new_tag')
     @decorators.transaction
-    def new_tag(self, tagname, *, commit=True):
+    def new_tag(self, tagname, description=None, *, commit=True):
         '''
         Register a new tag and return the Tag object.
         '''
@@ -976,11 +977,18 @@ class PDBTagMixin:
         tagid = self.generate_id('tags')
         self._cached_frozen_children = None
         cur = self.sql.cursor()
-        cur.execute('INSERT INTO tags VALUES(?, ?)', [tagid, tagname])
+        data = {
+            'id': tagid,
+            'name': tagname,
+            'description': description,
+        }
+        (qmarks, bindings) = helpers.binding_filler(constants.SQL_TAG_COLUMNS, data)
+        query = 'INSERT INTO tags VALUES(%s)' % qmarks
+        cur.execute(query, bindings)
         if commit:
             self.log.debug('Committing - new_tag')
             self.commit()
-        tag = objects.Tag(self, [tagid, tagname])
+        tag = objects.Tag(self, data)
         return tag
 
     def normalize_tagname(self, tagname):

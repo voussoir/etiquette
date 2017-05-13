@@ -270,7 +270,7 @@ form
         <span>Tags on this page (click to join query):</span>
         <ul>
             {% for tag in total_tags %}
-            <li><a href="" class="tag_object">{{tag}}</a></li>
+            <li><a href="javascript:void(0)" title="{{tag.description}}" class="tag_object tags_on_this_page">{{tag.name}}</a></li>
             {% endfor %}
         </ul>
         {% endif %}
@@ -560,7 +560,7 @@ var inputted_forbids = [];
 {% endfor %}
 
 /* Assign the click handler to "Tags on this page" results. */
-var found_on_page = document.getElementsByClassName("tag_object");
+var found_on_page = document.getElementsByClassName("tags_on_this_page");
 for (var index = 0; index < found_on_page.length; index += 1)
 {
     var tag_object = found_on_page[index];

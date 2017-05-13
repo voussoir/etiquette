@@ -67,11 +67,15 @@ body
 {{header.make_header(session=session)}}
 <div id="content_body">
     <div id="left">
+        {% if specific_tag is not none %}
+        <h1>{{specific_tag.name}}</h1>
+        <p>{{specific_tag.description}}</p>
+        {% endif %}
         <ul>
             {% for tag in tags %}
             {% set qualified_name = tag.qualified_name() %}
             <li>
-                <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualified_name}}</a><!--
+                <a target="_blank" class="tag_object" title="{{tag.description}}" href="/search?tag_musts={{tag.name}}">{{qualified_name}}</a><!--
                 --><button class="remove_tag_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
             </li>
             {% if include_synonyms %}

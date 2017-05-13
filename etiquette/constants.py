@@ -65,6 +65,7 @@ SQL_PHOTO_COLUMNS = [
 SQL_TAG_COLUMNS = [
     'id',
     'name',
+    'description',
 ]
 SQL_SYN_COLUMNS = [
     'name',
@@ -161,8 +162,9 @@ DEFAULT_CONFIGURATION = {
     'enable_new_tag': True,
     'enable_new_user': True,
     'enable_photo_add_remove_tag': True,
-    'enable_photo_reload_metadata': True,
     'enable_photo_generate_thumbnail': True,
+    'enable_photo_reload_metadata': True,
+    'enable_tag_edit': True,
 
     'min_tag_name_length': 1,
     'max_tag_name_length': 32,

@@ -524,8 +524,8 @@ def get_search_core():
     total_tags = set()
     for photo in photos:
         for tag in photo.tags():
-            total_tags.add(tag.qualified_name())
-    total_tags = sorted(total_tags)
+            total_tags.add(tag)
+    total_tags = sorted(total_tags, key=lambda t: t.qualified_name())
 
     # PREV-NEXT PAGE URLS
     offset = search_kwargs['offset'] or 0
@@ -613,6 +613,7 @@ def get_tags_html(specific_tag=None):
         'tags.html',
         include_synonyms=include_synonyms,
         session=session,
+        specific_tag=specific_tag,
         tags=tags,
     )
     return response

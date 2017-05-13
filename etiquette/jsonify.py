@@ -52,6 +52,7 @@ def tag(t, include_synonyms=False):
     j = {
         'id': t.id,
         'name': t.name,
+        'description': t.description,
         'qualified_name': t.qualified_name(),
     }
     if include_synonyms:

@@ -223,8 +223,8 @@ class Album(ObjectBase, GroupableMixin):
         if isinstance(db_row, (list, tuple)):
             db_row = dict(zip(constants.SQL_ALBUM_COLUMNS, db_row))
         self.id = db_row['id']
-        self.title = db_row['title']
-        self.description = db_row['description']
+        self.title = db_row['title'] or ''
+        self.description = db_row['description'] or ''
         self.name = 'Album %s' % self.id
         self.group_getter = self.photodb.get_album
         self._sum_bytes_photos = None
@@ -501,6 +501,7 @@ class Photo(ObjectBase):
 
         if self.duration:
             self.bitrate = (self.bytes / 128) / self.duration
+
         self.mimetype = helpers.get_mimetype(self.real_filepath)
         if self.mimetype is None:
             self.simple_mimetype = None
@@ -954,6 +955,7 @@ class Tag(ObjectBase, GroupableMixin):
             db_row = dict(zip(constants.SQL_TAG_COLUMNS, db_row))
         self.id = db_row['id']
         self.name = db_row['name']
+        self.description = db_row['description'] or ''
         self.group_getter = self.photodb.get_tag
         self._cached_qualified_name = None
 
@@ -1063,6 +1065,25 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - delete tag')
             self.photodb.commit()
 
+    @decorators.required_feature('enable_tag_edit')
+    @decorators.transaction
+    def edit(self, description=None, *, commit=True):
+        '''
+        Change the description. Leave None to keep current value.
+        '''
+        if description is None:
+            description = self.description
+        cur = self.photodb.sql.cursor()
+        cur.execute(
+            'UPDATE tags SET description = ? WHERE id == ?',
+            [description, self.id]
+        )
+        self.description = description
+        self._uncache()
+        if commit:
+            self.photodb.log.debug('Committing - edit tag')
+            self.photodb.commit()
+
     def qualified_name(self):
         '''
         Return the 'group1.group2.tag' string for this tag.
@@ -1107,7 +1128,8 @@ class Tag(ObjectBase, GroupableMixin):
         Rename the tag. Does not affect its relation to Photos or tag groups.
         '''
         new_name = self.photodb.normalize_tagname(new_name)
-        if new_name == self.name:
+        old_name = self.name
+        if new_name == old_name:
             return
 
         try:
@@ -1124,7 +1146,7 @@ class Tag(ObjectBase, GroupableMixin):
         if apply_to_synonyms:
             cur.execute(
                 'UPDATE tag_synonyms SET mastername = ? WHERE mastername = ?',
-                [new_name, self.name]
+                [new_name, old_name]
             )
 
         self.name = new_name
