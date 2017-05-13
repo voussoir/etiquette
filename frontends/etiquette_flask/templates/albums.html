@@ -5,6 +5,7 @@
     <title>Albums</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
+    <script src="/static/common.js"></script>
 
 <style>
 #content_body
@@ -23,6 +24,7 @@
         {% for album in albums %}
         <li><a href="/album/{{album.id}}">{{album.display_name}}</a></li>
         {% endfor %}
+        <li><button class="green_button" onclick="create_album_and_follow();">Create album</button></li>
     </ul>
 </div>
 </body>

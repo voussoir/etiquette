@@ -49,8 +49,23 @@ function bind_box_to_button(box, button, ctrl_enter)
             button.click();
         }
     };
-
 }
+
+function create_album_and_follow(parent)
+{
+    var url = "/albums/create_album";
+    var data = new FormData();
+    if (parent !== undefined)
+    {
+        data.append("parent", parent);
+    }
+    function receive_callback(response)
+    {
+        window.location.href = "/album/" + response["id"];
+    }
+    post(url, data, receive_callback);
+}
+
 function entry_with_history_hook(box, button)
 {
     //console.log(event.keyCode);

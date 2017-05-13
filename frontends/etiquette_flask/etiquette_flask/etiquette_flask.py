@@ -684,7 +684,6 @@ def post_album_add_tag(albumid):
     response['tagname'] = tag.name
     return jsonify.make_json_response(response)
 
-
 @site.route('/album/<albumid>/edit', methods=['POST'])
 @session_manager.give_token
 def post_album_edit(albumid):
@@ -696,7 +695,22 @@ def post_album_edit(albumid):
     title = request.form.get('title', None)
     description = request.form.get('description', None)
     album.edit(title=title, description=description)
-    response = {'title': album.title, 'description': album.description}
+    response = etiquette.jsonify.album(album, minimal=True)
+    return jsonify.make_json_response(response)
+
+@site.route('/albums/create_album', methods=['POST'])
+def post_albums_create():
+    print(dict(request.form))
+    title = request.form.get('title', None)
+    description = request.form.get('description', None)
+    parent = request.form.get('parent', None)
+    if parent is not None:
+        parent = P_album(parent)
+
+    album = P.new_album(title=title, description=description)
+    if parent is not None:
+        parent.add(album)
+    response = etiquette.jsonify.album(album, minimal=False)
     return jsonify.make_json_response(response)
 
 

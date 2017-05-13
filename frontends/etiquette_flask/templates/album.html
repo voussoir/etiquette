@@ -74,20 +74,15 @@ p
     {% endif %}
 
     {% set sub_albums = album.children() %}
-    {% if sub_albums %}
     <h3>Sub-albums</h3>
     <ul>
         {% for sub_album in sub_albums|sort(attribute='title') %}
-        <li><a href="/album/{{sub_album.id}}{{viewparam}}">{{sub_album.display_name}}</a>
-        </li>
+        <li><a href="/album/{{sub_album.id}}{{viewparam}}">{{sub_album.display_name}}</a></li>
         {% endfor %}
+        <li><button class="green_button" onclick="var parent='{{album.id}}'; create_album_and_follow(parent);">Create child</button></li>
     </ul>
-    {% endif %}
 
     {% set photos = album.photos() %}
-    {% if photos or sub_albums %}
-    {% endif %}
-
     {% if photos %}
         <h3>Photos</h3>
         {% if view != "list" %}
