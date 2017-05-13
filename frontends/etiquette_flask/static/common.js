@@ -43,15 +43,21 @@ function post(url, data, callback)
     request.send(data);
 }
 
-function bind_box_to_button(box, button)
+function bind_box_to_button(box, button, ctrl_enter)
 {
     box.onkeydown=function()
     {
-        if (event.keyCode == 13)
+        // Thanks Yaroslav Yakovlev
+        // http://stackoverflow.com/a/9343095
+        if (
+            (event.keyCode == 13 || event.keyCode == 10) &&
+            ((ctrl_enter && event.ctrlKey) || (!ctrl_enter))
+        )
         {
             button.click();
         }
     };
+
 }
 function entry_with_history_hook(box, button)
 {
