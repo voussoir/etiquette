@@ -6,3 +6,4 @@ from . import jsonify
 from . import objects
 from . import photodb
 from . import searchhelpers
+from . import tag_export

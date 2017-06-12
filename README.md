@@ -20,7 +20,6 @@ Documentation is still a work in progress. In general, I use:
 - Debate whether the `UserMixin.login` method should accept usernames or I should standardize the usage of IDs only internally.
 - Ability to access user page and user photos by user's ID, not just username.
 - Should album size be cached on disk?
-- Organize the tag exporter functions better.
 - Replace columns like area, ratio, bitrate by using expression indices or views (`width * height` etc).
 - Add some way to support large image albums without flooding the search results. Considering a "hidden" property so that a handful of representative images can appear in the search results, and the rest can be found on the actual Album page.
 - Add a `Photo.merge` to combine duplicate entries.

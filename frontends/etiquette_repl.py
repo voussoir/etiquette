@@ -1,9 +1,10 @@
 # Use with
 # py -i etiquette_easy.py
 
-import etiquette.photodb
+import etiquette
 import os
 import sys
+
 P = etiquette.photodb.PhotoDB()
 import traceback
 
@@ -13,7 +14,7 @@ def easytagger():
         if i.startswith('?'):
             i = i.split('?')[1] or None
             try:
-                P.export_tags(specific_tag=i)
+                etiquette.tag_export.stdout([P.get_tag(i)])
             except:
                 traceback.print_exc()
         else:

@@ -14,6 +14,7 @@ from . import exceptions
 from . import helpers
 from . import objects
 from . import searchhelpers
+from . import tag_export
 
 from voussoirkit import cacheclass
 from voussoirkit import expressionmatch
@@ -175,76 +176,6 @@ def searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, f
                     return False
 
     return True
-
-def tag_export_easybake(tags, depth=0):
-    lines = []
-    for tag in tags:
-        if not hasattr(tag, 'string'):
-            tag.string = tag.name
-        children = tag.children()
-        synonyms = tag.synonyms()
-        lines.append(tag.string)
-
-        for synonym in synonyms:
-            synonym = tag.string + '+' + synonym
-            lines.append(synonym)
-
-        for child in children:
-            child.string = tag.string + '.' + child.name
-        child_bake = tag_export_easybake(children, depth=depth+1)
-        if child_bake != '':
-            lines.append(child_bake)
-
-    lines = '\n'.join(lines)
-    return lines
-
-def tag_export_json(tags):
-    def fill(tag):
-        children = {child.name:fill(child) for child in tag.children()}
-        return children
-    result = {}
-    for tag in tags:
-        result[tag.name] = fill(tag)
-    return result
-
-def tag_export_qualname_map(tags):
-    lines = tag_export_easybake(tags)
-    lines = lines.split('\n')
-    lines = [line for line in lines if line]
-    qualname_map = {}
-    for line in lines:
-        key = line.split('.')[-1].split('+')[-1]
-        value = line.split('+')[0]
-        qualname_map[key] = value
-    return qualname_map
-
-def tag_export_stdout(tags, depth=0):
-    for tag in tags:
-        children = tag.children()
-        synonyms = tag.synonyms()
-
-        pad = '    ' * depth
-        synpad = '    ' * (depth + 1)
-        print(pad + str(tag))
-
-        for synonym in synonyms:
-            print(synpad + synonym)
-
-        tag_export_stdout(children, depth=depth+1)
-
-        if tag.parent() is None:
-            print()
-
-@decorators.time_me
-def tag_export_totally_flat(tags):
-    result = {}
-    for tag in tags:
-        for child in tag.walk_children():
-            children = list(child.walk_children())
-            result[child] = children
-            for synonym in child.synonyms():
-                result[synonym] = children
-    return result
 
 
 ####################################################################################################
@@ -725,7 +656,7 @@ class PDBPhotoMixin:
             if self._cached_frozen_children:
                 frozen_children = self._cached_frozen_children
             else:
-                frozen_children = self.export_tags(tag_export_totally_flat)
+                frozen_children = tag_export.flat_dict(self.get_tags())
                 self._cached_frozen_children = frozen_children
         else:
             frozen_children = None
@@ -915,20 +846,6 @@ class PDBTagMixin:
     def __init__(self):
         super().__init__()
         self._tag_cache = cacheclass.Cache()
-
-    def export_tags(self, exporter=tag_export_stdout, specific_tag=None):
-        '''
-        Send the top-level tags to function `exporter`.
-        Strings 'start' and 'stop' are sent before and after the tags are sent.
-        Recursion is to be handled by the exporter.
-        '''
-        if specific_tag is None:
-            items = list(self.get_tags())
-            items = [item for item in items if item.parent() is None]
-            items.sort(key=lambda x: x.name)
-        else:
-            items = [self.get_tag(specific_tag)]
-        return exporter(items)
 
     def get_tag(self, name=None, id=None):
         '''

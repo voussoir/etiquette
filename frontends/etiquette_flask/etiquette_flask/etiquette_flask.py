@@ -565,7 +565,7 @@ def get_search_core():
 def get_search_html():
     search_results = get_search_core()
     search_kwargs = search_results['search_kwargs']
-    qualname_map = P.export_tags(exporter=etiquette.photodb.tag_export_qualname_map)
+    qualname_map = etiquette.tag_export.qualified_names(P.get_tags())
     session = session_manager.get(request)
     response = flask.render_template(
         'search.html',
