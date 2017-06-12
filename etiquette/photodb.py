@@ -889,6 +889,11 @@ class PDBTagMixin:
     def get_tags(self):
         yield from self.get_things(thing_type='tag')
 
+    def get_root_tags(self):
+        for tag in self.get_tags():
+            if tag.parent() is None:
+                yield tag
+
     @decorators.required_feature('enable_new_tag')
     @decorators.transaction
     def new_tag(self, tagname, description=None, *, commit=True):
