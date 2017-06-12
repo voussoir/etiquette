@@ -218,7 +218,7 @@ def hms_to_seconds(hms):
         seconds += int(hms[0])*60
         hms.pop(0)
     if len(hms) == 1:
-        seconds += int(hms[0])
+        seconds += float(hms[0])
     return seconds
 
 def is_xor(*args):
