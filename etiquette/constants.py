@@ -168,7 +168,7 @@ DEFAULT_CONFIGURATION = {
 
     'min_tag_name_length': 1,
     'max_tag_name_length': 32,
-    'valid_tag_chars': string.ascii_lowercase + string.digits + '_',
+    'valid_tag_chars': string.ascii_lowercase + string.digits + '_()',
 
     'min_username_length': 2,
     'max_username_length': 24,
