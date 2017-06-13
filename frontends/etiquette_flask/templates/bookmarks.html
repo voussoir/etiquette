@@ -44,11 +44,11 @@
             {% for bookmark in bookmarks %}
             <div class="bookmark_card">
                 <a href="{{bookmark.url}}" class="bookmark_title">
-                {% if bookmark.title %}
+                {%- if bookmark.title -%}
                     {{bookmark.title}}
-                {% else %}
+                {%- else -%}
                     {{bookmark.id}}
-                {% endif %}
+                {%- endif -%}
                 </a>
                 <a href="{{bookmark.url}}" class="bookmark_url">{{bookmark.url}}</a>
             </div>

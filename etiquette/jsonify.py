@@ -18,6 +18,14 @@ def album(a, minimal=False):
 
     return j
 
+def bookmark(b):
+    j = {
+        'id': b.id,
+        'url': b.url,
+        'title': b.title,
+    }
+    return j
+
 def exception(e):
     j = {
         'error_type': e.error_type,

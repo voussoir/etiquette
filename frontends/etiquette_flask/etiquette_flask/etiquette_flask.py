@@ -378,11 +378,26 @@ def get_albums_json():
 
 @site.route('/bookmarks')
 @session_manager.give_token
-def get_bookmarks():
+def get_bookmarks_html():
     session = session_manager.get(request)
     bookmarks = list(P.get_bookmarks())
     return flask.render_template('bookmarks.html', bookmarks=bookmarks, session=session)
 
+@site.route('/bookmarks.json')
+@session_manager.give_token
+def get_bookmarks_json():
+    bookmarks = [etiquette.jsonify.bookmark(b) for b in P.get_bookmarks()]
+    return jsonify.make_json_response(bookmarks)
+
+@site.route('/bookmarks/create_bookmark', methods=['POST'])
+@decorators.required_fields(['url'], forbid_whitespace=True)
+def post_bookmarks_create():
+    url = request.form['url']
+    title = request.form.get('title', None)
+    bookmark = P.new_bookmark(url=url, title=title)
+    response = etiquette.jsonify.bookmark(bookmark)
+    response = jsonify.make_json_response(response)
+    return response
 
 @site.route('/file/<photoid>')
 def get_file(photoid):
