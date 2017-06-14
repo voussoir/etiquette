@@ -1,0 +1,71 @@
+<!--
+    tag: The Tag object
+    extra_classes:
+        Space-separated string, if you want more than "tag_object".
+    link:
+        None = no link, just a <span>
+        'search' = link to /search?tag_musts=tagname
+        'info' = link to /tags/tagname
+        'void' = javascript:void(0)
+    max_len:
+        None: As long as it needs to be.
+        integer: Rootmost parents are removed until the text fits under
+            this limit.
+            If the tag's own name can't find under the limit, characters are
+            dropped from the right.
+    qualified_name:
+        True: Use the qualified name as the innerhtml
+        False: Use the basic name
+    with_alt_description:
+        True: Include the description in the alt text
+    with_alt_qualified_name:
+        True: Include the qualified name in the alt text
+-->
+{% macro tag_object(
+    tag,
+    extra_classes="",
+    link='search',
+    max_len=None,
+    qualified_name=True,
+    with_alt_description=True,
+    with_alt_qualified_name=True
+) %}
+{%- if link is not none -%}
+    {%- set closing="</a>" -%}
+    <a
+    {%- if link == 'search' -%}
+        {{' '}}href="/search?tag_musts={{tag.name}}"
+    {%- elif link == 'info' -%}
+        {{' '}}href="/tags/{{tag.name}}"
+    {%- elif link == 'void' -%}
+        {{' '}}href="javascript:void(0)"
+    {%- else -%}
+        {{' '}}href="{{search}}"
+    {%- endif -%}
+    {{' '}}target="_blank" class="tag_object {{extra_classes}}"
+
+{%- else -%}
+    {% set closing="</span>" %}
+    <span
+
+{%- endif -%}
+{% set altlines=[] %}
+{% if with_alt_qualified_name %}{% do altlines.append(tag.qualified_name()) %}{% endif %}
+{% if with_alt_description %}{% do altlines.append(tag.description) %}{% endif %}
+{% set altlines=altlines|join("\n") %}
+{%- if altlines -%}
+    {{' '}}title="{{altlines}}"
+{%- endif -%}
+>
+{%- if qualified_name -%}
+    {{tag.qualified_name(max_len=max_len)}}
+{%- else -%}
+    {% if max_len is not none %}
+        {{tag.name[:max_len]}}
+    {% else %}
+        {{tag.name}}
+    {% endif %}
+{%- endif -%}
+
+{{- closing|safe -}}
+{% endmacro %}

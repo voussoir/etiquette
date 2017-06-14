@@ -2,6 +2,7 @@
 <html>
 <head>
     {% import "header.html" as header %}
+    {% import "tag_object.html" as tag_object %}
     <title>Tags</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
@@ -68,14 +69,14 @@ body
 <div id="content_body">
     <div id="left">
         {% if specific_tag is not none %}
-        <h1>{{specific_tag.name}}</h1>
-        <p>{{specific_tag.description}}</p>
+            <h1>{{specific_tag.name}}</h1>
+            <p>{{specific_tag.description}}</p>
         {% endif %}
         <ul>
             {% for tag in tags %}
             {% set qualified_name = tag.qualified_name() %}
             <li>
-                <a target="_blank" class="tag_object" title="{{tag.description}}" href="/search?tag_musts={{tag.name}}">{{qualified_name}}</a><!--
+                {{tag_object.tag_object(tag, link='search', qualified_name=True, with_alt_qualified_name=False)}}<!--
                 --><button class="remove_tag_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
             </li>
             {% if include_synonyms %}

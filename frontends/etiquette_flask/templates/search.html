@@ -3,6 +3,7 @@
 <head>
     {% import "photo_card.html" as photo_card %}
     {% import "header.html" as header %}
+    {% import "tag_object.html" as tag_object %}
     <title>Search</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
@@ -270,7 +271,14 @@ form
         <span>Tags on this page (click to join query):</span>
         <ul>
             {% for tag in total_tags %}
-            <li><a href="javascript:void(0)" title="{{tag.description}}" class="tag_object tags_on_this_page">{{tag.name}}</a></li>
+            <li>{{tag_object.tag_object(
+                tag,
+                extra_classes="tags_on_this_page",
+                link='void',
+                qualified_name=False,
+                with_alt_qualified_name=True,
+                with_alt_description=True,
+            )}}</li>
             {% endfor %}
         </ul>
         {% endif %}
