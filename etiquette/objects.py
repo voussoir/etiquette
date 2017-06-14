@@ -1086,16 +1086,39 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - edit tag')
             self.photodb.commit()
 
-    def qualified_name(self):
+    def qualified_name(self, *, max_len=None):
         '''
         Return the 'group1.group2.tag' string for this tag.
+
+        If `max_len` is not None, bring the length of the qualname down
+        by first stripping off ancestors, then slicing the end off of the
+        name if necessary.
+
+        ('people.family.mother', max_len=25) -> 'people.family.mother'
+        ('people.family.mother', max_len=15) -> 'family.mother'
+        ('people.family.mother', max_len=10) -> 'mother'
+        ('people.family.mother', max_len=4)  -> 'moth'
         '''
+        if max_len is not None:
+            if len(self.name) == max_len:
+                return self.name
+            if len(self.name) > max_len:
+                return self.name[:max_len]
+
         if self._cached_qualified_name:
-            return self._cached_qualified_name
-        qualname = self.name
-        for parent in self.walk_parents():
-            qualname = parent.name + '.' + qualname
-        self._cached_qualified_name = qualname
+            qualname = self._cached_qualified_name
+        else:
+            qualname = self.name
+            for parent in self.walk_parents():
+                qualname = parent.name + '.' + qualname
+            self._cached_qualified_name = qualname
+
+        if max_len is None or len(qualname) <= max_len:
+            return qualname
+
+        while len(qualname) > max_len:
+            qualname = qualname.split('.', 1)[1]
+
         return qualname
 
     @decorators.transaction
