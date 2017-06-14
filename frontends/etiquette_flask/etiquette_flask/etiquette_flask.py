@@ -765,6 +765,16 @@ def get_tags_json(specific_tag=None):
     tags = [etiquette.jsonify.tag(tag, include_synonyms=include_synonyms) for tag in tags]
     return jsonify.make_json_response(tags)
 
+@site.route('/tag/<specific_tag>/edit', methods=['POST'])
+def post_tag_edit(specific_tag):
+    tag = P_tag(specific_tag)
+    description = request.form.get('description', None)
+    tag.edit(description=description)
+
+    response = etiquette.jsonify.tag(tag)
+    response = jsonify.make_json_response(response)
+    return response
+
 @site.route('/tags/<specific_tag>')
 @site.route('/tags/<specific_tag>.json')
 def get_tags_specific_redirect(specific_tag=None):
