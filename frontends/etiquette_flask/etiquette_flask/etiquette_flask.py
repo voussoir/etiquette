@@ -734,8 +734,8 @@ def get_search_json():
     return jsonify.make_json_response(search_results)
 
 
+@site.route('/tag/<specific_tag>')
 @site.route('/tags')
-@site.route('/tags/<specific_tag>')
 @session_manager.give_token
 def get_tags_html(specific_tag=None):
     if specific_tag is not None:
@@ -753,8 +753,8 @@ def get_tags_html(specific_tag=None):
     )
     return response
 
+@site.route('/tag/<specific_tag>.json')
 @site.route('/tags.json')
-@site.route('/tags/<specific_tag>.json')
 @session_manager.give_token
 def get_tags_json(specific_tag=None):
     if specific_tag is not None:
@@ -764,6 +764,11 @@ def get_tags_json(specific_tag=None):
     include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
     tags = [etiquette.jsonify.tag(tag, include_synonyms=include_synonyms) for tag in tags]
     return jsonify.make_json_response(tags)
+
+@site.route('/tags/<specific_tag>')
+@site.route('/tags/<specific_tag>.json')
+def get_tags_specific_redirect(specific_tag=None):
+    return flask.redirect(request.url.replace('/tags/', '/tag/'))
 
 @site.route('/tags/create_tag', methods=['POST'])
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
