@@ -149,7 +149,18 @@ function on_save(editor, edit_element_map)
     post(url, data, callback);
 }
 
-var on_cancel = null;
+function on_cancel(editor, edit_element_map)
+{
+    editor.cancel();
+    if (title_text.innerText == "")
+    {
+        title_text.innerText = blank_title_text;
+    }
+    if (description_text.innerText == "")
+    {
+        description_text.classList.add("hidden");
+    }
+}
 
 var editor = new Editor([title_text, description_text], on_open, on_save, on_cancel);
 </script>
