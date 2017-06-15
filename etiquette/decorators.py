@@ -2,6 +2,8 @@ import functools
 import time
 import warnings
 
+from . import exceptions
+
 
 def required_feature(features):
     '''
