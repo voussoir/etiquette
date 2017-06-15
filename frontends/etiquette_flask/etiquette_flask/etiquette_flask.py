@@ -491,7 +491,12 @@ def post_album_edit(albumid):
 
     title = request.form.get('title', None)
     description = request.form.get('description', None)
-    album.edit(title=title, description=description)
+    try:
+        album.edit(title=title, description=description)
+    except etiquette.exceptions.EtiquetteException as e:
+        response = etiquette.jsonify.exception(e)
+        response = jsonify.make_json_response(response, status=400)
+        flask.abort(response)
     response = etiquette.jsonify.album(album, minimal=True)
     return jsonify.make_json_response(response)
 
@@ -544,7 +549,12 @@ def get_bookmarks_json():
 def post_bookmarks_create():
     url = request.form['url']
     title = request.form.get('title', None)
-    bookmark = P.new_bookmark(url=url, title=title)
+    try:
+        bookmark = P.new_bookmark(url=url, title=title)
+    except etiquette.exceptions.EtiquetteException as e:
+        response = etiquette.jsonify.exception(e)
+        response = jsonify.make_json_response(response, status=400)
+        flask.abort(response)
     response = etiquette.jsonify.bookmark(bookmark)
     response = jsonify.make_json_response(response)
     return response
