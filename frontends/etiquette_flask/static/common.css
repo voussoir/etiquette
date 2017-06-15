@@ -31,6 +31,11 @@ li
 
     margin-bottom: 4px;
 }
+.editor_input
+{
+    width: 100%;
+    max-width: 800px;
+}
 .header_element
 {
     display: flex;
@@ -43,6 +48,10 @@ li
 {
     background-color: #ffffd4;
 }
+.hidden
+{
+    display: none !important;
+}
 #content_body
 {
     display: flex;
@@ -51,6 +60,8 @@ li
 }
 #search_go_button,
 .add_tag_button,
+.editor_open_button,
+.editor_save_button,
 .green_button
 {
     border-top: 2px solid #c2ffc3;
@@ -61,6 +72,8 @@ li
 }
 #search_go_button:active,
 .add_tag_button:active,
+.editor_open_button:active,
+.editor_save_button:active,
 .green_button:active
 {
     border-top: 2px solid #259427;
@@ -70,6 +83,7 @@ li
 }
 .remove_tag_button,
 .remove_tag_button_perm,
+.editor_cancel_button,
 .red_button
 {
     border-top: 2px solid #ffacac;
@@ -81,6 +95,7 @@ li
 }
 .remove_tag_button:active,
 .remove_tag_button_perm:active,
+.editor_cancel_button:active,
 .red_button:active
 {
     border-top: 2px solid #bd1b1b;
