@@ -33,10 +33,6 @@ p
 {
     width: 100%;
 }
-.hidden
-{
-    display: none;
-}
 </style>
 </head>
 
@@ -45,25 +41,15 @@ p
 {{header.make_header(session=session)}}
 <div id="content_body">
     <h2>
-    {% if album.title %}
-        <span id="title_text">{{album.title}}</span>
-    {% else %}
-        <span id="title_text">Album {{album.id}}</span>
-    {% endif %}
-    <input id="title_editor" class="hidden" type="text" value="{{album.title}}" placeholder="title">
+        <span data-editor-id="title" data-editor-placeholder="title" id="title_text">
+        {%- if album.title -%}
+            {{album.title}}
+        {%- else -%}
+            Album {{album.id}}
+        {%- endif -%}
+        </span>
     </h2>
-
-    <p id="description_text" {% if album.description == "" %}class="hidden"{% endif %}>{{album.description}}</p>
-
-    <div id="description_editor" class="hidden">
-        <textarea id="description_editor_box" rows="6" placeholder="description">{{album.description}}</textarea>
-        <div>
-            <button id="save_button" class="green_button" onclick="finish_editing(true)">Save</button>
-            <button id="cancel_button" class="red_button" onclick="finish_editing(false)">Cancel</button>
-        </div>
-        <span id="edit_submitting_spinner">Submitting...</span>
-    </div>
-    <button id="edit_button" class="green_button" onclick="start_editing()">edit</button>
+    <p data-editor-id="description" data-editor-placeholder="description" id="description_text" {% if album.description == "" %}class="hidden"{% endif %}>{{album.description}}</p>
 
     {% set viewparam = "?view=list" if view == "list" else "" %}
     {% set parent = album.parent() %}
@@ -117,113 +103,54 @@ p
 
 
 <script type="text/javascript">
-var edit_button = document.getElementById("edit_button");
-var save_button = document.getElementById("save_button");
-var cancel_button = document.getElementById("cancel_button");
-
 var title_text = document.getElementById("title_text");
-var title_editor = document.getElementById("title_editor");
 var description_text = document.getElementById("description_text");
-var description_editor = document.getElementById("description_editor");
-var description_editor_box = document.getElementById("description_editor_box");
-var edit_submitting_spinner = document.getElementById("edit_submitting_spinner");
-
-bind_box_to_button(title_editor, save_button);
-var ctrl_enter = true;
-bind_box_to_button(description_editor_box, save_button, ctrl_enter);
-
-var title_is_blank = {{ (album.title == '')|int }};
 var blank_title_text = "Album {{album.id}}";
 
-function show_editor()
+function on_open(editor, edit_element_map)
 {
-    edit_button.classList.add("hidden");
-    edit_submitting_spinner.classList.add("hidden");
-
-    title_text.classList.add("hidden");
-    title_editor.classList.remove("hidden");
-
-    description_text.classList.add("hidden");
-    description_editor.classList.remove("hidden");
+    if (title_text.innerText == blank_title_text)
+    {
+        title_text.innerText = "";
+    }
+    editor.open();
+    edit_element_map['title'].focus();
 }
 
-function show_spinner()
+function on_save(editor, edit_element_map)
 {
-    edit_submitting_spinner.classList.remove("hidden");
-}
+    var title_editor = edit_element_map['title'];
+    var description_editor = edit_element_map['description'];
 
-function hide_editor()
-{
-    edit_button.classList.remove("hidden");
-    edit_submitting_spinner.classList.add("hidden");
-
-    title_text.classList.remove("hidden");
-    title_editor.classList.add("hidden");
-
-    if (description_text.innerText !== "")
+    editor.show_spinner();
+    function callback()
     {
-        description_text.classList.remove("hidden");
-    }
-    description_editor.classList.add("hidden");
-}
-
-function start_editing()
-{
-    if (title_is_blank)
-    {
-        title_editor.value = "";
-    }
-    else
-    {
-        title_editor.value = title_text.innerText;
-    }
-    show_editor();
-    title_editor.focus();
-    description_editor_box.value = description_text.innerText;
-}
-
-function finish_editing(do_save)
-{
-    if (do_save === true)
-    {
-        var title = title_editor.value;
-        var description = description_editor_box.value;
-
-        var url = "/album/{{album.id}}/edit";
-        var data = new FormData();
-        data.append("title", title);
-        data.append("description", description);
-
-        show_spinner();
-        post(url, data, callback_edit);
-    }
-    else
-    {
-        hide_editor();
-    }
-
-}
-
-function callback_edit(response)
-{
-    console.log(response);
-    if (response["_status"] == 200)
-    {
-        if (response["title"] === "")
+        editor.hide_spinner();
+        editor.save();
+        if (title_text.innerText == "")
         {
-            document.title = "Album {{album.id}}";
+            document.title = blank_title_text;
             title_text.innerText = blank_title_text;
-            title_is_blank = true;
         }
         else
         {
-            document.title = "Album " + response["title"];
-            title_text.innerText = response["title"];
-            title_is_blank = false;
+            document.title = "Album " + title_text.innerText;
         }
-        description_text.innerText = response["description"];
-        hide_editor();
+        if (description_text.innerText == "")
+        {
+            description_text.classList.add("hidden");
+        }
     }
+
+    var url = "/album/{{album.id}}/edit";
+    var data = new FormData();
+    data.append("title", title_editor.value);
+    data.append("description", description_editor.value);
+    post(url, data, callback);
 }
+
+var on_cancel = null;
+
+var editor = new Editor([title_text, description_text], on_open, on_save, on_cancel);
 </script>
 </html>
