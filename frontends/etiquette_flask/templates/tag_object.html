@@ -51,7 +51,7 @@
 {%- endif -%}
 {% set altlines=[] %}
 {% if with_alt_qualified_name %}{% do altlines.append(tag.qualified_name()) %}{% endif %}
-{% if with_alt_description %}{% do altlines.append(tag.description) %}{% endif %}
+{% if with_alt_description and tag.description != "" %}{% do altlines.append(tag.description) %}{% endif %}
 {% set altlines=altlines|join("\n") %}
 {%- if altlines -%}
     {{' '}}title="{{altlines}}"
@@ -60,11 +60,11 @@
 {%- if qualified_name -%}
     {{tag.qualified_name(max_len=max_len)}}
 {%- else -%}
-    {% if max_len is not none %}
+    {%- if max_len is not none -%}
         {{tag.name[:max_len]}}
-    {% else %}
+    {%- else -%}
         {{tag.name}}
-    {% endif %}
+    {%- endif -%}
 {%- endif -%}
 
 {{- closing|safe -}}
