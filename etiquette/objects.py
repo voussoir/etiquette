@@ -417,7 +417,8 @@ class Album(ObjectBase, GroupableMixin):
 
     def sum_bytes(self, recurse=True, string=False):
         if self._sum_bytes_photos is None:
-            self._sum_bytes_photos = sum(photo.bytes for photo in self.photos())
+            photos = (photo.bytes for photo in self.photos() if photo.bytes is not None)
+            self._sum_bytes_photos = sum(photos)
         total = self._sum_bytes_photos
 
         if recurse:
@@ -518,7 +519,7 @@ class Photo(ObjectBase):
         self.ratio = db_row['ratio']
         self.thumbnail = db_row['thumbnail']
 
-        if self.duration:
+        if self.duration and self.bytes is not None:
             self.bitrate = (self.bytes / 128) / self.duration
         else:
             self.bitrate = None
@@ -592,7 +593,9 @@ class Photo(ObjectBase):
         return self.photodb.get_user(id=self.author_id)
 
     def bytestring(self):
-        return bytestring.bytestring(self.bytes)
+        if self.bytes is not None:
+            return bytestring.bytestring(self.bytes)
+        return '??? b'
 
     @decorators.required_feature('enable_photo_add_remove_tag')
     def copy_tags(self, other_photo):
