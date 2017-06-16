@@ -1174,6 +1174,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             exclude_directories=None,
             exclude_filenames=None,
             make_albums=True,
+            new_photo_kwargs={},
             recurse=True,
             commit=True,
         ):
@@ -1191,6 +1192,11 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             exclude_directories = self.config['digest_exclude_dirs']
         if exclude_filenames is None:
             exclude_filenames = self.config['digest_exclude_files']
+
+        if 'commit' in new_photo_kwargs:
+            new_photo_kwargs.pop('commit')
+        if 'filepath' in new_photo_kwargs:
+            new_photo_kwargs.pop('filepath')
 
         directory.correct_case()
         generator = spinal.walk_generator(
@@ -1219,7 +1225,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
                 try:
                     photo = self.get_photo_by_path(filepath)
                 except exceptions.NoSuchPhoto:
-                    photo = self.new_photo(filepath.absolute_path, commit=False)
+                    photo = self.new_photo(filepath.absolute_path, commit=False, **new_photo_kwargs)
                 new_photos.append(photo)
 
             if not make_albums:
