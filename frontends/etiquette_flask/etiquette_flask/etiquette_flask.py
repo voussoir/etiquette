@@ -517,14 +517,18 @@ def get_albums_json():
 
 @site.route('/albums/create_album', methods=['POST'])
 def post_albums_create():
-    print(dict(request.form))
     title = request.form.get('title', None)
     description = request.form.get('description', None)
     parent = request.form.get('parent', None)
     if parent is not None:
         parent = P_album(parent)
 
-    album = P.new_album(title=title, description=description)
+    try:
+        album = P.new_album(title=title, description=description)
+    except etiquette.exceptions.EtiquetteException as e:
+        response = etiquette.jsonify.exception(e)
+        response = jsonify.make_json_response(response, status=400)
+        flask.abort(response)
     if parent is not None:
         parent.add(album)
     response = etiquette.jsonify.album(album, minimal=False)
