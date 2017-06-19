@@ -517,7 +517,7 @@ function tags_on_this_page_hook()
     */
     add_searchtag(
         input_musts,
-        this.innerHTML,
+        QUALNAME_MAP[this.innerHTML],
         inputted_musts,
         "search_builder_musts_inputted"
     );
