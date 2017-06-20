@@ -118,6 +118,10 @@ def P_tag(tagname):
 def P_user(username):
     return P.get_user(username=username)
 
+@P_wrapper
+def P_user_id(userid):
+    return P.get_user(id=userid)
+
 def send_file(filepath, override_mimetype=None):
     '''
     Range-enabled file sending.
@@ -346,10 +350,6 @@ def get_tags_core(specific_tag=None):
     tags = list(tags)
     tags.sort(key=lambda x: x.qualified_name())
     return tags
-
-def get_user_core(username):
-    user = P_user(username)
-    return user
 
 def post_photo_add_remove_tag_core(photoid, tagname, add_or_remove):
     photo = P_photo(photoid, response_type='json')
@@ -833,16 +833,28 @@ def get_thumbnail(photoid):
 @site.route('/user/<username>', methods=['GET'])
 @session_manager.give_token
 def get_user_html(username):
-    user = get_user_core(username)
+    user = P_user(username, response_type='html')
     session = session_manager.get(request)
     return flask.render_template('user.html', user=user, session=session)
 
 @site.route('/user/<username>.json', methods=['GET'])
 @session_manager.give_token
 def get_user_json(username):
-    user = get_user_core(username)
+    user = P_user(username, response_type='json')
     user = etiquette.jsonify.user(user)
     return jsonify.make_json_response(user)
+
+@site.route('/userid/<userid>')
+@site.route('/userid/<userid>.json')
+def get_user_id_redirect(userid):
+    if request.url.endswith('.json'):
+        user = P_user_id(userid, response_type='json')
+    else:
+        user = P_user_id(userid, response_type='html')
+    url_from = '/userid/' + userid
+    url_to = '/user/' + user.username
+    url = request.url.replace(url_from, url_to)
+    return flask.redirect(url)
 
 
 @site.route('/apitest')

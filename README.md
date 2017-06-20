@@ -18,7 +18,7 @@ Documentation is still a work in progress. In general, I use:
 - Improve the "tags on this page" list. Maybe add separate buttons for must/may/forbid on each.
 - Some way for the database to re-identify a file that was moved / renamed (lost & found). Maybe file hash of the first few mb is good enough.
 - Debate whether the `UserMixin.login` method should accept usernames or I should standardize the usage of IDs only internally.
-- Ability to access user page and user photos by user's ID, not just username.
+- Ability to access user photos by user's ID, not just username.
 - Should album size be cached on disk?
 - Replace columns like area, ratio, bitrate by using expression indices or views (`width * height` etc).
 - Add some way to support large image albums without flooding the search results. Considering a "hidden" property so that a handful of representative images can appear in the search results, and the rest can be found on the actual Album page.
