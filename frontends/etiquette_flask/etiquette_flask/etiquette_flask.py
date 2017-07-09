@@ -672,6 +672,12 @@ def post_photo_refresh_metadata(photoid):
         response = etiquette.jsonify.exception(e)
         response = jsonify.make_json_response(response, status=400)
         flask.abort(response)
+    if photo.thumbnail is None:
+        try:
+            photo.generate_thumbnail()
+        except Exception:
+            traceback.print_exc()
+
     return jsonify.make_json_response({})
 
 @site.route('/photo/<photoid>/remove_tag', methods=['POST'])
