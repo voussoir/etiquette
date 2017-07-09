@@ -797,7 +797,7 @@ def post_tag_edit(specific_tag):
 
 @site.route('/tags/<specific_tag>')
 @site.route('/tags/<specific_tag>.json')
-def get_tags_specific_redirect(specific_tag=None):
+def get_tags_specific_redirect(specific_tag):
     return flask.redirect(request.url.replace('/tags/', '/tag/'))
 
 @site.route('/tags/create_tag', methods=['POST'])
@@ -867,7 +867,6 @@ def get_user_id_redirect(userid):
 @session_manager.give_token
 def apitest():
     response = flask.Response('testing')
-    response.set_cookie('etiquette_session', 'don\'t overwrite me')
     return response
 
 if __name__ == '__main__':
