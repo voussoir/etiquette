@@ -3,7 +3,11 @@
 <head>
     {% import "header.html" as header %}
     {% import "tag_object.html" as tag_object %}
-    <title>Tags</title>
+    {% if specific is none %}
+        <title>Tags</title>
+    {% else %}
+        <title>Tag {{specific_tag.name}}</title>
+    {% endif %}
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/common.css">
     <script src="/static/common.js"></script>
