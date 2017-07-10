@@ -150,12 +150,14 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.open_button = document.createElement("button");
     this.open_button.innerText = "Edit";
+    this.open_button.classList.add("editor_button");
     this.open_button.classList.add("editor_open_button");
     this.open_button.onclick = this.bound_open.bind(this);
     toolbox.appendChild(this.open_button);
 
     this.save_button = document.createElement("button");
     this.save_button.innerText = "Save";
+    this.save_button.classList.add("editor_button");
     this.save_button.classList.add("editor_save_button");
     this.save_button.classList.add("hidden");
     this.save_button.onclick = this.bound_save.bind(this);
@@ -163,6 +165,7 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.cancel_button = document.createElement("button");
     this.cancel_button.innerText = "Cancel";
+    this.cancel_button.classList.add("editor_button");
     this.cancel_button.classList.add("editor_cancel_button");
     this.cancel_button.classList.add("hidden");
     this.cancel_button.onclick = this.bound_cancel.bind(this);
