@@ -40,14 +40,12 @@ p
 <body>
 {{header.make_header(session=session)}}
 <div id="content_body">
-    <h2>
-        <span data-editor-id="title" data-editor-placeholder="title" id="title_text">
+    <h2 data-editor-id="title" data-editor-placeholder="title" id="title_text">
         {%- if album.title -%}
             {{album.title}}
         {%- else -%}
             Album {{album.id}}
         {%- endif -%}
-        </span>
     </h2>
     <p data-editor-id="description" data-editor-placeholder="description" id="description_text" {% if album.description == "" %}class="hidden"{% endif %}>{{album.description}}</p>
 
