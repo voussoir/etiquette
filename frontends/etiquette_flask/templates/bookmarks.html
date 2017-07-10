@@ -53,11 +53,39 @@
                 <a href="{{bookmark.url}}" class="bookmark_url">{{bookmark.url}}</a>
             </div>
             {% endfor %}
+            <div class="new_bookmark_card">
+                <input id="new_bookmark_title" type="text" placeholder="title">
+                <input id="new_bookmark_url" type="text" placeholder="url">
+                <button id="new_bookmark_button" class="green_button" onclick="submit_bookmark_form()">Create</button>
+            </div>
         </div>
     </div>
 </body>
 
 
 <script type="text/javascript">
+function submit_bookmark_form()
+{
+    var url = document.getElementById("new_bookmark_url").value.trim();
+    var title = document.getElementById("new_bookmark_title").value.trim();
+    if (!url)
+    {
+        return;
+    }
+    return create_bookmark(url, title);
+}
+
+function create_bookmark(url, title)
+{
+    var api_url = "/bookmarks/create_bookmark";
+    var data = new FormData();
+    data.append("url", url);
+    if (title)
+    {
+        data.append("title", title);
+    }
+    var callback = function(){location.reload();};
+    post(api_url, data, callback);
+}
 </script>
 </html>
