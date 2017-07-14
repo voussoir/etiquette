@@ -103,24 +103,22 @@ p
 
 
 <script type="text/javascript">
-var title_text = document.getElementById("title_text");
-var description_text = document.getElementById("description_text");
 var blank_title_text = "Album {{album.id}}";
 
-function on_open(editor, edit_element_map)
+function on_open(editor, edit_element_map, display_element_map)
 {
-    if (title_text.innerText == blank_title_text)
+    if (display_element_map["title"].innerText == blank_title_text)
     {
-        title_text.innerText = "";
+        display_element_map["title"].innerText = "";
     }
     editor.open();
-    edit_element_map['title'].focus();
+    edit_element_map["title"].focus();
 }
 
-function on_save(editor, edit_element_map)
+function on_save(editor, edit_element_map, display_element_map)
 {
-    var title_editor = edit_element_map['title'];
-    var description_editor = edit_element_map['description'];
+    var title_editor = edit_element_map["title"];
+    var description_editor = edit_element_map["description"];
 
     editor.show_spinner();
     function callback()
@@ -149,19 +147,21 @@ function on_save(editor, edit_element_map)
     post(url, data, callback);
 }
 
-function on_cancel(editor, edit_element_map)
+function on_cancel(editor, edit_element_map, display_element_map)
 {
     editor.cancel();
-    if (title_text.innerText == "")
+    if (display_element_map["title"].innerText == "")
     {
-        title_text.innerText = blank_title_text;
+        display_element_map["title"].innerText = blank_title_text;
     }
-    if (description_text.innerText == "")
+    if (display_element_map["description"].innerText == "")
     {
-        description_text.classList.add("hidden");
+        display_element_map["description"].classList.add("hidden");
     }
 }
 
+var title_text = document.getElementById("title_text");
+var description_text = document.getElementById("description_text");
 var editor = new Editor([title_text, description_text], on_open, on_save, on_cancel);
 </script>
 </html>
