@@ -91,7 +91,9 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.display_elements = [];
     this.edit_elements = [];
+
     this.can_use_element_map = true;
+    this.display_element_map = {};
     this.edit_element_map = {};
 
     this.misc_data = {};
@@ -112,20 +114,24 @@ function Editor(elements, on_open, on_save, on_cancel)
         }
         edit_element.classList.add("editor_input");
         edit_element.classList.add("hidden");
+
         if (display_element.dataset.editorPlaceholder !== undefined)
         {
             edit_element.placeholder = display_element.dataset.editorPlaceholder;
         }
+
         if (this.can_use_element_map)
         {
             if (display_element.dataset.editorId !== undefined)
             {
+                this.display_element_map[display_element.dataset.editorId] = display_element;
                 this.edit_element_map[display_element.dataset.editorId] = edit_element;
             }
             else
             {
                 this.can_use_element_map = false;
                 this.edit_element_map = null;
+                this.display_element_map = null;
             }
         }
 
@@ -147,11 +153,11 @@ function Editor(elements, on_open, on_save, on_cancel)
         {
             if (this.can_use_element_map)
             {
-                func(self, self.edit_element_map);
+                func(self, self.edit_element_map, self.display_element_map);
             }
             else
             {
-                func(self, self.edit_elements);
+                func(self, self.edit_elements, self.display_elements);
             }
         }
         return bound;
