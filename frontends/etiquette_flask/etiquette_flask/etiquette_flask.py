@@ -107,6 +107,10 @@ def P_album(albumid):
     return P.get_album(albumid)
 
 @P_wrapper
+def P_bookmark(bookmarkid):
+    return P.get_bookmark(bookmarkid)
+
+@P_wrapper
 def P_photo(photoid):
     return P.get_photo(photoid)
 
@@ -534,6 +538,26 @@ def post_albums_create():
     response = etiquette.jsonify.album(album, minimal=False)
     return jsonify.make_json_response(response)
 
+
+@site.route('/bookmark/<bookmarkid>.json')
+@session_manager.give_token
+def get_bookmark_json(bookmarkid):
+    bookmark = P_bookmark(bookmarkid)
+    response = etiquette.jsonify.bookmark(bookmark)
+    return jsonify.make_json_response(response)
+
+@site.route('/bookmark/<bookmarkid>/edit', methods=['POST'])
+@session_manager.give_token
+def post_bookmark_edit(bookmarkid):
+    bookmark = P_bookmark(bookmarkid)
+    # Emptystring is okay for titles, but not for URL.
+    title = request.form.get('title', None)
+    url = request.form.get('url', None) or None
+    bookmark.edit(title=title, url=url)
+
+    response = etiquette.jsonify.bookmark(bookmark)
+    response = jsonify.make_json_response(response)
+    return response
 
 @site.route('/bookmarks')
 @session_manager.give_token
