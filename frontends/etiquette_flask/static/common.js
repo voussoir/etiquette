@@ -49,7 +49,15 @@ function Editor(elements, on_open, on_save, on_cancel)
             display_element.classList.add("hidden");
             edit_element.classList.remove("hidden");
 
-            edit_element.value = display_element.innerText;
+            var empty_text = display_element.dataset.editorEmptyText;
+            if (empty_text !== undefined && display_element.innerText == empty_text)
+            {
+                edit_element.value = "";
+            }
+            else
+            {
+                edit_element.value = display_element.innerText;
+            }
         }
         this.open_button.classList.add("hidden")
         this.save_button.classList.remove("hidden");
@@ -63,7 +71,14 @@ function Editor(elements, on_open, on_save, on_cancel)
             var display_element = this.display_elements[index];
             var edit_element = this.edit_elements[index];
 
-            display_element.innerText = edit_element.value;
+            if (display_element.dataset.editorEmptyText !== undefined && edit_element.value == "")
+            {
+                display_element.innerText = display_element.dataset.editorEmptyText;
+            }
+            else
+            {
+                display_element.innerText = edit_element.value;
+            }
         }
 
         this.close();
