@@ -14,7 +14,8 @@
     flex: 0 0 auto;
     flex-direction: column;
 }
-.bookmark_card
+.bookmark_card,
+.new_bookmark_card
 {
     display: inline-flex;
     flex: 0 0 auto;
@@ -42,15 +43,25 @@
     <div id="content_body">
         <div id="bookmarks">
             {% for bookmark in bookmarks %}
-            <div class="bookmark_card">
-                <a href="{{bookmark.url}}" class="bookmark_title">
+            <div class="bookmark_card" data-bookmark-id="{{bookmark.id}}">
+                <a href="{{bookmark.url}}"
+                class="bookmark_title"
+                data-editor-id="title"
+                data-editor-placeholer="title"
+                data-editor-empty-text="{{bookmark.id}}">
                 {%- if bookmark.title -%}
                     {{bookmark.title}}
                 {%- else -%}
                     {{bookmark.id}}
                 {%- endif -%}
                 </a>
-                <a href="{{bookmark.url}}" class="bookmark_url">{{bookmark.url}}</a>
+
+                <a href="{{bookmark.url}}"
+                class="bookmark_url"
+                data-editor-id="url"
+                data-editor-placeholder="url">
+                {{-bookmark.url-}}
+                </a>
             </div>
             {% endfor %}
             <div class="new_bookmark_card">
@@ -87,5 +98,42 @@ function create_bookmark(url, title)
     var callback = function(){location.reload();};
     post(api_url, data, callback);
 }
+
+
+function on_save(editor, edit_element_map)
+{
+    var title_editor = edit_element_map['title'];
+    var url_editor = edit_element_map['url'];
+
+    editor.show_spinner();
+    function callback()
+    {
+        editor.hide_spinner();
+        editor.save();
+    }
+
+    var url = "/bookmark/" + editor.misc_data["bookmark_id"] + "/edit";
+    var data = new FormData();
+    data.append("title", title_editor.value);
+    data.append("url", url_editor.value);
+    post(url, data, callback);
+}
+
+on_open = undefined;
+on_cancel = undefined;
+
+function create_editors()
+{
+    var cards = document.getElementsByClassName("bookmark_card");
+    for (var index = 0; index < cards.length; index += 1)
+    {
+        var card = cards[index];
+        var title_div = card.getElementsByClassName("bookmark_title")[0];
+        var url_div = card.getElementsByClassName("bookmark_url")[0];
+        editor = new Editor([title_div, url_div], on_open, on_save, on_cancel);
+        editor.misc_data["bookmark_id"] = card.dataset.bookmarkId;
+    }
+}
+create_editors();
 </script>
 </html>

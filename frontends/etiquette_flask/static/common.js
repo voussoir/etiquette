@@ -94,6 +94,8 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.can_use_element_map = true;
     this.edit_element_map = {};
 
+    this.misc_data = {};
+
     for (var index = 0; index < elements.length; index += 1)
     {
         var display_element = elements[index];
