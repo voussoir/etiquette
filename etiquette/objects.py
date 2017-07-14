@@ -472,6 +472,8 @@ class Bookmark(ObjectBase):
             self.title = title
 
         if url is not None:
+            if not url:
+                raise ValueError('Need a URL')
             self.url = url
 
         cur = self.photodb.sql.cursor()
