@@ -26,6 +26,7 @@ p
 }
 #description_text
 {
+    font-family: initial;
     padding: 8px;
     background-color: rgba(0, 0, 0, 0.1);
 }
@@ -49,7 +50,14 @@ p
         {%- endif -%}
         </span>
     </h2>
-    <p data-editor-id="description" data-editor-placeholder="description" id="description_text" {% if album.description == "" %}class="hidden"{% endif %}>{{album.description}}</p>
+    <pre
+    id="description_text"
+    data-editor-id="description"
+    data-editor-placeholder="description"
+    {% if album.description == "" %}class="hidden"{% endif %}
+    >
+        {{-album.description-}}
+    </pre>
 
     {% set viewparam = "?view=list" if view == "list" else "" %}
     {% set parent = album.parent() %}
