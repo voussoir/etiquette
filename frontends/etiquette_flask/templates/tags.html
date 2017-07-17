@@ -221,6 +221,7 @@ function on_save(editor, edit_element_map, display_element_map)
 {
     var name_display = display_element_map["name"];
     var name_editor = edit_element_map["name"];
+    var description_display = display_element_map["description"];
     var description_editor = edit_element_map["description"];
 
     editor.show_spinner();
@@ -237,6 +238,10 @@ function on_save(editor, edit_element_map, display_element_map)
             name_editor.value = new_name;
             description_editor.value = new_description;
             editor.save();
+            if (new_description === "")
+            {
+                description_display.classList.add("hidden");
+            }
         }
     }
 
@@ -246,7 +251,15 @@ function on_save(editor, edit_element_map, display_element_map)
     data.append("description", description_editor.value);
     post(url, data, callback);
 }
-on_cancel = undefined;
+
+function on_cancel(editor, edit_element_map, display_element_map)
+{
+    editor.cancel();
+    if (display_element_map["description"].innerText == "")
+    {
+        display_element_map["description"].classList.add("hidden");
+    }
+}
 
 var name_text = document.getElementById("name_text");
 var description_text = document.getElementById("description_text");
