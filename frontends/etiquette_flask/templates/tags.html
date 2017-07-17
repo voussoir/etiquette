@@ -3,7 +3,7 @@
 <head>
     {% import "header.html" as header %}
     {% import "tag_object.html" as tag_object %}
-    {% if specific is none %}
+    {% if specific_tag is none %}
         <title>Tags</title>
     {% else %}
         <title>Tag {{specific_tag.name}}</title>
@@ -42,6 +42,12 @@ body
 
     background-color: rgba(0, 0, 0, 0.1);
 }
+#description_text
+{
+    font-family: initial;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
 #editor_area
 {
     display: flex;
@@ -73,8 +79,23 @@ body
 <div id="content_body">
     <div id="left">
         {% if specific_tag is not none %}
-            <h1>{{specific_tag.name}}</h1>
-            <p>{{specific_tag.description}}</p>
+            <h2>
+                <span
+                id="name_text"
+                data-editor-id="name"
+                data-editor-placeholder="name"
+                >
+                    {{-specific_tag.name-}}
+                </span>
+            </h2>
+            <pre
+            id="description_text"
+            data-editor-id="description"
+            data-editor-placeholder="description"
+            {% if specific_tag.description == "" %}class="hidden"{% endif -%}
+            >
+                {{-specific_tag.description-}}
+            </pre>
         {% endif %}
         <ul>
             {% for tag in tags %}
@@ -182,5 +203,48 @@ function receive_callback(responses)
         create_message_bubble(message_area, message_positivity, message_text, 8000);
     }
 }
+
+{% if specific_tag is not none %}
+function on_open(editor, edit_element_map)
+{
+    editor.open();
+    edit_element_map["name"].focus();
+}
+
+function on_save(editor, edit_element_map, display_element_map)
+{
+    var name_display = display_element_map["name"];
+    var name_editor = edit_element_map["name"];
+    var description_editor = edit_element_map["description"];
+
+    editor.show_spinner();
+    function callback(response)
+    {
+        console.log(response);
+        editor.hide_spinner();
+        if (response["_status"] == 200)
+        {
+            var new_name = response["name"];
+            var new_description = response["description"];
+            document.title = "Tag " + new_name;
+            window.history.replaceState(null, null, "/tag/" + new_name);
+            name_editor.value = new_name;
+            description_editor.value = new_description;
+            editor.save();
+        }
+    }
+
+    var url = "/tag/" + name_display.innerText + "/edit";
+    var data = new FormData();
+    data.append("name", name_editor.value);
+    data.append("description", description_editor.value);
+    post(url, data, callback);
+}
+on_cancel = undefined;
+
+var name_text = document.getElementById("name_text");
+var description_text = document.getElementById("description_text");
+var editor = new Editor([name_text, description_text], on_open, on_save, on_cancel);
+{% endif %}
 </script>
 </html>
