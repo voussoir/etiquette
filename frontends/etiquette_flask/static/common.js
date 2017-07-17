@@ -1,3 +1,5 @@
+var PARAGRAPH_TYPES = new Set(["P", "PRE"]);
+
 function Editor(elements, on_open, on_save, on_cancel)
 {
     /*
@@ -102,7 +104,7 @@ function Editor(elements, on_open, on_save, on_cancel)
     {
         var display_element = elements[index];
         var edit_element;
-        if (display_element.tagName == "P")
+        if (PARAGRAPH_TYPES.has(display_element.tagName))
         {
             edit_element = document.createElement("textarea");
             edit_element.rows = 6;
