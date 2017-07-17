@@ -100,10 +100,16 @@ function create_bookmark(url, title)
 }
 
 
+function on_open(editor, edit_element_map)
+{
+    editor.open();
+    edit_element_map["title"].focus();
+}
+
 function on_save(editor, edit_element_map)
 {
-    var title_editor = edit_element_map['title'];
-    var url_editor = edit_element_map['url'];
+    var title_editor = edit_element_map["title"];
+    var url_editor = edit_element_map["url"];
 
     editor.show_spinner();
     function callback()
@@ -119,7 +125,6 @@ function on_save(editor, edit_element_map)
     post(url, data, callback);
 }
 
-on_open = undefined;
 on_cancel = undefined;
 
 function create_editors()
