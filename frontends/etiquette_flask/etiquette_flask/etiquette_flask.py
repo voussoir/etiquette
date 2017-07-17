@@ -812,6 +812,19 @@ def get_tags_json(specific_tag=None):
 @site.route('/tag/<specific_tag>/edit', methods=['POST'])
 def post_tag_edit(specific_tag):
     tag = P_tag(specific_tag)
+    name = request.form.get('name', '').strip()
+    if name:
+        try:
+            tag.rename(name, commit=False)
+        except etiquette.exceptions.EtiquetteException as e:
+            if isinstance(e, etiquette.exceptions.NoSuch):
+                status = 404
+            else:
+                status = 400
+            response = etiquette.jsonify.exception(e)
+            response = jsonify.make_json_response(response, status=status)
+            flask.abort(response)
+
     description = request.form.get('description', None)
     tag.edit(description=description)
 
