@@ -17,55 +17,59 @@ body
 {
     display:flex;
 }
-#left
+#content_body
 {
-    height:100%;
+    flex: 1;
 }
 #left
 {
     flex: 1;
     height: auto;
+    padding: 8px;
+}
+#description_text
+{
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+    font-family: initial;
 }
 #right
+{
+    width: 316px;
+}
+#right_inner
 {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    flex: 1;
+
     position: fixed;
+    top: 30px;
     right: 8px;
     bottom: 8px;
-    top: 30px;
-
     width: 300px;
-    padding: 8px;
 
-    background-color: rgba(0, 0, 0, 0.1);
-}
-#description_text
-{
-    font-family: initial;
     padding: 8px;
     background-color: rgba(0, 0, 0, 0.1);
 }
 #editor_area
 {
     display: flex;
-    flex: 1;
     flex-direction: row;
     justify-content center;
     align-items: center;
+    flex: 1;
 }
 #message_area
 {
     display: flex;
-    flex: 2;
     flex-direction: column;
     justify-content center;
     align-items: center;
+    flex: 2;
 
-    width: 100%;
-    height: 100%;
     overflow-y: auto;
 
     background-color: rgba(0, 0, 0, 0.1);
@@ -116,11 +120,13 @@ body
         </ul>
     </div>
     <div id="right">
-        <div id="editor_area">
-        <input type="text" id="add_tag_textbox" autofocus>
-        <button class="add_tag_button" id="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
-        </div>
-        <div id="message_area">
+        <div id="right_inner">
+            <div id="editor_area">
+            <input type="text" id="add_tag_textbox" autofocus>
+            <button class="add_tag_button" id="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
+            </div>
+            <div id="message_area">
+            </div>
         </div>
     </div>
 </div>
