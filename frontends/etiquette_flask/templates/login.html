@@ -20,7 +20,7 @@ button
 #content_body
 {
     display: flex;
-    flex: 1;
+    flex: 1 1 auto;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -34,6 +34,7 @@ button
 {
     display: flex;
     flex-direction: row;
+    flex: 0 0 auto;
 }
 
 #login_form,
@@ -53,6 +54,13 @@ button
 {
     margin-top: 5px;
     margin-bottom: 5px;
+}
+@media screen and (max-width: 800px)
+{
+    #login_register_box
+    {
+        flex-direction: column;
+    }
 }
 
 </style>
