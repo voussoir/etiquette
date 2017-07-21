@@ -648,6 +648,9 @@ def post_login():
         e = etiquette.exceptions.WrongLogin()
         response = etiquette.jsonify.exception(e)
         return jsonify.make_json_response(response, status=422)
+    except etiquette.exceptions.FeatureDisabled as e:
+        response = etiquette.jsonify.exception(e)
+        return jsonify.make_json_response(response, status=400)
     session = sessions.Session(request, user)
     session_manager.add(session)
     return jsonify.make_json_response({})

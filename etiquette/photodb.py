@@ -1006,6 +1006,7 @@ class PDBUserMixin:
             author_id = None
         return author_id
 
+    @decorators.required_feature('enable_login')
     def login(self, user_id, password):
         cur = self.sql.cursor()
         cur.execute('SELECT * FROM users WHERE id == ?', [user_id])
