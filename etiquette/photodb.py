@@ -215,7 +215,7 @@ class PDBAlbumMixin:
             if album.parent() is None:
                 yield album
 
-    @decorators.required_feature('enable_new_album')
+    @decorators.required_feature('album.new')
     @decorators.transaction
     def new_album(
             self,
@@ -283,7 +283,7 @@ class PDBBookmarkMixin:
     def get_bookmarks(self):
         yield from self.get_things(thing_type='bookmark')
 
-    @decorators.required_feature('enable_new_bookmark')
+    @decorators.required_feature('bookmark.new')
     @decorators.transaction
     def new_bookmark(self, url, title=None, *, author=None, commit=True):
         if not url:
@@ -356,7 +356,7 @@ class PDBPhotoMixin:
             if count <= 0:
                 break
 
-    @decorators.required_feature('enable_new_photo')
+    @decorators.required_feature('photo.new')
     @decorators.transaction
     def new_photo(
             self,
@@ -894,7 +894,7 @@ class PDBTagMixin:
             if tag.parent() is None:
                 yield tag
 
-    @decorators.required_feature('enable_new_tag')
+    @decorators.required_feature('tag.new')
     @decorators.transaction
     def new_tag(self, tagname, description=None, *, commit=True):
         '''
@@ -936,13 +936,13 @@ class PDBTagMixin:
         tagname = tagname.lower()
         tagname = tagname.replace('-', '_')
         tagname = tagname.replace(' ', '_')
-        tagname = (c for c in tagname if c in self.config['valid_tag_chars'])
+        tagname = (c for c in tagname if c in self.config['tag']['valid_chars'])
         tagname = ''.join(tagname)
 
-        if len(tagname) < self.config['min_tag_name_length']:
+        if len(tagname) < self.config['tag']['min_length']:
             raise exceptions.TagTooShort(original_tagname)
 
-        elif len(tagname) > self.config['max_tag_name_length']:
+        elif len(tagname) > self.config['tag']['max_length']:
             raise exceptions.TagTooLong(tagname)
 
         else:
@@ -1006,7 +1006,7 @@ class PDBUserMixin:
             author_id = None
         return author_id
 
-    @decorators.required_feature('enable_login')
+    @decorators.required_feature('user.login')
     def login(self, user_id, password):
         cur = self.sql.cursor()
         cur.execute('SELECT * FROM users WHERE id == ?', [user_id])
@@ -1026,30 +1026,30 @@ class PDBUserMixin:
 
         return objects.User(self, fetch)
 
-    @decorators.required_feature('enable_new_user')
+    @decorators.required_feature('user.new')
     @decorators.transaction
     def register_user(self, username, password, commit=True):
-        if len(username) < self.config['min_username_length']:
+        if len(username) < self.config['user']['min_length']:
             raise exceptions.UsernameTooShort(
                 username=username,
-                min_length=self.config['min_username_length']
+                min_length=self.config['user']['min_length']
             )
 
-        if len(username) > self.config['max_username_length']:
+        if len(username) > self.config['user']['max_length']:
             raise exceptions.UsernameTooLong(
                 username=username,
-                max_length=self.config['max_username_length']
+                max_length=self.config['user']['max_length']
             )
 
-        badchars = [c for c in username if c not in self.config['valid_username_chars']]
+        badchars = [c for c in username if c not in self.config['user']['valid_chars']]
         if badchars:
             raise exceptions.InvalidUsernameChars(username=username, badchars=badchars)
 
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
 
-        if len(password) < self.config['min_password_length']:
-            raise exceptions.PasswordTooShort(min_length=self.config['min_password_length'])
+        if len(password) < self.config['user']['min_password_length']:
+            raise exceptions.PasswordTooShort(min_length=self.config['user']['min_password_length'])
 
         try:
             existing_user = self.get_user(username=username)
@@ -1141,10 +1141,10 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         self.on_commit_queue = []
         self._cached_frozen_children = None
 
-        self._album_cache.maxlen = self.config['cache_size_album']
-        self._photo_cache.maxlen = self.config['cache_size_photo']
-        self._tag_cache.maxlen = self.config['cache_size_tag']
-        self._user_cache.maxlen = self.config['cache_size_user']
+        self._album_cache.maxlen = self.config['cache_size']['album']
+        self._photo_cache.maxlen = self.config['cache_size']['photo']
+        self._tag_cache.maxlen = self.config['cache_size']['tag']
+        self._user_cache.maxlen = self.config['cache_size']['user']
         self.caches = {
             'album': self._album_cache,
             'photo': self._photo_cache,

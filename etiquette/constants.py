@@ -150,35 +150,52 @@ DEFAULT_THUMBDIR = 'site_thumbnails'
 DEFAULT_CONFIGURATION = {
     'log_level': logging.DEBUG,
 
-    'cache_size_album': 1000,
-    'cache_size_photo': 100000,
-    'cache_size_tag': 1000,
-    'cache_size_user': 200,
+    'cache_size': {
+        'album': 1000,
+        'photo': 100000,
+        'tag': 1000,
+        'user': 200,
+    },
 
-    'enable_album_edit': True,
-    'enable_login': True,
-    'enable_new_album': True,
-    'enable_new_bookmark': True,
-    'enable_new_photo': True,
-    'enable_new_tag': True,
-    'enable_new_user': True,
-    'enable_bookmark_edit': True,
-    'enable_photo_add_remove_tag': True,
-    'enable_photo_edit': True,
-    'enable_photo_generate_thumbnail': True,
-    'enable_photo_reload_metadata': True,
-    'enable_tag_edit': True,
+    'enable_feature': {
+        'album': {
+            'edit': True,
+            'new': True,
+        },
+        'bookmark': {
+            'edit': True,
+            'new': True,
+        },
+        'photo': {
+            'add_remove_tag': True,
+            'new': True,
+            'edit': True,
+            'generate_thumbnail': True,
+            'reload_metadata': True,
+        },
+        'tag': {
+            'edit': True,
+            'new': True,
+        },
+        'user': {
+            'login': True,
+            'new': True,
+        },
+    },
 
-    'min_tag_name_length': 1,
-    'max_tag_name_length': 32,
-    'valid_tag_chars': string.ascii_lowercase + string.digits + '_()',
+    'tag': {
+        'min_length': 1,
+        'max_length': 32,
+        'valid_chars': string.ascii_lowercase + string.digits + '_()',
+    },
 
-    'min_username_length': 2,
-    'max_username_length': 24,
-    'valid_username_chars': string.ascii_letters + string.digits + '~!@#$%^*()[]{}:;,.<>/\\-_+=',
-    'min_password_length': 6,
+    'user': {
+        'min_length': 2,
+        'min_password_length': 6,
+        'max_length': 24,
+        'valid_chars': string.ascii_letters + string.digits + '~!@#$%^*()[]{}:;,.<>/\\-_+=',
+    },
 
-    'id_length': 12,
     'digest_exclude_files': [
         'phototagger.db',
         'desktop.ini',
@@ -188,9 +205,10 @@ DEFAULT_CONFIGURATION = {
         '_site_thumbnails',
     ],
 
-    'file_read_chunk': 2 ** 20,
+    'id_length': 12,
     'thumbnail_width': 400,
     'thumbnail_height': 400,
+
     'motd_strings': [
         'Good morning, Paul. What will your first sequence of the day be?',
     ],

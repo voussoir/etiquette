@@ -22,8 +22,20 @@ def required_feature(features):
             else:
                 config = self.config
 
-            if not all(config[key] for key in features):
-                raise exceptions.FeatureDisabled(function.__name__)
+            config = config['enable_feature']
+
+            # Using the received string like "photo.new", try to navigate the
+            # config and wind up at a True.
+            # Allow KeyErrors to raise themselves.
+            for feature in features:
+                cfg = config
+                pieces = feature.split('.')
+                for piece in pieces:
+                    cfg = cfg[piece]
+                if cfg is False:
+                    raise exceptions.FeatureDisabled(function.__qualname__)
+                if cfg is not True:
+                    raise ValueError('Bad required_feature "%s" led to %s' % (feature, cfg))
 
             return function(self, *args, **kwargs)
         return wrapped

@@ -241,11 +241,11 @@ class Album(ObjectBase, GroupableMixin):
         self._sum_bytes_photos = None
         self._sum_bytes_albums = None
 
-    @decorators.required_feature('enable_album_edit')
+    @decorators.required_feature('album.edit')
     def add(self, *args, **kwargs):
         return super().add(*args, **kwargs)
 
-    @decorators.required_feature('enable_album_edit')
+    @decorators.required_feature('album.edit')
     @decorators.transaction
     def add_associated_directory(self, filepath, *, commit=True):
         filepath = pathclass.Path(filepath)
@@ -277,7 +277,7 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - add associated directory')
             self.photodb.commit()
 
-    @decorators.required_feature('enable_album_edit')
+    @decorators.required_feature('album.edit')
     @decorators.transaction
     def add_photo(self, photo, *, commit=True):
         if self.photodb != photo.photodb:
@@ -325,7 +325,7 @@ class Album(ObjectBase, GroupableMixin):
         directories = [pathclass.Path(x) for x in directories]
         return directories
 
-    @decorators.required_feature('enable_album_edit')
+    @decorators.required_feature('album.edit')
     @decorators.transaction
     def delete(self, *, delete_children=False, commit=True):
         self.photodb.log.debug('Deleting album {album:r}'.format(album=self))
@@ -346,7 +346,7 @@ class Album(ObjectBase, GroupableMixin):
         else:
             return self.id
 
-    @decorators.required_feature('enable_album_edit')
+    @decorators.required_feature('album.edit')
     @decorators.transaction
     def edit(self, title=None, description=None, *, commit=True):
         '''
@@ -378,11 +378,11 @@ class Album(ObjectBase, GroupableMixin):
         )
         return cur.fetchone() is not None
 
-    @decorators.required_feature('enable_album_edit')
+    @decorators.required_feature('album.edit')
     def join_group(self, *args, **kwargs):
         return super().join_group(*args, **kwargs)
 
-    @decorators.required_feature('enable_album_edit')
+    @decorators.required_feature('album.edit')
     def leave_group(self, *args, **kwargs):
         return super().leave_group(*args, **kwargs)
 
@@ -400,7 +400,7 @@ class Album(ObjectBase, GroupableMixin):
         photos.sort(key=lambda x: x.basename.lower())
         return photos
 
-    @decorators.required_feature('enable_album_edit')
+    @decorators.required_feature('album.edit')
     @decorators.transaction
     def remove_photo(self, photo, *, commit=True):
         if not self.has_photo(photo):
@@ -454,7 +454,7 @@ class Bookmark(ObjectBase):
     def __repr__(self):
         return 'Bookmark:{id}'.format(id=self.id)
 
-    @decorators.required_feature('enable_bookmark_edit')
+    @decorators.required_feature('bookmark.edit')
     @decorators.transaction
     def delete(self, *, commit=True):
         cur = self.photodb.sql.cursor()
@@ -462,7 +462,7 @@ class Bookmark(ObjectBase):
         if commit:
             self.photodb.commit()
 
-    @decorators.required_feature('enable_bookmark_edit')
+    @decorators.required_feature('bookmark.edit')
     @decorators.transaction
     def edit(self, title=None, url=None, *, commit=True):
         if title is None and url is None:
@@ -547,7 +547,7 @@ class Photo(ObjectBase):
     def _uncache(self):
         self.photodb.caches['photo'].remove(self.id)
 
-    @decorators.required_feature('enable_photo_add_remove_tag')
+    @decorators.required_feature('photo.add_remove_tag')
     @decorators.transaction
     def add_tag(self, tag, *, commit=True):
         tag = self.photodb.get_tag(tag)
@@ -599,7 +599,7 @@ class Photo(ObjectBase):
             return bytestring.bytestring(self.bytes)
         return '??? b'
 
-    @decorators.required_feature('enable_photo_add_remove_tag')
+    @decorators.required_feature('photo.add_remove_tag')
     def copy_tags(self, other_photo):
         '''
         Take all of the tags owned by other_photo and apply them to this photo.
@@ -607,7 +607,7 @@ class Photo(ObjectBase):
         for tag in other_photo.tags():
             self.add_tag(tag)
 
-    @decorators.required_feature('enable_photo_edit')
+    @decorators.required_feature('photo.edit')
     @decorators.transaction
     def delete(self, *, delete_file=False, commit=True):
         '''
@@ -638,7 +638,7 @@ class Photo(ObjectBase):
         return helpers.seconds_to_hms(self.duration)
 
     #@decorators.time_me
-    @decorators.required_feature('enable_photo_generate_thumbnail')
+    @decorators.required_feature('photo.generate_thumbnail')
     @decorators.transaction
     def generate_thumbnail(self, *, commit=True, **special):
         '''
@@ -773,7 +773,7 @@ class Photo(ObjectBase):
         return hopeful_filepath
 
     #@decorators.time_me
-    @decorators.required_feature('enable_photo_reload_metadata')
+    @decorators.required_feature('photo.reload_metadata')
     @decorators.transaction
     def reload_metadata(self, *, commit=True):
         '''
@@ -830,7 +830,7 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Committing - reload metadata')
             self.photodb.commit()
 
-    @decorators.required_feature('enable_photo_edit')
+    @decorators.required_feature('photo.edit')
     @decorators.transaction
     def relocate(self, new_filepath, *, allow_duplicates=False, commit=True):
         '''
@@ -864,7 +864,7 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Commit - relocate photo')
             self.photodb.commit()
 
-    @decorators.required_feature('enable_photo_add_remove_tag')
+    @decorators.required_feature('photo.add_remove_tag')
     @decorators.transaction
     def remove_tag(self, tag, *, commit=True):
         tag = self.photodb.get_tag(tag)
@@ -884,7 +884,7 @@ class Photo(ObjectBase):
             self.photodb.log.debug('Committing - remove photo tag')
             self.photodb.commit()
 
-    @decorators.required_feature('enable_photo_edit')
+    @decorators.required_feature('photo.edit')
     @decorators.transaction
     def rename_file(self, new_filename, *, move=False, commit=True):
         '''
@@ -1007,11 +1007,11 @@ class Tag(ObjectBase, GroupableMixin):
         self.photodb.caches['tag'].remove(self.id)
         self._cached_qualified_name = None
 
-    @decorators.required_feature('enable_tag_edit')
+    @decorators.required_feature('tag.edit')
     def add(self, *args, **kwargs):
         return super().add(*args, **kwargs)
 
-    @decorators.required_feature('enable_tag_edit')
+    @decorators.required_feature('tag.edit')
     @decorators.transaction
     def add_synonym(self, synname, *, commit=True):
         synname = self.photodb.normalize_tagname(synname)
@@ -1037,7 +1037,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         return synname
 
-    @decorators.required_feature('enable_tag_edit')
+    @decorators.required_feature('tag.edit')
     @decorators.transaction
     def convert_to_synonym(self, mastertag, *, commit=True):
         '''
@@ -1087,7 +1087,7 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - convert to synonym')
             self.photodb.commit()
 
-    @decorators.required_feature('enable_tag_edit')
+    @decorators.required_feature('tag.edit')
     @decorators.transaction
     def delete(self, *, delete_children=False, commit=True):
         self.photodb.log.debug('Deleting tag {tag:r}'.format(tag=self))
@@ -1102,7 +1102,7 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - delete tag')
             self.photodb.commit()
 
-    @decorators.required_feature('enable_tag_edit')
+    @decorators.required_feature('tag.edit')
     @decorators.transaction
     def edit(self, description=None, *, commit=True):
         '''
@@ -1121,11 +1121,11 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - edit tag')
             self.photodb.commit()
 
-    @decorators.required_feature('enable_tag_edit')
+    @decorators.required_feature('tag.edit')
     def join_group(self, *args, **kwargs):
         return super().join_group(*args, **kwargs)
 
-    @decorators.required_feature('enable_tag_edit')
+    @decorators.required_feature('tag.edit')
     def leave_group(self, *args, **kwargs):
         return super().leave_group(*args, **kwargs)
 
@@ -1164,7 +1164,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         return qualname
 
-    @decorators.required_feature('enable_tag_edit')
+    @decorators.required_feature('tag.edit')
     @decorators.transaction
     def remove_synonym(self, synname, *, commit=True):
         '''
@@ -1191,7 +1191,7 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - remove synonym')
             self.photodb.commit()
 
-    @decorators.required_feature('enable_tag_edit')
+    @decorators.required_feature('tag.edit')
     @decorators.transaction
     def rename(self, new_name, *, apply_to_synonyms=True, commit=True):
         '''
