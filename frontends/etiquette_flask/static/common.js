@@ -279,7 +279,14 @@ function create_album_and_follow(parent)
     }
     function receive_callback(response)
     {
-        window.location.href = "/album/" + response["id"];
+        if (response["_status"] == 200 && response["id"])
+        {
+            window.location.href = "/album/" + response["id"];
+        }
+        else
+        {
+            console.log(response);
+        }
     }
     post(url, data, receive_callback);
 }
