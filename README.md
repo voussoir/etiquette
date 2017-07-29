@@ -34,8 +34,9 @@ If you are interested in helping, please raise an issue before making any pull r
 - Add a `Photo.merge` to combine duplicate entries.
 - Generate thumbnails for vector files.
 - Allow photos to have nonstandard, orderby-able properties like "release year". How?
-- Make the FFmpeg path configurable. Some kind of global config? Or part of the database config file?
+- Make the FFmpeg path configurable. Some kind of global config? Or part of the database config file? It's not like every photodb needs a separate one.
 - Improve the appearance of album page. Too many section headers and the "Create album" interface should allow giving a title immediately.
+- When users have '%' or '#', etc. in their username, it is difficult to access their /user/ URL. I would prefer to fix it without simply blacklisting those characters.
 
 ### Changelog
 
