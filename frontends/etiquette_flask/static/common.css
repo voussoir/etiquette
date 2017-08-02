@@ -24,17 +24,11 @@ li
 }
 #header
 {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-content: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    grid-template-rows: auto;
 
     margin-bottom: 4px;
-}
-.editor_input
-{
-    width: 100%;
-    max-width: 800px;
 }
 .header_element
 {
@@ -47,6 +41,11 @@ li
 .header_element:hover
 {
     background-color: #ffffd4;
+}
+.editor_input
+{
+    width: 100%;
+    max-width: 800px;
 }
 .hidden
 {
