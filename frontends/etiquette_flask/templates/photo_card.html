@@ -18,59 +18,57 @@
 
 {% if view == "list" %}
 <div class="photo_card_list">
-    <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
-    <a target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
+    <span class="photo_card_filename"><a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a></span>
+    <a class="photo_card_metadata" target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
 </div>
 
 {% else %}
+{% if photo.thumbnail %}
+    {% set thumbnail_src = "/thumbnail/" + photo.id + ".jpg" %}
+{% else %}
+    {% set thumbnail_src =
+        thumbnails.get(photo.extension, "") or
+        thumbnails.get(photo.mimetype, "") or
+        thumbnails.get(photo.simple_mimetype, "") or
+        "other"
+    %}
+    {% set thumbnail_src = "/static/basic_thumbnails/" + thumbnail_src + ".png" %}
+{% endif %}
+
+{% set tag_names_title = [] %}
+{% for tag in photo.tags() %}
+{% do tag_names_title.append(tag.name) %}
+{% endfor %}
+{% set tag_names_title = ", ".join(tag_names_title) %}
+{% if tag_names_title %}
+    {% set tag_names_inner = "T" %}
+{% else %}
+    {% set tag_names_inner = "" %}
+{% endif %}
+
+{% set metadata_inner = "" %}
+{% if photo.width %}
+    {% set metadata_inner = "{m}{w}&times;{h}, ".format(m=metadata_inner, w=photo.width, h=photo.height) %}
+{% endif %}
+{% if photo.duration %}
+    {% set metadata_inner = "{m}{d}, ".format(m=metadata_inner, d=photo.duration_string) %}
+{% endif %}
+
 <div class="photo_card_grid">
-    <div class="photo_card_grid_thumb">
-        <a target="_blank" href="/photo/{{photo.id}}">
-            <img height="150"
-            {% if photo.thumbnail %}
-                src="/thumbnail/{{photo.id}}.jpg"
-            {% else %}
-                {% set choice =
-                    thumbnails.get(photo.extension,
-                    thumbnails.get(photo.mimetype,
-                    thumbnails.get(photo.simple_mimetype,
-                    'other')))
-                %}
-                src="/static/basic_thumbnails/{{choice}}.png"
-            {% endif %}
-            >
-        </a>
+    <a class="photo_card_thumbnail" target="_blank" href="/photo/{{photo.id}}">
+        <img height="150" src="{{thumbnail_src}}">
+    </a>
+
+    <div class="photo_card_filename">
+        <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
     </div>
-    <div class="photo_card_grid_info">
-        <div class="photo_card_grid_filename">
-            <div class="photo_card_grid_filename_hoverhelper">
-            <a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a>
-            </div>
-        </div>
-        <div class="photo_card_grid_file_metadata">
-            {% set tag_names = [] %}
-            {% for tag in photo.tags() %}
-            {% do tag_names.append(tag.name) %}
-            {% endfor %}
-            {% if tag_names %}
-                <div class="photo_card_grid_tags">
-                    {% set tag_names = ", ".join(tag_names) %}
-                    <span title="{{tag_names}}">T</span>
-                </div>
-            {% else %}
-                <div></div>
-            {% endif %}
-            <span>
-            {% if photo.width %}
-                {{photo.width}}&times;{{photo.height}},
-            {% endif %}
-            {% if photo.duration %}
-                {{photo.duration_string}},
-            {% endif %}
-            <a target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
-            </span>
-        </div>
-    </div>
+
+    <span class="photo_card_tags" title="{{tag_names_title}}">{{tag_names_inner}}</span>
+
+    <span class="photo_card_metadata">
+    {{- metadata_inner|safe -}}
+    <a target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
+    </span>
 </div>
 {% endif %}
 {% endmacro %}

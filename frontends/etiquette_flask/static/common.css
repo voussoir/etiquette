@@ -133,21 +133,31 @@ is hovered over.
 
 .photo_card_list
 {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto;
+    grid-template-areas:
+        "filename metadata";
 
+    max-width: 800px;
     margin: 8px;
     padding: 4px;
 
     background-color: #ffffd4;
 }
+.photo_card_list:hover
+{
+    box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.25);
+}
 .photo_card_grid
 {
-    display: inline-flex;
-    flex-direction: column;
-    vertical-align: middle;
-
+    display: inline-grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+        "thumbnail thumbnail"
+        "filename filename"
+        "tags metadata";
     min-width: 150px;
     max-width: 300px;
     height: 200px;
@@ -159,91 +169,64 @@ is hovered over.
 
     background-color: #ffffd4;
 }
-.photo_card_grid_thumb
+.photo_card_thumbnail
 {
-    display:flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    width:  100%;
-    height: 150px;
+    grid-area: thumbnail;
+    align-self: start;
+    justify-self: center;
 }
-.photo_card_grid_thumb a
-{
-    display:flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    width: 100%;
-    height: 100%;
-}
-.photo_card_grid_thumb img
+.photo_card_thumbnail img
 {
     max-width: 100%;
-    max-height: 100%;
-    height: auto;
 }
-.photo_card_grid_info
+.photo_card_filename
 {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    justify-content: space-between;
-
-    background-color: inherit;
-
-    font-size: 12.8px;
-}
-.photo_card_grid_filename
-{
-    align-self: flex-start;
-
     /*
     The width of photo cards should be based on the aspect ratio of the
     thumbnail image. Previously, I had problems where the card would be wider
     than necessary because the file had a long name.
-    These min-width:100% + width:0 prevent the info div from controlling
+    The min-width:100% + width:0 prevent the info div from controlling
     card size, so we can prioritize the thumbnail instead.
     */
+    align-self: start;
+    justify-self: start;
+    grid-area: filename;
+
+    z-index: 1;
+    overflow: hidden;
+
     min-width: 100%;
     width: 0;
-    overflow: hidden;
-    z-index: 1;
-
     max-height: 30px;
-
     background-color: inherit;
+    word-break: break-word;
 
-    word-break:break-word;
+    font-size: 12.8px;
 }
-.photo_card_grid_filename:hover
+.photo_card_filename:hover
 {
     overflow: visible;
+    max-height: none;
 }
-.photo_card_grid_filename_hoverhelper:hover
+.photo_card_tags
 {
-    background-color: inherit;
-}
-.photo_card_grid_file_metadata
-{
-    display: flex;
-    z-index: 0;
-    justify-content: space-between;
+    grid-area: tags;
+    align-self: end;
+    justify-self: start;
 
     font-family: monospace;
     font-size: 11px;
 }
-.photo_card_grid_tags
+.photo_card_metadata
 {
-    align-self: flex-start;
-    /*
-    When the metadata is long it tends to squish against the T, so give it
-    some breathing room.
-    */
-    margin-right: 8px;
+    grid-area: metadata;
+    align-self: end;
+    justify-self: end;
+
+    font-family: monospace;
+    font-size: 11px;
 }
+
 .tag_object
 {
     border-radius: 2px;
