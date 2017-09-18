@@ -2,6 +2,7 @@ import flask
 from flask import request
 import functools
 import uuid
+import werkzeug.wrappers
 
 from etiquette import helpers
 
@@ -43,8 +44,7 @@ class SessionManager:
                 request.cookies['etiquette_session'] = token
 
             response = function(*args, **kwargs)
-
-            if not isinstance(response, flask.Response):
+            if not isinstance(response, (flask.Response, werkzeug.wrappers.Response)):
                 response = flask.Response(response)
 
             # Send the token back to the client
