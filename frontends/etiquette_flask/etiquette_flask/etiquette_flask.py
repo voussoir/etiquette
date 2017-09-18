@@ -781,12 +781,18 @@ def get_search_json():
     return jsonify.make_json_response(search_results)
 
 
-@site.route('/tag/<specific_tag>')
+@site.route('/tag/<specific_tag_name>')
 @site.route('/tags')
 @session_manager.give_token
-def get_tags_html(specific_tag=None):
-    if specific_tag is not None:
-        specific_tag = P_tag(specific_tag, response_type='html')
+def get_tags_html(specific_tag_name=None):
+    if specific_tag_name is None:
+        specific_tag = None
+    else:
+        specific_tag = P_tag(specific_tag_name, response_type='html')
+        if specific_tag.name != specific_tag_name:
+            new_url = request.url.replace('/tag/' + specific_tag_name, '/tag/' + specific_tag.name)
+            response = flask.redirect(new_url)
+            return response
     tags = get_tags_core(specific_tag)
     session = session_manager.get(request)
     include_synonyms = request.args.get('synonyms')
@@ -800,12 +806,17 @@ def get_tags_html(specific_tag=None):
     )
     return response
 
-@site.route('/tag/<specific_tag>.json')
+@site.route('/tag/<specific_tag_name>.json')
 @site.route('/tags.json')
 @session_manager.give_token
-def get_tags_json(specific_tag=None):
-    if specific_tag is not None:
-        specific_tag = P_tag(specific_tag, response_type='json')
+def get_tags_json(specific_tag_name=None):
+    if specific_tag_name is None:
+        specific_tag = None
+    else:
+        specific_tag = P_tag(specific_tag_name, response_type='json')
+        if specific_tag.name != specific_tag_name:
+            new_url = request.url.replace('/tag/' + specific_tag_name, '/tag/' + specific_tag.name)
+            return flask.redirect(new_url)
     tags = get_tags_core(specific_tag=specific_tag)
     include_synonyms = request.args.get('synonyms')
     include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
