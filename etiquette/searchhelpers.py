@@ -6,9 +6,20 @@ from . import objects
 from voussoirkit import expressionmatch
 
 
-def build_query(orderby, notnulls, minimums, maximums, mmf_results=None):
+def build_query(
+        orderby,
+        notnulls,
+        minimums,
+        maximums,
+        author_ids=None,
+        mmf_results=None,
+    ):
     query = ['SELECT * FROM photos']
     wheres = []
+
+    if author_ids:
+        notnulls.add('author_id')
+        wheres.append('author_id in %s' % helpers.sql_listify(author_ids))
 
     if mmf_results:
         wheres.append('id %s %s' % (mmf_results['operator'], helpers.sql_listify(mmf_results['photoids'])))

@@ -728,6 +728,7 @@ class PDBPhotoMixin:
                 notnulls,
                 minimums,
                 maximums,
+                author_ids=authors,
                 mmf_results=mmf_results,
             )
             print(query[:200])
@@ -765,9 +766,9 @@ class PDBPhotoMixin:
                 #print('Failed mimetype')
                 continue
 
-            if authors and photo.author_id not in authors:
-                #print('Failed author')
-                continue
+            # if authors and photo.author_id not in authors:
+            #     #print('Failed author')
+            #     continue
 
             if filename_tree and not filename_tree.evaluate(photo.basename.lower()):
                 #print('Failed filename')
