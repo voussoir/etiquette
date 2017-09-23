@@ -184,8 +184,8 @@
         </h4>
         <ul id="metadata">
         <li>Filename: {{photo.basename}}</li>
-        {% if photo.author_id %}
-            {% set author = photo.author() %}
+        {% set author = photo.author %}
+        {% if author is not none %}
             <li>Author: <a href="/user/{{author.username}}">{{author.username}}</a></li>
         {% endif %}
         {% if photo.width %}

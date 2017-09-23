@@ -591,7 +591,13 @@ class Photo(ObjectBase):
         albums = [self.photodb.get_album(f[0]) for f in fetch]
         return albums
 
+    @property
     def author(self):
+        '''
+        Return the User object who owns this photo, or None if it is unassigned.
+        '''
+        if self.author_id is None:
+            return None
         return self.photodb.get_user(id=self.author_id)
 
     def bytestring(self):
