@@ -15,14 +15,15 @@ def build_query(
         mmf_results=None,
     ):
     query = ['SELECT * FROM photos']
-    wheres = []
+    wheres = set()
 
     if author_ids:
         notnulls.add('author_id')
-        wheres.append('author_id in %s' % helpers.sql_listify(author_ids))
+        wheres.add('author_id in %s' % helpers.sql_listify(author_ids))
 
     if mmf_results:
-        wheres.append('id %s %s' % (mmf_results['operator'], helpers.sql_listify(mmf_results['photoids'])))
+        # "id IN/NOT IN (1, 2, 3)"
+        wheres.add('id %s %s' % (mmf_results['operator'], helpers.sql_listify(mmf_results['photoids'])))
 
     if orderby:
         orderby = [o.split('-') for o in orderby]
@@ -33,16 +34,19 @@ def build_query(
         if column != 'RANDOM()':
             notnulls.add(column)
 
-    for column in notnulls:
-        wheres.append(column + ' IS NOT NULL')
 
-    for (column, value) in minimums.items():
-        wheres.append(column + ' >= ' + str(value))
+    if minimums:
+        for (column, value) in minimums.items():
+            wheres.add(column + ' >= ' + str(value))
 
-    for (column, value) in maximums.items():
-        wheres.append(column + ' <= ' + str(value))
+    if maximums:
+        for (column, value) in maximums.items():
+            wheres.add(column + ' <= ' + str(value))
 
     ## Assemble
+
+    for column in notnulls:
+        wheres.add(column + ' IS NOT NULL')
 
     if wheres:
         wheres = 'WHERE '  + ' AND '.join(wheres)
