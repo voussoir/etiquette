@@ -725,12 +725,12 @@ class PDBPhotoMixin:
             generator = []
         else:
             query = searchhelpers.build_query(
-                orderby,
-                notnulls,
-                minimums,
-                maximums,
                 author_ids=authors,
+                maximums=maximums,
+                minimums=minimums,
                 mmf_results=mmf_results,
+                notnulls=notnulls,
+                orderby=orderby,
             )
             print(query[:200])
             generator = helpers.select_generator(self.sql, query)

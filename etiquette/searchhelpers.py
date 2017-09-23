@@ -7,13 +7,17 @@ from voussoirkit import expressionmatch
 
 
 def build_query(
-        orderby,
-        notnulls,
-        minimums,
-        maximums,
         author_ids=None,
+        maximums=None,
+        minimums=None,
         mmf_results=None,
+        notnulls=None,
+        orderby=None,
     ):
+
+    if notnulls is None:
+        notnulls = set()
+
     query = ['SELECT * FROM photos']
     wheres = set()
 
