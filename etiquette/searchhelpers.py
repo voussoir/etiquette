@@ -20,7 +20,7 @@ def build_query(orderby, notnulls, minimums, maximums, mmf_results=None):
 
     for (column, direction) in orderby:
         if column != 'RANDOM()':
-            notnulls.append(column)
+            notnulls.add(column)
 
     for column in notnulls:
         wheres.append(column + ' IS NOT NULL')

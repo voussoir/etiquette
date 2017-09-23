@@ -630,15 +630,15 @@ class PDBPhotoMixin:
         searchhelpers.minmax('duration', duration, minimums, maximums, warning_bag=warning_bag)
 
         orderby = searchhelpers.normalize_orderby(orderby)
-        notnulls = []
+        notnulls = set()
         if extension or mimetype:
-            notnulls.append('extension')
+            notnulls.add('extension')
         if width or height or ratio or area:
-            notnulls.append('width')
+            notnulls.add('width')
         if bytes:
-            notnulls.append('bytes')
+            notnulls.add('bytes')
         if duration:
-            notnulls.append('duration')
+            notnulls.add('duration')
 
         if orderby is None:
             giveback_orderby = None
