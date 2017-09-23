@@ -629,7 +629,8 @@ class PDBPhotoMixin:
         searchhelpers.minmax('bytes', bytes, minimums, maximums, warning_bag=warning_bag)
         searchhelpers.minmax('duration', duration, minimums, maximums, warning_bag=warning_bag)
 
-        orderby = searchhelpers.normalize_orderby(orderby)
+        orderby = searchhelpers.normalize_orderby(orderby, warning_bag=warning_bag)
+
         notnulls = set()
         if extension or mimetype:
             notnulls.add('extension')
