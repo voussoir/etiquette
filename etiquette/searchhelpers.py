@@ -176,8 +176,10 @@ def normalize_authors(authors, photodb, warning_bag=None):
     '''
     Either:
     - A string, where the usernames are separated by commas
-    - An iterable containing usernames
-    - An iterable containing User objects.
+    - An iterable containing
+        - Usernames
+        - User IDs
+        - User objects
 
     Returns: A set of user IDs.
     '''
@@ -196,7 +198,7 @@ def normalize_authors(authors, photodb, warning_bag=None):
                 requested_author = requested_author.username
 
         try:
-            user = get_user(photodb, requested_author)
+            user = get_user(photodb, username_or_id=requested_author)
         except exceptions.NoSuchUser as e:
             if warning_bag:
                 warning_bag.add(e.error_message)
