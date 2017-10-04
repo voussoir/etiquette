@@ -135,6 +135,7 @@ ADDITIONAL_MIMETYPES = {
     'ac3': 'audio/ac3',
     'dts': 'audio/dts',
     'm4a': 'audio/mp4',
+    'opus': 'audio/ogg',
 
     'mkv': 'video/x-matroska',
 
