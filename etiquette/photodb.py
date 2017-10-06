@@ -1124,8 +1124,10 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         if user_config_exists:
             with open(self.config_filepath.absolute_path, 'r') as handle:
                 user_config = json.load(handle)
-            needs_dump = len(user_config) < len(self.config)
-            self.config.update(user_config)
+            my_keys = helpers.recursive_dict_keys(self.config)
+            stored_keys = helpers.recursive_dict_keys(user_config)
+            needs_dump = not my_keys.issubset(stored_keys)
+            helpers.recursive_dict_update(self.config, user_config)
         else:
             needs_dump = True
 
