@@ -27,7 +27,9 @@ def build_query(
 
     if mmf_results:
         # "id IN/NOT IN (1, 2, 3)"
-        wheres.add('id %s %s' % (mmf_results['operator'], helpers.sql_listify(mmf_results['photoids'])))
+        operator = mmf_results['operator']
+        photo_ids = helpers.sql_listify(mmf_results['photo_ids'])
+        wheres.add('id %s %s' % (operator, photo_ids))
 
     if orderby:
         orderby = [o.split('-') for o in orderby]

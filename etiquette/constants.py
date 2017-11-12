@@ -5,8 +5,8 @@ import traceback
 
 try:
     ffmpeg = converter.Converter(
-        ffmpeg_path='C:\\software\\ffmpeg\\bin\\ffmpeg.exe',
-        ffprobe_path='C:\\software\\ffmpeg\\bin\\ffprobe.exe',
+        ffmpeg_path='D:\\software\\ffmpeg\\bin\\ffmpeg.exe',
+        ffprobe_path='D:\\software\\ffmpeg\\bin\\ffprobe.exe',
     )
 except converter.ffmpeg.FFMpegError:
     traceback.print_exc()

@@ -249,6 +249,11 @@ class Album(ObjectBase, GroupableMixin):
     @decorators.required_feature('album.edit')
     @decorators.transaction
     def add_associated_directory(self, filepath, *, commit=True):
+        '''
+        Add a directory from which this album will pull files during rescans.
+        These relationships are not unique and multiple albums
+        can associate with the same directory if desired.
+        '''
         filepath = pathclass.Path(filepath)
         if not filepath.is_dir:
             raise ValueError('%s is not a directory' % filepath)

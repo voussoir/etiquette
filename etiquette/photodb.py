@@ -811,21 +811,20 @@ class PDBPhotoMixin:
                         #print('Failed tag expression')
                         continue
 
-                elif is_must_may_forbid:
-                    pass
-                    # if photo.id not in mmf_results:
-                    #     #print('Failed tag mmf')
-                    #     continue
-                    # success = searchfilter_must_may_forbid(
-                    #     photo_tags=photo_tags,
-                    #     tag_musts=tag_musts,
-                    #     tag_mays=tag_mays,
-                    #     tag_forbids=tag_forbids,
-                    #     frozen_children=frozen_children,
-                    # )
-                    # if not success:
-                    #     #print('Failed tag mmf')
-                    #     continue
+                # elif is_must_may_forbid:
+                #     if photo.id not in mmf_results:
+                #         #print('Failed tag mmf')
+                #         continue
+                #     success = searchfilter_must_may_forbid(
+                #         photo_tags=photo_tags,
+                #         tag_musts=tag_musts,
+                #         tag_mays=tag_mays,
+                #         tag_forbids=tag_forbids,
+                #         frozen_children=frozen_children,
+                #     )
+                #     if not success:
+                #         #print('Failed tag mmf')
+                #         continue
 
             if offset > 0:
                 offset -= 1
@@ -991,21 +990,27 @@ class PDBUserMixin:
         else:
             raise exceptions.NoSuchUser(username or id)
 
-    def get_user_id_or_none(self, user):
+    def get_user_id_or_none(self, user_obj_or_id):
         '''
         For methods that create photos, albums, etc., we sometimes associate
-        them with an author but sometimes not. This method hides validation
-        that those methods would otherwise have to duplicate.
+        them with an author but sometimes not. The callers of those methods
+        might be trying to use a User object, or a user's ID, or maybe they
+        left it None.
+        This method hides validation that those methods would otherwise
+        have to duplicate.
         '''
-        if isinstance(user, objects.User):
-            if user.photodb != self:
-                raise ValueError('That user does not belong to this photodb')
-            author_id = user.id
-        elif user is not None:
-            # Confirm that this string is an ID and not junk.
-            author_id = self.get_user(id=user).id
-        else:
+        if user_obj_or_id is None:
             author_id = None
+
+        elif isinstance(user_obj_or_id, objects.User):
+            if user_obj_or_id.photodb != self:
+                raise ValueError('That user does not belong to this photodb')
+            author_id = user_obj_or_id.id
+
+        else:
+            # Confirm that this string is a valid ID and not junk.
+            author_id = self.get_user(id=user_obj_or_id).id
+
         return author_id
 
     @decorators.required_feature('user.login')
@@ -1017,10 +1022,10 @@ class PDBUserMixin:
         if fetch is None:
             raise exceptions.WrongLogin()
 
-        stored_password = fetch[constants.SQL_USER['password']]
-
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
+
+        stored_password = fetch[constants.SQL_USER['password']]
 
         success = bcrypt.checkpw(password, stored_password)
         if not success:
