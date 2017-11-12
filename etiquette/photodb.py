@@ -229,7 +229,7 @@ class PDBAlbumMixin:
         '''
         Create a new album. Photos can be added now or later.
         '''
-        albumid = self.generate_id('albums')
+        album_id = self.generate_id('albums')
         title = title or ''
         description = description or ''
         if not isinstance(title, str):
@@ -242,7 +242,7 @@ class PDBAlbumMixin:
 
         self.log.debug('New Album: %s' % title)
         data = {
-            'id': albumid,
+            'id': album_id,
             'title': title,
             'description': description,
         }
@@ -319,8 +319,8 @@ class PDBPhotoMixin:
         super().__init__()
         self._photo_cache = cacheclass.Cache()
 
-    def get_photo(self, photoid):
-        return self.get_thing_by_id('photo', photoid)
+    def get_photo(self, id):
+        return self.get_thing_by_id('photo', id)
 
     def get_photo_by_path(self, filepath):
         filepath = pathclass.Path(filepath)
@@ -394,10 +394,10 @@ class PDBPhotoMixin:
         author_id = self.get_user_id_or_none(author)
 
         created = int(helpers.now())
-        photoid = self.generate_id('photos')
+        photo_id = self.generate_id('photos')
 
         data = {
-            'id': photoid,
+            'id': photo_id,
             'filepath': filepath.absolute_path,
             'override_filename': None,
             'extension': filepath.extension,
@@ -710,7 +710,7 @@ class PDBPhotoMixin:
             yield parameters
 
         if is_must_may_forbid:
-            mmf_results = searchhelpers.mmf_photoids(
+            mmf_results = searchhelpers.mmf_photo_ids(
                 self,
                 tag_musts,
                 tag_mays,
@@ -721,7 +721,7 @@ class PDBPhotoMixin:
         else:
             mmf_results = None
 
-        if mmf_results is not None and mmf_results['photoids'] == set():
+        if mmf_results is not None and mmf_results['photo_ids'] == set():
             generator = []
         else:
             query = searchhelpers.build_query(

@@ -103,16 +103,16 @@ def P_wrapper(function):
     return P_wrapped
 
 @P_wrapper
-def P_album(albumid):
-    return P.get_album(albumid)
+def P_album(album_id):
+    return P.get_album(album_id)
 
 @P_wrapper
 def P_bookmark(bookmarkid):
     return P.get_bookmark(bookmarkid)
 
 @P_wrapper
-def P_photo(photoid):
-    return P.get_photo(photoid)
+def P_photo(photo_id):
+    return P.get_photo(photo_id)
 
 @P_wrapper
 def P_tag(tagname):
@@ -123,8 +123,8 @@ def P_user(username):
     return P.get_user(username=username)
 
 @P_wrapper
-def P_user_id(userid):
-    return P.get_user(id=userid)
+def P_user_id(user_id):
+    return P.get_user(id=user_id)
 
 def send_file(filepath, override_mimetype=None):
     '''
@@ -206,8 +206,8 @@ def send_file(filepath, override_mimetype=None):
 ####################################################################################################
 
 
-def get_album_core(albumid):
-    album = P_album(albumid)
+def get_album_core(album_id):
+    album = P_album(album_id)
     return album
 
 def get_albums_core():
@@ -355,8 +355,8 @@ def get_tags_core(specific_tag=None):
     tags.sort(key=lambda x: x.qualified_name())
     return tags
 
-def post_photo_add_remove_tag_core(photoid, tagname, add_or_remove):
-    photo = P_photo(photoid, response_type='json')
+def post_photo_add_remove_tag_core(photo_id, tagname, add_or_remove):
+    photo = P_photo(photo_id, response_type='json')
     tag = P_tag(tagname, response_type='json')
 
     try:
@@ -397,10 +397,10 @@ def root():
     session = session_manager.get(request)
     return flask.render_template('root.html', motd=motd, session=session)
 
-@site.route('/album/<albumid>')
+@site.route('/album/<album_id>')
 @session_manager.give_token
-def get_album_html(albumid):
-    album = get_album_core(albumid)
+def get_album_html(album_id):
+    album = get_album_core(album_id)
     session = session_manager.get(request)
     response = flask.render_template(
         'album.html',
@@ -410,19 +410,19 @@ def get_album_html(albumid):
     )
     return response
 
-@site.route('/album/<albumid>.json')
+@site.route('/album/<album_id>.json')
 @session_manager.give_token
-def get_album_json(albumid):
-    album = get_album_core(albumid)
+def get_album_json(album_id):
+    album = get_album_core(album_id)
     album = etiquette.jsonify.album(album)
     album['sub_albums'] = [P_album(x) for x in album['sub_albums']]
     album['sub_albums'].sort(key=lambda x: (x.title or x.id).lower())
     album['sub_albums'] = [etiquette.jsonify.album(x, minimal=True) for x in album['sub_albums']]
     return jsonify.make_json_response(album)
 
-@site.route('/album/<albumid>.zip')
-def get_album_zip(albumid):
-    album = P_album(albumid)
+@site.route('/album/<album_id>.zip')
+def get_album_zip(album_id):
+    album = P_album(album_id)
 
     recursive = request.args.get('recursive', True)
     recursive = etiquette.helpers.truthystring(recursive)
@@ -463,14 +463,14 @@ def get_album_zip(albumid):
     }
     return flask.Response(streamed_zip, headers=outgoing_headers)
 
-@site.route('/album/<albumid>/add_tag', methods=['POST'])
+@site.route('/album/<album_id>/add_tag', methods=['POST'])
 @session_manager.give_token
-def post_album_add_tag(albumid):
+def post_album_add_tag(album_id):
     '''
     Apply a tag to every photo in the album.
     '''
     response = {}
-    album = P_album(albumid)
+    album = P_album(album_id)
 
     tag = request.form['tagname'].strip()
     try:
@@ -485,13 +485,13 @@ def post_album_add_tag(albumid):
     response['tagname'] = tag.name
     return jsonify.make_json_response(response)
 
-@site.route('/album/<albumid>/edit', methods=['POST'])
+@site.route('/album/<album_id>/edit', methods=['POST'])
 @session_manager.give_token
-def post_album_edit(albumid):
+def post_album_edit(album_id):
     '''
     Edit the title / description.
     '''
-    album = P_album(albumid)
+    album = P_album(album_id)
 
     title = request.form.get('title', None)
     description = request.form.get('description', None)
@@ -594,10 +594,10 @@ def favicon():
     return flask.send_file(FAVICON_PATH.absolute_path)
 
 
-@site.route('/file/<photoid>')
-def get_file(photoid):
-    photoid = photoid.split('.')[0]
-    photo = P.get_photo(photoid)
+@site.route('/file/<photo_id>')
+def get_file(photo_id):
+    photo_id = photo_id.split('.')[0]
+    photo = P.get_photo(photo_id)
 
     do_download = request.args.get('download', False)
     do_download = etiquette.helpers.truthystring(do_download)
@@ -663,36 +663,36 @@ def logout():
     return response
 
 
-@site.route('/photo/<photoid>', methods=['GET'])
+@site.route('/photo/<photo_id>', methods=['GET'])
 @session_manager.give_token
-def get_photo_html(photoid):
-    photo = P_photo(photoid, response_type='html')
+def get_photo_html(photo_id):
+    photo = P_photo(photo_id, response_type='html')
     session = session_manager.get(request)
     return flask.render_template('photo.html', photo=photo, session=session)
 
-@site.route('/photo/<photoid>.json', methods=['GET'])
+@site.route('/photo/<photo_id>.json', methods=['GET'])
 @session_manager.give_token
-def get_photo_json(photoid):
-    photo = P_photo(photoid, response_type='json')
+def get_photo_json(photo_id):
+    photo = P_photo(photo_id, response_type='json')
     photo = etiquette.jsonify.photo(photo)
     photo = jsonify.make_json_response(photo)
     return photo
 
-@site.route('/photo/<photoid>/add_tag', methods=['POST'])
+@site.route('/photo/<photo_id>/add_tag', methods=['POST'])
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
-def post_photo_add_tag(photoid):
+def post_photo_add_tag(photo_id):
     '''
     Add a tag to this photo.
     '''
-    return post_photo_add_remove_tag_core(photoid, request.form['tagname'], 'add')
+    return post_photo_add_remove_tag_core(photo_id, request.form['tagname'], 'add')
 
-@site.route('/photo/<photoid>/refresh_metadata', methods=['POST'])
-def post_photo_refresh_metadata(photoid):
+@site.route('/photo/<photo_id>/refresh_metadata', methods=['POST'])
+def post_photo_refresh_metadata(photo_id):
     '''
     Refresh the file metadata.
     '''
-    P.caches['photo'].remove(photoid)
-    photo = P_photo(photoid, response_type='json')
+    P.caches['photo'].remove(photo_id)
+    photo = P_photo(photo_id, response_type='json')
     try:
         photo.reload_metadata()
     except etiquette.exceptions.EtiquetteException as e:
@@ -707,13 +707,13 @@ def post_photo_refresh_metadata(photoid):
 
     return jsonify.make_json_response({})
 
-@site.route('/photo/<photoid>/remove_tag', methods=['POST'])
+@site.route('/photo/<photo_id>/remove_tag', methods=['POST'])
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
-def post_photo_remove_tag(photoid):
+def post_photo_remove_tag(photo_id):
     '''
     Remove a tag from this photo.
     '''
-    return post_photo_add_remove_tag_core(photoid, request.form['tagname'], 'remove')
+    return post_photo_add_remove_tag_core(photo_id, request.form['tagname'], 'remove')
 
 
 @site.route('/register', methods=['GET'])
@@ -876,10 +876,10 @@ def post_tag_delete():
     return post_tag_create_delete_core(request.form['tagname'], delete_tag)
 
 
-@site.route('/thumbnail/<photoid>')
-def get_thumbnail(photoid):
-    photoid = photoid.split('.')[0]
-    photo = P_photo(photoid)
+@site.route('/thumbnail/<photo_id>')
+def get_thumbnail(photo_id):
+    photo_id = photo_id.split('.')[0]
+    photo = P_photo(photo_id)
     if photo.thumbnail:
         path = photo.thumbnail
     else:
@@ -901,14 +901,14 @@ def get_user_json(username):
     user = etiquette.jsonify.user(user)
     return jsonify.make_json_response(user)
 
-@site.route('/userid/<userid>')
-@site.route('/userid/<userid>.json')
-def get_user_id_redirect(userid):
+@site.route('/userid/<user_id>')
+@site.route('/userid/<user_id>.json')
+def get_user_id_redirect(user_id):
     if request.url.endswith('.json'):
-        user = P_user_id(userid, response_type='json')
+        user = P_user_id(user_id, response_type='json')
     else:
-        user = P_user_id(userid, response_type='html')
-    url_from = '/userid/' + userid
+        user = P_user_id(user_id, response_type='html')
+    url_from = '/userid/' + user_id
     url_to = '/user/' + user.username
     url = request.url.replace(url_from, url_to)
     return flask.redirect(url)

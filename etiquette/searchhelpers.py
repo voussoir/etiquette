@@ -120,7 +120,7 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
     if high is not None:
         maximums[key] = high
 
-def mmf_photoids(photodb, tag_musts, tag_mays, tag_forbids, frozen_children):
+def mmf_photo_ids(photodb, tag_musts, tag_mays, tag_forbids, frozen_children):
     if not(tag_musts or tag_mays or tag_forbids):
         return None
 
@@ -170,7 +170,7 @@ def mmf_photoids(photodb, tag_musts, tag_mays, tag_forbids, frozen_children):
             else:
                 results.update(photo_ids)
 
-    return {'operator': operator, 'photoids': results}
+    return {'operator': operator, 'photo_ids': results}
 
 def normalize_authors(authors, photodb, warning_bag=None):
     '''

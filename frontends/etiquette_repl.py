@@ -22,8 +22,8 @@ def easytagger():
         else:
             P.easybake(i)
 
-def photag(photoid):
-    photo = P.get_photo_by_id(photoid)
+def photag(photo_id):
+    photo = P.get_photo_by_id(photo_id)
     print(photo.tags())
     while True:
         photo.add_tag(input('> '))
