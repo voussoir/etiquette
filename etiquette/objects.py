@@ -85,7 +85,6 @@ class GroupableMixin:
             'INSERT INTO %s VALUES(?, ?)' % self.group_table,
             [self.id, member.id]
         )
-        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - add to group')
             self.photodb.commit()
@@ -197,7 +196,6 @@ class GroupableMixin:
             'DELETE FROM %s WHERE memberid == ?' % self.group_table,
             [self.id]
         )
-        self._uncache()
         if commit:
             self.photodb.log.debug('Committing - leave group')
             self.photodb.commit()
@@ -228,8 +226,10 @@ class Album(ObjectBase, GroupableMixin):
         self.description = db_row['description'] or ''
         self.name = 'Album %s' % self.id
         self.group_getter = self.photodb.get_album
-        self._sum_bytes_photos = None
-        self._sum_bytes_albums = None
+
+        self._sum_bytes_local = None
+        self._sum_bytes_recursive = None
+        self._sum_photos_recursive = None
 
     def __hash__(self):
         return hash(self.id)
@@ -238,13 +238,24 @@ class Album(ObjectBase, GroupableMixin):
         return 'Album:{id}'.format(id=self.id)
 
     def _uncache(self):
+        self._uncache_sums()
         self.photodb.caches['album'].remove(self.id)
-        self._sum_bytes_photos = None
-        self._sum_bytes_albums = None
+
+    def _uncache_sums(self):
+        self._sum_photos_recursive = None
+        self._sum_bytes_local = None
+        self._sum_bytes_recursive = None
+        parent = self.parent()
+        if parent is not None:
+            parent._sum_photos_recursive = None
+            parent._sum_bytes_recursive = None
+
 
     @decorators.required_feature('album.edit')
     def add_child(self, *args, **kwargs):
-        return super().add_child(*args, **kwargs)
+        result = super().add_child(*args, **kwargs)
+        self._uncache_sums()
+        return result
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
@@ -293,7 +304,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.log.debug('Adding photo %s to %s' % (photo, self))
         cur = self.photodb.sql.cursor()
         cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
-        self._uncache()
+        self._uncache_sums()
         if commit:
             self.photodb.log.debug('Committing - add photo to album')
             self.photodb.commit()
@@ -369,7 +380,7 @@ class Album(ObjectBase, GroupableMixin):
         )
         self.title = title
         self.description = description
-        self._uncache()
+
         if commit:
             self.photodb.log.debug('Committing - edit album')
             self.photodb.commit()
@@ -386,11 +397,15 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     def join_group(self, *args, **kwargs):
-        return super().join_group(*args, **kwargs)
+        result = super().join_group(*args, **kwargs)
+        return result
 
     @decorators.required_feature('album.edit')
     def leave_group(self, *args, **kwargs):
-        return super().leave_group(*args, **kwargs)
+        parent = self.parent()
+        if parent is not None:
+            parent._uncache_sums()
+        result = super().leave_group(*args, **kwargs)
 
     def photos(self):
         photos = []
@@ -416,26 +431,39 @@ class Album(ObjectBase, GroupableMixin):
             'DELETE FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
             [self.id, photo.id]
         )
-        self._uncache()
+        self._uncache_sums()
         if commit:
             self.photodb.log.debug('Committing - remove photo from album')
             self.photodb.commit()
 
     def sum_bytes(self, recurse=True, string=False):
-        if self._sum_bytes_photos is None:
-            photos = (photo.bytes for photo in self.photos() if photo.bytes is not None)
-            self._sum_bytes_photos = sum(photos)
-        total = self._sum_bytes_photos
+        if self._sum_bytes_local is None:
+            #print(self, 'sumbytes cache miss local')
+            photos = (photo for photo in self.photos() if photo.bytes is not None)
+            self._sum_bytes_local = sum(photo.bytes for photo in photos)
+        total = self._sum_bytes_local
 
         if recurse:
-            if self._sum_bytes_albums is None:
-                self._sum_bytes_albums = sum(a.sum_bytes(recurse=True) for a in self.children())
-            total += self._sum_bytes_albums
+            if self._sum_bytes_recursive is None:
+                #print(self, 'sumbytes cache miss recursive')
+                child_bytes = sum(child.sum_bytes(recurse=True) for child in self.children())
+                self._sum_bytes_recursive = self._sum_bytes_local + child_bytes
+            total = self._sum_bytes_recursive
 
         if string:
             return bytestring.bytestring(total)
         else:
             return total
+
+    def sum_photos(self):
+        if self._sum_photos_recursive is None:
+            #print(self, 'sumphotos cache miss')
+            total = 0
+            total += sum(1 for x in self.photos())
+            total += sum(child.sum_photos() for child in self.children())
+            self._sum_photos_recursive = total
+
+        return self._sum_photos_recursive
 
     def walk_photos(self):
         yield from self.photos()

@@ -91,16 +91,19 @@ p
         {% endfor %}
         </ul>
     {% endif %}
+
     <p>
-        {% if photos or sub_albums %}
+        {% set has_local_photos = photos|length > 0 %}
+        {% set has_child_photos = album.sum_photos() > photos|length %}
+        {% if has_local_photos or has_child_photos %}
             Download:
-            {% if photos %}
+            {% if has_local_photos %}
                 <a href="/album/{{album.id}}.zip?recursive=no">
                     These files ({{album.sum_bytes(recurse=False, string=True)}})
                 </a>
             {% endif %}
-            {% if photos and sub_albums %}&mdash;{% endif %}
-            {% if sub_albums %}
+            {% if has_local_photos and has_child_photos %}&mdash;{% endif %}
+            {% if has_child_photos %}
                 <a href="/album/{{album.id}}.zip?recursive=yes">
                     Include children ({{album.sum_bytes(recurse=True, string=True)}})
                 </a>

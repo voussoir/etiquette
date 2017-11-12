@@ -1387,12 +1387,9 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         if isinstance(thing_id, thing_map['class']):
             thing_id = thing_id.id
 
-        cache = {
-            'album': self._album_cache,
-            'photo': self._photo_cache,
-            'tag': self._tag_cache,
-        }[thing_type]
+        cache = self.caches[thing_type]
         try:
+            #self.log.debug('Cache hit for %s %s', thing_type, thing_id)
             val = cache[thing_id]
             return val
         except KeyError:
