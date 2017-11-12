@@ -7,19 +7,32 @@ I am currently running a demonstration copy of Etiquette at http://etiquette.vou
 
 Etiquette is a tag-based file organization system with a web front-end.
 
-Documentation is still a work in progress. In general, I use:
+Documentation is still a work in progress. In general,
 
-- `python etiquette_flask_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
-- `python -i etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
+- You must make the `etiquette` package importable by placing it in one of your lib paths. I use filesystem junctions for this purpose.
+- Run `python etiquette_flask_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
+- Run `python -i etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 
 ### Project stability
 
 You may notice that Etiquette doesn't have a version number anywhere. That's because I don't think it's ready for one. I am using this project to learn and practice, and breaking changes are very common.
 
+### Project Structure
+
+- `etiquette`  
+    The core backend package.
+- `frontends`  
+    Ideally the backend should be frontend-agnostic. Even though the Flask interface is my primary interest, it should not feel like it must be the only one. Therefore I place it in this folder to indicate that other frontends are possible too.
+    - `etiquette_flask`  
+    This folder represents the flask server as somewhat of a black box, in the sense that you can move it around and just run the contained launch file.
+        - `etiquette_flask`  
+        This is the package that contains all of the site's actual API code.
+- `utilities`  
+    For other scripts that will be used with etiquette databases, but are not part of the library itself.
+
 ### Contributing
 
 If you are interested in helping, please raise an issue before making any pull requests!
-
 
 ### To do list
 - Make the wording between "new", "create", "add"; and "remove", "delete" more consistent.
