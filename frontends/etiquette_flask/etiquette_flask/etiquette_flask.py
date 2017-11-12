@@ -534,7 +534,7 @@ def post_albums_create():
         response = jsonify.make_json_response(response, status=400)
         flask.abort(response)
     if parent is not None:
-        parent.add(album)
+        parent.add_child(album)
     response = etiquette.jsonify.album(album, minimal=False)
     return jsonify.make_json_response(response)
 

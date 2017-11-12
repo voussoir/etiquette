@@ -1258,7 +1258,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             parent = albums.get(current_location.parent.absolute_path, None)
             if parent is not None:
                 try:
-                    parent.add(current_album, commit=False)
+                    parent.add_child(current_album, commit=False)
                 except exceptions.GroupExists:
                     pass
             for photo in new_photos:

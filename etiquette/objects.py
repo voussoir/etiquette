@@ -48,7 +48,7 @@ class GroupableMixin:
     group_table = None
 
     @decorators.transaction
-    def add(self, member, *, commit=True):
+    def add_child(self, member, *, commit=True):
         '''
         Add a child object to this group.
         Child must be of the same type as the calling object.
@@ -175,7 +175,7 @@ class GroupableMixin:
     @decorators.transaction
     def join_group(self, group, *, commit=True):
         '''
-        Leave the current group, then call `group.add(self)`.
+        Leave the current group, then call `group.add_child(self)`.
         '''
         if not isinstance(group, type(self)):
             raise TypeError('Group must also be %s' % type(self))
@@ -184,7 +184,7 @@ class GroupableMixin:
             raise ValueError('Cant join self')
 
         self.leave_group(commit=commit)
-        group.add(self, commit=commit)
+        group.add_child(self, commit=commit)
 
     @decorators.transaction
     def leave_group(self, *, commit=True):
@@ -222,6 +222,7 @@ class Album(ObjectBase, GroupableMixin):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
             db_row = dict(zip(constants.SQL_ALBUM_COLUMNS, db_row))
+
         self.id = db_row['id']
         self.title = db_row['title'] or ''
         self.description = db_row['description'] or ''
@@ -242,8 +243,8 @@ class Album(ObjectBase, GroupableMixin):
         self._sum_bytes_albums = None
 
     @decorators.required_feature('album.edit')
-    def add(self, *args, **kwargs):
-        return super().add(*args, **kwargs)
+    def add_child(self, *args, **kwargs):
+        return super().add_child(*args, **kwargs)
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
@@ -1014,8 +1015,8 @@ class Tag(ObjectBase, GroupableMixin):
         self._cached_qualified_name = None
 
     @decorators.required_feature('tag.edit')
-    def add(self, *args, **kwargs):
-        return super().add(*args, **kwargs)
+    def add_child(self, *args, **kwargs):
+        return super().add_child(*args, **kwargs)
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
