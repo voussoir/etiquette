@@ -1,12 +1,14 @@
 # Use with
 # py -i etiquette_easy.py
 
-import etiquette
+import argparse
 import os
 import sys
+import traceback
+
+import etiquette
 
 P = etiquette.photodb.PhotoDB()
-import traceback
 
 def easytagger():
     while True:
@@ -25,4 +27,21 @@ def photag(photoid):
     print(photo.tags())
     while True:
         photo.add_tag(input('> '))
-get=P.get_tag
+get = P.get_tag
+
+
+def erepl_argparse(args):
+    if args.exec_statement:
+        exec(args.exec_statement)
+
+def main(argv):
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--exec', dest='exec_statement', default=None)
+    parser.set_defaults(func=erepl_argparse)
+
+    args = parser.parse_args(argv)
+    args.func(args)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
