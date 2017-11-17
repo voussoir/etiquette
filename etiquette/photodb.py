@@ -6,6 +6,7 @@ import os
 import random
 import sqlite3
 import string
+import tempfile
 import time
 
 from . import constants
@@ -1092,11 +1093,22 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
     def __init__(
             self,
             data_directory=None,
+            ephemeral=False,
         ):
         super().__init__()
 
+        self.ephemeral = ephemeral
+
         if data_directory is None:
-            data_directory = constants.DEFAULT_DATADIR
+            if self.ephemeral:
+                # In addition to the data_dir as a pathclass object, keep the
+                # TempDir object so we can use the cleanup method later.
+                self.ephemeral_directory = tempfile.TemporaryDirectory(prefix='etiquette_ephem_')
+                data_directory = self.ephemeral_directory.name
+            else:
+                data_directory = constants.DEFAULT_DATADIR
+        elif self.ephemeral:
+            raise exceptions.NotExclusive(['data_directory', 'ephemeral'])
 
         # DATA DIR PREP
         data_directory = helpers.normalize_filepath(data_directory, allowed=':/\\')
@@ -1104,9 +1116,14 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         os.makedirs(self.data_directory.absolute_path, exist_ok=True)
 
         # DATABASE
-        self.database_file = self.data_directory.with_child(constants.DEFAULT_DBNAME)
-        existing_database = self.database_file.exists
-        self.sql = sqlite3.connect(self.database_file.absolute_path)
+        if self.ephemeral:
+            self.sql = sqlite3.connect(':memory:')
+            existing_database = False
+        else:
+            self.database_file = self.data_directory.with_child(constants.DEFAULT_DBNAME)
+            existing_database = self.database_file.exists
+            self.sql = sqlite3.connect(self.database_file.absolute_path)
+
         self.cur = self.sql.cursor()
 
         if existing_database:
@@ -1159,11 +1176,22 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             'user': self._user_cache,
         }
 
+    def __del__(self):
+        self.close()
+
     def __repr__(self):
-        return 'PhotoDB(data_directory={datadir})'.format(datadir=repr(self.data_directory))
+        if self.ephemeral:
+            return 'PhotoDB(ephemeral=True)'
+        else:
+            return 'PhotoDB(data_directory={datadir})'.format(datadir=repr(self.data_directory))
 
     def _uncache(self):
         self._cached_frozen_children = None
+
+    def close(self):
+        self.sql.close()
+        if self.ephemeral:
+            self.ephemeral_directory.cleanup()
 
     def commit(self):
         while self.on_commit_queue:
