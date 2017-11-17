@@ -1124,17 +1124,17 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             existing_database = self.database_file.exists
             self.sql = sqlite3.connect(self.database_file.absolute_path)
 
-        self.cur = self.sql.cursor()
+        cur = self.sql.cursor()
 
         if existing_database:
-            self.cur.execute('PRAGMA user_version')
-            existing_version = self.cur.fetchone()[0]
+            cur.execute('PRAGMA user_version')
+            existing_version = cur.fetchone()[0]
             if existing_version != DATABASE_VERSION:
                 raise exceptions.DatabaseOutOfDate(current=existing_version, new=DATABASE_VERSION)
 
         statements = DB_INIT.split(';')
         for statement in statements:
-            self.cur.execute(statement)
+            cur.execute(statement)
         self.sql.commit()
 
         # CONFIG
