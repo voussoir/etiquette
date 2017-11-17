@@ -50,6 +50,7 @@ If you are interested in helping, please raise an issue before making any pull r
 - Make the FFmpeg path configurable. Some kind of global config? Or part of the database config file? It's not like every photodb needs a separate one.
 - Improve the appearance of album page. Too many section headers and the "Create album" interface should allow giving a title immediately.
 - When users have '%' or '#', etc. in their username, it is difficult to access their /user/ URL. I would prefer to fix it without simply blacklisting those characters.
+- Currently, the Jinja templates are having a tangling influence on the backend objects, because Jinja cannot import my other modules like bytestring, but it can access the methods of the objects I pass into the template. As a result, the objects have excess helper methods. Consider making them into Jinja filters instead. Which is also kind of ugly but will move that pollution out of the backend at least.
 
 ### To do list: User permissions
 Here are some thoughts about the kinds of features that need to exist within the permission system. I don't know how I'll actually manage it just yet. Possibly a `permissions` table in the database with `user_id | permission` where `permission` is some reliably-formatted string.

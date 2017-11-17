@@ -325,6 +325,7 @@ class Album(ObjectBase, GroupableMixin):
             photos = self.walk_photos()
         else:
             photos = self.photos()
+
         for photo in photos:
             photo.add_tag(tag, commit=False)
 
@@ -499,6 +500,9 @@ class Bookmark(ObjectBase):
     @decorators.required_feature('bookmark.edit')
     @decorators.transaction
     def edit(self, title=None, url=None, *, commit=True):
+        '''
+        Change the title or URL. Leave None to keep current.
+        '''
         if title is None and url is None:
             return
 

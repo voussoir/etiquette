@@ -12,6 +12,13 @@ def pascal_to_loudsnakes(text):
 
 class ErrorTypeAdder(type):
     '''
+    During definition, the Exception class will automatically receive a class
+    attribute called `error_type` which is just the class's name as a string
+    in the loudsnake casing style. NoSuchPhoto -> NO_SUCH_PHOTO.
+
+    This is used for serialization of the exception object and should
+    basically act as a status code when displaying the error to the user.
+
     Thanks Unutbu
     http://stackoverflow.com/a/18126678
     '''
@@ -20,6 +27,12 @@ class ErrorTypeAdder(type):
         cls.error_type = pascal_to_loudsnakes(name)
 
 class EtiquetteException(Exception, metaclass=ErrorTypeAdder):
+    '''
+    Base type for all of the Etiquette exceptions.
+    Subtypes should have a class attribute `error_message`. The error message
+    may contain {format} strings which will be formatted using the
+    Exception's constructor arguments.
+    '''
     error_message = ''
     def __init__(self, *args, **kwargs):
         self.given_args = args
