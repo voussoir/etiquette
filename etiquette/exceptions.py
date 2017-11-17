@@ -27,6 +27,9 @@ class EtiquetteException(Exception, metaclass=ErrorTypeAdder):
         self.error_message = self.error_message.format(*args, **kwargs)
         self.args = (self.error_message, args, kwargs)
 
+    def __str__(self):
+        return self.error_type + '\n' + self.error_message
+
 
 # NO SUCH
 class NoSuch(EtiquetteException):
