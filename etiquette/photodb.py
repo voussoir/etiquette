@@ -1113,9 +1113,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             self.cur.execute('PRAGMA user_version')
             existing_version = self.cur.fetchone()[0]
             if existing_version != DATABASE_VERSION:
-                message = constants.ERROR_DATABASE_OUTOFDATE
-                message = message.format(current=existing_version, new=DATABASE_VERSION)
-                raise SystemExit(message)
+                raise exceptions.DatabaseOutOfDate(current=existing_version, new=DATABASE_VERSION)
 
         statements = DB_INIT.split(';')
         for statement in statements:

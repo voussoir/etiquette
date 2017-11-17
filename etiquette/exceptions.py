@@ -124,6 +124,16 @@ class WrongLogin(EtiquetteException):
 
 
 # GENERAL ERRORS
+OUTOFDATE = '''
+Database is out of date. {current} should be {new}.
+Please use utilities\\etiquette_upgrader.py
+'''.strip()
+class DatabaseOutOfDate(EtiquetteException):
+    '''
+    Raised by PhotoDB __init__ if the user's database is behind.
+    '''
+    error_message = OUTOFDATE
+
 class FeatureDisabled(EtiquetteException):
     '''
     For when features of the system have been disabled by the configuration.

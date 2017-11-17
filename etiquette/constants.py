@@ -110,11 +110,6 @@ SQL_USER = _sql_dictify(SQL_USER_COLUMNS)
 
 
 # Errors and warnings
-ERROR_DATABASE_OUTOFDATE = '''
-Database is out-of-date. {current} should be {new}.
-Please use utilities\\etiquette_upgrader.py
-'''.strip()
-
 WARNING_MINMAX_INVALID = 'Field "{field}": "{value}" is not a valid request. Ignored.'
 WARNING_ORDERBY_INVALID = 'Invalid orderby request "{request}". Ignored.'
 WARNING_ORDERBY_BADCOL = '"{column}" is not a sorting option. Ignored.'
