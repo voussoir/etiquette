@@ -1251,7 +1251,7 @@ class Tag(ObjectBase, GroupableMixin):
         except exceptions.NoSuchTag:
             pass
         else:
-            raise exceptions.TagExists(existing_tag)
+            raise exceptions.TagExists(new_name)
 
         self._cached_qualified_name = None
         self.photodb._cached_frozen_children = None
