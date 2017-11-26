@@ -1,6 +1,12 @@
 # Use with
 # py -i etiquette_easy.py
 
+import logging
+handler = logging.StreamHandler()
+log_format = '{levelname}:etiquette.{module}.{funcName}: {message}'
+handler.setFormatter(logging.Formatter(log_format, style='{'))
+logging.getLogger().addHandler(handler)
+
 import argparse
 import os
 import sys

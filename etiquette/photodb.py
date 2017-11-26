@@ -23,8 +23,7 @@ from voussoirkit import pathclass
 from voussoirkit import spinal
 
 
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger('PIL.PngImagePlugin').setLevel(logging.WARNING)
+logging.basicConfig()
 
 
 # Note: Setting user_version pragma in init sequence is safe because it only
@@ -1160,8 +1159,9 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         os.makedirs(self.thumbnail_directory.absolute_path, exist_ok=True)
 
         # OTHER
-        self.log = logging.getLogger(__name__)
+        self.log = logging.getLogger('etiquette:%s' % self.data_directory.absolute_path)
         self.log.setLevel(self.config['log_level'])
+
         self.on_commit_queue = []
         self._cached_frozen_children = None
 

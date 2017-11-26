@@ -1,6 +1,12 @@
 import gevent.monkey
 gevent.monkey.patch_all()
 
+import logging
+handler = logging.StreamHandler()
+log_format = '{levelname}:etiquette.{module}.{funcName}: {message}'
+handler.setFormatter(logging.Formatter(log_format, style='{'))
+logging.getLogger().addHandler(handler)
+
 import etiquette_flask
 import gevent.pywsgi
 import gevent.wsgi
