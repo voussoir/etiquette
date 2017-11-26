@@ -130,13 +130,15 @@ body
             {% for tag in tags %}
             {% set qualified_name = tag.qualified_name() %}
             <li>
+                {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
                 {{tag_object.tag_object(tag, link='search', qualified_name=True, with_alt_qualified_name=False)}}<!--
                 --><button class="remove_tag_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
             </li>
             {% if include_synonyms %}
                 {% for synonym in tag.synonyms() %}
                 <li>
-                    <a target="_blank" class="tag_object" href="/search?tag_musts={{tag.name}}">{{qualified_name + "+" + synonym}}</a><!--
+                    {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
+                    {{tag_object.tag_object(tag, innertext=qualified_name + '+' + synonym, link='search')}}<!--
                     --><button class="remove_tag_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
                 </li>
                 {% endfor %}
