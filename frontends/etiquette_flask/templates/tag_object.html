@@ -2,6 +2,9 @@
     tag: The Tag object
     extra_classes:
         Space-separated string, if you want more than "tag_object".
+    innertext:
+        A string to use as the innertext.
+        Otherwise, will use the name based on the other parameters.
     link:
         None = no link, just a <span>
         'search' = link to /search?tag_musts=tagname
@@ -14,7 +17,7 @@
             If the tag's own name can't find under the limit, characters are
             dropped from the right.
     qualified_name:
-        True: Use the qualified name as the innerhtml
+        True: Use the qualified name as the innertext
         False: Use the basic name
     with_alt_description:
         True: Include the description in the alt text
@@ -24,6 +27,7 @@
 {% macro tag_object(
     tag,
     extra_classes="",
+    innertext=None,
     link='search',
     max_len=None,
     qualified_name=True,
@@ -42,13 +46,15 @@
     {%- else -%}
         {{' '}}href="{{search}}"
     {%- endif -%}
-    {{' '}}target="_blank" class="tag_object {{extra_classes}}"
+    {{' '}}target="_blank"
 
 {%- else -%}
     {% set closing="</span>" %}
     <span
-
 {%- endif -%}
+
+{{' '}}class="tag_object {{extra_classes}}"
+
 {% set altlines=[] %}
 {% if with_alt_qualified_name %}{% do altlines.append(tag.qualified_name()) %}{% endif %}
 {% if with_alt_description and tag.description != "" %}{% do altlines.append(tag.description) %}{% endif %}
@@ -57,15 +63,19 @@
     {{' '}}title="{{altlines}}"
 {%- endif -%}
 >
-{%- if qualified_name -%}
-    {{tag.qualified_name(max_len=max_len)}}
+{%- if innertext is not none -%}
+    {{innertext}}
 {%- else -%}
-    {%- if max_len is not none -%}
-        {{tag.name[:max_len]}}
+    {%- if qualified_name -%}
+        {{tag.qualified_name(max_len=max_len)}}
     {%- else -%}
-        {{tag.name}}
+        {%- if max_len is not none -%}
+            {{tag.name[:max_len]}}
+        {%- else -%}
+            {{tag.name}}
+        {%- endif -%}
     {%- endif -%}
-{%- endif -%}
+{% endif %}
 
 {{- closing|safe -}}
 {% endmacro %}
