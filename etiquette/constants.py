@@ -201,6 +201,7 @@ DEFAULT_CONFIGURATION = {
         '_site_thumbnails',
     ],
 
+    'file_read_chunk': 2 ** 20,
     'id_length': 12,
     'thumbnail_width': 400,
     'thumbnail_height': 400,
