@@ -888,9 +888,15 @@ class PDBTagMixin:
             tagname = fetch[constants.SQL_SYN['master']]
 
     def get_tags(self):
+        '''
+        Yield all Tags in the database.
+        '''
         yield from self.get_things(thing_type='tag')
 
     def get_root_tags(self):
+        '''
+        Yield all Tags that have no parent.
+        '''
         for tag in self.get_tags():
             if tag.parent() is None:
                 yield tag
@@ -994,10 +1000,13 @@ class PDBUserMixin:
         '''
         For methods that create photos, albums, etc., we sometimes associate
         them with an author but sometimes not. The callers of those methods
-        might be trying to use a User object, or a user's ID, or maybe they
+        might be trying to submit a User object, or a user's ID, or maybe they
         left it None.
-        This method hides validation that those methods would otherwise
-        have to duplicate.
+        This method converts those inputs into a User's ID if possible, or else
+        returns None, hiding validation that those methods would otherwise have
+        to duplicate.
+        Exceptions like NoSuchUser can still be raised if the input appears to
+        be workable but fails.
         '''
         if user_obj_or_id is None:
             author_id = None
@@ -1007,14 +1016,20 @@ class PDBUserMixin:
                 raise ValueError('That user does not belong to this photodb')
             author_id = user_obj_or_id.id
 
-        else:
+        elif isinstance(user_obj_or_id, str):
             # Confirm that this string is a valid ID and not junk.
             author_id = self.get_user(id=user_obj_or_id).id
+
+        else:
+            raise TypeError('Unworkable type %s' % type(user_obj_or_id))
 
         return author_id
 
     @decorators.required_feature('user.login')
     def login(self, user_id, password):
+        '''
+        Return the User object for the user if the credentials are correct.
+        '''
         cur = self.sql.cursor()
         cur.execute('SELECT * FROM users WHERE id == ?', [user_id])
         fetch = cur.fetchone()
@@ -1296,7 +1311,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
                 current_album.add_photo(photo, commit=False)
 
         if commit:
-            self.log.debug('Committing - digest')
+            self.log.debug('Committing - digest_directory')
             self.commit()
 
         if make_albums:

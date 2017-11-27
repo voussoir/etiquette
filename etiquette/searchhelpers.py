@@ -405,7 +405,7 @@ def normalize_tag_mmf(tags, photodb, warning_bag=None):
             exc = e
         except (exceptions.TagTooShort, exceptions.TagTooLong) as e:
             exc = exceptions.NoSuchTag(tag)
-        if exc:
+        if exc is not None:
             if warning_bag:
                 warning_bag.add(exc.error_message)
                 continue

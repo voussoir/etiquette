@@ -250,7 +250,6 @@ class Album(ObjectBase, GroupableMixin):
             parent._sum_photos_recursive = None
             parent._sum_bytes_recursive = None
 
-
     @decorators.required_feature('album.edit')
     def add_child(self, *args, **kwargs):
         result = super().add_child(*args, **kwargs)
@@ -388,7 +387,7 @@ class Album(ObjectBase, GroupableMixin):
 
     def has_photo(self, photo):
         if not isinstance(photo, Photo):
-            raise TypeError('Must be a %s' % Photo)
+            raise TypeError('`photo` must be of type %s' % Photo)
         cur = self.photodb.sql.cursor()
         cur.execute(
             'SELECT * FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
@@ -407,6 +406,7 @@ class Album(ObjectBase, GroupableMixin):
         if parent is not None:
             parent._uncache_sums()
         result = super().leave_group(*args, **kwargs)
+        return result
 
     def photos(self):
         photos = []
@@ -905,7 +905,7 @@ class Photo(ObjectBase):
         )
         self._uncache()
         if commit:
-            self.photodb.log.debug('Commit - relocate photo')
+            self.photodb.log.debug('Committing - relocate photo')
             self.photodb.commit()
 
     @decorators.required_feature('photo.add_remove_tag')
