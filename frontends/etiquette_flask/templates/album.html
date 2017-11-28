@@ -60,21 +60,25 @@ p
         {{-album.description-}}
     </pre>
 
-    {% set viewparam = "?view=list" if view == "list" else "" %}
-    {% set parent = album.parent() %}
-    {% if parent %}
-    <h3>Parent: <a href="/album/{{parent.id}}{{viewparam}}">{{parent.display_name}}</a></h3>
-    {% else %}
-    <h3>Parent: <a href="/albums">Albums</a></h3>
-    {% endif %}
-
-    {% set sub_albums = album.children() %}
-    <h3>Sub-albums</h3>
     <ul>
-        {% for sub_album in sub_albums|sort(attribute='title') %}
-        <li><a href="/album/{{sub_album.id}}{{viewparam}}">{{sub_album.display_name}}</a></li>
-        {% endfor %}
-        <li><button class="green_button" onclick="var parent='{{album.id}}'; create_album_and_follow(parent);">Create child</button></li>
+        {% set viewparam = "?view=list" if view == "list" else "" %}
+        {% set parent = album.parent() %}
+        {% if parent %}
+        <li><a href="/album/{{parent.id}}{{viewparam}}">{{parent.display_name}}</a></li>
+        {% else %}
+        <li><a href="/albums">Albums</a></li>
+        {% endif %}
+
+        <ul>
+            <li>You are here</li>
+            <ul>
+                {% set sub_albums = album.children() %}
+                {% for sub_album in sub_albums|sort(attribute='title') %}
+                <li><a href="/album/{{sub_album.id}}{{viewparam}}">{{sub_album.display_name}}</a></li>
+                {% endfor %}
+                <li><button class="green_button" onclick="var parent='{{album.id}}'; create_album_and_follow(parent);">Create child</button></li>
+            </ul>
+        </ul>
     </ul>
 
     {% set photos = album.photos() %}
