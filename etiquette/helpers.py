@@ -127,10 +127,12 @@ def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
 
     return chunks
 
-def comma_split(s):
+def comma_space_split(s):
     '''
-    Split the string apart by commas, discarding all extra whitespace and
-    blank phrases.
+    Split the string apart by commas and spaces, discarding all extra
+    whitespace and blank phrases.
+
+    'a b, c,,d' -> ['a', 'b', 'c', 'd']
     '''
     if s is None:
         return s

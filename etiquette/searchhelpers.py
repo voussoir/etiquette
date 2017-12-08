@@ -189,7 +189,7 @@ def normalize_authors(authors, photodb, warning_bag=None):
         return None
 
     if isinstance(authors, str):
-        authors = helpers.comma_split(authors)
+        authors = helpers.comma_space_split(authors)
 
     user_ids = set()
     for requested_author in authors:
@@ -219,7 +219,7 @@ def normalize_extensions(extensions):
         return None
 
     if isinstance(extensions, str):
-        extensions = helpers.comma_split(extensions)
+        extensions = helpers.comma_space_split(extensions)
 
     if len(extensions) == 0:
         return None
@@ -382,7 +382,7 @@ def normalize_tag_mmf(tags, photodb, warning_bag=None):
         return None
 
     if isinstance(tags, str):
-        tags = helpers.comma_split(tags)
+        tags = helpers.comma_space_split(tags)
 
     tagset = set()
     for tag in tags:
