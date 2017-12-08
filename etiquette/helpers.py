@@ -3,6 +3,7 @@ import math
 import mimetypes
 import os
 import PIL.Image
+import unicodedata
 
 from . import constants
 from . import exceptions
@@ -65,7 +66,7 @@ def binding_filler(column_names, values, require_all=True):
     column_names=['id', 'name', 'score'],
     values={'score': 20, 'id': '1111', 'name': 'James'}
     ->
-    returns ('?, ?, ?, ?', ['1111', 'James', 20])
+    returns ('?, ?, ?', ['1111', 'James', 20])
     '''
     values = values.copy()
     for column in column_names:
@@ -145,7 +146,7 @@ def dict_to_params(d):
     '''
     Given a dictionary of URL parameters, return a URL parameter string.
 
-    {'a':1, 'b':2} => ?a=1&b=2
+    {'a':1, 'b':2} -> '?a=1&b=2'
     '''
     if not d:
         return ''
@@ -160,6 +161,8 @@ def fit_into_bounds(image_width, image_height, frame_width, frame_height):
     Given the w+h of the image and the w+h of the frame,
     return new w+h that fits the image into the frame
     while maintaining the aspect ratio.
+
+    (1920, 1080, 400, 400) -> (400, 225)
     '''
     ratio = min(frame_width/image_width, frame_height/image_height)
 
@@ -174,9 +177,9 @@ def get_mimetype(filepath):
     constants.ADDITIONAL_MIMETYPES.
     '''
     extension = os.path.splitext(filepath)[1].replace('.', '')
-    if extension in constants.ADDITIONAL_MIMETYPES:
-        return constants.ADDITIONAL_MIMETYPES[extension]
-    mimetype = mimetypes.guess_type(filepath)[0]
+    mimetype = constants.ADDITIONAL_MIMETYPES.get(extension, None)
+    if mimetype is None:
+        mimetype = mimetypes.guess_type(filepath)[0]
     return mimetype
 
 def hyphen_range(s):
@@ -318,12 +321,13 @@ def remove_characters(text, characters):
 
 def remove_control_characters(text):
     '''
-    Thanks SilentGhost
-    http://stackoverflow.com/a/4324823
+    Alex Quinn
+    https://stackoverflow.com/a/19016117
+
+    unicodedata.category(character) returns some two-character string
+    where if [0] is a C then the character is a control character.
     '''
-    translator = dict.fromkeys(range(32))
-    text = text.translate(translator)
-    return text
+    return ''.join(c for c in text if unicodedata.category(c)[0] != 'C')
 
 def seconds_to_hms(seconds):
     '''
@@ -343,6 +347,9 @@ def seconds_to_hms(seconds):
     return hms
 
 def select_generator(sql, query, bindings=None):
+    '''
+    Perform the query, and yield the results.
+    '''
     bindings = bindings or []
     cursor = sql.cursor()
     cursor.execute(query, bindings)
@@ -353,6 +360,11 @@ def select_generator(sql, query, bindings=None):
         yield fetch
 
 def sql_listify(items):
+    '''
+    Given a list of strings, return a string in the form of an SQL list.
+
+    ['hi', 'ho', 'hey'] -> '("hi", "ho", "hey")'
+    '''
     return '(%s)' % ', '.join('"%s"' % item for item in items)
 
 def truthystring(s):
@@ -373,6 +385,7 @@ def truthystring(s):
     return False
 
 
+_numerical_characters = set('0123456789.')
 def _unitconvert(value):
     '''
     When parsing hyphenated ranges, this function is used to convert
@@ -382,7 +395,7 @@ def _unitconvert(value):
         return None
     if ':' in value:
         return hms_to_seconds(value)
-    elif all(c in '0123456789.' for c in value):
+    elif all(c in _numerical_characters for c in value):
         return float(value)
     else:
         return bytestring.parsebytes(value)
