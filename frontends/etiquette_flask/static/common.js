@@ -171,6 +171,7 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     var last_element = this.edit_elements[this.edit_elements.length - 1];
     var toolbox = document.createElement("div");
+    toolbox.classList.add("editor_toolbox");
     last_element.parentElement.insertBefore(toolbox, last_element.nextSibling);
 
     this.open_button = document.createElement("button");
