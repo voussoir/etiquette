@@ -17,7 +17,7 @@ def album_zip_directories(album, recursive=True):
     '''
     directories = {}
     if album.title:
-        root_folder = 'album %s - %s' % (album.id, normalize_filepath(album.title))
+        root_folder = 'album %s - %s' % (album.id, remove_path_badchars(album.title))
     else:
         root_folder = 'album %s' % album.id
 
@@ -229,17 +229,6 @@ def is_xor(*args):
     '''
     return [bool(a) for a in args].count(True) == 1
 
-def normalize_filepath(filepath, allowed=''):
-    '''
-    Remove some bad characters.
-    '''
-    badchars = remove_characters(constants.FILENAME_BADCHARS, allowed)
-    filepath = remove_characters(filepath, badchars)
-
-    filepath = filepath.replace('/', os.sep)
-    filepath = filepath.replace('\\', os.sep)
-    return filepath
-
 def now(timestamp=True):
     '''
     Return the current UTC timestamp or datetime object.
@@ -306,6 +295,21 @@ def recursive_dict_keys(d):
             subkeys = {'%s\\%s' % (key, subkey) for subkey in recursive_dict_keys(value)}
             keys.update(subkeys)
     return keys
+
+def remove_path_badchars(filepath, allowed=''):
+    '''
+    Remove the bad characters seen in constants.FILENAME_BADCHARS, except
+    those which you explicitly permit.
+
+    'file*name' -> 'filename'
+    ('D:\\file*name', allowed=':\\') -> 'D:\\filename'
+    '''
+    badchars = remove_characters(constants.FILENAME_BADCHARS, allowed)
+    filepath = remove_characters(filepath, badchars)
+
+    filepath = filepath.replace('/', os.sep)
+    filepath = filepath.replace('\\', os.sep)
+    return filepath
 
 def remove_characters(text, characters):
     translator = {ord(c): None for c in characters}

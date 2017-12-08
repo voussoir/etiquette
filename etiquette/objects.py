@@ -535,7 +535,7 @@ class Photo(ObjectBase):
         if isinstance(db_row, (list, tuple)):
             db_row = dict(zip(constants.SQL_PHOTO_COLUMNS, db_row))
 
-        self.real_filepath = helpers.normalize_filepath(db_row['filepath'], allowed=':\\/')
+        self.real_filepath = helpers.remove_path_badchars(db_row['filepath'], allowed=':\\/')
         self.real_path = pathclass.Path(self.real_filepath)
 
         self.id = db_row['id']
@@ -941,7 +941,7 @@ class Photo(ObjectBase):
         old_path = self.real_path
         old_path.correct_case()
 
-        new_filename = helpers.normalize_filepath(new_filename, allowed=':\\/')
+        new_filename = helpers.remove_path_badchars(new_filename, allowed=':\\/')
         if os.path.dirname(new_filename) == '':
             new_path = old_path.parent.with_child(new_filename)
         else:

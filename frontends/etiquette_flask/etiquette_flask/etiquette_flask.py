@@ -454,7 +454,7 @@ def get_album_zip(album_id):
     else:
         download_as = 'album %s.zip' % album.id
 
-    download_as = etiquette.helpers.normalize_filepath(download_as)
+    download_as = etiquette.helpers.remove_path_badchars(download_as)
     download_as = urllib.parse.quote(download_as)
     outgoing_headers = {
         'Content-Type': 'application/octet-stream',
@@ -611,7 +611,7 @@ def get_file(photo_id):
         else:
             download_as = photo.id + photo.dot_extension
 
-        download_as = etiquette.helpers.normalize_filepath(download_as)
+        download_as = etiquette.helpers.remove_path_badchars(download_as)
         download_as =  urllib.parse.quote(download_as)
         response = flask.make_response(send_file(photo.real_filepath))
         response.headers['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % download_as

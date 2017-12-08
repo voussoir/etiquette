@@ -1125,7 +1125,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             raise exceptions.NotExclusive(['data_directory', 'ephemeral'])
 
         # DATA DIR PREP
-        data_directory = helpers.normalize_filepath(data_directory, allowed=':/\\')
+        data_directory = helpers.remove_path_badchars(data_directory, allowed=':/\\')
         self.data_directory = pathclass.Path(data_directory)
         os.makedirs(self.data_directory.absolute_path, exist_ok=True)
 
