@@ -299,21 +299,6 @@ def recursive_dict_keys(d):
             keys.update(subkeys)
     return keys
 
-def remove_path_badchars(filepath, allowed=''):
-    '''
-    Remove the bad characters seen in constants.FILENAME_BADCHARS, except
-    those which you explicitly permit.
-
-    'file*name' -> 'filename'
-    ('D:\\file*name', allowed=':\\') -> 'D:\\filename'
-    '''
-    badchars = remove_characters(constants.FILENAME_BADCHARS, allowed)
-    filepath = remove_characters(filepath, badchars)
-
-    filepath = filepath.replace('/', os.sep)
-    filepath = filepath.replace('\\', os.sep)
-    return filepath
-
 def remove_characters(text, characters):
     translator = {ord(c): None for c in characters}
     text = text.translate(translator)
@@ -328,6 +313,21 @@ def remove_control_characters(text):
     where if [0] is a C then the character is a control character.
     '''
     return ''.join(c for c in text if unicodedata.category(c)[0] != 'C')
+
+def remove_path_badchars(filepath, allowed=''):
+    '''
+    Remove the bad characters seen in constants.FILENAME_BADCHARS, except
+    those which you explicitly permit.
+
+    'file*name' -> 'filename'
+    ('D:\\file*name', allowed=':\\') -> 'D:\\filename'
+    '''
+    badchars = remove_characters(constants.FILENAME_BADCHARS, allowed)
+    filepath = remove_characters(filepath, badchars)
+
+    filepath = filepath.replace('/', os.sep)
+    filepath = filepath.replace('\\', os.sep)
+    return filepath
 
 def seconds_to_hms(seconds):
     '''
