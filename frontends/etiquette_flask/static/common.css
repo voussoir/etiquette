@@ -130,26 +130,33 @@ is hovered over.
     display:inline;
 }
 
+.photo_card
+{
+    background-color: #ffffd4;
+}
 .photo_card_list
 {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto 1fr auto;
     grid-template-rows: auto;
     grid-template-areas:
-        "filename metadata";
+        "checkbox filename metadata";
 
     max-width: 800px;
     margin: 8px;
     padding: 4px;
-
-    background-color: #ffffd4;
 }
 .photo_card_list:hover
 {
     box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.25);
 }
+.photo_card_list .photo_card_selector_checkbox
+{
+    grid-area: checkbox;
+}
 .photo_card_grid
 {
+    position: relative;
     display: inline-grid;
     grid-template-columns: auto auto;
     grid-template-rows: auto 1fr auto;
@@ -165,8 +172,12 @@ is hovered over.
 
     border-radius: 8px;
     box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.25);
-
-    background-color: #ffffd4;
+}
+.photo_card_grid .photo_card_selector_checkbox
+{
+    position:absolute;
+    left:5px;
+    top:5px;
 }
 .photo_card_thumbnail
 {
@@ -187,7 +198,6 @@ is hovered over.
     The min-width:100% + width:0 prevent the info div from controlling
     card size, so we can prioritize the thumbnail instead.
     */
-    align-self: start;
     justify-self: start;
     grid-area: filename;
 
@@ -201,6 +211,14 @@ is hovered over.
     word-break: break-word;
 
     font-size: 12.8px;
+}
+.photo_card_grid .photo_card_filename
+{
+    align-self: start;
+}
+.photo_card_list .photo_card_filename
+{
+    align-self: center;
 }
 .photo_card_filename:hover
 {

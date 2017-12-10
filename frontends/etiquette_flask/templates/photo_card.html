@@ -17,12 +17,13 @@
 {% macro create_photo_card(photo, view="grid") %}
 
 {% if view == "list" %}
-<div class="photo_card_list">
+<div class="photo_card photo_card_list" data-id="{{photo.id}}">
+    <input type="checkbox" class="photo_card_selector_checkbox" onclick="on_photo_select(event)"/>
     <span class="photo_card_filename"><a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a></span>
     <a class="photo_card_metadata" target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
 </div>
-
 {% else %}
+
 {% if photo.thumbnail %}
     {% set thumbnail_src = "/thumbnail/" + photo.id + ".jpg" %}
 {% else %}
@@ -37,8 +38,9 @@
 
 {% set tag_names_title = [] %}
 {% for tag in photo.tags() %}
-{% do tag_names_title.append(tag.name) %}
+    {% do tag_names_title.append(tag.name) %}
 {% endfor %}
+
 {% set tag_names_title = ", ".join(tag_names_title) %}
 {% if tag_names_title %}
     {% set tag_names_inner = "T" %}
@@ -54,7 +56,7 @@
     {% set metadata_inner = "{m}{d}, ".format(m=metadata_inner, d=photo.duration_string) %}
 {% endif %}
 
-<div class="photo_card_grid">
+<div class="photo_card photo_card_grid" data-id="{{photo.id}}">
     <a class="photo_card_thumbnail" target="_blank" href="/photo/{{photo.id}}">
         <img height="150" src="{{thumbnail_src}}">
     </a>
@@ -69,6 +71,8 @@
     {{- metadata_inner|safe -}}
     <a target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring()}}</a>
     </span>
+
+    <input type="checkbox" class="photo_card_selector_checkbox" onclick="on_photo_select(event)"/>
 </div>
 {% endif %}
 {% endmacro %}
