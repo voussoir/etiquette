@@ -54,6 +54,7 @@ If you are interested in helping, please raise an issue before making any pull r
 - Use browser localstorage to act as a clipboard for holding photos, so that you can select them on one tab and move them into an album on another, etc.
 - Perhaps instead of actually deleting objects, they should just have a `deleted` flag, to make easy restoration possible. Also consider regrouping the children of restored Groupables if those children haven't already been reassigned somewhere else.
 - Add a new table to store permanent history of add/remove of tags on photos, so that accidents or trolling can be reversed.
+- Currently, the photo clipboard only stores IDs and therefore when we construct the clipboard tray elements we cannot provide more rich information like filename, the user is only presented with a list of IDs which they probably don't care about. Should the localstorage cache some other more user-friendly information?
 
 ### To do list: User permissions
 Here are some thoughts about the kinds of features that need to exist within the permission system. I don't know how I'll actually manage it just yet. Possibly a `permissions` table in the database with `user_id | permission` where `permission` is some reliably-formatted string.

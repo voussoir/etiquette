@@ -3,6 +3,7 @@
 <head>
     {% import "photo_card.html" as photo_card %}
     {% import "header.html" as header %}
+    {% import "clipboard_tray.html" as clipboard_tray %}
     <title>Album {{album.display_name}}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -115,6 +116,7 @@ p
             {% endif %}
         {% endif %}
     </p>
+    {{clipboard_tray.clipboard_tray()}}
 </div>
 </body>
 

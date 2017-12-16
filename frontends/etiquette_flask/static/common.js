@@ -292,6 +292,14 @@ function create_album_and_follow(parent)
     post(url, data, receive_callback);
 }
 
+function delete_all_children(element)
+{
+    while (element.firstChild)
+    {
+        element.removeChild(element.firstChild);
+    }
+}
+
 function entry_with_history_hook(box, button)
 {
     //console.log(event.keyCode);

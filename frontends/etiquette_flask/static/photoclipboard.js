@@ -1,5 +1,7 @@
 var photo_clipboard = new Set();
 
+////////////////////////////////////////////////////////////////////////////////
+//--LOAD-SAVE-----------------------------------------------------------------//
 function load_photo_clipboard(event)
 {
     console.log("Loading photo clipboard");
@@ -15,9 +17,6 @@ function load_photo_clipboard(event)
     {
         photo_clipboard = new Set(JSON.parse(stored));
     }
-
-    var photo_divs = Array.from(document.getElementsByClassName("photo_card"));
-    photo_divs.forEach(apply_check);
     return photo_clipboard;
 }
 
@@ -26,12 +25,16 @@ function save_photo_clipboard()
     console.log("Saving photo clipboard");
     var serialized = JSON.stringify(Array.from(photo_clipboard));
     localStorage.setItem("photo_clipboard", serialized);
+    on_storage();
 }
 
-function apply_check(photo_div)
+
+////////////////////////////////////////////////////////////////////////////////
+//*-CARD MANAGEMENT-----------------------------------------------------------//
+function apply_check(photo_card)
 {
-    var checkbox = photo_div.getElementsByClassName("photo_card_selector_checkbox")[0];
-    if (photo_clipboard.has(photo_div.dataset.id))
+    var checkbox = photo_card.getElementsByClassName("photo_card_selector_checkbox")[0];
+    if (photo_clipboard.has(photo_card.dataset.id))
     {
         checkbox.checked = true;
     }
@@ -39,6 +42,12 @@ function apply_check(photo_div)
     {
         checkbox.checked = false;
     }
+}
+
+function update_checked_cards()
+{
+    var photo_divs = Array.from(document.getElementsByClassName("photo_card"));
+    photo_divs.forEach(apply_check);
 }
 
 var previous_photo_select;
@@ -95,9 +104,80 @@ function on_photo_select(event)
     save_photo_clipboard();
 }
 
-function onpageload()
+
+////////////////////////////////////////////////////////////////////////////////
+//--TRAY MANAGEMENT-----------------------------------------------------------//
+function toggle_clipboard_tray_collapsed()
 {
-    window.addEventListener("storage", load_photo_clipboard, false);
-    load_photo_clipboard();
+    var tray_body = document.getElementById("clipboard_tray_body");
+    if (tray_body.classList.contains("hidden") && photo_clipboard.size > 0)
+    {
+        tray_body.classList.remove("hidden");
+        update_clipboard_tray();
+    }
+    else
+    {
+        tray_body.classList.add("hidden");
+    }
 }
-document.addEventListener("DOMContentLoaded", onpageload);
+
+function on_tray_delete_button(event)
+{
+    var clipboard_line = event.target.parentElement;
+    var photo_id = clipboard_line.dataset.id;
+    photo_clipboard.delete(photo_id);
+    if (photo_clipboard.size == 0)
+    {
+        toggle_clipboard_tray_collapsed();
+    }
+    save_photo_clipboard();
+}
+
+function update_clipboard_tray()
+{
+    var tray_button = document.getElementById("clipboard_tray_expandbutton");
+    if (tray_button !== null)
+    {
+        tray_button.innerText = "Clipboard: " + photo_clipboard.size + " items";
+    }
+
+    var tray_body = document.getElementById("clipboard_tray_body");
+    if (!clipboard_tray.classList.contains("hidden"))
+    {
+        delete_all_children(tray_body);
+        var photo_ids = Array.from(photo_clipboard);
+        photo_ids.sort();
+        for (var i = 0; i < photo_ids.length; i += 1)
+        {
+            var clipboard_line = document.createElement("div");
+            clipboard_line.classList.add("clipboard_tray_line");
+            clipboard_line.dataset.id = photo_ids[i];
+
+            var clipboard_line_delete_button = document.createElement("button");
+            clipboard_line_delete_button.classList.add("remove_tag_button_perm");
+            clipboard_line_delete_button.onclick = on_tray_delete_button;
+
+            var clipboard_line_link = document.createElement("a");
+            clipboard_line_link.target = "_blank";
+            clipboard_line_link.href = "/photo/" + photo_ids[i];
+            clipboard_line_link.innerText = photo_ids[i];
+
+            clipboard_line.appendChild(clipboard_line_delete_button);
+            clipboard_line.appendChild(clipboard_line_link);
+            tray_body.appendChild(clipboard_line);
+        }
+    }
+}
+
+function on_storage()
+{
+    load_photo_clipboard();
+    update_checked_cards();
+    update_clipboard_tray();
+}
+function on_pageload()
+{
+    window.addEventListener("storage", on_storage, false);
+    on_storage();
+}
+document.addEventListener("DOMContentLoaded", on_pageload);

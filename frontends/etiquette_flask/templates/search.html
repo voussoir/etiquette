@@ -4,6 +4,7 @@
     {% import "photo_card.html" as photo_card %}
     {% import "header.html" as header %}
     {% import "tag_object.html" as tag_object %}
+    {% import "clipboard_tray.html" as clipboard_tray %}
     <title>Search</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -37,11 +38,6 @@ form
 
     color: #fff;
 }
-#left, #right
-{
-    /* Keep the prev-next buttons from scraping the floor */
-    /*padding-bottom: 30px;*/
-}
 #left
 {
     flex: 1;
@@ -60,6 +56,8 @@ form
     flex: 1;
 
     padding: 8px;
+    /* Keep the prev-next buttons from scraping the floor */
+    padding-bottom: 30px;
 
     width: auto;
 }
@@ -296,6 +294,7 @@ form
 
         {{prev_next_buttons()}}
     </div>
+    {{clipboard_tray.clipboard_tray()}}
     </div>
 </body>
 

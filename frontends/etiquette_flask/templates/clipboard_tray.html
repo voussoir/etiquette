@@ -1,0 +1,11 @@
+{% macro clipboard_tray() %}
+<div id="clipboard_tray">
+    <button
+    id="clipboard_tray_expandbutton"
+    class="green_button"
+    onclick="toggle_clipboard_tray_collapsed()"
+    >Clipboard: 0 items</button>
+    <div id="clipboard_tray_body" class="hidden">
+    </div>
+</div>
+{% endmacro %}
