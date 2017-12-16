@@ -1,7 +1,8 @@
 /*
 Organization:
 {
-    display and alignment
+    display and flexing
+    positioning and alignment
     bounding box (width, margin, overflow, ...)
     borders and shadows
     backgrounds
@@ -9,6 +10,12 @@ Organization:
     misc
 }
 */
+:root
+{
+    --color_site_theme: #00d8f4;
+    --color_3d_shadow: rgba(0, 0, 0, 0.5);
+    --color_3d_highlight: rgba(255, 255, 255, 0.5);
+}
 body
 {
     display: flex;
@@ -16,7 +23,7 @@ body
 
     margin: 8px;
 
-    background-color:#00d8f4;
+    background-color: var(--color_site_theme);
 }
 li
 {
@@ -57,50 +64,37 @@ li
     flex: 0 0 auto;
     flex-direction: row;
 }
-#search_go_button,
-.add_tag_button,
-.editor_open_button,
-.editor_save_button,
+
 .green_button
 {
-    border-top: 2px solid #c2ffc3;
-    border-left: 2px solid #c2ffc3;
-    border-right: 2px solid #259427;
-    border-bottom: 2px solid #259427;
     background-color: #6df16f;
 }
-#search_go_button:active,
-.add_tag_button:active,
-.editor_open_button:active,
-.editor_save_button:active,
-.green_button:active
-{
-    border-top: 2px solid #259427;
-    border-left: 2px solid #259427;
-    border-right: 2px solid #c2ffc3;
-    border-bottom: 2px solid #c2ffc3;
-}
-.remove_tag_button,
-.remove_tag_button_perm,
-.editor_cancel_button,
 .red_button
 {
-    border-top: 2px solid #ffacac;
-    border-left: 2px solid #ffacac;
-    border-right: 2px solid #bd1b1b;
-    border-bottom: 2px solid #bd1b1b;
-
     background-color: #ff4949;
 }
-.remove_tag_button:active,
-.remove_tag_button_perm:active,
-.editor_cancel_button:active,
-.red_button:active
+.yellow_button
 {
-    border-top: 2px solid #bd1b1b;
-    border-left: 2px solid #bd1b1b;
-    border-right: 2px solid #ffacac;
-    border-bottom: 2px solid #ffacac;
+    background-color: #ffea57;
+}
+
+.green_button,
+.red_button,
+.yellow_button
+{
+    border-top: 2px solid var(--color_3d_highlight);
+    border-left: 2px solid var(--color_3d_highlight);
+    border-right: 2px solid var(--color_3d_shadow);
+    border-bottom: 2px solid var(--color_3d_shadow);
+}
+.green_button:active,
+.red_button:active,
+.yellow_button:active
+{
+    border-top: 2px solid var(--color_3d_shadow);
+    border-left: 2px solid var(--color_3d_shadow);
+    border-right: 2px solid var(--color_3d_highlight);
+    border-bottom: 2px solid var(--color_3d_highlight);
 }
 
 .remove_tag_button,

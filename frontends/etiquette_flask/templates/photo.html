@@ -163,14 +163,14 @@
         <ul id="this_tags">
             <li>
                 <input id="add_tag_textbox" type="text" autofocus>
-                <button id="add_tag_button" class="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
+                <button id="add_tag_button" class="green_button" onclick="submit_tag(receive_callback);">add</button>
             </li>
             {% set tags = photo.sorted_tags() %}
             {% for tag in tags %}
             <li>
                 {{tag_object.tag_object(tag, qualified_name=True, max_len=30, with_alt_description=True, with_alt_qualified_name=True)}}<!--
                 --><button
-                class="remove_tag_button"
+                class="remove_tag_button red_button"
                 onclick="remove_photo_tag('{{photo.id}}', '{{tag.name}}', receive_callback);">
                 </button>
             </li>
@@ -180,7 +180,7 @@
         <!-- METADATA & DOWNLOAD -->
         <h4>
             File info
-            <button id="refresh_metadata_button" class="add_tag_button" onclick="refresh_metadata('{{photo.id}}');">refresh</button>
+            <button id="refresh_metadata_button" class="green_button" onclick="refresh_metadata('{{photo.id}}');">refresh</button>
         </h4>
         <ul id="metadata">
         <li>Filename: {{photo.basename}}</li>

@@ -139,7 +139,7 @@ form
         <option value="desc" {%if selected_sorter=="desc"%}selected{%endif%} >Descending</option>
         <option value="asc"  {%if selected_sorter=="asc"%}selected{%endif%} >Ascending</option>
     </select>
-    <button class="remove_tag_button_perm" onclick="orderby_remove_hook(this);"></button>
+    <button class="remove_tag_button_perm red_button" onclick="orderby_remove_hook(this);"></button>
 </li>
 {% endmacro %}
 </head>
@@ -191,7 +191,7 @@ form
                 {% else %}
                 {{ create_orderby_li(selected_column=0, selected_sorter=0) }}
                 {% endif %}
-                <li id="search_builder_orderby_newrow"><button class="add_tag_button" onclick="add_new_orderby()">+</button></li>
+                <li id="search_builder_orderby_newrow"><button class="green_button" onclick="add_new_orderby()">+</button></li>
             </ul>
         </div>
         <br>
@@ -265,7 +265,7 @@ form
                 <option value="grid" {%if search_kwargs['view'] == "grid" %}selected{%endif%}>Grid</option>
                 <option value="list" {%if search_kwargs['view'] == "list" %}selected{%endif%}>List</option>
             </select>
-            <button type="submit" id="search_go_button" value="">Search</button>
+            <button type="submit" id="search_go_button" class="green_button" value="">Search</button>
         </form>
         {% if total_tags %}
         <span>Tags on this page (click to join query):</span>

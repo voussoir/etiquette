@@ -155,6 +155,7 @@ function update_clipboard_tray()
 
             var clipboard_line_delete_button = document.createElement("button");
             clipboard_line_delete_button.classList.add("remove_tag_button_perm");
+            clipboard_line_delete_button.classList.add("red_button");
             clipboard_line_delete_button.onclick = on_tray_delete_button;
 
             var clipboard_line_link = document.createElement("a");
