@@ -141,10 +141,10 @@ function update_clipboard_tray()
         tray_button.innerText = "Clipboard: " + photo_clipboard.size + " items";
     }
 
-    var tray_body = document.getElementById("clipboard_tray_body");
+    var tray_lines = document.getElementById("clipboard_tray_lines");
     if (!clipboard_tray.classList.contains("hidden"))
     {
-        delete_all_children(tray_body);
+        delete_all_children(tray_lines);
         var photo_ids = Array.from(photo_clipboard);
         photo_ids.sort();
         for (var i = 0; i < photo_ids.length; i += 1)
@@ -164,7 +164,7 @@ function update_clipboard_tray()
 
             clipboard_line.appendChild(clipboard_line_delete_button);
             clipboard_line.appendChild(clipboard_line_link);
-            tray_body.appendChild(clipboard_line);
+            tray_lines.appendChild(clipboard_line);
         }
     }
 }
