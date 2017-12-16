@@ -2,7 +2,7 @@ import flask
 from flask import request
 import functools
 
-from etiquette import jsonify
+from . import jsonify
 
 
 def required_fields(fields, forbid_whitespace=False):
