@@ -124,6 +124,41 @@ p
 <script type="text/javascript">
 var blank_title_text = "Album {{album.id}}";
 
+function _paste_unpaste_photo_clipboard(add_or_remove)
+{
+    var photo_ids = Array.from(photo_clipboard);
+    photo_ids = photo_ids.join(",");
+    var url = "/album/{{album.id}}/" + add_or_remove;
+    var data = new FormData();
+    data.append("photo_id", photo_ids);
+    var callback = function(){
+        photo_clipboard.clear();
+        save_photo_clipboard();
+        location.reload();
+    };
+    post(url, data, callback);
+}
+function paste_photo_clipboard()
+{
+    _paste_unpaste_photo_clipboard("add_photo");
+}
+
+function unpaste_photo_clipboard()
+{
+    _paste_unpaste_photo_clipboard("remove_photo");
+}
+var paste_photo_clipboard_button = document.createElement("button");
+paste_photo_clipboard_button.classList.add("green_button");
+paste_photo_clipboard_button.innerText = "Add to album";
+paste_photo_clipboard_button.onclick = paste_photo_clipboard;
+document.getElementById("clipboard_tray_toolbox").appendChild(paste_photo_clipboard_button);
+
+var unpaste_photo_clipboard_button = document.createElement("button");
+unpaste_photo_clipboard_button.classList.add("red_button");
+unpaste_photo_clipboard_button.innerText = "Remove from album";
+unpaste_photo_clipboard_button.onclick = unpaste_photo_clipboard;
+document.getElementById("clipboard_tray_toolbox").appendChild(unpaste_photo_clipboard_button);
+
 function on_open(editor, edit_element_map, display_element_map)
 {
     if (display_element_map["title"].innerText == blank_title_text)
