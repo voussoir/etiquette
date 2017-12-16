@@ -21,8 +21,8 @@ if port == 443:
     http = gevent.pywsgi.WSGIServer(
         listener=('0.0.0.0', port),
         application=etiquette_flask.site,
-        keyfile='C:\\git\\etiquette\\etiquette\\https\\etiquette.key',
-        certfile='C:\\git\\etiquette\\etiquette\\https\\etiquette.crt',
+        keyfile='D:\\git\\etiquette\\frontends\\etiquette_flask\\https\\etiquette.key',
+        certfile='D:\\git\\etiquette\\frontends\\etiquette_flask\\https\\etiquette.crt',
     )
 else:
     http = gevent.pywsgi.WSGIServer(

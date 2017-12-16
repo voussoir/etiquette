@@ -306,7 +306,7 @@ def remove_characters(text, characters):
 
 def remove_control_characters(text):
     '''
-    Alex Quinn
+    Thanks Alex Quinn
     https://stackoverflow.com/a/19016117
 
     unicodedata.category(character) returns some two-character string

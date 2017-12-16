@@ -139,7 +139,7 @@ class WrongLogin(EtiquetteException):
 # GENERAL ERRORS
 OUTOFDATE = '''
 Database is out of date. {current} should be {new}.
-Please use utilities\\etiquette_upgrader.py
+Please use utilities\\database_upgrader.py
 '''.strip()
 class DatabaseOutOfDate(EtiquetteException):
     '''
