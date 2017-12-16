@@ -485,6 +485,40 @@ def post_album_add_tag(album_id):
     response['tagname'] = tag.name
     return jsonify.make_json_response(response)
 
+@site.route('/album/<album_id>/add_photo', methods=['POST'])
+@session_manager.give_token
+@decorators.required_fields(['photo_id'], forbid_whitespace=True)
+def post_album_add_photo(album_id):
+    '''
+    Add a photo or photos to this album.
+    '''
+    response = {}
+    album = P_album(album_id)
+
+    photo_ids = etiquette.helpers.comma_space_split(request.form['photo_id'])
+    photos = [P_photo(photo_id) for photo_id in photo_ids]
+    for photo in photos:
+        album.add_photo(photo, commit=False)
+    P.commit()
+    return jsonify.make_json_response(response)
+
+@site.route('/album/<album_id>/remove_photo', methods=['POST'])
+@session_manager.give_token
+@decorators.required_fields(['photo_id'], forbid_whitespace=True)
+def post_album_remove_photo(album_id):
+    '''
+    Remove a photo or photos from this album.
+    '''
+    response = {}
+    album = P_album(album_id)
+
+    photo_ids = etiquette.helpers.comma_space_split(request.form['photo_id'])
+    photos = [P_photo(photo_id) for photo_id in photo_ids]
+    for photo in photos:
+        album.remove_photo(photo, commit=False)
+    P.commit()
+    return jsonify.make_json_response(response)
+
 @site.route('/album/<album_id>/edit', methods=['POST'])
 @session_manager.give_token
 def post_album_edit(album_id):
