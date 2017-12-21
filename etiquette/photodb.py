@@ -270,15 +270,10 @@ class PDBAlbumMixin:
 class PDBBookmarkMixin:
     def __init__(self):
         super().__init__()
+        self._bookmark_cache = cacheclass.Cache()
 
     def get_bookmark(self, id):
-        cur = self.sql.cursor()
-        cur.execute('SELECT * FROM bookmarks WHERE id == ?', [id])
-        fetch = cur.fetchone()
-        if fetch is None:
-            raise exceptions.NoSuchBookmark(id)
-        bookmark = objects.Bookmark(self, fetch)
-        return bookmark
+        return self.get_thing_by_id('bookmark', id)
 
     def get_bookmarks(self):
         yield from self.get_things(thing_type='bookmark')
@@ -1181,11 +1176,13 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         self._cached_frozen_children = None
 
         self._album_cache.maxlen = self.config['cache_size']['album']
+        self._bookmark_cache.maxlen = self.config['cache_size']['bookmark']
         self._photo_cache.maxlen = self.config['cache_size']['photo']
         self._tag_cache.maxlen = self.config['cache_size']['tag']
         self._user_cache.maxlen = self.config['cache_size']['user']
         self.caches = {
             'album': self._album_cache,
+            'bookmark': self._bookmark_cache,
             'photo': self._photo_cache,
             'tag': self._tag_cache,
             'user': self._user_cache,

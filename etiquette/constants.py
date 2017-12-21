@@ -148,6 +148,7 @@ DEFAULT_CONFIGURATION = {
 
     'cache_size': {
         'album': 1000,
+        'bookmark': 100,
         'photo': 100000,
         'tag': 1000,
         'user': 200,
