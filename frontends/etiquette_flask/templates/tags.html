@@ -132,14 +132,14 @@ body
             <li>
                 {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
                 {{tag_object.tag_object(tag, link='search', qualified_name=True, with_alt_qualified_name=False)}}<!--
-                --><button class="remove_tag_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
+                --><button class="remove_tag_button red_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
             </li>
             {% if include_synonyms %}
                 {% for synonym in tag.synonyms() %}
                 <li>
                     {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
                     {{tag_object.tag_object(tag, innertext=qualified_name + '+' + synonym, link='search')}}<!--
-                    --><button class="remove_tag_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
+                    --><button class="remove_tag_button red_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
                 </li>
                 {% endfor %}
             {% endif %}
@@ -150,7 +150,7 @@ body
         <div id="right_inner">
             <div id="editor_area">
             <input type="text" id="add_tag_textbox" autofocus>
-            <button class="add_tag_button" id="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
+            <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
             </div>
             <div id="message_area">
             </div>
