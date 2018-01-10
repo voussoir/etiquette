@@ -135,6 +135,7 @@ ADDITIONAL_MIMETYPES = {
     'mkv': 'video/x-matroska',
 
     'ass': 'text/plain',
+    'nfo': 'text/plain',
     'srt': 'text/plain',
 }
 
