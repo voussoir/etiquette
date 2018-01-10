@@ -2,8 +2,29 @@ import flask
 from flask import request
 import functools
 
+import etiquette
+
 from . import jsonify
 
+
+def catch_etiquette_exception(function):
+    '''
+    If an EtiquetteException is raised, automatically catch it and convert it
+    into a response so that the user isn't receiving error 500.
+    '''
+    @functools.wraps(function)
+    def wrapped(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except etiquette.exceptions.EtiquetteException as e:
+            if isinstance(e, etiquette.exceptions.NoSuch):
+                status = 404
+            else:
+                status = 400
+            response = etiquette.jsonify.exception(e)
+            response = jsonify.make_json_response(response, status=status)
+            flask.abort(response)
+    return wrapped
 
 def required_fields(fields, forbid_whitespace=False):
     '''

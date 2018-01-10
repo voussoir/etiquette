@@ -355,33 +355,22 @@ def get_tags_core(specific_tag=None):
     tags.sort(key=lambda x: x.qualified_name())
     return tags
 
+@decorators.catch_etiquette_exception
 def post_photo_add_remove_tag_core(photo_id, tagname, add_or_remove):
     photo = P_photo(photo_id, response_type='json')
     tag = P_tag(tagname, response_type='json')
 
-    try:
-        if add_or_remove == 'add':
-            photo.add_tag(tag)
-        elif add_or_remove == 'remove':
-            photo.remove_tag(tag)
-    except etiquette.exceptions.EtiquetteException as e:
-        response = etiquette.jsonify.exception(e)
-        response = jsonify.make_json_response(response, status=400)
-        flask.abort(response)
+    if add_or_remove == 'add':
+        photo.add_tag(tag)
+    elif add_or_remove == 'remove':
+        photo.remove_tag(tag)
 
     response = {'tagname': tag.name}
     return jsonify.make_json_response(response)
 
+@decorators.catch_etiquette_exception
 def post_tag_create_delete_core(tagname, function):
-    try:
-        response = function(tagname)
-        status = 200
-    except etiquette.exceptions.EtiquetteException as e:
-        response = etiquette.jsonify.exception(e)
-        status = 400
-    #print(response)
-
-    return jsonify.make_json_response(response, status=status)
+    return jsonify.make_json_response(function(tagname))
 
 
 ####################################################################################################
@@ -464,6 +453,7 @@ def get_album_zip(album_id):
     return flask.Response(streamed_zip, headers=outgoing_headers)
 
 @site.route('/album/<album_id>/add_tag', methods=['POST'])
+@decorators.catch_etiquette_exception
 @session_manager.give_token
 def post_album_add_tag(album_id):
     '''
@@ -487,6 +477,7 @@ def post_album_add_tag(album_id):
 
 @site.route('/album/<album_id>/add_photo', methods=['POST'])
 @session_manager.give_token
+@decorators.catch_etiquette_exception
 @decorators.required_fields(['photo_id'], forbid_whitespace=True)
 def post_album_add_photo(album_id):
     '''
@@ -504,6 +495,7 @@ def post_album_add_photo(album_id):
 
 @site.route('/album/<album_id>/remove_photo', methods=['POST'])
 @session_manager.give_token
+@decorators.catch_etiquette_exception
 @decorators.required_fields(['photo_id'], forbid_whitespace=True)
 def post_album_remove_photo(album_id):
     '''
@@ -521,6 +513,7 @@ def post_album_remove_photo(album_id):
 
 @site.route('/album/<album_id>/edit', methods=['POST'])
 @session_manager.give_token
+@decorators.catch_etiquette_exception
 def post_album_edit(album_id):
     '''
     Edit the title / description.
@@ -529,12 +522,7 @@ def post_album_edit(album_id):
 
     title = request.form.get('title', None)
     description = request.form.get('description', None)
-    try:
-        album.edit(title=title, description=description)
-    except etiquette.exceptions.EtiquetteException as e:
-        response = etiquette.jsonify.exception(e)
-        response = jsonify.make_json_response(response, status=400)
-        flask.abort(response)
+    album.edit(title=title, description=description)
     response = etiquette.jsonify.album(album, minimal=True)
     return jsonify.make_json_response(response)
 
@@ -554,6 +542,7 @@ def get_albums_json():
     return jsonify.make_json_response(albums)
 
 @site.route('/albums/create_album', methods=['POST'])
+@decorators.catch_etiquette_exception
 def post_albums_create():
     title = request.form.get('title', None)
     description = request.form.get('description', None)
@@ -561,12 +550,7 @@ def post_albums_create():
     if parent is not None:
         parent = P_album(parent)
 
-    try:
-        album = P.new_album(title=title, description=description)
-    except etiquette.exceptions.EtiquetteException as e:
-        response = etiquette.jsonify.exception(e)
-        response = jsonify.make_json_response(response, status=400)
-        flask.abort(response)
+    album = P.new_album(title=title, description=description)
     if parent is not None:
         parent.add_child(album)
     response = etiquette.jsonify.album(album, minimal=False)
@@ -582,6 +566,7 @@ def get_bookmark_json(bookmarkid):
 
 @site.route('/bookmark/<bookmarkid>/edit', methods=['POST'])
 @session_manager.give_token
+@decorators.catch_etiquette_exception
 def post_bookmark_edit(bookmarkid):
     bookmark = P_bookmark(bookmarkid)
     # Emptystring is okay for titles, but not for URL.
@@ -607,16 +592,12 @@ def get_bookmarks_json():
     return jsonify.make_json_response(bookmarks)
 
 @site.route('/bookmarks/create_bookmark', methods=['POST'])
+@decorators.catch_etiquette_exception
 @decorators.required_fields(['url'], forbid_whitespace=True)
 def post_bookmarks_create():
     url = request.form['url']
     title = request.form.get('title', None)
-    try:
-        bookmark = P.new_bookmark(url=url, title=title)
-    except etiquette.exceptions.EtiquetteException as e:
-        response = etiquette.jsonify.exception(e)
-        response = jsonify.make_json_response(response, status=400)
-        flask.abort(response)
+    bookmark = P.new_bookmark(url=url, title=title)
     response = etiquette.jsonify.bookmark(bookmark)
     response = jsonify.make_json_response(response)
     return response
@@ -721,18 +702,14 @@ def post_photo_add_tag(photo_id):
     return post_photo_add_remove_tag_core(photo_id, request.form['tagname'], 'add')
 
 @site.route('/photo/<photo_id>/refresh_metadata', methods=['POST'])
+@decorators.catch_etiquette_exception
 def post_photo_refresh_metadata(photo_id):
     '''
     Refresh the file metadata.
     '''
     P.caches['photo'].remove(photo_id)
     photo = P_photo(photo_id, response_type='json')
-    try:
-        photo.reload_metadata()
-    except etiquette.exceptions.EtiquetteException as e:
-        response = etiquette.jsonify.exception(e)
-        response = jsonify.make_json_response(response, status=400)
-        flask.abort(response)
+    photo.reload_metadata()
     if photo.thumbnail is None:
         try:
             photo.generate_thumbnail()
@@ -756,6 +733,7 @@ def get_register():
 
 @site.route('/register', methods=['POST'])
 @session_manager.give_token
+@decorators.catch_etiquette_exception
 @decorators.required_fields(['username', 'password_1', 'password_2'])
 def post_register():
     if session_manager.get(request):
@@ -774,11 +752,7 @@ def post_register():
         }
         return jsonify.make_json_response(response, status=422)
 
-    try:
-        user = P.register_user(username, password_1)
-    except etiquette.exceptions.EtiquetteException as e:
-        response = etiquette.jsonify.exception(e)
-        return jsonify.make_json_response(response, status=400)
+    user = P.register_user(username, password_1)
 
     session = sessions.Session(request, user)
     session_manager.add(session)
@@ -858,20 +832,12 @@ def get_tags_json(specific_tag_name=None):
     return jsonify.make_json_response(tags)
 
 @site.route('/tag/<specific_tag>/edit', methods=['POST'])
+@decorators.catch_etiquette_exception
 def post_tag_edit(specific_tag):
     tag = P_tag(specific_tag)
     name = request.form.get('name', '').strip()
     if name:
-        try:
-            tag.rename(name, commit=False)
-        except etiquette.exceptions.EtiquetteException as e:
-            if isinstance(e, etiquette.exceptions.NoSuch):
-                status = 404
-            else:
-                status = 400
-            response = etiquette.jsonify.exception(e)
-            response = jsonify.make_json_response(response, status=status)
-            flask.abort(response)
+        tag.rename(name, commit=False)
 
     description = request.form.get('description', None)
     tag.edit(description=description)
