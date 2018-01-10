@@ -1232,9 +1232,41 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         If a Photo object already exists for a file, it will be added to the
         correct album.
         '''
+        def create_or_fetch_photos(files):
+            photos = []
+            for filepath in files:
+                try:
+                    photo = self.get_photo_by_path(filepath)
+                except exceptions.NoSuchPhoto:
+                    photo = self.new_photo(filepath.absolute_path, commit=False, **new_photo_kwargs)
+
+                photos.append(photo)
+            return photos
+
+        def create_or_fetch_current_album(albums_by_path, current_directory):
+            current_album = albums_by_path.get(current_directory.absolute_path, None)
+            if current_album is None:
+                try:
+                    current_album = self.get_album_by_path(current_directory.absolute_path)
+                except exceptions.NoSuchAlbum:
+                    current_album = self.new_album(
+                        associated_directory=current_directory.absolute_path,
+                        commit=False,
+                        title=current_directory.basename,
+                    )
+                albums_by_path[current_directory.absolute_path] = current_album
+            return current_album
+
+        def orphan_join_parent_album(albums_by_path, current_album, current_directory):
+            if current_album.parent() is None:
+                parent = albums_by_path.get(current_directory.parent.absolute_path, None)
+                if parent is not None:
+                    parent.add_child(current_album, commit=False)
+
         directory = pathclass.Path(directory)
         if not directory.is_dir:
             raise ValueError('Not a directory: %s' % directory)
+        directory.correct_case()
 
         if exclude_directories is None:
             exclude_directories = self.config['digest_exclude_dirs']
@@ -1246,15 +1278,6 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         if 'filepath' in new_photo_kwargs:
             new_photo_kwargs.pop('filepath')
 
-        directory.correct_case()
-        generator = spinal.walk_generator(
-            directory,
-            exclude_directories=exclude_directories,
-            exclude_filenames=exclude_filenames,
-            recurse=recurse,
-            yield_style='nested',
-        )
-
         if make_albums:
             try:
                 album = self.get_album_by_path(directory.absolute_path)
@@ -1264,47 +1287,26 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
                     commit=False,
                     title=directory.basename,
                 )
-            albums = {directory.absolute_path: album}
+            albums_by_path = {directory.absolute_path: album}
 
-        for (current_location, directories, files) in generator:
-            # Create the photo object
-            new_photos = []
-            for filepath in files:
-                try:
-                    photo = self.get_photo_by_path(filepath)
-                except exceptions.NoSuchPhoto:
-                    makenew = True
-                else:
-                    makenew = False
+        walk_generator = spinal.walk_generator(
+            directory,
+            exclude_directories=exclude_directories,
+            exclude_filenames=exclude_filenames,
+            recurse=recurse,
+            yield_style='nested',
+        )
 
-                if makenew:
-                    photo = self.new_photo(filepath.absolute_path, commit=False, **new_photo_kwargs)
-
-                new_photos.append(photo)
+        for (current_directory, subdirectories, files) in walk_generator:
+            photos = create_or_fetch_photos(files)
 
             if not make_albums:
                 continue
 
-            # Ensure that the current directory is an album.
-            current_album = albums.get(current_location.absolute_path, None)
-            if current_album is None:
-                try:
-                    current_album = self.get_album_by_path(current_location.absolute_path)
-                except exceptions.NoSuchAlbum:
-                    current_album = self.new_album(
-                        associated_directory=current_location.absolute_path,
-                        commit=False,
-                        title=current_location.basename,
-                    )
-                albums[current_location.absolute_path] = current_album
+            current_album = create_or_fetch_current_album(albums_by_path, current_directory)
+            orphan_join_parent_album(albums_by_path, current_album, current_directory)
 
-            parent = albums.get(current_location.parent.absolute_path, None)
-            if parent is not None:
-                try:
-                    parent.add_child(current_album, commit=False)
-                except exceptions.GroupExists:
-                    pass
-            for photo in new_photos:
+            for photo in photos:
                 current_album.add_photo(photo, commit=False)
 
         if commit:

@@ -9,7 +9,7 @@ Etiquette is a tag-based file organization system with a web front-end.
 
 Documentation is still a work in progress. In general,
 
-- You must make the `etiquette` package importable by placing it in one of your lib paths. I use filesystem junctions for this purpose.
+- You must make the `etiquette` package importable by placing it in one of your lib paths because I have not made a setup.py yet. Rather than actually moving the folder I just use filesystem junctions.
 - Run `python etiquette_flask_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
 - Run `python -i etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 
@@ -81,6 +81,7 @@ If you are interested in helping, please raise an issue before making any pull r
 - Perhaps instead of actually deleting objects, they should just have a `deleted` flag, to make easy restoration possible. Also consider regrouping the children of restored Groupables if those children haven't already been reassigned somewhere else.
 - Add a new table to store permanent history of add/remove of tags on photos, so that accidents or trolling can be reversed.
 - Currently, the photo clipboard only stores IDs and therefore when we construct the clipboard tray elements we cannot provide more rich information like filename, the user is only presented with a list of IDs which they probably don't care about. Should the localstorage cache some other more user-friendly information?
+- Improve transaction rollbacking. I'm not satisfied with the @transaction decorator because sometimes I want to use exceptions as control flow without them rolling things back. Context managers are good but it's a matter of how abstracted they should be.
 
 ### To do list: User permissions
 Here are some thoughts about the kinds of features that need to exist within the permission system. I don't know how I'll actually manage it just yet. Possibly a `permissions` table in the database with `user_id | permission` where `permission` is some reliably-formatted string.
