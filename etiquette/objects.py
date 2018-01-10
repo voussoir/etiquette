@@ -10,6 +10,7 @@ from . import helpers
 from voussoirkit import bytestring
 from voussoirkit import pathclass
 from voussoirkit import spinal
+from voussoirkit import sqlhelpers
 
 
 class ObjectBase:
@@ -284,7 +285,7 @@ class Album(ObjectBase, GroupableMixin):
             'albumid': self.id,
             'directory': filepath.absolute_path,
         }
-        (qmarks, bindings) = helpers.binding_filler(constants.SQL_ALBUM_DIRECTORY_COLUMNS, data)
+        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_ALBUM_DIRECTORY_COLUMNS, data)
         query = 'INSERT INTO album_associated_directories VALUES(%s)' % qmarks
         cur = self.photodb.sql.cursor()
         cur.execute(query, bindings)

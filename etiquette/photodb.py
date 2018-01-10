@@ -21,6 +21,7 @@ from voussoirkit import cacheclass
 from voussoirkit import expressionmatch
 from voussoirkit import pathclass
 from voussoirkit import spinal
+from voussoirkit import sqlhelpers
 
 
 logging.basicConfig()
@@ -247,7 +248,7 @@ class PDBAlbumMixin:
             'description': description,
         }
 
-        (qmarks, bindings) = helpers.binding_filler(constants.SQL_ALBUM_COLUMNS, data)
+        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_ALBUM_COLUMNS, data)
         query = 'INSERT INTO albums VALUES(%s)' % qmarks
 
         cur.execute(query, bindings)
@@ -297,7 +298,7 @@ class PDBBookmarkMixin:
             'url': url,
         }
 
-        (qmarks, bindings) = helpers.binding_filler(constants.SQL_BOOKMARK_COLUMNS, data)
+        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_BOOKMARK_COLUMNS, data)
         query = 'INSERT INTO bookmarks VALUES(%s)' % qmarks
         cur = self.sql.cursor()
         cur.execute(query, bindings)
@@ -409,7 +410,7 @@ class PDBPhotoMixin:
             'thumbnail': None,
         }
 
-        (qmarks, bindings) = helpers.binding_filler(constants.SQL_PHOTO_COLUMNS, data)
+        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_PHOTO_COLUMNS, data)
         query = 'INSERT INTO photos VALUES(%s)' % qmarks
         cur = self.sql.cursor()
         cur.execute(query, bindings)
@@ -918,7 +919,7 @@ class PDBTagMixin:
             'name': tagname,
             'description': description,
         }
-        (qmarks, bindings) = helpers.binding_filler(constants.SQL_TAG_COLUMNS, data)
+        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_TAG_COLUMNS, data)
         query = 'INSERT INTO tags VALUES(%s)' % qmarks
         cur.execute(query, bindings)
         if commit:
@@ -1086,7 +1087,7 @@ class PDBUserMixin:
             'created': created,
         }
 
-        (qmarks, bindings) = helpers.binding_filler(constants.SQL_USER_COLUMNS, data)
+        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_USER_COLUMNS, data)
         query = 'INSERT INTO users VALUES(%s)' % qmarks
         cur = self.sql.cursor()
         cur.execute(query, bindings)

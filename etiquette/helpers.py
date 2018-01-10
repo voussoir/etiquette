@@ -51,36 +51,6 @@ def album_zip_filenames(album, recursive=True):
 
     return arcnames
 
-def binding_filler(column_names, values, require_all=True):
-    '''
-    Manually aligning question marks and bindings is annoying.
-    Given the table's column names and a dictionary of {column: value},
-    return the question marks and the list of bindings in the right order.
-
-    require_all:
-        If `values` does not contain one of the column names, should we raise
-        an exception?
-        Otherwise, that column will simply receive None.
-
-    Ex:
-    column_names=['id', 'name', 'score'],
-    values={'score': 20, 'id': '1111', 'name': 'James'}
-    ->
-    returns ('?, ?, ?', ['1111', 'James', 20])
-    '''
-    values = values.copy()
-    for column in column_names:
-        if column in values:
-            continue
-        if require_all:
-            raise ValueError('Missing column "%s"' % column)
-        else:
-            values.setdefault(column, None)
-    qmarks = '?' * len(column_names)
-    qmarks = ', '.join(qmarks)
-    bindings = [values[column] for column in column_names]
-    return (qmarks, bindings)
-
 def checkerboard_image(color_1, color_2, image_size, checker_size):
     '''
     Generate a PIL Image with a checkerboard pattern.
