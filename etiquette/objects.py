@@ -248,8 +248,7 @@ class Album(ObjectBase, GroupableMixin):
         self._sum_bytes_recursive = None
         parent = self.parent()
         if parent is not None:
-            parent._sum_photos_recursive = None
-            parent._sum_bytes_recursive = None
+            parent._uncache_sums()
 
     @decorators.required_feature('album.edit')
     def add_child(self, *args, **kwargs):
@@ -301,7 +300,8 @@ class Album(ObjectBase, GroupableMixin):
             raise ValueError('Not the same PhotoDB')
         if self.has_photo(photo):
             return
-        self.photodb.log.debug('Adding photo %s to %s' % (photo, self))
+
+        self.photodb.log.debug('Adding photo %s to %s', photo, self)
         cur = self.photodb.sql.cursor()
         cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
         self._uncache_sums()
@@ -428,6 +428,8 @@ class Album(ObjectBase, GroupableMixin):
     def remove_photo(self, photo, *, commit=True):
         if not self.has_photo(photo):
             return
+
+        self.photodb.log.debug('Removing photo %s from %s', photo, self)
         cur = self.photodb.sql.cursor()
         cur.execute(
             'DELETE FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
@@ -1061,7 +1063,6 @@ class Tag(ObjectBase, GroupableMixin):
     def add_synonym(self, synname, *, commit=True):
         synname = self.photodb.normalize_tagname(synname)
 
-        print(synname, self.name)
         if synname == self.name:
             raise exceptions.CantSynonymSelf()
 
@@ -1071,6 +1072,8 @@ class Tag(ObjectBase, GroupableMixin):
             pass
         else:
             raise exceptions.TagExists(existing_tag)
+
+        self.log.debug('New synonym %s of %s', synname, self.name)
 
         self.photodb._cached_frozen_children = None
         cur = self.photodb.sql.cursor()

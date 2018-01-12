@@ -241,7 +241,7 @@ class PDBAlbumMixin:
 
         cur = self.sql.cursor()
 
-        self.log.debug('New Album: %s' % title)
+        self.log.debug('New Album: %s %s', album_id, title)
         data = {
             'id': album_id,
             'title': title,
@@ -386,7 +386,7 @@ class PDBPhotoMixin:
             else:
                 raise exceptions.PhotoExists(existing)
 
-        self.log.debug('New Photo: %s' % filepath.absolute_path)
+        self.log.debug('New Photo: %s', filepath.absolute_path)
         author_id = self.get_user_id_or_none(author)
 
         created = int(helpers.now())
@@ -911,6 +911,8 @@ class PDBTagMixin:
         else:
             raise exceptions.TagExists(existing_tag)
 
+        self.log.debug('New Tag: %s', tagname)
+
         tagid = self.generate_id('tags')
         self._cached_frozen_children = None
         cur = self.sql.cursor()
@@ -1075,6 +1077,8 @@ class PDBUserMixin:
             pass
         else:
             raise exceptions.UserExists(existing_user)
+
+        self.log.debug('New User: %s', username)
 
         user_id = self.generate_user_id()
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
@@ -1389,7 +1393,6 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             synonym = tag.add_synonym(synonym)
             note = ('new_synonym', '%s+%s' % (tag.name, synonym))
             output_notes.append(note)
-            print('New syn %s' % synonym)
         return output_notes
 
     def generate_id(self, table):
