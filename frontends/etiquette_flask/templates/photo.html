@@ -209,8 +209,10 @@
             {% for album in albums %}
             <li><a href="/album/{{album.id}}">{{album.display_name}}</a></li>
             {% endfor %}
-        {% endif %}
         </ul>
+        {% endif %}
+
+        <a href="/search?created=-{{photo.created}}">&larr;Before</a><span> | </span><a href="/search?created={{photo.created}}-">After&rarr;</a>
     </div>
     <div id="message_area_bg">
         <div id="message_area">
