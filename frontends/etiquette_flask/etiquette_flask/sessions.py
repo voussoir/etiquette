@@ -1,14 +1,15 @@
-import flask
-from flask import request
+import flask; from flask import request
 import functools
-import uuid
+import math
+import os
 import werkzeug.wrappers
 
 from etiquette import helpers
 
-def _generate_token():
-    token = str(uuid.uuid4())
-    #print('MAKE SESSION', token)
+def _generate_token(length=32):
+    randbytes = os.urandom(math.ceil(length / 2))
+    token = ''.join('{:02x}'.format(x) for x in randbytes)
+    token = token[:length]
     return token
 
 def _normalize_token(token):
@@ -25,7 +26,8 @@ class SessionManager:
 
     def get(self, token):
         token = _normalize_token(token)
-        return self.sessions.get(token, None)
+        session = self.sessions.get(token, None)
+        return session
 
     def give_token(self, function):
         '''
