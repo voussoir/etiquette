@@ -764,7 +764,7 @@ class PDBTagMixin:
             if fetch is None:
                 # was not a master tag or synonym
                 raise exceptions.NoSuchTag(tagname)
-            tagname = fetch[constants.SQL_SYN['master']]
+            tagname = fetch[constants.SQL_SYN['mastername']]
 
     def get_tags(self):
         '''
