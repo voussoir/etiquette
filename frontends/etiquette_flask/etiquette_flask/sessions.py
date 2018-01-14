@@ -4,7 +4,7 @@ import math
 import os
 import werkzeug.wrappers
 
-from etiquette import helpers
+import etiquette
 
 def _generate_token(length=32):
     randbytes = os.urandom(math.ceil(length / 2))
@@ -77,7 +77,7 @@ class Session:
         self.user = user
         self.ip_address = request.remote_addr
         self.user_agent = request.headers.get('User-Agent', '')
-        self.last_activity = int(helpers.now())
+        self.last_activity = int(etiquette.helpers.now())
 
     def maintain(self):
-        self.last_activity = int(helpers.now())
+        self.last_activity = int(etiquette.helpers.now())
