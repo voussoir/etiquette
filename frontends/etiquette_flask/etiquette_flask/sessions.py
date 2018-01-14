@@ -15,6 +15,7 @@ def _generate_token(length=32):
 def _normalize_token(token):
     if isinstance(token, flask.Request):
         token = token.cookies.get('etiquette_session', None)
+    return token
 
 
 class SessionManager:
