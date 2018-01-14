@@ -222,6 +222,10 @@ form
             value="{%if search_kwargs['duration']%}{{search_kwargs['duration']}}{%endif%}"
             name="duration" placeholder="Duration: 10:00-20:00">
 
+            <input type="text" class="basic_param"
+            value="{%if search_kwargs['created']%}{{search_kwargs['created']}}{%endif%}"
+            name="created" placeholder="Created: 1483228800-1514764800">
+
             <br>
 
             <span>Other filters</span>
