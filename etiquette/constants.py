@@ -14,85 +14,142 @@ except converter.ffmpeg.FFMpegError:
 
 FILENAME_BADCHARS = '\\/:*?<>|"'
 
-ALLOWED_ORDERBY_COLUMNS = [
-    'extension',
-    'width',
-    'height',
-    'ratio',
-    'area',
-    'duration',
-    'bytes',
-    'created',
-    'tagged_at',
-    'random',
-]
+# Note: Setting user_version pragma in init sequence is safe because it only
+# happens after the out-of-date check occurs, so no chance of accidentally
+# overwriting it.
+DATABASE_VERSION = 8
+DB_INIT = '''
+PRAGMA count_changes = OFF;
+PRAGMA cache_size = 10000;
+PRAGMA user_version = {user_version};
 
-SQL_LASTID_COLUMNS = [
-    'table',
-    'last_id',
-]
-SQL_ALBUM_DIRECTORY_COLUMNS = [
-    'albumid',
-    'directory',
-]
-SQL_ALBUM_COLUMNS = [
-    'id',
-    'title',
-    'description',
-]
-SQL_BOOKMARK_COLUMNS = [
-    'id',
-    'title',
-    'url',
-    'author_id',
-]
-SQL_PHOTO_COLUMNS = [
-    'id',
-    'filepath',
-    'override_filename',
-    'extension',
-    'width',
-    'height',
-    'ratio',
-    'area',
-    'duration',
-    'bytes',
-    'created',
-    'thumbnail',
-    'tagged_at',
-    'author_id',
-]
-SQL_TAG_COLUMNS = [
-    'id',
-    'name',
-    'description',
-]
-SQL_SYN_COLUMNS = [
-    'name',
-    'master',
-]
-SQL_ALBUMGROUP_COLUMNS = [
-    'parentid',
-    'memberid',
-]
-SQL_ALBUMPHOTO_COLUMNS = [
-    'albumid',
-    'photoid',
-]
-SQL_PHOTOTAG_COLUMNS = [
-    'photoid',
-    'tagid',
-]
-SQL_TAGGROUP_COLUMNS = [
-    'parentid',
-    'memberid',
-]
-SQL_USER_COLUMNS = [
-    'id',
-    'username',
-    'password',
-    'created',
-]
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS album_associated_directories(
+    albumid TEXT,
+    directory TEXT COLLATE NOCASE
+);
+CREATE INDEX IF NOT EXISTS index_album_associated_directories_albumid on
+    album_associated_directories(albumid);
+CREATE INDEX IF NOT EXISTS index_album_associated_directories_directory on
+    album_associated_directories(directory);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS album_group_rel(
+    parentid TEXT,
+    memberid TEXT
+);
+CREATE INDEX IF NOT EXISTS index_album_group_rel_parentid on album_group_rel(parentid);
+CREATE INDEX IF NOT EXISTS index_album_group_rel_memberid on album_group_rel(memberid);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS album_photo_rel(
+    albumid TEXT,
+    photoid TEXT
+);
+CREATE INDEX IF NOT EXISTS index_album_photo_rel_albumid on album_photo_rel(albumid);
+CREATE INDEX IF NOT EXISTS index_album_photo_rel_photoid on album_photo_rel(photoid);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS albums(
+    id TEXT,
+    title TEXT,
+    description TEXT
+);
+CREATE INDEX IF NOT EXISTS index_albums_id on albums(id);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS bookmarks(
+    id TEXT,
+    title TEXT,
+    url TEXT,
+    author_id TEXT
+);
+CREATE INDEX IF NOT EXISTS index_bookmarks_id on bookmarks(id);
+CREATE INDEX IF NOT EXISTS index_bookmarks_author on bookmarks(author_id);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS id_numbers(
+    tab TEXT,
+    last_id TEXT
+);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS photo_tag_rel(
+    photoid TEXT,
+    tagid TEXT
+);
+CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid on photo_tag_rel(photoid);
+CREATE INDEX IF NOT EXISTS index_photo_tag_rel_tagid on photo_tag_rel(tagid);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS photos(
+    id TEXT,
+    filepath TEXT COLLATE NOCASE,
+    override_filename TEXT COLLATE NOCASE,
+    extension TEXT,
+    width INT,
+    height INT,
+    ratio REAL,
+    area INT,
+    duration INT,
+    bytes INT,
+    created INT,
+    thumbnail TEXT,
+    tagged_at INT,
+    author_id TEXT
+);
+CREATE INDEX IF NOT EXISTS index_photos_id on photos(id);
+CREATE INDEX IF NOT EXISTS index_photos_filepath on photos(filepath COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS index_photos_override_filename on
+    photos(override_filename COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS index_photos_created on photos(created);
+CREATE INDEX IF NOT EXISTS index_photos_extension on photos(extension);
+CREATE INDEX IF NOT EXISTS index_photos_author_id on photos(author_id);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tag_group_rel(
+    parentid TEXT,
+    memberid TEXT
+);
+CREATE INDEX IF NOT EXISTS index_tag_group_rel_parentid on tag_group_rel(parentid);
+CREATE INDEX IF NOT EXISTS index_tag_group_rel_memberid on tag_group_rel(memberid);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tag_synonyms(
+    name TEXT,
+    mastername TEXT
+);
+CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tags(
+    id TEXT,
+    name TEXT,
+    description TEXT
+);
+CREATE INDEX IF NOT EXISTS index_tags_id on tags(id);
+CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS users(
+    id TEXT,
+    username TEXT COLLATE NOCASE,
+    password BLOB,
+    created INT
+);
+CREATE INDEX IF NOT EXISTS index_users_id on users(id);
+CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE);
+'''.format(user_version=DATABASE_VERSION)
+
+def _extract_column_names(table):
+    statement = DB_INIT.split('CREATE TABLE IF NOT EXISTS %s(' % table)[1]
+    statement = statement.split(');')[0]
+    statement = statement.replace('\n', ' ')
+    columns = statement.split(',')
+    columns = [column.strip().split(' ')[0] for column in columns]
+    return columns
+
+SQL_LASTID_COLUMNS = _extract_column_names('id_numbers')
+SQL_ALBUM_DIRECTORY_COLUMNS = _extract_column_names('album_associated_directories')
+SQL_ALBUM_COLUMNS = _extract_column_names('albums')
+SQL_BOOKMARK_COLUMNS = _extract_column_names('bookmarks')
+SQL_PHOTO_COLUMNS = _extract_column_names('photos')
+SQL_TAG_COLUMNS = _extract_column_names('tags')
+SQL_SYN_COLUMNS = _extract_column_names('tag_synonyms')
+SQL_ALBUMGROUP_COLUMNS = _extract_column_names('album_group_rel')
+SQL_ALBUMPHOTO_COLUMNS = _extract_column_names('album_photo_rel')
+SQL_PHOTOTAG_COLUMNS = _extract_column_names('photo_tag_rel')
+SQL_TAGGROUP_COLUMNS = _extract_column_names('tag_group_rel')
+SQL_USER_COLUMNS = _extract_column_names('users')
 
 _sql_dictify = lambda columns: {key:index for (index, key) in enumerate(columns)}
 SQL_ALBUM = _sql_dictify(SQL_ALBUM_COLUMNS)
@@ -107,6 +164,19 @@ SQL_SYN = _sql_dictify(SQL_SYN_COLUMNS)
 SQL_TAG = _sql_dictify(SQL_TAG_COLUMNS)
 SQL_TAGGROUP = _sql_dictify(SQL_TAGGROUP_COLUMNS)
 SQL_USER = _sql_dictify(SQL_USER_COLUMNS)
+
+ALLOWED_ORDERBY_COLUMNS = [
+    'extension',
+    'width',
+    'height',
+    'ratio',
+    'area',
+    'duration',
+    'bytes',
+    'created',
+    'tagged_at',
+    'random',
+]
 
 
 # Errors and warnings

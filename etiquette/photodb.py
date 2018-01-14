@@ -27,123 +27,6 @@ from voussoirkit import sqlhelpers
 logging.basicConfig()
 
 
-# Note: Setting user_version pragma in init sequence is safe because it only
-# happens after the out-of-date check occurs, so no chance of accidentally
-# overwriting it.
-DATABASE_VERSION = 8
-DB_INIT = '''
-PRAGMA count_changes = OFF;
-PRAGMA cache_size = 10000;
-PRAGMA user_version = {user_version};
-
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS album_associated_directories(
-    albumid TEXT,
-    directory TEXT COLLATE NOCASE
-);
-CREATE INDEX IF NOT EXISTS index_album_associated_directories_albumid on
-    album_associated_directories(albumid);
-CREATE INDEX IF NOT EXISTS index_album_associated_directories_directory on
-    album_associated_directories(directory);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS album_group_rel(
-    parentid TEXT,
-    memberid TEXT
-);
-CREATE INDEX IF NOT EXISTS index_album_group_rel_parentid on album_group_rel(parentid);
-CREATE INDEX IF NOT EXISTS index_album_group_rel_memberid on album_group_rel(memberid);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS album_photo_rel(
-    albumid TEXT,
-    photoid TEXT
-);
-CREATE INDEX IF NOT EXISTS index_album_photo_rel_albumid on album_photo_rel(albumid);
-CREATE INDEX IF NOT EXISTS index_album_photo_rel_photoid on album_photo_rel(photoid);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS albums(
-    id TEXT,
-    title TEXT,
-    description TEXT
-);
-CREATE INDEX IF NOT EXISTS index_albums_id on albums(id);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS bookmarks(
-    id TEXT,
-    title TEXT,
-    url TEXT,
-    author_id TEXT
-);
-CREATE INDEX IF NOT EXISTS index_bookmarks_id on bookmarks(id);
-CREATE INDEX IF NOT EXISTS index_bookmarks_author on bookmarks(author_id);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS id_numbers(
-    tab TEXT,
-    last_id TEXT
-);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS photo_tag_rel(
-    photoid TEXT,
-    tagid TEXT
-);
-CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid on photo_tag_rel(photoid);
-CREATE INDEX IF NOT EXISTS index_photo_tag_rel_tagid on photo_tag_rel(tagid);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS photos(
-    id TEXT,
-    filepath TEXT COLLATE NOCASE,
-    override_filename TEXT COLLATE NOCASE,
-    extension TEXT,
-    width INT,
-    height INT,
-    ratio REAL,
-    area INT,
-    duration INT,
-    bytes INT,
-    created INT,
-    thumbnail TEXT,
-    tagged_at INT,
-    author_id TEXT
-);
-CREATE INDEX IF NOT EXISTS index_photos_id on photos(id);
-CREATE INDEX IF NOT EXISTS index_photos_filepath on photos(filepath COLLATE NOCASE);
-CREATE INDEX IF NOT EXISTS index_photos_override_filename on
-    photos(override_filename COLLATE NOCASE);
-CREATE INDEX IF NOT EXISTS index_photos_created on photos(created);
-CREATE INDEX IF NOT EXISTS index_photos_extension on photos(extension);
-CREATE INDEX IF NOT EXISTS index_photos_author_id on photos(author_id);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS tag_group_rel(
-    parentid TEXT,
-    memberid TEXT
-);
-CREATE INDEX IF NOT EXISTS index_tag_group_rel_parentid on tag_group_rel(parentid);
-CREATE INDEX IF NOT EXISTS index_tag_group_rel_memberid on tag_group_rel(memberid);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS tag_synonyms(
-    name TEXT,
-    mastername TEXT
-);
-CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS tags(
-    id TEXT,
-    name TEXT,
-    description TEXT
-);
-CREATE INDEX IF NOT EXISTS index_tags_id on tags(id);
-CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS users(
-    id TEXT,
-    username TEXT COLLATE NOCASE,
-    password BLOB,
-    created INT
-);
-CREATE INDEX IF NOT EXISTS index_users_id on users(id);
-CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE);
-'''.format(user_version=DATABASE_VERSION)
-
-
 def _helper_filenamefilter(subject, terms):
     basename = subject.lower()
     return all(term in basename for term in terms)
@@ -1143,10 +1026,14 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         if existing_database:
             cur.execute('PRAGMA user_version')
             existing_version = cur.fetchone()[0]
-            if existing_version != DATABASE_VERSION:
-                raise exceptions.DatabaseOutOfDate(current=existing_version, new=DATABASE_VERSION)
+            if existing_version != constants.DATABASE_VERSION:
+                exc = exceptions.DatabaseOutOfDate(
+                    current=existing_version,
+                    new=constants.DATABASE_VERSION,
+                )
+                raise exc
 
-        statements = DB_INIT.split(';')
+        statements = constants.DB_INIT.split(';')
         for statement in statements:
             cur.execute(statement)
         self.sql.commit()
