@@ -51,7 +51,7 @@ class SessionManager:
         def wrapped(*args, **kwargs):
             # Inject new token so the function doesn't know the difference
             token = request.cookies.get('etiquette_session', None)
-            if not token:
+            if not token or token not in self.sessions:
                 token = _generate_token()
                 request.cookies = dict(request.cookies)
                 request.cookies['etiquette_session'] = token
