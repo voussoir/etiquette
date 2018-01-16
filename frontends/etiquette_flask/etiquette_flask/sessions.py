@@ -13,8 +13,16 @@ def _generate_token(length=32):
     return token
 
 def _normalize_token(token):
-    if isinstance(token, flask.Request):
-        token = token.cookies.get('etiquette_session', None)
+    if isinstance(token, (flask.Request, werkzeug.wrappers.Request, werkzeug.local.LocalProxy)):
+        request = token
+        token = request.cookies.get('etiquette_session', None)
+        if token is None:
+            message = 'Cannot normalize token for request with no etiquette_session header.'
+            raise TypeError(message, request)
+    elif isinstance(token, str):
+        pass
+    else:
+        raise TypeError('Unsupported token normalization', type(token))
     return token
 
 
