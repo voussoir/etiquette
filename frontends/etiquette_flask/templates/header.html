@@ -3,7 +3,7 @@
     <a class="header_element" href="/">Etiquette</a>
     <a class="header_element" href="/search">Search</a>
     <a class="header_element" href="/tags">Tags</a>
-    {% if session %}
+    {% if session.user %}
     <a class="header_element" href="/user/{{session.user.username}}">{{session.user.username}}</a>
     <a class="header_element" href="/logout" style="flex:0">Logout</a>
     {% else %}

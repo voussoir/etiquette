@@ -6,6 +6,8 @@ import werkzeug.wrappers
 
 import etiquette
 
+SESSION_MAX_AGE = 86400
+
 def _generate_token(length=32):
     randbytes = os.urandom(math.ceil(length / 2))
     token = ''.join('{:02x}'.format(x) for x in randbytes)
@@ -35,7 +37,7 @@ class SessionManager:
 
     def get(self, token):
         token = _normalize_token(token)
-        session = self.sessions.get(token, None)
+        session = self.sessions[token]
         return session
 
     def give_token(self, function):
@@ -54,6 +56,14 @@ class SessionManager:
                 request.cookies = dict(request.cookies)
                 request.cookies['etiquette_session'] = token
 
+            try:
+                session = self.get(token)
+            except KeyError:
+                session = Session(request, user=None)
+                self.add(session)
+            else:
+                session.maintain()
+
             response = function(*args, **kwargs)
             if not isinstance(response, (flask.Response, werkzeug.wrappers.Response)):
                 response = flask.Response(response)
@@ -64,16 +74,14 @@ class SessionManager:
                 if headerkey == 'Set-Cookie' and value.startswith('etiquette_session='):
                     break
             else:
-                response.set_cookie('etiquette_session', value=token, max_age=86400)
-                self.maintain(token)
+                response.set_cookie(
+                    'etiquette_session',
+                    value=session.token,
+                    max_age=SESSION_MAX_AGE,
+                )
 
             return response
         return wrapped
-
-    def maintain(self, token):
-        session = self.get(token)
-        if session:
-            session.maintain()
 
     def remove(self, token):
         token = _normalize_token(token)
@@ -87,6 +95,12 @@ class Session:
         self.ip_address = request.remote_addr
         self.user_agent = request.headers.get('User-Agent', '')
         self.last_activity = int(etiquette.helpers.now())
+
+    def __repr__(self):
+        if self.user:
+            return 'Session %s for user %s' % (self.token, self.user)
+        else:
+            return 'Session %s for anonymous' % self.token
 
     def maintain(self):
         self.last_activity = int(etiquette.helpers.now())

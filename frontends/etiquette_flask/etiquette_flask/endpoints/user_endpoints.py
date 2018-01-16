@@ -51,7 +51,8 @@ def get_login():
 @session_manager.give_token
 @decorators.required_fields(['username', 'password'])
 def post_login():
-    if session_manager.get(request):
+    session = session_manager.get(request)
+    if session.user:
         exc = etiquette.exceptions.AlreadySignedIn()
         response = etiquette.jsonify.exception(exc)
         return jsonify.make_json_response(response, status=403)
@@ -94,7 +95,8 @@ def get_register():
 @decorators.catch_etiquette_exception
 @decorators.required_fields(['username', 'password_1', 'password_2'])
 def post_register():
-    if session_manager.get(request):
+    session = session_manager.get(request)
+    if session.user:
         exc = etiquette.exceptions.AlreadySignedIn()
         response = etiquette.jsonify.exception(exc)
         return jsonify.make_json_response(response, status=403)

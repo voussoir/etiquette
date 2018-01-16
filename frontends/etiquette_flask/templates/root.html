@@ -38,7 +38,7 @@ body, .nice_link
     <a class="nice_link" href="/tags">Browse tags</a>
     <a class="nice_link" href="/albums">Browse albums</a>
     <a class="nice_link" href="/bookmarks">Bookmarks</a>
-    {% if session %}
+    {% if session.user %}
     <a class="nice_link" href="/user/{{session.user.username}}">{{session.user.username}}</a>
     {% else %}
     <a class="nice_link" href="/login">Log in</a>
