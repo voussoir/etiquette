@@ -12,6 +12,11 @@ import gevent.pywsgi
 import gevent.wsgi
 import sys
 
+
+import werkzeug.contrib.fixers
+etiquette_flask.site.wsgi_app = werkzeug.contrib.fixers.ProxyFix(etiquette_flask.site.wsgi_app)
+
+
 if len(sys.argv) == 2:
     port = int(sys.argv[1])
 else:
