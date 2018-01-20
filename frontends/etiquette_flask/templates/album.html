@@ -131,10 +131,13 @@ function _paste_unpaste_photo_clipboard(add_or_remove)
     var url = "/album/{{album.id}}/" + add_or_remove;
     var data = new FormData();
     data.append("photo_id", photo_ids);
-    var callback = function(){
-        photo_clipboard.clear();
-        save_photo_clipboard();
-        location.reload();
+    var callback = function(response){
+        if (response["_status"] === 200)
+        {
+            photo_clipboard.clear();
+            save_photo_clipboard();
+            location.reload();
+        }
     };
     post(url, data, callback);
 }
