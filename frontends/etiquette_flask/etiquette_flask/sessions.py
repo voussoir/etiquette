@@ -38,6 +38,8 @@ class SessionManager:
     def get(self, token):
         token = _normalize_token(token)
         session = self.sessions[token]
+        if session.expired():
+            raise KeyError(token)
         return session
 
     def give_token(self, function):
@@ -92,7 +94,7 @@ class Session:
         self.user = user
         self.ip_address = request.remote_addr
         self.user_agent = request.headers.get('User-Agent', '')
-        self.last_activity = int(etiquette.helpers.now())
+        self.last_activity = etiquette.helpers.now()
 
     def __repr__(self):
         if self.user:
@@ -100,5 +102,10 @@ class Session:
         else:
             return 'Session %s for anonymous' % self.token
 
+    def expired(self):
+        now = etiquette.helpers.now()
+        age = now - self.last_activity
+        return age > SESSION_MAX_AGE
+
     def maintain(self):
-        self.last_activity = int(etiquette.helpers.now())
+        self.last_activity = etiquette.helpers.now()
