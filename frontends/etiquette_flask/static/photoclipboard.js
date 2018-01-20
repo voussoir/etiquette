@@ -1,7 +1,7 @@
 var photo_clipboard = new Set();
 
-////////////////////////////////////////////////////////////////////////////////
-//--LOAD-SAVE-----------------------------------------------------------------//
+// Load save ///////////////////////////////////////////////////////////////////////////////////////
+
 function load_photo_clipboard(event)
 {
     console.log("Loading photo clipboard");
@@ -29,10 +29,14 @@ function save_photo_clipboard()
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-//*-CARD MANAGEMENT-----------------------------------------------------------//
+// Card management /////////////////////////////////////////////////////////////////////////////////
+
 function apply_check(photo_card)
 {
+    /*
+    Given a photo card div, set its checkbox to the correct value based on
+    whether the clipboard contains this card's ID.
+    */
     var checkbox = photo_card.getElementsByClassName("photo_card_selector_checkbox")[0];
     if (photo_clipboard.has(photo_card.dataset.id))
     {
@@ -44,8 +48,12 @@ function apply_check(photo_card)
     }
 }
 
-function update_checked_cards()
+function apply_check_all()
 {
+    /*
+    Run through all the photo cards on the page and set their checkbox to the
+    correct value.
+    */
     var photo_divs = Array.from(document.getElementsByClassName("photo_card"));
     photo_divs.forEach(apply_check);
 }
@@ -53,6 +61,13 @@ function update_checked_cards()
 var previous_photo_select;
 function on_photo_select(event)
 {
+    /*
+    Select or unselect the clicked photo, with support for Shift-click to action
+    everything between the previous click and this one inclusively.
+
+    Those middle items will be set to the same state as the new state of the
+    clicked item.
+    */
     if (event.target.checked)
     {
         action = function(photo_div)
@@ -105,10 +120,13 @@ function on_photo_select(event)
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-//--TRAY MANAGEMENT-----------------------------------------------------------//
+// Tray management /////////////////////////////////////////////////////////////////////////////////
+
 function toggle_clipboard_tray_collapsed()
 {
+    /*
+    Show or hide the clipboard.
+    */
     var tray_body = document.getElementById("clipboard_tray_body");
     if (tray_body.classList.contains("hidden") && photo_clipboard.size > 0)
     {
@@ -123,6 +141,9 @@ function toggle_clipboard_tray_collapsed()
 
 function on_tray_delete_button(event)
 {
+    /*
+    Remove the clicked row from the clipboard.
+    */
     var clipboard_line = event.target.parentElement;
     var photo_id = clipboard_line.dataset.id;
     photo_clipboard.delete(photo_id);
@@ -135,6 +156,10 @@ function on_tray_delete_button(event)
 
 function update_clipboard_tray()
 {
+    /*
+    Update the clipboard's title bar to the correct number of items and rebuild
+    the rows if the tray is open.
+    */
     var tray_button = document.getElementById("clipboard_tray_expandbutton");
     if (tray_button !== null)
     {
@@ -172,8 +197,11 @@ function update_clipboard_tray()
 
 function on_storage()
 {
+    /*
+    Receive storage events from other tabs and update our state to match.
+    */
     load_photo_clipboard();
-    update_checked_cards();
+    apply_check_all();
     update_clipboard_tray();
 }
 function on_pageload()
