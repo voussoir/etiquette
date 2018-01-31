@@ -163,7 +163,7 @@ form
                 {% for tagname in search_kwargs[key] %}
                 <li class="search_builder_{{tagtype}}_inputted">
                     <span class="tag_object">{{tagname}}</span><!--
-                    --><button class="remove_tag_button"
+                    --><button class="remove_tag_button red_button"
                     onclick="remove_searchtag(this, '{{tagname}}', inputted_{{tagtype}});"></button>
                 </li>
                 {% endfor %}
@@ -351,7 +351,8 @@ function add_searchtag(box, value, inputted_list, li_class)
         new_span.innerHTML = value;
 
         var new_delbutton = document.createElement("button")
-        new_delbutton.className = "remove_tag_button";
+        new_delbutton.classList.add("remove_tag_button");
+        new_delbutton.classList.add("red_button");
         new_delbutton.onclick = function(){remove_searchtag(new_delbutton, value, inputted_list)};
 
         new_li.appendChild(new_span);
