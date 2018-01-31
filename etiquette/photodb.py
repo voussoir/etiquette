@@ -1017,9 +1017,9 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             self.sql = sqlite3.connect(':memory:')
             existing_database = False
         else:
-            self.database_file = self.data_directory.with_child(constants.DEFAULT_DBNAME)
-            existing_database = self.database_file.exists
-            self.sql = sqlite3.connect(self.database_file.absolute_path)
+            self.database_filepath = self.data_directory.with_child(constants.DEFAULT_DBNAME)
+            existing_database = self.database_filepath.exists
+            self.sql = sqlite3.connect(self.database_filepath.absolute_path)
 
         cur = self.sql.cursor()
 
