@@ -272,7 +272,7 @@ class PDBPhotoMixin:
         self.log.debug('New Photo: %s', filepath.absolute_path)
         author_id = self.get_user_id_or_none(author)
 
-        created = int(helpers.now())
+        created = helpers.now()
         photo_id = self.generate_id('photos')
 
         data = {
@@ -965,7 +965,7 @@ class PDBUserMixin:
 
         user_id = self.generate_user_id()
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
-        created = int(helpers.now())
+        created = helpers.now()
 
         data = {
             'id': user_id,

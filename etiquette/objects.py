@@ -613,7 +613,7 @@ class Photo(ObjectBase):
                 self.remove_tag(parent)
 
         self.photodb.log.debug('Applying tag {tag:s} to photo {pho:s}'.format(tag=tag, pho=self))
-        now = int(helpers.now())
+        now = helpers.now()
         cur = self.photodb.sql.cursor()
         cur.execute('INSERT INTO photo_tag_rel VALUES(?, ?)', [self.id, tag.id])
         cur.execute('UPDATE photos SET tagged_at = ? WHERE id == ?', [now, self.id])
@@ -925,7 +925,7 @@ class Photo(ObjectBase):
                 'DELETE FROM photo_tag_rel WHERE photoid == ? AND tagid == ?',
                 [self.id, tag.id]
             )
-        now = int(helpers.now())
+        now = helpers.now()
         cur.execute('UPDATE photos SET tagged_at = ? WHERE id == ?', [now, self.id])
         if commit:
             self.photodb.log.debug('Committing - remove photo tag')
