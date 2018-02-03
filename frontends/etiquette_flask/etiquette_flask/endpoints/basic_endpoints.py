@@ -1,6 +1,7 @@
 import flask; from flask import request
+import random
 
-from . import common
+from .. import common
 
 site = common.site
 session_manager = common.session_manager

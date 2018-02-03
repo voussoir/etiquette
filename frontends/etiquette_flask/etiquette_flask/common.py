@@ -7,11 +7,11 @@ import etiquette
 
 from voussoirkit import pathclass
 
-from .. import jsonify
-from .. import sessions
+from . import jsonify
+from . import sessions
 
 
-root_dir = pathclass.Path(__file__).parent.parent.parent
+root_dir = pathclass.Path(__file__).parent.parent
 
 TEMPLATE_DIR = root_dir.with_child('templates')
 STATIC_DIR = root_dir.with_child('static')
