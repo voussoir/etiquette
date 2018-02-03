@@ -996,6 +996,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
 
         self.ephemeral = ephemeral
 
+        # DATA DIR PREP
         if data_directory is None:
             if self.ephemeral:
                 # In addition to the data_dir as a pathclass object, keep the
@@ -1007,10 +1008,12 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         elif self.ephemeral:
             raise exceptions.NotExclusive(['data_directory', 'ephemeral'])
 
-        # DATA DIR PREP
         data_directory = helpers.remove_path_badchars(data_directory, allowed=':/\\')
         self.data_directory = pathclass.Path(data_directory)
         os.makedirs(self.data_directory.absolute_path, exist_ok=True)
+
+        self.log = logging.getLogger('etiquette:%s' % self.data_directory.absolute_path)
+        self.log.setLevel(logging.DEBUG)
 
         # DATABASE
         if self.ephemeral:
@@ -1021,48 +1024,21 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             existing_database = self.database_filepath.exists
             self.sql = sqlite3.connect(self.database_filepath.absolute_path)
 
-        cur = self.sql.cursor()
-
         if existing_database:
-            cur.execute('PRAGMA user_version')
-            existing_version = cur.fetchone()[0]
-            if existing_version != constants.DATABASE_VERSION:
-                exc = exceptions.DatabaseOutOfDate(
-                    current=existing_version,
-                    new=constants.DATABASE_VERSION,
-                )
-                raise exc
-
-        statements = constants.DB_INIT.split(';')
-        for statement in statements:
-            cur.execute(statement)
-        self.sql.commit()
-
-        # CONFIG
-        self.config = copy.deepcopy(constants.DEFAULT_CONFIGURATION)
-        self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
-        user_config_exists = self.config_filepath.is_file
-        if user_config_exists:
-            with open(self.config_filepath.absolute_path, 'r') as handle:
-                user_config = json.load(handle)
-            my_keys = helpers.recursive_dict_keys(self.config)
-            stored_keys = helpers.recursive_dict_keys(user_config)
-            needs_dump = not my_keys.issubset(stored_keys)
-            helpers.recursive_dict_update(self.config, user_config)
+            self._check_version()
         else:
-            needs_dump = True
-
-        if (not user_config_exists) or needs_dump:
-            with open(self.config_filepath.absolute_path, 'w') as handle:
-                handle.write(json.dumps(self.config, indent=4, sort_keys=True))
+            self._first_time_setup()
 
         # THUMBNAIL DIRECTORY
         self.thumbnail_directory = self.data_directory.with_child(constants.DEFAULT_THUMBDIR)
         os.makedirs(self.thumbnail_directory.absolute_path, exist_ok=True)
 
-        # OTHER
-        self.log = logging.getLogger('etiquette:%s' % self.data_directory.absolute_path)
+        # CONFIG
+        self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
+        self.config = self._load_config()
         self.log.setLevel(self.config['log_level'])
+
+        # OTHER
 
         self.on_commit_queue = []
         self._cached_frozen_children = None
@@ -1079,6 +1055,44 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             'tag': self._tag_cache,
             'user': self._user_cache,
         }
+
+    def _check_version(self):
+        cur = self.sql.cursor()
+
+        cur.execute('PRAGMA user_version')
+        existing_version = cur.fetchone()[0]
+        if existing_version != constants.DATABASE_VERSION:
+            exc = exceptions.DatabaseOutOfDate(
+                current=existing_version,
+                new=constants.DATABASE_VERSION,
+            )
+            raise exc
+
+    def _first_time_setup(self):
+        self.log.debug('Running first-time setup.')
+        cur = self.sql.cursor()
+
+        statements = constants.DB_INIT.split(';')
+        for statement in statements:
+            cur.execute(statement)
+        self.sql.commit()
+
+    def _load_config(self):
+        config = copy.deepcopy(constants.DEFAULT_CONFIGURATION)
+        user_config_exists = self.config_filepath.is_file
+        needs_dump = False
+        if user_config_exists:
+            with open(self.config_filepath.absolute_path, 'r') as handle:
+                user_config = json.load(handle)
+            my_keys = helpers.recursive_dict_keys(config)
+            stored_keys = helpers.recursive_dict_keys(user_config)
+            needs_dump = not my_keys.issubset(stored_keys)
+            helpers.recursive_dict_update(config, user_config)
+
+        if (not user_config_exists) or needs_dump:
+            with open(self.config_filepath.absolute_path, 'w') as handle:
+                handle.write(json.dumps(config, indent=4, sort_keys=True))
+        return config
 
     def __del__(self):
         self.close()
