@@ -1087,7 +1087,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             my_keys = helpers.recursive_dict_keys(config)
             stored_keys = helpers.recursive_dict_keys(user_config)
             needs_dump = not my_keys.issubset(stored_keys)
-            helpers.recursive_dict_update(config, user_config)
+            helpers.recursive_dict_update(target=config, supply=user_config)
 
         if (not user_config_exists) or needs_dump:
             with open(self.config_filepath.absolute_path, 'w') as handle:

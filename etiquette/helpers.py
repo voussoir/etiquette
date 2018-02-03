@@ -231,20 +231,20 @@ def read_filebytes(filepath, range_min, range_max, chunk_size=2 ** 20):
             yield chunk
             sent_amount += len(chunk)
 
-def recursive_dict_update(d1, d2):
+def recursive_dict_update(target, supply):
     '''
-    Update d1 using d2, but when the value is a dictionary update the insides
-    instead of replacing the dictionary itself.
+    Update target using supply, but when the value is a dictionary update the
+    insides instead of replacing the dictionary itself.
     '''
-    for (key, value) in d2.items():
+    for (key, value) in supply.items():
         if isinstance(value, dict):
-            existing = d1.get(key, None)
+            existing = target.get(key, None)
             if existing is None:
-                d1[key] = value
+                target[key] = value
             else:
                 recursive_dict_update(existing, value)
         else:
-            d1[key] = value
+            target[key] = value
 
 def recursive_dict_keys(d):
     '''
