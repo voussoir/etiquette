@@ -596,7 +596,6 @@ class PDBPhotoMixin:
                 tag_forbids,
                 frozen_children,
             )
-            #print('mmf accept:', mmf_results)
         else:
             mmf_results = None
 
@@ -628,7 +627,6 @@ class PDBPhotoMixin:
                 )
             )
             if not ext_okay:
-                #print('Failed extension')
                 continue
 
             ext_fail = (
@@ -639,46 +637,21 @@ class PDBPhotoMixin:
                 )
             )
             if ext_fail:
-                #print('Failed extension_not')
                 continue
 
             if mimetype and photo.simple_mimetype not in mimetype:
-                #print('Failed mimetype')
                 continue
-
-            # if authors and photo.author_id not in authors:
-            #     #print('Failed author')
-            #     continue
 
             if filename_tree and not filename_tree.evaluate(photo.basename.lower()):
-                #print('Failed filename')
                 continue
-
-            # if any(
-            #         fetch[constants.SQL_PHOTO[key]] is None or
-            #         fetch[constants.SQL_PHOTO[key]] > value
-            #         for (key, value) in maximums.items()
-            #     ):
-            #     #print('Failed maximums')
-            #     continue
-
-            # if any(
-            #         fetch[constants.SQL_PHOTO[key]] is None or
-            #         fetch[constants.SQL_PHOTO[key]] < value
-            #         for (key, value) in minimums.items()
-            #     ):
-            #     #print('Failed minimums')
-            #     continue
 
             if (has_tags is not None) or is_tagsearch:
                 photo_tags = set(photo.tags())
 
                 if has_tags is False and len(photo_tags) > 0:
-                    #print('Failed has_tags=False')
                     continue
 
                 if has_tags is True and len(photo_tags) == 0:
-                    #print('Failed has_tags=True')
                     continue
 
                 if tag_expression:
@@ -687,23 +660,7 @@ class PDBPhotoMixin:
                         match_function=tag_match_function,
                     )
                     if not success:
-                        #print('Failed tag expression')
                         continue
-
-                # elif is_must_may_forbid:
-                #     if photo.id not in mmf_results:
-                #         #print('Failed tag mmf')
-                #         continue
-                #     success = searchfilter_must_may_forbid(
-                #         photo_tags=photo_tags,
-                #         tag_musts=tag_musts,
-                #         tag_mays=tag_mays,
-                #         tag_forbids=tag_forbids,
-                #         frozen_children=frozen_children,
-                #     )
-                #     if not success:
-                #         #print('Failed tag mmf')
-                #         continue
 
             if offset > 0:
                 offset -= 1
