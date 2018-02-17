@@ -1183,7 +1183,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
                 item = self.get_tag(name=name)
                 note = ('existing_tag', item.qualified_name())
             except exceptions.NoSuchTag:
-                item = self.new_tag(name=name)
+                item = self.new_tag(name)
                 note = ('new_tag', item.qualified_name())
             output_notes.append(note)
             return item
