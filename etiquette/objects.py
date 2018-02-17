@@ -65,13 +65,10 @@ class GroupableMixin:
         # Groupables are only allowed to have 1 parent.
         # Unlike photos which can exist in multiple albums.
         cur = self.photodb.sql.cursor()
-        cur.execute(
-            'SELECT * FROM %s WHERE memberid == ?' % self.group_table,
-            [member.id]
-        )
+        cur.execute('SELECT parentid FROM %s WHERE memberid == ?' % self.group_table, [member.id])
         fetch = cur.fetchone()
         if fetch is not None:
-            parent_id = fetch[self.group_sql_index['parentid']]
+            parent_id = fetch[0]
             if parent_id == self.id:
                 return
             that_group = self.group_getter(id=parent_id)
@@ -81,26 +78,26 @@ class GroupableMixin:
             if my_ancestor == member:
                 raise exceptions.RecursiveGrouping(member=member, group=self)
 
+        data = {
+            'parentid': self.id,
+            'memberid': member.id,
+        }
+        self.photodb.sql_insert(table=self.group_table, data=data, commit=False)
+
         self.photodb._cached_frozen_children = None
-        cur.execute(
-            'INSERT INTO %s VALUES(?, ?)' % self.group_table,
-            [self.id, member.id]
-        )
+
         if commit:
             self.photodb.log.debug('Committing - add to group')
             self.photodb.commit()
 
     def children(self):
         cur = self.photodb.sql.cursor()
-        
-        cur.execute(
-            'SELECT * FROM %s WHERE parentid == ?' % self.group_table,
-            [self.id]
-        )
-        fetch = cur.fetchall()
+
+        cur.execute('SELECT memberid FROM %s WHERE parentid == ?' % self.group_table, [self.id])
+        fetches = cur.fetchall()
         results = []
-        for f in fetch:
-            memberid = f[self.group_sql_index['memberid']]
+        for fetch in fetches:
+            memberid = fetch[0]
             child = self.group_getter(id=memberid)
             results.append(child)
         if isinstance(self, Tag):
@@ -284,10 +281,7 @@ class Album(ObjectBase, GroupableMixin):
             'albumid': self.id,
             'directory': filepath.absolute_path,
         }
-        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_ALBUM_DIRECTORY_COLUMNS, data)
-        query = 'INSERT INTO album_associated_directories VALUES(%s)' % qmarks
-        cur = self.photodb.sql.cursor()
-        cur.execute(query, bindings)
+        self.photodb.sql_insert(table='album_associated_directories', data=data, commit=False)
 
         if commit:
             self.photodb.log.debug('Committing - add associated directory')
@@ -302,8 +296,12 @@ class Album(ObjectBase, GroupableMixin):
             return
 
         self.photodb.log.debug('Adding photo %s to %s', photo, self)
-        cur = self.photodb.sql.cursor()
-        cur.execute('INSERT INTO album_photo_rel VALUES(?, ?)', [self.id, photo.id])
+        data = {
+            'albumid': self.id,
+            'photoid': photo.id,
+        }
+        self.photodb.sql_insert(table='album_photo_rel', data=data, commit=False)
+
         self._uncache_sums()
         if commit:
             self.photodb.log.debug('Committing - add photo to album')
@@ -370,17 +368,21 @@ class Album(ObjectBase, GroupableMixin):
         '''
         Change the title or description. Leave None to keep current value.
         '''
-        if title is None:
-            title = self.title
-        if description is None:
-            description = self.description
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'UPDATE albums SET title=?, description=? WHERE id == ?',
-            [title, description, self.id]
-        )
-        self.title = title
-        self.description = description
+        if title is None and description is None:
+            return
+
+        if title is not None:
+            self.title = title
+
+        if description is not None:
+            self.description = description
+
+        data = {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+        }
+        self.photodb.sql_update(table='albums', pairs=data, where_key='id', commit=False)
 
         if commit:
             self.photodb.log.debug('Committing - edit album')
@@ -413,13 +415,10 @@ class Album(ObjectBase, GroupableMixin):
         photos = []
         generator = helpers.select_generator(
             self.photodb.sql,
-            'SELECT * FROM album_photo_rel WHERE albumid == ?',
+            'SELECT photoid FROM album_photo_rel WHERE albumid == ?',
             [self.id]
         )
-        for photo in generator:
-            photoid = photo[constants.SQL_ALBUMPHOTO['photoid']]
-            photo = self.photodb.get_photo(photoid)
-            photos.append(photo)
+        photos = [self.photodb.get_photo(id=fetch[0]) for fetch in generator]
         photos.sort(key=lambda x: x.basename.lower())
         return photos
 
@@ -517,11 +516,13 @@ class Bookmark(ObjectBase):
                 raise ValueError('Need a URL')
             self.url = url
 
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'UPDATE bookmarks SET title = ?, url = ? WHERE id == ?',
-            [self.title, self.url, self.id]
-        )
+        data = {
+            'id': self.id,
+            'title': self.title,
+            'url': self.url,
+        }
+        self.photodb.sql_update(table='bookmarks', pairs=data, where_key='id', commit=False)
+
         if commit:
             self.photodb.log.debug('Committing - edit bookmark')
             self.photodb.commit()
@@ -613,10 +614,18 @@ class Photo(ObjectBase):
                 self.remove_tag(parent)
 
         self.photodb.log.debug('Applying tag {tag:s} to photo {pho:s}'.format(tag=tag, pho=self))
-        now = helpers.now()
-        cur = self.photodb.sql.cursor()
-        cur.execute('INSERT INTO photo_tag_rel VALUES(?, ?)', [self.id, tag.id])
-        cur.execute('UPDATE photos SET tagged_at = ? WHERE id == ?', [now, self.id])
+
+        data = {
+            'photoid': self.id,
+            'tagid': tag.id
+        }
+        self.photodb.sql_insert(table='photo_tag_rel', data=data, commit=False)
+        data = {
+            'id': self.id,
+            'tagged_at': helpers.now(),
+        }
+        self.photodb.sql_update(table='photos', data=data, where_key='id', commit=False)
+
         if commit:
             self.photodb.log.debug('Committing - add photo tag')
             self.photodb.commit()
@@ -628,8 +637,8 @@ class Photo(ObjectBase):
         '''
         cur = self.photodb.sql.cursor()
         cur.execute('SELECT albumid FROM album_photo_rel WHERE photoid == ?', [self.id])
-        fetch = cur.fetchall()
-        albums = [self.photodb.get_album(f[0]) for f in fetch]
+        fetches = cur.fetchall()
+        albums = [self.photodb.get_album(id=fetch[0]) for fetch in fetches]
         return albums
 
     @property
@@ -764,11 +773,11 @@ class Photo(ObjectBase):
 
 
         if return_filepath != self.thumbnail:
-            cur = self.photodb.sql.cursor()
-            cur.execute(
-                'UPDATE photos SET thumbnail = ? WHERE id == ?',
-                [return_filepath, self.id]
-            )
+            data = {
+                'id': self.id,
+                'thumbnail': return_filepath,
+            }
+            self.photodb.sql_update(table='photos', pairs=data, where_key='id', commit=False)
             self.thumbnail = return_filepath
 
         self._uncache()
@@ -810,8 +819,7 @@ class Photo(ObjectBase):
         Create the filepath that should be the location of our thumbnail.
         '''
         chunked_id = helpers.chunk_sequence(self.id, 3)
-        basename = chunked_id[-1]
-        folder = chunked_id[:-1]
+        (folder, basename) = (chunked_id[:-1], chunked_id[-1])
         folder = os.sep.join(folder)
         folder = self.photodb.thumbnail_directory.join(folder)
         if folder:
@@ -867,11 +875,17 @@ class Photo(ObjectBase):
             self.area = self.width * self.height
             self.ratio = round(self.width / self.height, 2)
 
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'UPDATE photos SET width=?, height=?, area=?, ratio=?, duration=?, bytes=? WHERE id==?',
-            [self.width, self.height, self.area, self.ratio, self.duration, self.bytes, self.id],
-        )
+        data = {
+            'id': self.id,
+            'width': self.width,
+            'height': self.height,
+            'area': self.area,
+            'ratio': self.ratio,
+            'duration': self.duration,
+            'bytes': self.bytes,
+        }
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id', commit=False)
+
         self._uncache()
         if commit:
             self.photodb.log.debug('Committing - reload metadata')
@@ -893,7 +907,7 @@ class Photo(ObjectBase):
         new_filepath = pathclass.Path(new_filepath)
         if not new_filepath.is_file:
             raise FileNotFoundError(new_filepath.absolute_path)
-        cur = self.photodb.sql.cursor()
+
         if not allow_duplicates:
             try:
                 existing = self.photodb.get_photo_by_path(new_filepath)
@@ -902,10 +916,13 @@ class Photo(ObjectBase):
                 pass
             else:
                 raise exceptions.PhotoExists(existing)
-        cur.execute(
-            'UPDATE photos SET filepath = ? WHERE id == ?',
-            [new_filepath.absolute_path, self.id]
-        )
+
+        data = {
+            'id': self.id,
+            'filepath': new_filepath.absolute_path,
+        }
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id', commit=False)
+
         self._uncache()
         if commit:
             self.photodb.log.debug('Committing - relocate photo')
@@ -925,8 +942,13 @@ class Photo(ObjectBase):
                 'DELETE FROM photo_tag_rel WHERE photoid == ? AND tagid == ?',
                 [self.id, tag.id]
             )
-        now = helpers.now()
-        cur.execute('UPDATE photos SET tagged_at = ? WHERE id == ?', [now, self.id])
+
+        data = {
+            'id': self.id,
+            'tagged_at': helpers.now(),
+        }
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id', commit=False)
+
         if commit:
             self.photodb.log.debug('Committing - remove photo tag')
             self.photodb.commit()
@@ -1006,16 +1028,12 @@ class Photo(ObjectBase):
         '''
         Return the tags assigned to this Photo.
         '''
-        tags = []
         generator = helpers.select_generator(
             self.photodb.sql,
-            'SELECT * FROM photo_tag_rel WHERE photoid == ?',
+            'SELECT tagid FROM photo_tag_rel WHERE photoid == ?',
             [self.id]
         )
-        for tag in generator:
-            tagid = tag[constants.SQL_PHOTOTAG['tagid']]
-            tag = self.photodb.get_tag(id=tagid)
-            tags.append(tag)
+        tags = [self.photodb.get_tag(id=fetch[0]) for fetch in generator]
         return tags
 
 
@@ -1076,8 +1094,12 @@ class Tag(ObjectBase, GroupableMixin):
         self.log.debug('New synonym %s of %s', synname, self.name)
 
         self.photodb._cached_frozen_children = None
-        cur = self.photodb.sql.cursor()
-        cur.execute('INSERT INTO tag_synonyms VALUES(?, ?)', [synname, self.name])
+
+        data = {
+            'name': synname,
+            'mastername': self.name,
+        }
+        self.photodb.sql_insert(table='tag_synonyms', data=data, commit=False)
 
         if commit:
             self.photodb.log.debug('Committing - add synonym')
@@ -1109,22 +1131,21 @@ class Tag(ObjectBase, GroupableMixin):
 
         # Iterate over all photos with the old tag, and swap them to the new tag
         # if they don't already have it.
-        generator = helpers.select_generator(
-            self.photodb.sql,
-            'SELECT * FROM photo_tag_rel WHERE tagid == ?',
-            [self.id]
-        )
-        for relationship in generator:
-            photoid = relationship[constants.SQL_PHOTOTAG['photoid']]
+        cur.execute('SELECT photoid FROM photo_tag_rel WHERE tagid == ?', [self.id])
+        fetches = cur.fetchall()
+
+        for fetch in fetches:
+            photoid = fetch[0]
             cur.execute(
                 'SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid == ?',
                 [photoid, mastertag.id]
             )
             if cur.fetchone() is None:
-                cur.execute(
-                    'INSERT INTO photo_tag_rel VALUES(?, ?)',
-                    [photoid, mastertag.id]
-                )
+                data = {
+                    'photoid': photoid,
+                    'tagid': mastertag.id,
+                }
+                self.photodb.sql_insert(table='photo_tag_rel', data=data, commit=False)
 
         # Then delete the relationships with the old tag
         self.delete()
@@ -1157,13 +1178,16 @@ class Tag(ObjectBase, GroupableMixin):
         Change the description. Leave None to keep current value.
         '''
         if description is None:
-            description = self.description
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'UPDATE tags SET description = ? WHERE id == ?',
-            [description, self.id]
-        )
+            return
+
         self.description = description
+
+        data = {
+            'id': self.id,
+            'description': self.description
+        }
+        self.photodb.sql_update(table='tags', pairs=data, where_key='id', commit=False)
+
         self._uncache()
         if commit:
             self.photodb.log.debug('Committing - edit tag')
@@ -1259,8 +1283,14 @@ class Tag(ObjectBase, GroupableMixin):
 
         self._cached_qualified_name = None
         self.photodb._cached_frozen_children = None
+
+        data = {
+            'id': self.id,
+            'name': new_name,
+        }
+        self.photodb.sql_update(table='tags', pairs=data, where_key='id', commit=False)
+
         cur = self.photodb.sql.cursor()
-        cur.execute('UPDATE tags SET name = ? WHERE id == ?', [new_name, self.id])
         if apply_to_synonyms:
             cur.execute(
                 'UPDATE tag_synonyms SET mastername = ? WHERE mastername = ?',
@@ -1276,10 +1306,9 @@ class Tag(ObjectBase, GroupableMixin):
     def synonyms(self):
         cur = self.photodb.sql.cursor()
         cur.execute('SELECT name FROM tag_synonyms WHERE mastername == ?', [self.name])
-        fetch = cur.fetchall()
-        fetch = [f[0] for f in fetch]
-        fetch.sort()
-        return fetch
+        fetches = [fetch[0] for fetch in cur.fetchall()]
+        fetches.sort()
+        return fetches
 
 
 class User(ObjectBase):

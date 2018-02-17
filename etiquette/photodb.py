@@ -122,19 +122,14 @@ class PDBAlbumMixin:
         if not isinstance(description, str):
             raise TypeError('Description must be string, not %s' % type(description))
 
-        cur = self.sql.cursor()
-
         self.log.debug('New Album: %s %s', album_id, title)
         data = {
             'id': album_id,
             'title': title,
             'description': description,
         }
+        self.sql_insert(table='albums', data=data, commit=False)
 
-        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_ALBUM_COLUMNS, data)
-        query = 'INSERT INTO albums VALUES(%s)' % qmarks
-
-        cur.execute(query, bindings)
         album = objects.Album(self, data)
 
         if associated_directory is not None:
@@ -180,11 +175,7 @@ class PDBBookmarkMixin:
             'title': title,
             'url': url,
         }
-
-        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_BOOKMARK_COLUMNS, data)
-        query = 'INSERT INTO bookmarks VALUES(%s)' % qmarks
-        cur = self.sql.cursor()
-        cur.execute(query, bindings)
+        self.sql_insert(table='bookmarks', data=data, commit=False)
 
         bookmark = objects.Bookmark(self, data)
         if commit:
@@ -292,11 +283,8 @@ class PDBPhotoMixin:
             'duration': None,
             'thumbnail': None,
         }
+        self.sql_insert(table='photos', data=data, commit=False)
 
-        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_PHOTO_COLUMNS, data)
-        query = 'INSERT INTO photos VALUES(%s)' % qmarks
-        cur = self.sql.cursor()
-        cur.execute(query, bindings)
         photo = objects.Photo(self, data)
 
         if do_metadata:
@@ -716,12 +704,12 @@ class PDBTagMixin:
                 return objects.Tag(self, fetch)
 
             # ...or resolve the synonym and try again.
-            cur.execute('SELECT * FROM tag_synonyms WHERE name == ?', [tagname])
+            cur.execute('SELECT mastername FROM tag_synonyms WHERE name == ?', [tagname])
             fetch = cur.fetchone()
             if fetch is None:
                 # was not a master tag or synonym
                 raise exceptions.NoSuchTag(tagname)
-            tagname = fetch[constants.SQL_SYN['mastername']]
+            tagname = fetch[0]
 
     def get_tags(self):
         '''
@@ -755,15 +743,13 @@ class PDBTagMixin:
 
         tagid = self.generate_id('tags')
         self._cached_frozen_children = None
-        cur = self.sql.cursor()
         data = {
             'id': tagid,
             'name': tagname,
             'description': description,
         }
-        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_TAG_COLUMNS, data)
-        query = 'INSERT INTO tags VALUES(%s)' % qmarks
-        cur.execute(query, bindings)
+        self.sql_insert(table='tags', data=data, commit=False)
+
         if commit:
             self.log.debug('Committing - new_tag')
             self.commit()
@@ -930,11 +916,7 @@ class PDBUserMixin:
             'password': hashed_password,
             'created': created,
         }
-
-        (qmarks, bindings) = sqlhelpers.insert_filler(constants.SQL_USER_COLUMNS, data)
-        query = 'INSERT INTO users VALUES(%s)' % qmarks
-        cur = self.sql.cursor()
-        cur.execute(query, bindings)
+        self.sql_insert(table='users', data=data, commit=False)
 
         if commit:
             self.log.debug('Committing - register user')
@@ -1265,7 +1247,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             raise ValueError('Invalid table requested: %s.', table)
 
         cur = self.sql.cursor()
-        cur.execute('SELECT * FROM id_numbers WHERE tab == ?', [table])
+        cur.execute('SELECT last_id FROM id_numbers WHERE tab == ?', [table])
         fetch = cur.fetchone()
         if fetch is None:
             # Register new value
@@ -1273,7 +1255,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             do_insert = True
         else:
             # Use database value
-            new_id_int = int(fetch[constants.SQL_LASTID['last_id']]) + 1
+            new_id_int = int(fetch[0]) + 1
             do_insert = False
 
         new_id = str(new_id_int).rjust(self.config['id_length'], '0')
@@ -1330,10 +1312,9 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         cur.execute(query, bindings)
 
         if commit:
-            self.sql.commit()
+            self.commit()
 
     def sql_update(self, table, pairs, where_key, *, commit=True):
-        column_names = constants.SQL_COLUMNS[table]
         cur = self.sql.cursor()
 
         (query, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
@@ -1341,7 +1322,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         cur.execute(query, bindings)
 
         if commit:
-            self.sql.commit()
+            self.commit()
 
 
 _THING_CLASSES = {
