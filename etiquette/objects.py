@@ -1036,10 +1036,12 @@ class Photo(ObjectBase):
         self.__reinit__()
 
     def set_override_filename(self, new_filename, *, commit=True):
-        if not new_filename:
-            new_filename = None
-        else:
-            new_filename = helpers.remove_path_badchars(new_filename)
+        if new_filename is not None:
+            cleaned = helpers.remove_path_badchars(new_filename)
+            cleaned = cleaned.strip()
+            if not cleaned:
+                raise ValueError('"%s" is not valid.' % new_filename)
+            new_filename = cleaned
 
         data = {
             'id': self.id,
@@ -1050,6 +1052,8 @@ class Photo(ObjectBase):
         if commit:
             self.photodb.log.debug('Committing - set override filename')
             self.photodb.commit()
+
+        self.__reinit__()
 
     def sorted_tags(self):
         tags = self.get_tags()
