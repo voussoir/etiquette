@@ -635,15 +635,6 @@ class Photo(ObjectBase):
             self.photodb.commit()
         return tag
 
-    @property
-    def author(self):
-        '''
-        Return the User object who owns this photo, or None if it is unassigned.
-        '''
-        if self.author_id is None:
-            return None
-        return self.photodb.get_user(id=self.author_id)
-
     def bytestring(self):
         if self.bytes is not None:
             return bytestring.bytestring(self.bytes)
@@ -781,6 +772,14 @@ class Photo(ObjectBase):
 
         self.__reinit__()
         return self.thumbnail
+
+    def get_author(self):
+        '''
+        Return the User object who owns this photo, or None if it is unassigned.
+        '''
+        if self.author_id is None:
+            return None
+        return self.photodb.get_user(id=self.author_id)
 
     def get_containing_albums(self):
         '''
