@@ -16,7 +16,7 @@ def album(a, minimal=False):
             j['parent'] = album(parent, minimal=True)
         else:
             j['parent'] = None
-        j['sub_albums'] = [child.id for child in a.children()]
+        j['sub_albums'] = [child.id for child in a.get_children()]
 
     return j
 

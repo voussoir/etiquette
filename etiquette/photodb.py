@@ -325,7 +325,7 @@ class PDBPhotoMixin:
     def purge_empty_albums(self, *, commit=True):
         albums = self.get_albums()
         for album in albums:
-            if album.children() or album.photos():
+            if album.get_children() or album.photos():
                 continue
             album.delete(commit=False)
         if commit:

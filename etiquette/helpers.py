@@ -29,7 +29,7 @@ def album_zip_directories(album, recursive=True):
 
     directories[album] = root_folder
     if recursive:
-        for child_album in album.children():
+        for child_album in album.get_children():
             child_directories = album_zip_directories(child_album, recursive=True)
             for (child_album, child_directory) in child_directories.items():
                 child_directory = os.path.join(root_folder, child_directory)

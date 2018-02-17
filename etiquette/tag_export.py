@@ -87,7 +87,7 @@ def qualified_names(tags):
 
 def stdout(tags, depth=0):
     for tag in tags:
-        children = tag.children()
+        children = tag.get_children()
         synonyms = tag.synonyms()
 
         pad = '    ' * depth

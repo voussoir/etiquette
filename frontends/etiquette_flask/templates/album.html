@@ -74,7 +74,7 @@ p
         <ul>
             <li>You are here</li>
             <ul>
-                {% set sub_albums = album.children() %}
+                {% set sub_albums = album.get_children() %}
                 {% for sub_album in sub_albums|sort(attribute='title') %}
                 <li><a href="/album/{{sub_album.id}}{{viewparam}}">{{sub_album.display_name}}</a></li>
                 {% endfor %}

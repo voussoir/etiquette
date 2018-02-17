@@ -94,22 +94,6 @@ class GroupableMixin:
             self.photodb.log.debug('Committing - add to group')
             self.photodb.commit()
 
-    def children(self):
-        cur = self.photodb.sql.cursor()
-
-        cur.execute('SELECT memberid FROM %s WHERE parentid == ?' % self.group_table, [self.id])
-        fetches = cur.fetchall()
-        results = []
-        for fetch in fetches:
-            memberid = fetch[0]
-            child = self.group_getter(id=memberid)
-            results.append(child)
-        if isinstance(self, Tag):
-            results.sort(key=lambda x: x.name)
-        else:
-            results.sort(key=lambda x: x.id)
-        return results
-
     @decorators.transaction
     def delete(self, *, delete_children=False, commit=True):
         '''
@@ -127,7 +111,7 @@ class GroupableMixin:
         self.photodb._cached_frozen_children = None
         cur = self.photodb.sql.cursor()
         if delete_children:
-            for child in self.children():
+            for child in self.get_children():
                 child.delete(delete_children=delete_children, commit=False)
         else:
             # Lift children
@@ -155,6 +139,22 @@ class GroupableMixin:
         if commit:
             self.photodb.log.debug('Committing - delete tag')
             self.photodb.commit()
+
+    def get_children(self):
+        cur = self.photodb.sql.cursor()
+
+        cur.execute('SELECT memberid FROM %s WHERE parentid == ?' % self.group_table, [self.id])
+        fetches = cur.fetchall()
+        results = []
+        for fetch in fetches:
+            memberid = fetch[0]
+            child = self.group_getter(id=memberid)
+            results.append(child)
+        if isinstance(self, Tag):
+            results.sort(key=lambda x: x.name)
+        else:
+            results.sort(key=lambda x: x.id)
+        return results
 
     def get_parent(self):
         '''
@@ -204,7 +204,7 @@ class GroupableMixin:
 
     def walk_children(self):
         yield self
-        for child in self.children():
+        for child in self.get_children():
             yield from child.walk_children()
 
     def walk_parents(self):
@@ -453,7 +453,7 @@ class Album(ObjectBase, GroupableMixin):
         if recurse:
             if self._sum_bytes_recursive is None:
                 #print(self, 'sumbytes cache miss recursive')
-                child_bytes = sum(child.sum_bytes(recurse=True) for child in self.children())
+                child_bytes = sum(child.sum_bytes(recurse=True) for child in self.get_children())
                 self._sum_bytes_recursive = self._sum_bytes_local + child_bytes
             total = self._sum_bytes_recursive
 
@@ -467,7 +467,7 @@ class Album(ObjectBase, GroupableMixin):
             #print(self, 'sumphotos cache miss')
             total = 0
             total += sum(1 for x in self.photos())
-            total += sum(child.sum_photos() for child in self.children())
+            total += sum(child.sum_photos() for child in self.get_children())
             self._sum_photos_recursive = total
 
         return self._sum_photos_recursive
