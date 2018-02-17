@@ -135,7 +135,7 @@ body
                 --><button class="remove_tag_button red_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
             </li>
             {% if include_synonyms %}
-                {% for synonym in tag.synonyms() %}
+                {% for synonym in tag.get_synonyms() %}
                 <li>
                     {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
                     {{tag_object.tag_object(tag, innertext=qualified_name + '+' + synonym, link='search')}}<!--

@@ -17,7 +17,7 @@ def easybake(tags):
     for tag in tags:
         qualname = tag.qualified_name()
         lines.append(qualname)
-        lines.extend(qualname + '+' + syn for syn in tag.synonyms())
+        lines.extend(qualname + '+' + syn for syn in tag.get_synonyms())
     return '\n'.join(lines)
 
 def flat_dict(tags):
@@ -41,7 +41,7 @@ def flat_dict(tags):
         for child in tag.walk_children():
             children = list(child.walk_children())
             result[child] = children
-            for synonym in child.synonyms():
+            for synonym in child.get_synonyms():
                 result[synonym] = children
     return result
 
@@ -81,14 +81,14 @@ def qualified_names(tags):
     for tag in tags:
         qualname = tag.qualified_name()
         results[tag.name] = qualname
-        for synonym in tag.synonyms():
+        for synonym in tag.get_synonyms():
             results[synonym] = qualname
     return results
 
 def stdout(tags, depth=0):
     for tag in tags:
         children = tag.get_children()
-        synonyms = tag.synonyms()
+        synonyms = tag.get_synonyms()
 
         pad = '    ' * depth
         print(pad + tag.name)

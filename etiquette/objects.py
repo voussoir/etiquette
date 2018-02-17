@@ -1197,6 +1197,13 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - edit tag')
             self.photodb.commit()
 
+    def get_synonyms(self):
+        cur = self.photodb.sql.cursor()
+        cur.execute('SELECT name FROM tag_synonyms WHERE mastername == ?', [self.name])
+        fetches = [fetch[0] for fetch in cur.fetchall()]
+        fetches.sort()
+        return fetches
+
     @decorators.required_feature('tag.edit')
     def join_group(self, *args, **kwargs):
         return super().join_group(*args, **kwargs)
@@ -1306,13 +1313,6 @@ class Tag(ObjectBase, GroupableMixin):
         if commit:
             self.photodb.log.debug('Committing - rename tag')
             self.photodb.commit()
-
-    def synonyms(self):
-        cur = self.photodb.sql.cursor()
-        cur.execute('SELECT name FROM tag_synonyms WHERE mastername == ?', [self.name])
-        fetches = [fetch[0] for fetch in cur.fetchall()]
-        fetches.sort()
-        return fetches
 
 
 class User(ObjectBase):

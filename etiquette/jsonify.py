@@ -70,7 +70,7 @@ def tag(t, include_synonyms=False):
         'qualified_name': t.qualified_name(),
     }
     if include_synonyms:
-        j['synonyms'] = list(t.synonyms())
+        j['synonyms'] = list(t.get_synonyms())
     return j
 
 def user(u):
