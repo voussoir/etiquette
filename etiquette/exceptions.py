@@ -72,28 +72,31 @@ class NoSuchUser(NoSuch):
 
 
 # EXISTS
-class AlbumExists(EtiquetteException):
+class Exists(EtiquetteException):
+    pass
+
+class AlbumExists(Exists):
     error_message = 'Album "{}" already exists.'
     def __init__(self, album):
         self.album = album
         EtiquetteException.__init__(self, album)
 
-class GroupExists(EtiquetteException):
+class GroupExists(Exists):
     error_message = '{member} already in group {group}'
 
-class PhotoExists(EtiquetteException):
+class PhotoExists(Exists):
     error_message = 'Photo "{}" already exists.'
     def __init__(self, photo):
         self.photo = photo
         EtiquetteException.__init__(self, photo)
 
-class TagExists(EtiquetteException):
+class TagExists(Exists):
     error_message = 'Tag "{}" already exists.'
     def __init__(self, tag):
         self.tag = tag
         EtiquetteException.__init__(self, tag)
 
-class UserExists(EtiquetteException):
+class UserExists(Exists):
     error_message = 'User "{}" already exists.'
     def __init__(self, user):
         self.user = user
@@ -121,16 +124,22 @@ class TagTooShort(EtiquetteException):
 class AlreadySignedIn(EtiquetteException):
     error_message = 'You\'re already signed in.'
 
-class InvalidUsernameChars(EtiquetteException):
+class InvalidPassword(EtiquetteException):
+    error_message = 'Password is invalid.'
+
+class InvalidUsername(EtiquetteException):
+    error_message = 'Username "{username}" is invalid.'
+
+class InvalidUsernameChars(InvalidUsername):
     error_message = 'Username "{username}" contains invalid characters: {badchars}.'
 
-class PasswordTooShort(EtiquetteException):
+class PasswordTooShort(InvalidPassword):
     error_message = 'Password is shorter than the minimum of {min_length}.'
 
-class UsernameTooLong(EtiquetteException):
+class UsernameTooLong(InvalidUsername):
     error_message = 'Username "{username}" is longer than maximum of {max_length}.'
 
-class UsernameTooShort(EtiquetteException):
+class UsernameTooShort(InvalidUsername):
     error_message = 'Username "{username}" is shorter than minimum of {min_length}.'
 
 class WrongLogin(EtiquetteException):
