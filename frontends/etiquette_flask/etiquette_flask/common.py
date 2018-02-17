@@ -77,7 +77,7 @@ def P_photo(photo_id):
 
 @P_wrapper
 def P_tag(tagname):
-    return P.get_tag(tagname)
+    return P.get_tag(name=tagname)
 
 @P_wrapper
 def P_user(username):

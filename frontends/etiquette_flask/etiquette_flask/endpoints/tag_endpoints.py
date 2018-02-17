@@ -130,7 +130,7 @@ def post_tag_delete():
     '''
     tagname = request.form['tagname']
     tagname = tagname.split('.')[-1].split('+')[0]
-    tag = common.P.get_tag(tagname)
+    tag = common.P.get_tag(name=tagname)
 
     tag.delete()
     response = {'action': 'delete_tag', 'tagname': tag.name}

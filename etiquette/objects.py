@@ -322,7 +322,7 @@ class Album(ObjectBase, GroupableMixin):
             If True, add the tag to photos contained in sub-albums.
             Otherwise, only local photos.
         '''
-        tag = self.photodb.get_tag(tag)
+        tag = self.photodb.get_tag(name=tag)
         if nested_children:
             photos = self.walk_photos()
         else:
@@ -596,7 +596,7 @@ class Photo(ObjectBase):
     @decorators.required_feature('photo.add_remove_tag')
     @decorators.transaction
     def add_tag(self, tag, *, commit=True):
-        tag = self.photodb.get_tag(tag)
+        tag = self.photodb.get_tag(name=tag)
 
         existing = self.has_tag(tag, check_children=False)
         if existing:
@@ -800,7 +800,7 @@ class Photo(ObjectBase):
         check_children:
             If True, children of the requested tag are accepted.
         '''
-        tag = self.photodb.get_tag(tag)
+        tag = self.photodb.get_tag(name=tag)
 
         if check_children:
             tags = tag.walk_children()
@@ -935,7 +935,7 @@ class Photo(ObjectBase):
     @decorators.required_feature('photo.add_remove_tag')
     @decorators.transaction
     def remove_tag(self, tag, *, commit=True):
-        tag = self.photodb.get_tag(tag)
+        tag = self.photodb.get_tag(name=tag)
 
         self.photodb.log.debug('Removing tag {t} from photo {p}'.format(t=repr(tag), p=repr(self)))
         tags = list(tag.walk_children())
@@ -1089,7 +1089,7 @@ class Tag(ObjectBase, GroupableMixin):
             raise exceptions.CantSynonymSelf()
 
         try:
-            existing_tag = self.photodb.get_tag_by_name(synname)
+            existing_tag = self.photodb.get_tag(name=synname)
         except exceptions.NoSuchTag:
             pass
         else:
@@ -1122,7 +1122,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         Good for when two tags need to be merged under a single name.
         '''
-        mastertag = self.photodb.get_tag(mastertag)
+        mastertag = self.photodb.get_tag(name=mastertag)
 
         # Migrate the old tag's synonyms to the new one
         # UPDATE is safe for this operation because there is no chance of duplicates.
@@ -1279,7 +1279,7 @@ class Tag(ObjectBase, GroupableMixin):
             return
 
         try:
-            existing_tag = self.photodb.get_tag(new_name)
+            existing_tag = self.photodb.get_tag(name=new_name)
         except exceptions.NoSuchTag:
             pass
         else:

@@ -293,7 +293,7 @@ class PDBPhotoMixin:
             photo.generate_thumbnail(commit=False)
 
         tags = tags or []
-        tags = [self.get_tag(tag) for tag in tags]
+        tags = [self.get_tag(name=tag) for tag in tags]
         for tag in tags:
             photo.add_tag(tag, commit=False)
 
@@ -790,9 +790,6 @@ class PDBUserMixin:
             raise exceptions.PasswordTooShort(min_length=self.config['user']['min_password_length'])
 
     def _assert_valid_username(self, username):
-        '''
-        If something is wrong, raise an exception. Otherwise do nothing.
-        '''
         if len(username) < self.config['user']['min_length']:
             raise exceptions.UsernameTooShort(
                 username=username,
@@ -1183,10 +1180,10 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         def create_or_get(name):
             #print('cog', name)
             try:
-                item = self.get_tag(name)
+                item = self.get_tag(name=name)
                 note = ('existing_tag', item.qualified_name())
             except exceptions.NoSuchTag:
-                item = self.new_tag(name)
+                item = self.new_tag(name=name)
                 note = ('new_tag', item.qualified_name())
             output_notes.append(note)
             return item
@@ -1221,7 +1218,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             raise exceptions.EasyBakeError('No tag supplied')
 
         if rename_to:
-            tag = self.get_tag(tag)
+            tag = self.get_tag(name=tag)
             old_name = tag.name
             tag.rename(rename_to)
             note = ('rename', '%s=%s' % (old_name, tag.name))
