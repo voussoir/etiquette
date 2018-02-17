@@ -544,13 +544,13 @@ class Photo(ObjectBase):
         if isinstance(db_row, (list, tuple)):
             db_row = dict(zip(constants.SQL_COLUMNS['photos'], db_row))
 
-        self.real_filepath = helpers.remove_path_badchars(db_row['filepath'], allowed=':\\/')
-        self.real_path = pathclass.Path(self.real_filepath)
+        self.real_path = db_row['filepath']
+        self.real_path = helpers.remove_path_badchars(self.real_path, allowed=':\\/')
+        self.real_path = pathclass.Path(self.real_path)
 
         self.id = db_row['id']
         self.created = db_row['created']
         self.author_id = db_row['author_id']
-        self.filepath = db_row['override_filename'] or self.real_path.absolute_path
         self.basename = db_row['override_filename'] or self.real_path.basename
         self.extension = db_row['extension']
         self.tagged_at = db_row['tagged_at']
@@ -573,7 +573,7 @@ class Photo(ObjectBase):
         else:
             self.bitrate = None
 
-        self.mimetype = helpers.get_mimetype(self.real_filepath)
+        self.mimetype = helpers.get_mimetype(self.real_path.basename)
         if self.mimetype is None:
             self.simple_mimetype = None
         else:
@@ -694,9 +694,9 @@ class Photo(ObjectBase):
         return_filepath = None
 
         if self.simple_mimetype == 'image':
-            self.photodb.log.debug('Thumbnailing %s' % self.real_filepath)
+            self.photodb.log.debug('Thumbnailing %s' % self.real_path.absolute_path)
             try:
-                image = PIL.Image.open(self.real_filepath)
+                image = PIL.Image.open(self.real_path.absolute_path)
             except (OSError, ValueError):
                 pass
             else:
@@ -728,7 +728,7 @@ class Photo(ObjectBase):
 
         elif self.simple_mimetype == 'video' and constants.ffmpeg:
             #print('video')
-            probe = constants.ffmpeg.probe(self.real_filepath)
+            probe = constants.ffmpeg.probe(self.real_path.absolute_path)
             try:
                 if probe.video:
                     size = helpers.fit_into_bounds(
@@ -747,7 +747,7 @@ class Photo(ObjectBase):
                         else:
                             timestamp = 2
                     constants.ffmpeg.thumbnail(
-                        self.real_filepath,
+                        self.real_path.absolute_path,
                         outfile=hopeful_filepath,
                         quality=2,
                         size=size,
@@ -851,7 +851,7 @@ class Photo(ObjectBase):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
         '''
-        self.bytes = os.path.getsize(self.real_filepath)
+        self.bytes = self.real_path.size
         self.width = None
         self.height = None
         self.area = None
@@ -862,7 +862,7 @@ class Photo(ObjectBase):
 
         if self.simple_mimetype == 'image':
             try:
-                image = PIL.Image.open(self.real_filepath)
+                image = PIL.Image.open(self.real_path.absolute_path)
             except (OSError, ValueError):
                 self.photodb.log.debug('Failed to read image data for {photo:r}'.format(photo=self))
             else:
@@ -872,7 +872,7 @@ class Photo(ObjectBase):
 
         elif self.simple_mimetype == 'video' and constants.ffmpeg:
             try:
-                probe = constants.ffmpeg.probe(self.real_filepath)
+                probe = constants.ffmpeg.probe(self.real_path.absolute_path)
                 if probe and probe.video:
                     self.duration = probe.format.duration or probe.video.duration
                     self.width = probe.video.video_width
@@ -882,7 +882,7 @@ class Photo(ObjectBase):
 
         elif self.simple_mimetype == 'audio' and constants.ffmpeg:
             try:
-                probe = constants.ffmpeg.probe(self.real_filepath)
+                probe = constants.ffmpeg.probe(self.real_path.absolute_path)
                 if probe and probe.audio:
                     self.duration = probe.audio.duration
             except Exception:

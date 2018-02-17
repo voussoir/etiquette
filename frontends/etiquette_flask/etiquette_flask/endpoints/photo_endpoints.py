@@ -49,11 +49,11 @@ def get_file(photo_id):
 
         download_as = etiquette.helpers.remove_path_badchars(download_as)
         download_as = urllib.parse.quote(download_as)
-        response = flask.make_response(common.send_file(photo.real_filepath))
+        response = flask.make_response(common.send_file(photo.real_path.absolute_path))
         response.headers['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % download_as
         return response
     else:
-        return common.send_file(photo.real_filepath, override_mimetype=photo.mimetype)
+        return common.send_file(photo.real_path.absolute_path, override_mimetype=photo.mimetype)
 
 @site.route('/thumbnail/<photo_id>')
 def get_thumbnail(photo_id):

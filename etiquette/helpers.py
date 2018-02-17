@@ -49,10 +49,11 @@ def album_zip_filenames(album, recursive=True):
     for (album, directory) in directories.items():
         photos = album.get_photos()
         for photo in photos:
-            if photo.real_filepath in arcnames:
+            filepath = photo.real_path.absolute_path
+            if filepath in arcnames:
                 continue
             photo_name = '%s - %s' % (photo.id, photo.basename)
-            arcnames[photo.real_filepath] = os.path.join(directory, photo_name)
+            arcnames[filepath] = os.path.join(directory, photo_name)
 
     return arcnames
 

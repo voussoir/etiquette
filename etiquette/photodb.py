@@ -314,7 +314,7 @@ class PDBPhotoMixin:
             photos = self.get_photos_by_recent()
 
         for photo in photos:
-            if os.path.exists(photo.real_filepath):
+            if photo.real_path.exists:
                 continue
             photo.delete(commit=False)
         if commit:
