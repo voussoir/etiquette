@@ -335,16 +335,6 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - add tag to all')
             self.photodb.commit()
 
-    def associated_directories(self):
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'SELECT directory FROM album_associated_directories WHERE albumid == ?',
-            [self.id]
-        )
-        directories = [x[0] for x in cur.fetchall()]
-        directories = [pathclass.Path(x) for x in directories]
-        return directories
-
     @decorators.required_feature('album.edit')
     @decorators.transaction
     def delete(self, *, delete_children=False, commit=True):
@@ -391,6 +381,16 @@ class Album(ObjectBase, GroupableMixin):
         if commit:
             self.photodb.log.debug('Committing - edit album')
             self.photodb.commit()
+
+    def get_associated_directories(self):
+        cur = self.photodb.sql.cursor()
+        cur.execute(
+            'SELECT directory FROM album_associated_directories WHERE albumid == ?',
+            [self.id]
+        )
+        directories = [x[0] for x in cur.fetchall()]
+        directories = [pathclass.Path(x) for x in directories]
+        return directories
 
     def get_photos(self):
         photos = []
