@@ -1035,6 +1035,22 @@ class Photo(ObjectBase):
 
         self.__reinit__()
 
+    def set_override_filename(self, new_filename, *, commit=True):
+        if not new_filename:
+            new_filename = None
+        else:
+            new_filename = helpers.remove_path_badchars(new_filename)
+
+        data = {
+            'id': self.id,
+            'override_filename': new_filename,
+        }
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+
+        if commit:
+            self.photodb.log.debug('Committing - set override filename')
+            self.photodb.commit()
+
     def sorted_tags(self):
         tags = self.get_tags()
         tags.sort(key=lambda x: x.qualified_name())
