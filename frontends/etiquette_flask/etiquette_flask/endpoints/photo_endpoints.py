@@ -15,14 +15,14 @@ session_manager = common.session_manager
 
 # Individual photos ################################################################################
 
-@site.route('/photo/<photo_id>', methods=['GET'])
+@site.route('/photo/<photo_id>')
 @session_manager.give_token
 def get_photo_html(photo_id):
     photo = common.P_photo(photo_id, response_type='html')
     session = session_manager.get(request)
     return flask.render_template('photo.html', photo=photo, session=session)
 
-@site.route('/photo/<photo_id>.json', methods=['GET'])
+@site.route('/photo/<photo_id>.json')
 @session_manager.give_token
 def get_photo_json(photo_id):
     photo = common.P_photo(photo_id, response_type='json')

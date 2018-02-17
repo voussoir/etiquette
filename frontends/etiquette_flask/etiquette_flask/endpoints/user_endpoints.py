@@ -13,14 +13,14 @@ session_manager = common.session_manager
 
 # Individual users #################################################################################
 
-@site.route('/user/<username>', methods=['GET'])
+@site.route('/user/<username>')
 @session_manager.give_token
 def get_user_html(username):
     user = common.P_user(username, response_type='html')
     session = session_manager.get(request)
     return flask.render_template('user.html', user=user, session=session)
 
-@site.route('/user/<username>.json', methods=['GET'])
+@site.route('/user/<username>.json')
 @session_manager.give_token
 def get_user_json(username):
     user = common.P_user(username, response_type='json')
