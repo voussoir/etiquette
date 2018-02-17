@@ -878,13 +878,13 @@ class PDBUserMixin:
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
 
-        stored_password = fetch[constants.SQL_USER['password']]
+        user = objects.User(self, fetch)
 
-        success = bcrypt.checkpw(password, stored_password)
+        success = bcrypt.checkpw(password, user.password_hash)
         if not success:
             raise exceptions.WrongLogin()
 
-        return objects.User(self, fetch)
+        return user
 
     @decorators.required_feature('user.new')
     @decorators.transaction

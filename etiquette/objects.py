@@ -1293,6 +1293,7 @@ class User(ObjectBase):
         self.id = db_row['id']
         self.username = db_row['username']
         self.created = db_row['created']
+        self.password_hash = db_row['password']
 
     def __repr__(self):
         rep = 'User:{id}:{username}'.format(id=self.id, username=self.username)
