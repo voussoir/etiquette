@@ -10,7 +10,7 @@ def album(a, minimal=False):
         'title': a.title,
     }
     if not minimal:
-        j['photos'] = [photo(p) for p in a.photos()]
+        j['photos'] = [photo(p) for p in a.get_photos()]
         parent = a.get_parent()
         if parent is not None:
             j['parent'] = album(parent, minimal=True)

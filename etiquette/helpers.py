@@ -47,7 +47,7 @@ def album_zip_filenames(album, recursive=True):
     arcnames = {}
     directories = album_zip_directories(album, recursive=recursive)
     for (album, directory) in directories.items():
-        photos = album.photos()
+        photos = album.get_photos()
         for photo in photos:
             if photo.real_filepath in arcnames:
                 continue

@@ -326,7 +326,7 @@ class Album(ObjectBase, GroupableMixin):
         if nested_children:
             photos = self.walk_photos()
         else:
-            photos = self.photos()
+            photos = self.get_photos()
 
         for photo in photos:
             photo.add_tag(tag, commit=False)
@@ -392,6 +392,17 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - edit album')
             self.photodb.commit()
 
+    def get_photos(self):
+        photos = []
+        generator = helpers.select_generator(
+            self.photodb.sql,
+            'SELECT photoid FROM album_photo_rel WHERE albumid == ?',
+            [self.id]
+        )
+        photos = [self.photodb.get_photo(id=fetch[0]) for fetch in generator]
+        photos.sort(key=lambda x: x.basename.lower())
+        return photos
+
     def has_photo(self, photo):
         if not isinstance(photo, Photo):
             raise TypeError('`photo` must be of type %s' % Photo)
@@ -415,17 +426,6 @@ class Album(ObjectBase, GroupableMixin):
         result = super().leave_group(*args, **kwargs)
         return result
 
-    def photos(self):
-        photos = []
-        generator = helpers.select_generator(
-            self.photodb.sql,
-            'SELECT photoid FROM album_photo_rel WHERE albumid == ?',
-            [self.id]
-        )
-        photos = [self.photodb.get_photo(id=fetch[0]) for fetch in generator]
-        photos.sort(key=lambda x: x.basename.lower())
-        return photos
-
     @decorators.required_feature('album.edit')
     @decorators.transaction
     def remove_photo(self, photo, *, commit=True):
@@ -446,7 +446,7 @@ class Album(ObjectBase, GroupableMixin):
     def sum_bytes(self, recurse=True, string=False):
         if self._sum_bytes_local is None:
             #print(self, 'sumbytes cache miss local')
-            photos = (photo for photo in self.photos() if photo.bytes is not None)
+            photos = (photo for photo in self.get_photos() if photo.bytes is not None)
             self._sum_bytes_local = sum(photo.bytes for photo in photos)
         total = self._sum_bytes_local
 
@@ -466,14 +466,14 @@ class Album(ObjectBase, GroupableMixin):
         if self._sum_photos_recursive is None:
             #print(self, 'sumphotos cache miss')
             total = 0
-            total += sum(1 for x in self.photos())
+            total += sum(1 for x in self.get_photos())
             total += sum(child.sum_photos() for child in self.get_children())
             self._sum_photos_recursive = total
 
         return self._sum_photos_recursive
 
     def walk_photos(self):
-        yield from self.photos()
+        yield from self.get_photos()
         children = self.walk_children()
         # The first yield is itself
         next(children)

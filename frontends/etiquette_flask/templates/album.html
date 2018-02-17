@@ -83,7 +83,7 @@ p
         </ul>
     </ul>
 
-    {% set photos = album.photos() %}
+    {% set photos = album.get_photos() %}
     {% if photos %}
         <h3>Photos</h3>
         {% if view != "list" %}
