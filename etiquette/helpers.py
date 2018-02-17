@@ -1,3 +1,8 @@
+'''
+This file provides functions which are used in various places throughout the
+codebase but don't deserve to be methods of any class.
+'''
+
 import datetime
 import math
 import mimetypes

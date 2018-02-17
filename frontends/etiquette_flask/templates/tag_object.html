@@ -55,7 +55,7 @@
 
 {{' '}}class="tag_object {{extra_classes}}"
 
-{% set altlines=[] %}
+{%- set altlines=[] -%}
 {% if with_alt_qualified_name %}{% do altlines.append(tag.qualified_name()) %}{% endif %}
 {% if with_alt_description and tag.description != "" %}{% do altlines.append(tag.description) %}{% endif %}
 {% set altlines=altlines|join("\n") %}

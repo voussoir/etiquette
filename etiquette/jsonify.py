@@ -1,5 +1,7 @@
-import json
-
+'''
+This file provides functions that convert the Etiquette objects into
+dictionaries suitable for JSON serializing.
+'''
 
 def album(a, minimal=False):
     j = {

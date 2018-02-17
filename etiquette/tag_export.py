@@ -1,3 +1,8 @@
+'''
+This file provides a variety of functions for exporting a PDB's tags into other
+formats. Strings, dicts, etc.
+'''
+
 def easybake(tags):
     '''
     A string where every line is the qualified name of a tag or its synonyms.

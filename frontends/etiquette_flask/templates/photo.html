@@ -311,7 +311,7 @@ function refresh_metadata(photoid)
 {
     var url= "/photo/" + photoid + "/refresh_metadata";
     var data = new FormData();
-    callback = function(){location.reload();};
+    var callback = function(){location.reload();};
     post(url, data, callback);
 }
 

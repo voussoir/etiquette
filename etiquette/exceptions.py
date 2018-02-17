@@ -35,6 +35,7 @@ class EtiquetteException(Exception, metaclass=ErrorTypeAdder):
     '''
     error_message = ''
     def __init__(self, *args, **kwargs):
+        super().__init__()
         self.given_args = args
         self.given_kwargs = kwargs
         self.error_message = self.error_message.format(*args, **kwargs)

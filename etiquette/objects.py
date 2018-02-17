@@ -1,3 +1,8 @@
+'''
+This file provides the data objects that should not be instantiated directly,
+but are returned by the PDB accesses.
+'''
+
 import os
 import PIL.Image
 import traceback
@@ -623,7 +628,7 @@ class Photo(ObjectBase):
             'id': self.id,
             'tagged_at': helpers.now(),
         }
-        self.photodb.sql_update(table='photos', data=data, where_key='id', commit=False)
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id', commit=False)
 
         if commit:
             self.photodb.log.debug('Committing - add photo tag')
@@ -859,7 +864,7 @@ class Photo(ObjectBase):
                     self.duration = probe.format.duration or probe.video.duration
                     self.width = probe.video.video_width
                     self.height = probe.video.video_height
-            except:
+            except Exception:
                 traceback.print_exc()
 
         elif self.simple_mimetype == 'audio' and constants.ffmpeg:
@@ -867,7 +872,7 @@ class Photo(ObjectBase):
                 probe = constants.ffmpeg.probe(self.real_filepath)
                 if probe and probe.audio:
                     self.duration = probe.audio.duration
-            except:
+            except Exception:
                 traceback.print_exc()
 
         if self.width and self.height:

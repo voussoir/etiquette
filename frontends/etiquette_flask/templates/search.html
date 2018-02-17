@@ -162,8 +162,8 @@ form
                 {% if search_kwargs[key] %}
                 {% for tagname in search_kwargs[key] %}
                 <li class="search_builder_{{tagtype}}_inputted">
-                    <span class="tag_object">{{tagname}}</span><!--
-                    --><button class="remove_tag_button red_button"
+                    <span class="tag_object">{{tagname}}</span>{{-''-}}
+                    <button class="remove_tag_button red_button"
                     onclick="remove_searchtag(this, '{{tagname}}', inputted_{{tagtype}});"></button>
                 </li>
                 {% endfor %}
@@ -252,11 +252,11 @@ form
                     {% do limit_options.sort() %}
                 {% endif %}
                 {% for limit_option in limit_options %}
-                <option
-                value="{{limit_option}}"
-                {{"selected" if search_kwargs['limit'] == limit_option else ""}}
+                <option{{-' '-}}
+                value="{{limit_option}}"{{-''-}}
+                {{-" selected" if search_kwargs['limit'] == limit_option else ""-}}
                 >
-                {{limit_option}} items
+                {{- limit_option }} items{{-''-}}
                 </option>
                 {% endfor %}
             </select>
@@ -275,14 +275,14 @@ form
         <span>Tags on this page (click to join query):</span>
         <ul>
             {% for tag in total_tags %}
-            <li>{{tag_object.tag_object(
+            <li>{{-tag_object.tag_object(
                 tag,
                 extra_classes="tags_on_this_page",
                 link='void',
                 qualified_name=False,
                 with_alt_qualified_name=True,
                 with_alt_description=True,
-            )}}</li>
+            )-}}</li>
             {% endfor %}
         </ul>
         {% endif %}
