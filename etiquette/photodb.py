@@ -785,6 +785,30 @@ class PDBUserMixin:
         super().__init__()
         self._user_cache = cacheclass.Cache()
 
+    def _assert_valid_password(self, password):
+        if len(password) < self.config['user']['min_password_length']:
+            raise exceptions.PasswordTooShort(min_length=self.config['user']['min_password_length'])
+
+    def _assert_valid_username(self, username):
+        '''
+        If something is wrong, raise an exception. Otherwise do nothing.
+        '''
+        if len(username) < self.config['user']['min_length']:
+            raise exceptions.UsernameTooShort(
+                username=username,
+                min_length=self.config['user']['min_length']
+            )
+
+        if len(username) > self.config['user']['max_length']:
+            raise exceptions.UsernameTooLong(
+                username=username,
+                max_length=self.config['user']['max_length']
+            )
+
+        badchars = [c for c in username if c not in self.config['user']['valid_chars']]
+        if badchars:
+            raise exceptions.InvalidUsernameChars(username=username, badchars=badchars)
+
     def generate_user_id(self):
         '''
         User IDs are randomized instead of integers like the other objects,
@@ -874,28 +898,13 @@ class PDBUserMixin:
 
     @decorators.required_feature('user.new')
     @decorators.transaction
-    def register_user(self, username, password, commit=True):
-        if len(username) < self.config['user']['min_length']:
-            raise exceptions.UsernameTooShort(
-                username=username,
-                min_length=self.config['user']['min_length']
-            )
-
-        if len(username) > self.config['user']['max_length']:
-            raise exceptions.UsernameTooLong(
-                username=username,
-                max_length=self.config['user']['max_length']
-            )
-
-        badchars = [c for c in username if c not in self.config['user']['valid_chars']]
-        if badchars:
-            raise exceptions.InvalidUsernameChars(username=username, badchars=badchars)
+    def register_user(self, username, password, *, commit=True):
+        self._assert_valid_username(username)
 
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
 
-        if len(password) < self.config['user']['min_password_length']:
-            raise exceptions.PasswordTooShort(min_length=self.config['user']['min_password_length'])
+        self._assert_valid_password(password)
 
         try:
             existing_user = self.get_user(username=username)
