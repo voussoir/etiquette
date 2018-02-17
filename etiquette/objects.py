@@ -635,16 +635,6 @@ class Photo(ObjectBase):
             self.photodb.commit()
         return tag
 
-    def albums(self):
-        '''
-        Return the albums of which this photo is a member.
-        '''
-        cur = self.photodb.sql.cursor()
-        cur.execute('SELECT albumid FROM album_photo_rel WHERE photoid == ?', [self.id])
-        fetches = cur.fetchall()
-        albums = [self.photodb.get_album(id=fetch[0]) for fetch in fetches]
-        return albums
-
     @property
     def author(self):
         '''
@@ -791,6 +781,16 @@ class Photo(ObjectBase):
 
         self.__reinit__()
         return self.thumbnail
+
+    def get_containing_albums(self):
+        '''
+        Return the albums of which this photo is a member.
+        '''
+        cur = self.photodb.sql.cursor()
+        cur.execute('SELECT albumid FROM album_photo_rel WHERE photoid == ?', [self.id])
+        fetches = cur.fetchall()
+        albums = [self.photodb.get_album(id=fetch[0]) for fetch in fetches]
+        return albums
 
     def get_tags(self):
         '''

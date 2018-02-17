@@ -202,7 +202,7 @@
         </ul>
 
         <!-- CONTAINING ALBUMS -->
-        {% set albums = photo.albums() %}
+        {% set albums = photo.get_containing_albums() %}
         {% if albums %}
         <h4>Albums containing this photo</h4>
         <ul id="containing albums">
