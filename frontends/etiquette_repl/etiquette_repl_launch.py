@@ -30,7 +30,7 @@ def easytagger():
 
 def photag(photo_id):
     photo = P.get_photo_by_id(photo_id)
-    print(photo.tags())
+    print(photo.get_tags())
     while True:
         photo.add_tag(input('> '))
 get = P.get_tag

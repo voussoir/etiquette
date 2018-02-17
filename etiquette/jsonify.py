@@ -36,7 +36,7 @@ def exception(e):
     return j
 
 def photo(p, include_albums=True, include_tags=True):
-    tags = p.tags()
+    tags = p.get_tags()
     tags.sort(key=lambda x: x.name)
     j = {
         'id': p.id,

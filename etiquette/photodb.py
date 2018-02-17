@@ -634,7 +634,7 @@ class PDBPhotoMixin:
                 continue
 
             if (has_tags is not None) or is_tagsearch:
-                photo_tags = set(photo.tags())
+                photo_tags = set(photo.get_tags())
 
                 if has_tags is False and len(photo_tags) > 0:
                     continue

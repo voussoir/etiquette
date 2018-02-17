@@ -37,7 +37,7 @@
 {% endif %}
 
 {% set tag_names_title = [] %}
-{% for tag in photo.tags() %}
+{% for tag in photo.get_tags() %}
     {% do tag_names_title.append(tag.name) %}
 {% endfor %}
 

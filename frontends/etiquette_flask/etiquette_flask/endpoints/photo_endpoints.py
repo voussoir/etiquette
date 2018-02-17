@@ -211,7 +211,7 @@ def get_search_core():
     # TAGS ON THIS PAGE
     total_tags = set()
     for photo in photos:
-        for tag in photo.tags():
+        for tag in photo.get_tags():
             total_tags.add(tag)
     total_tags = sorted(total_tags, key=lambda t: t.qualified_name())
 

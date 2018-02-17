@@ -664,7 +664,7 @@ class Photo(ObjectBase):
         '''
         Take all of the tags owned by other_photo and apply them to this photo.
         '''
-        for tag in other_photo.tags():
+        for tag in other_photo.get_tags():
             self.add_tag(tag)
 
     @decorators.required_feature('photo.edit')
@@ -791,6 +791,18 @@ class Photo(ObjectBase):
 
         self.__reinit__()
         return self.thumbnail
+
+    def get_tags(self):
+        '''
+        Return the tags assigned to this Photo.
+        '''
+        generator = helpers.select_generator(
+            self.photodb.sql,
+            'SELECT tagid FROM photo_tag_rel WHERE photoid == ?',
+            [self.id]
+        )
+        tags = [self.photodb.get_tag(id=fetch[0]) for fetch in generator]
+        return tags
 
     def has_tag(self, tag, *, check_children=True):
         '''
@@ -1024,20 +1036,8 @@ class Photo(ObjectBase):
         self.__reinit__()
 
     def sorted_tags(self):
-        tags = self.tags()
+        tags = self.get_tags()
         tags.sort(key=lambda x: x.qualified_name())
-        return tags
-
-    def tags(self):
-        '''
-        Return the tags assigned to this Photo.
-        '''
-        generator = helpers.select_generator(
-            self.photodb.sql,
-            'SELECT tagid FROM photo_tag_rel WHERE photoid == ?',
-            [self.id]
-        )
-        tags = [self.photodb.get_tag(id=fetch[0]) for fetch in generator]
         return tags
 
 
