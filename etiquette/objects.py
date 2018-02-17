@@ -86,7 +86,7 @@ class GroupableMixin:
             'parentid': self.id,
             'memberid': member.id,
         }
-        self.photodb.sql_insert(table=self.group_table, data=data, commit=False)
+        self.photodb.sql_insert(table=self.group_table, data=data)
 
         self.photodb._cached_frozen_children = None
 
@@ -285,7 +285,7 @@ class Album(ObjectBase, GroupableMixin):
             'albumid': self.id,
             'directory': filepath.absolute_path,
         }
-        self.photodb.sql_insert(table='album_associated_directories', data=data, commit=False)
+        self.photodb.sql_insert(table='album_associated_directories', data=data)
 
         if commit:
             self.photodb.log.debug('Committing - add associated directory')
@@ -304,7 +304,7 @@ class Album(ObjectBase, GroupableMixin):
             'albumid': self.id,
             'photoid': photo.id,
         }
-        self.photodb.sql_insert(table='album_photo_rel', data=data, commit=False)
+        self.photodb.sql_insert(table='album_photo_rel', data=data)
 
         self._uncache_sums()
         if commit:
@@ -376,7 +376,7 @@ class Album(ObjectBase, GroupableMixin):
             'title': self.title,
             'description': self.description,
         }
-        self.photodb.sql_update(table='albums', pairs=data, where_key='id', commit=False)
+        self.photodb.sql_update(table='albums', pairs=data, where_key='id')
 
         if commit:
             self.photodb.log.debug('Committing - edit album')
@@ -525,7 +525,7 @@ class Bookmark(ObjectBase):
             'title': self.title,
             'url': self.url,
         }
-        self.photodb.sql_update(table='bookmarks', pairs=data, where_key='id', commit=False)
+        self.photodb.sql_update(table='bookmarks', pairs=data, where_key='id')
 
         if commit:
             self.photodb.log.debug('Committing - edit bookmark')
@@ -623,12 +623,12 @@ class Photo(ObjectBase):
             'photoid': self.id,
             'tagid': tag.id
         }
-        self.photodb.sql_insert(table='photo_tag_rel', data=data, commit=False)
+        self.photodb.sql_insert(table='photo_tag_rel', data=data)
         data = {
             'id': self.id,
             'tagged_at': helpers.now(),
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id', commit=False)
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 
         if commit:
             self.photodb.log.debug('Committing - add photo tag')
@@ -763,7 +763,7 @@ class Photo(ObjectBase):
                 'id': self.id,
                 'thumbnail': return_filepath,
             }
-            self.photodb.sql_update(table='photos', pairs=data, where_key='id', commit=False)
+            self.photodb.sql_update(table='photos', pairs=data, where_key='id')
             self.thumbnail = return_filepath
 
         self._uncache()
@@ -900,7 +900,7 @@ class Photo(ObjectBase):
             'duration': self.duration,
             'bytes': self.bytes,
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id', commit=False)
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 
         self._uncache()
         if commit:
@@ -937,7 +937,7 @@ class Photo(ObjectBase):
             'id': self.id,
             'filepath': new_filepath.absolute_path,
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id', commit=False)
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 
         self._uncache()
         if commit:
@@ -963,7 +963,7 @@ class Photo(ObjectBase):
             'id': self.id,
             'tagged_at': helpers.now(),
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id', commit=False)
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 
         if commit:
             self.photodb.log.debug('Committing - remove photo tag')
@@ -1103,7 +1103,7 @@ class Tag(ObjectBase, GroupableMixin):
             'name': synname,
             'mastername': self.name,
         }
-        self.photodb.sql_insert(table='tag_synonyms', data=data, commit=False)
+        self.photodb.sql_insert(table='tag_synonyms', data=data)
 
         if commit:
             self.photodb.log.debug('Committing - add synonym')
@@ -1149,7 +1149,7 @@ class Tag(ObjectBase, GroupableMixin):
                     'photoid': photoid,
                     'tagid': mastertag.id,
                 }
-                self.photodb.sql_insert(table='photo_tag_rel', data=data, commit=False)
+                self.photodb.sql_insert(table='photo_tag_rel', data=data)
 
         # Then delete the relationships with the old tag
         self.delete()
@@ -1190,7 +1190,7 @@ class Tag(ObjectBase, GroupableMixin):
             'id': self.id,
             'description': self.description
         }
-        self.photodb.sql_update(table='tags', pairs=data, where_key='id', commit=False)
+        self.photodb.sql_update(table='tags', pairs=data, where_key='id')
 
         self._uncache()
         if commit:
@@ -1299,7 +1299,7 @@ class Tag(ObjectBase, GroupableMixin):
             'id': self.id,
             'name': new_name,
         }
-        self.photodb.sql_update(table='tags', pairs=data, where_key='id', commit=False)
+        self.photodb.sql_update(table='tags', pairs=data, where_key='id')
 
         cur = self.photodb.sql.cursor()
         if apply_to_synonyms:

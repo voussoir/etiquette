@@ -128,7 +128,7 @@ class PDBAlbumMixin:
             'title': title,
             'description': description,
         }
-        self.sql_insert(table='albums', data=data, commit=False)
+        self.sql_insert(table='albums', data=data)
 
         album = objects.Album(self, data)
 
@@ -175,7 +175,7 @@ class PDBBookmarkMixin:
             'title': title,
             'url': url,
         }
-        self.sql_insert(table='bookmarks', data=data, commit=False)
+        self.sql_insert(table='bookmarks', data=data)
 
         bookmark = objects.Bookmark(self, data)
         if commit:
@@ -283,7 +283,7 @@ class PDBPhotoMixin:
             'duration': None,
             'thumbnail': None,
         }
-        self.sql_insert(table='photos', data=data, commit=False)
+        self.sql_insert(table='photos', data=data)
 
         photo = objects.Photo(self, data)
 
@@ -748,7 +748,7 @@ class PDBTagMixin:
             'name': tagname,
             'description': description,
         }
-        self.sql_insert(table='tags', data=data, commit=False)
+        self.sql_insert(table='tags', data=data)
 
         if commit:
             self.log.debug('Committing - new_tag')
@@ -922,7 +922,7 @@ class PDBUserMixin:
             'password': hashed_password,
             'created': created,
         }
-        self.sql_insert(table='users', data=data, commit=False)
+        self.sql_insert(table='users', data=data)
 
         if commit:
             self.log.debug('Committing - register user')
@@ -1309,7 +1309,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             thing = thing_map['class'](self, db_row=thing)
             yield thing
 
-    def sql_insert(self, table, data, *, commit=True):
+    def sql_insert(self, table, data, *, commit=False):
         column_names = constants.SQL_COLUMNS[table]
         cur = self.sql.cursor()
 
@@ -1320,7 +1320,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         if commit:
             self.commit()
 
-    def sql_update(self, table, pairs, where_key, *, commit=True):
+    def sql_update(self, table, pairs, where_key, *, commit=False):
         cur = self.sql.cursor()
 
         (query, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
