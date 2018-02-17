@@ -125,10 +125,11 @@ class GroupableMixin:
                 )
             else:
                 # Since this group was a child, its parent adopts all its children.
-                cur.execute(
-                    'UPDATE %s SET parentid == ? WHERE parentid == ?' % self.group_table,
-                    [parent.id, self.id]
-                )
+                data = {
+                    'parentid': (self.id, parent.id),
+                }
+                self.photodb.sql_update(table=self.group_table, pairs=data, where_key='parentid')
+
         # Note that this part comes after the deletion of children to prevent
         # issues of recursion.
         cur.execute(
@@ -1009,11 +1010,10 @@ class Photo(ObjectBase):
             except OSError:
                 spinal.copy_file(old_path, new_path)
 
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'UPDATE photos SET filepath = ? WHERE filepath == ?',
-            [new_path.absolute_path, old_path.absolute_path]
-        )
+        data = {
+            'filepath': (old_path.absolute_path, new_path.absolute_path),
+        }
+        self.photodb.sql_update(table='photos', pairs=data, where_key='filepath')
 
         if new_path.normcase == old_path.normcase:
             # If they are equivalent but differently cased, just rename.
@@ -1127,14 +1127,15 @@ class Tag(ObjectBase, GroupableMixin):
         # Migrate the old tag's synonyms to the new one
         # UPDATE is safe for this operation because there is no chance of duplicates.
         self.photodb._cached_frozen_children = None
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'UPDATE tag_synonyms SET mastername = ? WHERE mastername == ?',
-            [mastertag.name, self.name]
-        )
+
+        data = {
+            'mastername': (self.name, mastertag.name),
+        }
+        self.photodb.sql_update(table='tag_synonyms', pairs=data, where_key='mastername')
 
         # Iterate over all photos with the old tag, and swap them to the new tag
         # if they don't already have it.
+        cur = self.photodb.sql.cursor()
         cur.execute('SELECT photoid FROM photo_tag_rel WHERE tagid == ?', [self.id])
         fetches = cur.fetchall()
 
@@ -1301,12 +1302,11 @@ class Tag(ObjectBase, GroupableMixin):
         }
         self.photodb.sql_update(table='tags', pairs=data, where_key='id')
 
-        cur = self.photodb.sql.cursor()
         if apply_to_synonyms:
-            cur.execute(
-                'UPDATE tag_synonyms SET mastername = ? WHERE mastername = ?',
-                [new_name, old_name]
-            )
+            data = {
+                'mastername': (old_name, new_name),
+            }
+            self.photodb.sql_update(table='tag_synonyms', pairs=data, where_key='mastername')
 
         self.name = new_name
         self._uncache()
