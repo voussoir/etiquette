@@ -48,7 +48,7 @@ def photo(p, include_albums=True, include_tags=True):
         'bytes': p.bytes,
         'duration_str': p.duration_string,
         'duration': p.duration,
-        'bytes_str': p.bytestring(),
+        'bytes_str': p.bytestring,
         'has_thumbnail': bool(p.thumbnail),
         'created': p.created,
         'filename': p.basename,

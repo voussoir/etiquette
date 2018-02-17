@@ -192,7 +192,7 @@
             <li>Dimensions: {{photo.width}}x{{photo.height}} px</li>
             <li>Aspect ratio: {{photo.ratio}}</li>
         {% endif %}
-        <li>Size: {{photo.bytestring()}}</li>
+        <li>Size: {{photo.bytestring}}</li>
         {% if photo.duration %}
             <li>Duration: {{photo.duration_string}}</li>
             <li>Overall Bitrate: {{photo.bitrate|int}} kbps</li>

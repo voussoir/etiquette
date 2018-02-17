@@ -635,6 +635,7 @@ class Photo(ObjectBase):
             self.photodb.commit()
         return tag
 
+    @property
     def bytestring(self):
         if self.bytes is not None:
             return bytestring.bytestring(self.bytes)
