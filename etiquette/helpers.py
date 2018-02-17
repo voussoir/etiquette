@@ -299,6 +299,7 @@ def remove_path_badchars(filepath, allowed=''):
     '''
     badchars = remove_characters(constants.FILENAME_BADCHARS, allowed)
     filepath = remove_characters(filepath, badchars)
+    filepath = remove_control_characters(filepath)
 
     filepath = filepath.replace('/', os.sep)
     filepath = filepath.replace('\\', os.sep)
