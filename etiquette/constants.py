@@ -130,6 +130,20 @@ CREATE INDEX IF NOT EXISTS index_users_id on users(id);
 CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE);
 '''.format(user_version=DATABASE_VERSION)
 
+SQL_COLUMNS = {}
+for statement in DB_INIT.split(';'):
+    if 'create table' not in statement.lower():
+        continue
+
+    table_name = statement.split('(')[0].strip().split(' ')[-1]
+    column_names = statement.split('(')[1].rsplit(')', 1)[0]
+    column_names = column_names.split(',')
+    column_names = [x.strip().split(' ')[0] for x in column_names]
+    SQL_COLUMNS[table_name] = column_names
+
+_sql_dictify = lambda columns: {key:index for (index, key) in enumerate(columns)}
+SQL_INDEX = {key: _sql_dictify(value) for (key, value) in SQL_COLUMNS.items()}
+
 def _extract_column_names(table):
     statement = DB_INIT.split('CREATE TABLE IF NOT EXISTS %s(' % table)[1]
     statement = statement.split(');')[0]
@@ -151,7 +165,6 @@ SQL_PHOTOTAG_COLUMNS = _extract_column_names('photo_tag_rel')
 SQL_TAGGROUP_COLUMNS = _extract_column_names('tag_group_rel')
 SQL_USER_COLUMNS = _extract_column_names('users')
 
-_sql_dictify = lambda columns: {key:index for (index, key) in enumerate(columns)}
 SQL_ALBUM = _sql_dictify(SQL_ALBUM_COLUMNS)
 SQL_ALBUM_DIRECTORY = _sql_dictify(SQL_ALBUM_DIRECTORY_COLUMNS)
 SQL_ALBUMGROUP = _sql_dictify(SQL_ALBUMGROUP_COLUMNS)
