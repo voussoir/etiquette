@@ -99,5 +99,5 @@ def stdout(tags, depth=0):
 
         stdout(children, depth=depth+1)
 
-        if tag.parent() is None:
+        if tag.get_parent() is None:
             print()

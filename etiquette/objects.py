@@ -131,7 +131,7 @@ class GroupableMixin:
                 child.delete(delete_children=delete_children, commit=False)
         else:
             # Lift children
-            parent = self.parent()
+            parent = self.get_parent()
             if parent is None:
                 # Since this group was a root, children become roots by removing
                 # the row.
@@ -156,7 +156,7 @@ class GroupableMixin:
             self.photodb.log.debug('Committing - delete tag')
             self.photodb.commit()
 
-    def parent(self):
+    def get_parent(self):
         '''
         Return the group of which this is a member, or None.
         Returned object will be of the same type as calling object.
@@ -208,10 +208,10 @@ class GroupableMixin:
             yield from child.walk_children()
 
     def walk_parents(self):
-        parent = self.parent()
+        parent = self.get_parent()
         while parent is not None:
             yield parent
-            parent = parent.parent()
+            parent = parent.get_parent()
 
 
 class Album(ObjectBase, GroupableMixin):
@@ -247,7 +247,7 @@ class Album(ObjectBase, GroupableMixin):
         self._sum_photos_recursive = None
         self._sum_bytes_local = None
         self._sum_bytes_recursive = None
-        parent = self.parent()
+        parent = self.get_parent()
         if parent is not None:
             parent._uncache_sums()
 
@@ -409,7 +409,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     def leave_group(self, *args, **kwargs):
-        parent = self.parent()
+        parent = self.get_parent()
         if parent is not None:
             parent._uncache_sums()
         result = super().leave_group(*args, **kwargs)

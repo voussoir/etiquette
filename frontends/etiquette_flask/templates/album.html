@@ -64,7 +64,7 @@ p
 
     <ul>
         {% set viewparam = "?view=list" if view == "list" else "" %}
-        {% set parent = album.parent() %}
+        {% set parent = album.get_parent() %}
         {% if parent %}
         <li><a href="/album/{{parent.id}}{{viewparam}}">{{parent.display_name}}</a></li>
         {% else %}

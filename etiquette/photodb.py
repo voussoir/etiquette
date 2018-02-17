@@ -96,7 +96,7 @@ class PDBAlbumMixin:
 
     def get_root_albums(self):
         for album in self.get_albums():
-            if album.parent() is None:
+            if album.get_parent() is None:
                 yield album
 
     @decorators.required_feature('album.new')
@@ -722,7 +722,7 @@ class PDBTagMixin:
         Yield all Tags that have no parent.
         '''
         for tag in self.get_tags():
-            if tag.parent() is None:
+            if tag.get_parent() is None:
                 yield tag
 
     @decorators.required_feature('tag.new')
@@ -1109,7 +1109,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             return current_album
 
         def orphan_join_parent_album(albums_by_path, current_album, current_directory):
-            if current_album.parent() is None:
+            if current_album.get_parent() is None:
                 parent = albums_by_path.get(current_directory.parent.absolute_path, None)
                 if parent is not None:
                     parent.add_child(current_album, commit=False)
