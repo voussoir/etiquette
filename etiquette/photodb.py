@@ -1321,6 +1321,28 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             thing = thing_map['class'](self, db_row=thing)
             yield thing
 
+    def sql_insert(self, table, data, *, commit=True):
+        column_names = constants.SQL_COLUMNS[table]
+        cur = self.sql.cursor()
+
+        (qmarks, bindings) = sqlhelpers.insert_filler(column_names, data)
+        query = 'INSERT INTO %s VALUES(%s)' % (table, qmarks)
+        cur.execute(query, bindings)
+
+        if commit:
+            self.sql.commit()
+
+    def sql_update(self, table, pairs, where_key, *, commit=True):
+        column_names = constants.SQL_COLUMNS[table]
+        cur = self.sql.cursor()
+
+        (query, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
+        query = 'UPDATE %s %s' % (table, query)
+        cur.execute(query, bindings)
+
+        if commit:
+            self.sql.commit()
+
 
 _THING_CLASSES = {
     'album':
