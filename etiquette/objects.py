@@ -10,7 +10,6 @@ from . import helpers
 from voussoirkit import bytestring
 from voussoirkit import pathclass
 from voussoirkit import spinal
-from voussoirkit import sqlhelpers
 
 
 class ObjectBase:
@@ -211,13 +210,13 @@ class GroupableMixin:
 
 
 class Album(ObjectBase, GroupableMixin):
-    group_sql_index = constants.SQL_ALBUMGROUP
     group_table = 'album_group_rel'
+    group_sql_index = constants.SQL_INDEX[group_table]
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
-            db_row = dict(zip(constants.SQL_ALBUM_COLUMNS, db_row))
+            db_row = dict(zip(constants.SQL_COLUMNS['albums'], db_row))
 
         self.id = db_row['id']
         self.title = db_row['title'] or ''
@@ -481,7 +480,7 @@ class Bookmark(ObjectBase):
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
-            db_row = dict(zip(constants.SQL_BOOKMARK_COLUMNS, db_row))
+            db_row = dict(zip(constants.SQL_COLUMNS['bookmarks'], db_row))
 
         self.id = db_row['id']
         self.title = db_row['title']
@@ -537,7 +536,7 @@ class Photo(ObjectBase):
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
-            db_row = dict(zip(constants.SQL_PHOTO_COLUMNS, db_row))
+            db_row = dict(zip(constants.SQL_COLUMNS['photos'], db_row))
 
         self.real_filepath = helpers.remove_path_badchars(db_row['filepath'], allowed=':\\/')
         self.real_path = pathclass.Path(self.real_filepath)
@@ -1041,13 +1040,13 @@ class Tag(ObjectBase, GroupableMixin):
     '''
     A Tag, which can be applied to Photos for organization.
     '''
-    group_sql_index = constants.SQL_TAGGROUP
     group_table = 'tag_group_rel'
+    group_sql_index = constants.SQL_INDEX[group_table]
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
-            db_row = dict(zip(constants.SQL_TAG_COLUMNS, db_row))
+            db_row = dict(zip(constants.SQL_COLUMNS['tags'], db_row))
         self.id = db_row['id']
         self.name = db_row['name']
         self.description = db_row['description'] or ''
@@ -1318,7 +1317,7 @@ class User(ObjectBase):
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         if isinstance(db_row, (list, tuple)):
-            db_row = dict(zip(constants.SQL_USER_COLUMNS, db_row))
+            db_row = dict(zip(constants.SQL_COLUMNS['users'], db_row))
         self.id = db_row['id']
         self.username = db_row['username']
         self.created = db_row['created']

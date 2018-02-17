@@ -144,39 +144,6 @@ for statement in DB_INIT.split(';'):
 _sql_dictify = lambda columns: {key:index for (index, key) in enumerate(columns)}
 SQL_INDEX = {key: _sql_dictify(value) for (key, value) in SQL_COLUMNS.items()}
 
-def _extract_column_names(table):
-    statement = DB_INIT.split('CREATE TABLE IF NOT EXISTS %s(' % table)[1]
-    statement = statement.split(');')[0]
-    statement = statement.replace('\n', ' ')
-    columns = statement.split(',')
-    columns = [column.strip().split(' ')[0] for column in columns]
-    return columns
-
-SQL_LASTID_COLUMNS = _extract_column_names('id_numbers')
-SQL_ALBUM_DIRECTORY_COLUMNS = _extract_column_names('album_associated_directories')
-SQL_ALBUM_COLUMNS = _extract_column_names('albums')
-SQL_BOOKMARK_COLUMNS = _extract_column_names('bookmarks')
-SQL_PHOTO_COLUMNS = _extract_column_names('photos')
-SQL_TAG_COLUMNS = _extract_column_names('tags')
-SQL_SYN_COLUMNS = _extract_column_names('tag_synonyms')
-SQL_ALBUMGROUP_COLUMNS = _extract_column_names('album_group_rel')
-SQL_ALBUMPHOTO_COLUMNS = _extract_column_names('album_photo_rel')
-SQL_PHOTOTAG_COLUMNS = _extract_column_names('photo_tag_rel')
-SQL_TAGGROUP_COLUMNS = _extract_column_names('tag_group_rel')
-SQL_USER_COLUMNS = _extract_column_names('users')
-
-SQL_ALBUM = _sql_dictify(SQL_ALBUM_COLUMNS)
-SQL_ALBUM_DIRECTORY = _sql_dictify(SQL_ALBUM_DIRECTORY_COLUMNS)
-SQL_ALBUMGROUP = _sql_dictify(SQL_ALBUMGROUP_COLUMNS)
-SQL_BOOKMARK = _sql_dictify(SQL_BOOKMARK_COLUMNS)
-SQL_ALBUMPHOTO = _sql_dictify(SQL_ALBUMPHOTO_COLUMNS)
-SQL_LASTID = _sql_dictify(SQL_LASTID_COLUMNS)
-SQL_PHOTO = _sql_dictify(SQL_PHOTO_COLUMNS)
-SQL_PHOTOTAG = _sql_dictify(SQL_PHOTOTAG_COLUMNS)
-SQL_SYN = _sql_dictify(SQL_SYN_COLUMNS)
-SQL_TAG = _sql_dictify(SQL_TAG_COLUMNS)
-SQL_TAGGROUP = _sql_dictify(SQL_TAGGROUP_COLUMNS)
-SQL_USER = _sql_dictify(SQL_USER_COLUMNS)
 
 ALLOWED_ORDERBY_COLUMNS = [
     'extension',
