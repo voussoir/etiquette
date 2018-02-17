@@ -11,7 +11,7 @@ Documentation is still a work in progress. In general,
 
 - You must make the `etiquette` package importable by placing it in one of your lib paths because I have not made a setup.py yet. Rather than actually moving the folder I just use filesystem junctions.
 - Run `python etiquette_flask_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
-- Run `python -i etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
+- Run `python -i etiquette_repl_launch.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 
 ### Project stability
 
