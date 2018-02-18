@@ -281,21 +281,21 @@ function receive_callback(response)
 {
     var message_text;
     var message_positivity;
-    var tagname = response["tagname"];
-    if ("error_type" in response)
+    var tagname = response["data"]["tagname"];
+    if ("error_type" in response["data"])
     {
         message_positivity = "message_negative";
-        message_text = response["error_message"];
+        message_text = response["data"]["error_message"];
     }
     else
     {
         var action;
         message_positivity = "message_positive";
-        if (response["_request_url"].includes("add_tag"))
+        if (response["meta"]["request_url"].includes("add_tag"))
         {
             message_text = "Added tag " + tagname;
         }
-        else if (response["_request_url"].includes("remove_tag"))
+        else if (response["meta"]["request_url"].includes("remove_tag"))
         {
             message_text = "Removed tag " + tagname;
         }

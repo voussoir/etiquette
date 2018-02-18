@@ -245,9 +245,12 @@ function _request(method, url, callback)
             if (callback != null)
             {
                 var text = request.responseText;
-                var response = JSON.parse(text);
-                response["_request_url"] = url;
-                response["_status"] = request.status;
+                var response = {
+                    "data": JSON.parse(text),
+                    "meta": {}
+                };
+                response["meta"]["request_url"] = url;
+                response["meta"]["status"] = request.status;
                 callback(response);
             }
         }
@@ -293,9 +296,9 @@ function create_album_and_follow(parent)
     }
     function receive_callback(response)
     {
-        if (response["_status"] == 200 && response["id"])
+        if (response["meta"]["status"] == 200 && response["data"]["id"])
         {
-            window.location.href = "/album/" + response["id"];
+            window.location.href = "/album/" + response["data"]["id"];
         }
         else
         {

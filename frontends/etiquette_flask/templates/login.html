@@ -143,6 +143,7 @@ function submit_register()
 }
 function receive_callback(response)
 {
+    response = response["data"];
     if ("error_type" in response)
     {
         create_message_bubble(message_area, "message_negative", response["error_message"], 8000);

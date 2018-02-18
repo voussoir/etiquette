@@ -192,8 +192,9 @@ function create_tag(tagname, callback)
     return edit_tags("create_tag", tagname, callback);
 }
 
-function receive_callback(responses)
+function receive_callback(response)
 {
+    responses = response["data"];
     if (!(responses instanceof Array))
     {
         responses = [responses];
@@ -256,10 +257,10 @@ function on_save(editor, edit_element_map, display_element_map)
     {
         console.log(response);
         editor.hide_spinner();
-        if (response["_status"] == 200)
+        if (response["meta"]["status"] == 200)
         {
-            var new_name = response["name"];
-            var new_description = response["description"];
+            var new_name = response["data"]["name"];
+            var new_description = response["data"]["description"];
             document.title = "Tag " + new_name;
             window.history.replaceState(null, null, "/tag/" + new_name);
             name_editor.value = new_name;
