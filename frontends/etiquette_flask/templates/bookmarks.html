@@ -25,6 +25,8 @@
 
     padding: 8px;
     margin: 8px;
+    width: 500px;
+    max-width: 500px;
 
     border-radius: 8px;
     box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.25);
@@ -48,7 +50,7 @@
                 <a href="{{bookmark.url}}"
                 class="bookmark_title"
                 data-editor-id="title"
-                data-editor-placeholder="title"
+                data-editor-placeholder="title (optional)"
                 data-editor-empty-text="{{bookmark.id}}">
                 {%- if bookmark.title -%}
                     {{bookmark.title}}
@@ -66,7 +68,7 @@
             </div>
             {% endfor %}
             <div class="new_bookmark_card">
-                <input id="new_bookmark_title" type="text" placeholder="title">
+                <input id="new_bookmark_title" type="text" placeholder="title (optional)">
                 <input id="new_bookmark_url" type="text" placeholder="url">
                 <button id="new_bookmark_button" class="green_button" onclick="submit_bookmark_form()">Create</button>
             </div>
@@ -111,6 +113,11 @@ function on_save(editor, edit_element_map)
 {
     var title_editor = edit_element_map["title"];
     var url_editor = edit_element_map["url"];
+    url_editor.value = url_editor.value.trim();
+    if (!url_editor.value)
+    {
+        return;
+    }
 
     editor.show_spinner();
     function callback()
