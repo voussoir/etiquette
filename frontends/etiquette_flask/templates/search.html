@@ -146,13 +146,13 @@ form
 
 
 <body>
-    {{header.make_header(session=session)}}
-    <div id="error_message_area">
-        {% for warning in warnings %}
+{{header.make_header(session=session)}}
+<div id="error_message_area">
+    {% for warning in warnings %}
         <span class="search_warning">{{warning}}</span>
-        {% endfor %}
-    </div>
-    <div id="content_body">
+    {% endfor %}
+</div>
+<div id="content_body">
     <div id="left">
         {% for tagtype in ["musts", "mays", "forbids"] %}
         <div id="search_builder_{{tagtype}}" {% if search_kwargs["tag_expression"]%}style="display:none"{%endif%}>
@@ -160,13 +160,13 @@ form
             <ul class="search_builder_tagger">
                 {% set key="tag_" + tagtype %}
                 {% if search_kwargs[key] %}
-                {% for tagname in search_kwargs[key] %}
-                <li class="search_builder_{{tagtype}}_inputted">
-                    <span class="tag_object">{{tagname}}</span>{{-''-}}
-                    <button class="remove_tag_button red_button"
-                    onclick="remove_searchtag(this, '{{tagname}}', inputted_{{tagtype}});"></button>
-                </li>
-                {% endfor %}
+                    {% for tagname in search_kwargs[key] %}
+                        <li class="search_builder_{{tagtype}}_inputted">
+                            <span class="tag_object">{{tagname}}</span>{{-''-}}
+                            <button class="remove_tag_button red_button"
+                            onclick="remove_searchtag(this, '{{tagname}}', inputted_{{tagtype}});"></button>
+                        </li>
+                    {% endfor %}
                 {% endif %}
                 <li><input id="search_builder_{{tagtype}}_input" type="text"></li>
             </ul>
@@ -184,12 +184,12 @@ form
             <span>Order by</span>
             <ul id="search_builder_orderby_ul">
                 {% if "orderby" in search_kwargs and search_kwargs["orderby"] %}
-                {% for orderby in search_kwargs["orderby"] %}
-                    {% set column, sorter=orderby.split("-") %}
-                    {{ create_orderby_li(selected_column=column, selected_sorter=sorter) }}
-                {% endfor %}
+                    {% for orderby in search_kwargs["orderby"] %}
+                        {% set column, sorter=orderby.split("-") %}
+                        {{ create_orderby_li(selected_column=column, selected_sorter=sorter) }}
+                    {% endfor %}
                 {% else %}
-                {{ create_orderby_li(selected_column=0, selected_sorter=0) }}
+                    {{ create_orderby_li(selected_column=0, selected_sorter=0) }}
                 {% endif %}
                 <li id="search_builder_orderby_newrow"><button class="green_button" onclick="add_new_orderby()">+</button></li>
             </ul>
@@ -252,12 +252,12 @@ form
                     {% do limit_options.sort() %}
                 {% endif %}
                 {% for limit_option in limit_options %}
-                <option{{-' '-}}
-                value="{{limit_option}}"{{-''-}}
-                {{-" selected" if search_kwargs['limit'] == limit_option else ""-}}
-                >
-                {{- limit_option }} items{{-''-}}
-                </option>
+                    <option{{-' '-}}
+                    value="{{limit_option}}"{{-''-}}
+                    {{-" selected" if search_kwargs['limit'] == limit_option else ""-}}
+                    >
+                    {{- limit_option }} items{{-''-}}
+                    </option>
                 {% endfor %}
             </select>
             <select name="has_tags" class="basic_param">
@@ -275,14 +275,14 @@ form
         <span>Tags on this page (click to join query):</span>
         <ul>
             {% for tag in total_tags %}
-            <li>{{-tag_object.tag_object(
-                tag,
-                extra_classes="tags_on_this_page",
-                link='void',
-                qualified_name=False,
-                with_alt_qualified_name=True,
-                with_alt_description=True,
-            )-}}</li>
+                <li>{{-tag_object.tag_object(
+                    tag,
+                    extra_classes="tags_on_this_page",
+                    link='void',
+                    qualified_name=False,
+                    with_alt_qualified_name=True,
+                    with_alt_description=True,
+                )-}}</li>
             {% endfor %}
         </ul>
         {% endif %}
@@ -291,15 +291,15 @@ form
         <p>You got {{photos|length}} items</p>
         {{prev_next_buttons()}}
         <div id="search_results_holder">
-        {% for photo in photos %}
-        {{photo_card.create_photo_card(photo, view=search_kwargs["view"])}}
-        {% endfor %}
+            {% for photo in photos %}
+                {{photo_card.create_photo_card(photo, view=search_kwargs["view"])}}
+            {% endfor %}
         </div>
 
         {{prev_next_buttons()}}
     </div>
-    {{clipboard_tray.clipboard_tray()}}
-    </div>
+</div>
+{{clipboard_tray.clipboard_tray()}}
 </body>
 
 
