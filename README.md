@@ -79,7 +79,6 @@ If you are interested in helping, please raise an issue before making any pull r
 - Currently, the Jinja templates are having a tangling influence on the backend objects, because Jinja cannot import my other modules like bytestring, but it can access the methods of the objects I pass into the template. As a result, the objects have excess helper methods. Consider making them into Jinja filters instead. Which is also kind of ugly but will move that pollution out of the backend at least.
 - Perhaps instead of actually deleting objects, they should just have a `deleted` flag, to make easy restoration possible. Also consider regrouping the children of restored Groupables if those children haven't already been reassigned somewhere else.
 - Add a new table to store permanent history of add/remove of tags on photos, so that accidents or trolling can be reversed.
-- Currently, the photo clipboard only stores IDs and therefore when we construct the clipboard tray elements we cannot provide more rich information like filename, the user is only presented with a list of IDs which they probably don't care about. Should the localstorage cache some other more user-friendly information?
 - Improve transaction rollbacking. I'm not satisfied with the @transaction decorator because sometimes I want to use exceptions as control flow without them rolling things back. Context managers are good but it's a matter of how abstracted they should be.
 
 ### To do list: User permissions

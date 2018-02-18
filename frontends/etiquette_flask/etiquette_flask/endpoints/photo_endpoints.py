@@ -115,6 +115,40 @@ def post_photo_refresh_metadata(photo_id):
 
     return jsonify.make_json_response({})
 
+# Clipboard ########################################################################################
+
+@site.route('/clipboard')
+@session_manager.give_token
+def get_clipboard_page():
+    return flask.render_template('clipboard.html')
+
+@site.route('/photo_cards', methods=['POST'])
+def get_photo_cards():
+    photo_ids = request.form.get('photo_ids', None)
+    if photo_ids is None:
+        return jsonify.make_json_response({})
+
+    photo_ids = etiquette.helpers.comma_space_split(photo_ids)
+    photos = [common.P_photo(photo_id, response_type='html') for photo_id in photo_ids]
+
+    # Photo filenames are prevented from having colons, so using it as a split
+    # delimiter should be safe.
+    template = '''
+    {% import "photo_card.html" as photo_card %}
+    {% for photo in photos %}
+        {{photo.id}}:
+        {{photo_card.create_photo_card(photo)}}
+        :SPLITME:
+    {% endfor %}
+    '''
+    html = flask.render_template_string(template, photos=photos)
+    divs = [div.strip() for div in html.split(':SPLITME:')]
+    divs = [div for div in divs if div]
+    divs = [div.split(':', 1) for div in divs]
+    divs = {photo_id.strip(): photo_card.strip() for (photo_id, photo_card) in divs}
+    response = jsonify.make_json_response(divs)
+    return response
+
 # Search ###########################################################################################
 
 def get_search_core():

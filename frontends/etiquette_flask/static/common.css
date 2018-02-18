@@ -305,3 +305,8 @@ is hovered over.
     width: 300px;
     overflow-y: auto;
 }
+#clipboard_tray_toolbox
+{
+    display: flex;
+    flex-direction: column;
+}

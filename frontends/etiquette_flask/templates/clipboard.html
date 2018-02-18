@@ -1,0 +1,101 @@
+<!DOCTYPE html5>
+<html>
+<head>
+    {% import "header.html" as header %}
+    {% import "clipboard_tray.html" as clipboard_tray %}
+    <title>Clipboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="/static/common.css">
+    <script src="/static/common.js"></script>
+    <script src="/static/photoclipboard.js"></script>
+
+<style>
+</style>
+</head>
+
+
+<body>
+    {{header.make_header(session=session)}}
+    <div id="content_body">
+        <div id="photo_card_holder">
+        </div>
+    </div>
+</body>
+
+
+<script type="text/javascript">
+var divs = {};
+var needed = new Set();
+var holder = document.getElementById("photo_card_holder");
+
+function recalculate_needed()
+{
+    needed = new Set();
+    photo_clipboard.forEach(function(photo_id)
+    {
+        if (!(photo_id in divs))
+        {
+            needed.add(photo_id);
+        }
+    });
+}
+
+function refresh_divs()
+{
+    for (var photo_id in divs)
+    {
+        var photo_div = divs[photo_id];
+        var should_keep = photo_clipboard.has(photo_id);
+        var on_page = holder.contains(photo_div);
+        if (on_page && !should_keep)
+        {
+            holder.removeChild(photo_div)
+        }
+        if (!on_page && should_keep)
+        {
+            holder.appendChild(photo_div)
+        }
+    }
+}
+
+function request_more_divs()
+{
+    if (needed.size == 0)
+    {
+        return;
+    }
+    var url = "/photo_cards";
+    var data = new FormData();
+    var photo_ids = Array.from(needed).join(",");
+    data.append("photo_ids", photo_ids);
+    function callback(response)
+    {
+        if (response["meta"]["status"] !== 200)
+        {
+            return;
+        }
+        response = response["data"];
+        var holder = document.getElementById("photo_card_holder");
+        for (photo_id in response)
+        {
+            photo_div = html_to_element(response[photo_id]);
+            divs[photo_id] = photo_div;
+            needed.delete(photo_id)
+            holder.appendChild(photo_div);
+        }
+        apply_check_all();
+    }
+    post(url, data, callback);
+}
+
+function myhook()
+{
+    recalculate_needed();
+    request_more_divs();
+    refresh_divs();
+}
+
+on_clipboard_load_hooks.push(myhook);
+</script>
+</html>

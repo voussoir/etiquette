@@ -173,6 +173,12 @@ function update_clipboard_tray()
     Update the clipboard's title bar to the correct number of items and rebuild
     the rows if the tray is open.
     */
+    var clipboard_tray = document.getElementById("clipboard_tray");
+    if (clipboard_tray === null)
+    {
+        return;
+    }
+
     var tray_button = document.getElementById("clipboard_tray_expandbutton");
     if (tray_button !== null)
     {
