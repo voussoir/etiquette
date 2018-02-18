@@ -1,4 +1,6 @@
 var photo_clipboard = new Set();
+var on_clipboard_load_hooks = [];
+var on_clipboard_save_hooks = [];
 
 // Load save ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -17,6 +19,12 @@ function load_photo_clipboard(event)
     {
         photo_clipboard = new Set(JSON.parse(stored));
     }
+
+    for (var index = 0; index < on_clipboard_load_hooks.length; index += 1)
+    {
+        on_clipboard_load_hooks[index]();
+    }
+
     return photo_clipboard;
 }
 
@@ -26,6 +34,11 @@ function save_photo_clipboard()
     var serialized = JSON.stringify(Array.from(photo_clipboard));
     localStorage.setItem("photo_clipboard", serialized);
     on_storage();
+
+    for (var index = 0; index < on_clipboard_save_hooks.length; index += 1)
+    {
+        on_clipboard_save_hooks[index]();
+    }
 }
 
 
