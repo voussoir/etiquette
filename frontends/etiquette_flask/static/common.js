@@ -235,7 +235,7 @@ function create_message_bubble(message_area, message_positivity, message_text, l
     setTimeout(function(){message_area.removeChild(message);}, lifespan);
 }
 
-function post(url, data, callback)
+function _request(method, url, callback)
 {
     var request = new XMLHttpRequest();
     request.onreadystatechange = function()
@@ -253,7 +253,17 @@ function post(url, data, callback)
         }
     };
     var asynchronous = true;
-    request.open("POST", url, asynchronous);
+    request.open(method, url, asynchronous);
+    return request;
+}
+function get(url, callback)
+{
+    request = _request("GET", url, callback);
+    request.send();
+}
+function post(url, data, callback)
+{
+    request = _request("POST", url, callback);
     request.send(data);
 }
 
