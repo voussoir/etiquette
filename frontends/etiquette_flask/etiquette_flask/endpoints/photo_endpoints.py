@@ -122,8 +122,8 @@ def post_photo_refresh_metadata(photo_id):
 def get_clipboard_page():
     return flask.render_template('clipboard.html')
 
-@site.route('/photo_cards', methods=['POST'])
-def get_photo_cards():
+@site.route('/batch/photos/photo_card', methods=['POST'])
+def post_batch_photos_photo_cards():
     photo_ids = request.form.get('photo_ids', None)
     if photo_ids is None:
         return jsonify.make_json_response({})

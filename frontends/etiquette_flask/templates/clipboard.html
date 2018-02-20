@@ -65,7 +65,7 @@ function request_more_divs()
     {
         return;
     }
-    var url = "/photo_cards";
+    var url = "/batch/photos/photo_card";
     var data = new FormData();
     var photo_ids = Array.from(needed).join(",");
     data.append("photo_ids", photo_ids);
