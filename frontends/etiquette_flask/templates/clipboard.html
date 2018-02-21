@@ -11,6 +11,10 @@
     <script src="/static/photoclipboard.js"></script>
 
 <style>
+#content_body
+{
+    flex-direction: column;
+}
 </style>
 </head>
 
@@ -18,6 +22,7 @@
 <body>
     {{header.make_header(session=session)}}
     <div id="content_body">
+        <span>The clipboard contains <span class="clipboard_count">0</span> items</span>
         <div id="photo_card_holder">
         </div>
     </div>
@@ -97,5 +102,6 @@ function myhook()
 }
 
 on_clipboard_load_hooks.push(myhook);
+on_clipboard_save_hooks.push(myhook);
 </script>
 </html>

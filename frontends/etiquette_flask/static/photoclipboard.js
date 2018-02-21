@@ -33,7 +33,7 @@ function save_photo_clipboard()
     console.log("Saving photo clipboard");
     var serialized = JSON.stringify(Array.from(photo_clipboard));
     localStorage.setItem("photo_clipboard", serialized);
-    on_storage();
+    update_pagestate();
 
     for (var index = 0; index < on_clipboard_save_hooks.length; index += 1)
     {
@@ -135,7 +135,18 @@ function on_photo_select(event)
 
 // Tray management /////////////////////////////////////////////////////////////////////////////////
 
-function toggle_clipboard_tray_collapsed()
+function clipboard_tray_collapse()
+{
+    var tray_body = document.getElementById("clipboard_tray_body");
+    tray_body.classList.add("hidden");
+}
+function clipboard_tray_uncollapse()
+{
+    var tray_body = document.getElementById("clipboard_tray_body");
+    tray_body.classList.remove("hidden");
+    update_clipboard_tray();
+}
+function clipboard_tray_collapse_toggle()
 {
     /*
     Show or hide the clipboard.
@@ -143,12 +154,11 @@ function toggle_clipboard_tray_collapsed()
     var tray_body = document.getElementById("clipboard_tray_body");
     if (tray_body.classList.contains("hidden") && photo_clipboard.size > 0)
     {
-        tray_body.classList.remove("hidden");
-        update_clipboard_tray();
+        clipboard_tray_uncollapse();
     }
     else
     {
-        tray_body.classList.add("hidden");
+        clipboard_tray_collapse();
     }
 }
 
@@ -162,7 +172,7 @@ function on_tray_delete_button(event)
     photo_clipboard.delete(photo_id);
     if (photo_clipboard.size == 0)
     {
-        toggle_clipboard_tray_collapsed();
+        clipboard_tray_collapse();
     }
     save_photo_clipboard();
 }
@@ -170,19 +180,12 @@ function on_tray_delete_button(event)
 function update_clipboard_tray()
 {
     /*
-    Update the clipboard's title bar to the correct number of items and rebuild
-    the rows if the tray is open.
+    Rebuild the rows if the tray is open.
     */
     var clipboard_tray = document.getElementById("clipboard_tray");
     if (clipboard_tray === null)
     {
         return;
-    }
-
-    var tray_button = document.getElementById("clipboard_tray_expandbutton");
-    if (tray_button !== null)
-    {
-        tray_button.innerText = "Clipboard: " + photo_clipboard.size + " items";
     }
 
     var tray_lines = document.getElementById("clipboard_tray_lines");
@@ -214,14 +217,27 @@ function update_clipboard_tray()
     }
 }
 
+function update_clipboard_count()
+{
+    var elements = document.getElementsByClassName("clipboard_count");
+    for (var index = 0; index < elements.length; index += 1)
+    {
+        elements[index].innerText = photo_clipboard.size;
+    }
+}
 function on_storage()
 {
     /*
     Receive storage events from other tabs and update our state to match.
     */
     load_photo_clipboard();
-    apply_check_all();
+    update_pagestate();
+}
+function update_pagestate()
+{
+    update_clipboard_count();
     update_clipboard_tray();
+    apply_check_all();
 }
 function on_pageload()
 {
