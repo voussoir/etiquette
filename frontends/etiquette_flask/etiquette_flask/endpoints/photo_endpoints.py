@@ -68,14 +68,19 @@ def get_thumbnail(photo_id):
 # Photo tag operations #############################################################################
 
 @decorators.catch_etiquette_exception
-def post_photo_add_remove_tag_core(photo_id, tagname, add_or_remove):
-    photo = common.P_photo(photo_id, response_type='json')
+def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
+    if isinstance(photo_ids, str):
+        photo_ids = etiquette.helpers.comma_space_split(photo_ids)
+
+    photos = [common.P_photo(photo_id, response_type='json') for photo_id in photo_ids]
     tag = common.P_tag(tagname, response_type='json')
 
-    if add_or_remove == 'add':
-        photo.add_tag(tag)
-    elif add_or_remove == 'remove':
-        photo.remove_tag(tag)
+    for photo in photos:
+        if add_or_remove == 'add':
+            photo.add_tag(tag, commit=False)
+        elif add_or_remove == 'remove':
+            photo.remove_tag(tag, commit=False)
+    common.P.commit()
 
     response = {'tagname': tag.name}
     return jsonify.make_json_response(response)
@@ -86,7 +91,12 @@ def post_photo_add_tag(photo_id):
     '''
     Add a tag to this photo.
     '''
-    return post_photo_add_remove_tag_core(photo_id, request.form['tagname'], 'add')
+    response = post_photo_add_remove_tag_core(
+        photo_ids=photo_id,
+        tagname=request.form['tagname'],
+        add_or_remove='add',
+    )
+    return response
 
 @site.route('/photo/<photo_id>/remove_tag', methods=['POST'])
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
@@ -94,7 +104,32 @@ def post_photo_remove_tag(photo_id):
     '''
     Remove a tag from this photo.
     '''
-    return post_photo_add_remove_tag_core(photo_id, request.form['tagname'], 'remove')
+    response = post_photo_add_remove_tag_core(
+        photo_ids=photo_id,
+        tagname=request.form['tagname'],
+        add_or_remove='remove',
+    )
+    return response
+
+@site.route('/batch/photos/add_tag', methods=['POST'])
+@decorators.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
+def post_batch_photos_add_tag():
+    response = post_photo_add_remove_tag_core(
+        photo_ids=request.form['photo_ids'],
+        tagname=request.form['tagname'],
+        add_or_remove='add',
+    )
+    return response
+
+@site.route('/batch/photos/remove_tag', methods=['POST'])
+@decorators.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
+def post_batch_photos_remove_tag():
+    response = post_photo_add_remove_tag_core(
+        photo_ids=request.form['photo_ids'],
+        tagname=request.form['tagname'],
+        add_or_remove='remove',
+    )
+    return response
 
 # Photo metadata operations ########################################################################
 
@@ -123,13 +158,12 @@ def get_clipboard_page():
     return flask.render_template('clipboard.html')
 
 @site.route('/batch/photos/photo_card', methods=['POST'])
+@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_photo_cards():
-    photo_ids = request.form.get('photo_ids', None)
-    if photo_ids is None:
-        return jsonify.make_json_response({})
+    photo_ids = request.form['photo_ids']
 
     photo_ids = etiquette.helpers.comma_space_split(photo_ids)
-    photos = [common.P_photo(photo_id, response_type='html') for photo_id in photo_ids]
+    photos = [common.P_photo(photo_id, response_type='json') for photo_id in photo_ids]
 
     # Photo filenames are prevented from having colons, so using it as a split
     # delimiter should be safe.
