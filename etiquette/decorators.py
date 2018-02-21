@@ -69,7 +69,6 @@ def transaction(method):
             return ret
         except Exception as e:
             self.log.debug('Rolling back')
-            print(e)
             self.sql.rollback()
             raise
     return wrapped

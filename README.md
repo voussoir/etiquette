@@ -80,6 +80,11 @@ If you are interested in helping, please raise an issue before making any pull r
 - Perhaps instead of actually deleting objects, they should just have a `deleted` flag, to make easy restoration possible. Also consider regrouping the children of restored Groupables if those children haven't already been reassigned somewhere else.
 - Add a new table to store permanent history of add/remove of tags on photos, so that accidents or trolling can be reversed.
 - Improve transaction rollbacking. I'm not satisfied with the @transaction decorator because sometimes I want to use exceptions as control flow without them rolling things back. Context managers are good but it's a matter of how abstracted they should be.
+- Photo thumbnail paths should be relative to the data_dir, they are currently one level up. Or maybe should remove the paths entirely and just recalculate it by the ID. Can't think of any reason to have a thumbnail point elsewhere.
+- Fix album size cache when photo reload metadata and generally improve that validation.
+- Better bookmark url validation.
+- Create a textbox which gives autocomplete tag names.
+- Allow any div to get the clipboard size. Update via classname instead of ID.
 
 ### To do list: User permissions
 Here are some thoughts about the kinds of features that need to exist within the permission system. I don't know how I'll actually manage it just yet. Possibly a `permissions` table in the database with `user_id | permission` where `permission` is some reliably-formatted string.

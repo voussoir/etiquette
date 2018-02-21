@@ -1183,7 +1183,7 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
                 item = self.get_tag(name=name)
                 note = ('existing_tag', item.qualified_name())
             except exceptions.NoSuchTag:
-                item = self.new_tag(name)
+                item = self.new_tag(name, commit=False)
                 note = ('new_tag', item.qualified_name())
             output_notes.append(note)
             return item
@@ -1228,12 +1228,15 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             tags = [create_or_get(t) for t in tag_parts]
             for (higher, lower) in zip(tags, tags[1:]):
                 try:
-                    lower.join_group(higher)
+                    lower.join_group(higher, commit=False)
                     note = ('join_group', '%s.%s' % (higher.name, lower.name))
                     output_notes.append(note)
                 except exceptions.GroupExists:
                     pass
             tag = tags[-1]
+
+        self.log.debug('Committing - easybake')
+        self.commit()
 
         if synonym:
             synonym = tag.add_synonym(synonym)
