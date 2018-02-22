@@ -11,21 +11,80 @@
     <script src="/static/photoclipboard.js"></script>
 
 <style>
-#content_body
+body
 {
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 300px;
+    grid-template-areas:
+        "header header"
+        "left right";
+}
+#header
+{
+    grid-area: header;
+}
+#left
+{
+    word-break: break-word;
+    grid-area: left;
+}
+#right
+{
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    top: 30px;
+    width: 300px;
+    grid-area: right;
+
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-areas:
+        "add_tag_area"
+        "remove_tag_area"
+        "message_area";
+
+    background-color: rgba(0, 0, 0, 0.1);
+}
+#add_tag_area
+{
+    grid-area: add_tag_area;
+    margin: auto;
+}
+#remove_tag_area
+{
+    grid-area: remove_tag_area;
+    margin: auto;
+}
+#message_area
+{
+    grid-area: message_area;
+    margin: 8px;
 }
 </style>
 </head>
 
 
 <body>
-    {{header.make_header(session=session)}}
-    <div id="content_body">
-        <span>The clipboard contains <span class="clipboard_count">0</span> items</span>
-        <div id="photo_card_holder">
-        </div>
+{{header.make_header(session=session)}}
+<div id="left">
+    <span>The clipboard contains <span class="clipboard_count">0</span> items</span>
+    <div id="photo_card_holder">
     </div>
+</div>
+<div id="right">
+    <div id="add_tag_area">
+        <input type="text" id="add_tag_textbox">
+        <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_add_tag(add_remove_callback);">add</button>
+    </div>
+    <div id="remove_tag_area">
+        <input type="text" id="remove_tag_textbox">
+        <button class="red_button" id="remove_tag_button" onclick="submit_remove_tag(add_remove_callback);">Remove</button>
+    </div>
+    <div id="message_area">
+    </div>
+</div>
 </body>
 
 
@@ -33,6 +92,13 @@
 var divs = {};
 var needed = new Set();
 var holder = document.getElementById("photo_card_holder");
+
+var add_box = document.getElementById("add_tag_textbox");
+var add_button = document.getElementById("add_tag_button");
+add_box.onkeydown = function(){entry_with_history_hook(add_box, add_button)};
+var remove_box = document.getElementById("remove_tag_textbox");
+var remove_button = document.getElementById("remove_tag_button");
+remove_box.onkeydown = function(){entry_with_history_hook(remove_box, remove_button)};
 
 function recalculate_needed()
 {
@@ -103,5 +169,60 @@ function myhook()
 
 on_clipboard_load_hooks.push(myhook);
 on_clipboard_save_hooks.push(myhook);
+
+
+function submit_add_tag(callback)
+{
+    var box = document.getElementById("add_tag_textbox");
+    var tagname = box.value.trim();
+    if (! tagname)
+        {return}
+
+    box.value = "";
+    return submit_add_remove_tag("add", tagname, callback);
+}
+function submit_remove_tag(callback)
+{
+    var box = document.getElementById("remove_tag_textbox");
+    var tagname = box.value.trim();
+    if (! tagname)
+        {return}
+
+    box.value = "";
+    return submit_add_remove_tag("remove", tagname, callback);
+}
+function submit_add_remove_tag(action, tagname, callback)
+{
+    var url = "/batch/photos/" + action + "_tag";
+    var data = new FormData();
+    var photo_ids = Array.from(photo_clipboard).join(",");
+    data.append("photo_ids", photo_ids);
+    data.append("tagname", tagname);
+    post(url, data, callback);
+}
+function add_remove_callback(response)
+{
+    response = response["data"];
+    var tagname = response["tagname"];
+    var message_positivity;
+    var message_text;
+
+    if ("error_type" in response)
+    {
+        message_positivity = "message_negative";
+        message_text = response["error_message"];
+    }
+    else if ("action" in response)
+    {
+        var action = response["action"];
+        message_positivity = "message_positive";
+        if (action == "add")
+        {message_text = "Added tag " + tagname;}
+
+        else if (action == "remove")
+        {message_text = "Removed tag " + tagname;}
+    }
+    create_message_bubble(message_area, message_positivity, message_text, 8000);
+}
 </script>
 </html>

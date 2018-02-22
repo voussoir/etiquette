@@ -82,7 +82,7 @@ def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
             photo.remove_tag(tag, commit=False)
     common.P.commit()
 
-    response = {'tagname': tag.name}
+    response = {'action': add_or_remove, 'tagname': tag.name}
     return jsonify.make_json_response(response)
 
 @site.route('/photo/<photo_id>/add_tag', methods=['POST'])
