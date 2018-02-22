@@ -170,10 +170,6 @@ function on_tray_delete_button(event)
     var clipboard_line = event.target.parentElement;
     var photo_id = clipboard_line.dataset.id;
     photo_clipboard.delete(photo_id);
-    if (photo_clipboard.size == 0)
-    {
-        clipboard_tray_collapse();
-    }
     save_photo_clipboard();
 }
 
@@ -186,6 +182,11 @@ function update_clipboard_tray()
     if (clipboard_tray === null)
     {
         return;
+    }
+
+    if (photo_clipboard.size == 0)
+    {
+        clipboard_tray_collapse();
     }
 
     var tray_lines = document.getElementById("clipboard_tray_lines");
