@@ -16,88 +16,74 @@
 <style>
 body
 {
-    display:flex;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 300px;
+    grid-template-areas:
+        "header header"
+        "left right";
 }
-#content_body
+#header
 {
-    flex: 1;
-    word-break: break-word;
+    grid-area: header;
 }
 #left
 {
-    flex: 1;
-    height: auto;
-    padding: 8px;
-}
-#description_text
-{
-    padding: 8px;
-    background-color: rgba(0, 0, 0, 0.1);
-    font-family: initial;
+    word-break: break-word;
+    grid-area: left;
 }
 #right
 {
-    width: 316px;
-}
-#right_inner
-{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    flex: 1;
-
     position: fixed;
-    top: 30px;
     right: 8px;
     bottom: 8px;
+    top: 30px;
     width: 300px;
+    grid-area: right;
 
-    padding: 8px;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    grid-template-areas:
+        "editor_area"
+        "message_area";
+
     background-color: rgba(0, 0, 0, 0.1);
 }
 #editor_area
 {
-    display: flex;
-    flex-direction: row;
-    justify-content center;
-    align-items: center;
-    flex: 1;
+    grid-area: editor_area;
+    margin: auto;
 }
 #message_area
 {
-    display: flex;
-    flex-direction: column;
-    justify-content center;
-    align-items: center;
-    flex: 2;
-
-    overflow-y: auto;
-
-    background-color: rgba(0, 0, 0, 0.1);
+    grid-area: message_area;
+    margin: 8px;
 }
+
 @media screen and (max-width: 800px)
 {
-    #content_body
+    body
     {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr 150px;
+        grid-template-areas:
+            "header"
+            "left"
+            "right";
     }
     #right
     {
-        width: initial;
-        height: 216px;
-    }
-    #right_inner
-    {
-        flex-direction: row;
+        top: unset;
+        width: unset;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        height: 150px;
 
-        position: initial;
-        left: initial;
-        right: initial;
-        bottom: initial;
-        top: initial;
-        width: initial;
-        height: 200px;
+        grid-template-areas:
+            "editor_area message_area";
+        grid-template-rows: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
 }
 </style>
@@ -106,56 +92,52 @@ body
 
 <body>
 {{header.make_header(session=session)}}
-<div id="content_body">
-    <div id="left">
-        {% if specific_tag is not none %}
-            <h2>
-                <span
-                id="name_text"
-                data-editor-id="name"
-                data-editor-placeholder="name"
-                >
-                    {{-specific_tag.name-}}
-                </span>
-            </h2>
-            <pre
-            id="description_text"
-            data-editor-id="description"
-            data-editor-placeholder="description"
-            {% if specific_tag.description == "" %}class="hidden"{% endif -%}
+<div id="left">
+    {% if specific_tag is not none %}
+        <h2>
+            <span
+            id="name_text"
+            data-editor-id="name"
+            data-editor-placeholder="name"
             >
-                {{-specific_tag.description-}}
-            </pre>
-        {% endif %}
-        <ul>
-            {% for tag in tags %}
-            {% set qualified_name = tag.qualified_name() %}
+                {{-specific_tag.name-}}
+            </span>
+        </h2>
+        <pre
+        id="description_text"
+        data-editor-id="description"
+        data-editor-placeholder="description"
+        {% if specific_tag.description == "" %}class="hidden"{% endif -%}
+        >
+            {{-specific_tag.description-}}
+        </pre>
+    {% endif %}
+    <ul>
+        {% for tag in tags %}
+        {% set qualified_name = tag.qualified_name() %}
+        <li>
+            {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
+            {{tag_object.tag_object(tag, link='search', qualified_name=True, with_alt_qualified_name=False)}}<!--
+            --><button class="remove_tag_button red_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
+        </li>
+        {% if include_synonyms %}
+            {% for synonym in tag.get_synonyms() %}
             <li>
-                {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
-                {{tag_object.tag_object(tag, link='search', qualified_name=True, with_alt_qualified_name=False)}}<!--
-                --><button class="remove_tag_button red_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
+                {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
+                {{tag_object.tag_object(tag, innertext=qualified_name + '+' + synonym, link='search')}}<!--
+                --><button class="remove_tag_button red_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
             </li>
-            {% if include_synonyms %}
-                {% for synonym in tag.get_synonyms() %}
-                <li>
-                    {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
-                    {{tag_object.tag_object(tag, innertext=qualified_name + '+' + synonym, link='search')}}<!--
-                    --><button class="remove_tag_button red_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
-                </li>
-                {% endfor %}
-            {% endif %}
             {% endfor %}
-        </ul>
+        {% endif %}
+        {% endfor %}
+    </ul>
+</div>
+<div id="right">
+    <div id="editor_area">
+    <input type="text" id="add_tag_textbox" autofocus>
+    <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
     </div>
-    <div id="right">
-        <div id="right_inner">
-            <div id="editor_area">
-            <input type="text" id="add_tag_textbox" autofocus>
-            <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
-            </div>
-            <div id="message_area">
-            </div>
-        </div>
+    <div id="message_area">
     </div>
 </div>
 </body>

@@ -21,13 +21,7 @@ body
     display: flex;
     flex-direction: column;
 
-    margin: 8px;
-
     background-color: var(--color_site_theme);
-}
-li
-{
-    position:relative;
 }
 #header
 {
@@ -256,9 +250,6 @@ is hovered over.
     flex-direction: column;
     align-items: center;
 
-    max-height: 300px;
-    width: 100%;
-    height: 100%;
     overflow-y: auto;
 
     background-color: rgba(0, 0, 0, 0.1);
