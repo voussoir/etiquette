@@ -155,35 +155,3 @@ is hovered over.
 {
     background-color: #faa;
 }
-
-#clipboard_tray
-{
-    display: flex;
-    flex-direction: column;
-
-    position: fixed;
-    right: 8px;
-    bottom: 8px;
-    z-index: 10;
-
-    max-height: 80%;
-    min-width: 150px;
-    padding: 2px;
-
-    background-color: #ffffd4;
-}
-#clipboard_tray_expandbutton
-{
-    flex: 1 0 auto;
-    width: 100%;
-}
-#clipboard_tray_body
-{
-    width: 300px;
-    overflow-y: auto;
-}
-#clipboard_tray_toolbox
-{
-    display: flex;
-    flex-direction: column;
-}
