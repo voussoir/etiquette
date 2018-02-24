@@ -41,10 +41,11 @@ body
     grid-area: right;
 
     display: grid;
-    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
     grid-template-areas:
         "add_tag_area"
         "remove_tag_area"
+        "refresh_metadata_area"
         "message_area";
 
     background-color: rgba(0, 0, 0, 0.1);
@@ -59,10 +60,16 @@ body
     grid-area: remove_tag_area;
     margin: auto;
 }
+#refresh_metadata_area
+{
+    grid-area: refresh_metadata_area;
+    margin: auto;
+}
 #message_area
 {
     grid-area: message_area;
     margin: 8px;
+    max-height: 300px;
 }
 </style>
 </head>
@@ -78,11 +85,14 @@ body
 <div id="right">
     <div id="add_tag_area">
         <input type="text" id="add_tag_textbox">
-        <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_add_tag(add_remove_callback);">add</button>
+        <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_add_tag(add_remove_callback);">Add tag</button>
     </div>
     <div id="remove_tag_area">
         <input type="text" id="remove_tag_textbox">
-        <button class="red_button" id="remove_tag_button" onclick="submit_remove_tag(add_remove_callback);">Remove</button>
+        <button class="red_button" id="remove_tag_button" onclick="submit_remove_tag(add_remove_callback);">Remove tag</button>
+    </div>
+    <div id="refresh_metadata_area">
+        <button class="green_button" id="refresh_metadata_button" onclick="submit_refresh_metadata(refresh_metadata_callback);">Refresh metadata</button>
     </div>
     <div id="message_area">
     </div>
@@ -97,10 +107,13 @@ var holder = document.getElementById("photo_card_holder");
 
 var add_box = document.getElementById("add_tag_textbox");
 var add_button = document.getElementById("add_tag_button");
-add_box.onkeydown = function(){entry_with_history_hook(add_box, add_button)};
+add_box.addEventListener("keyup", entry_with_history_hook);
+bind_box_to_button(add_box, add_button);
+
 var remove_box = document.getElementById("remove_tag_textbox");
 var remove_button = document.getElementById("remove_tag_button");
-remove_box.onkeydown = function(){entry_with_history_hook(remove_box, remove_button)};
+remove_box.addEventListener("keyup", entry_with_history_hook);
+bind_box_to_button(remove_box, remove_button);
 
 function recalculate_needed()
 {
@@ -195,9 +208,11 @@ function submit_remove_tag(callback)
 }
 function submit_add_remove_tag(action, tagname, callback)
 {
+    if (photo_clipboard.size == 0)
+        {return;}
     var url = "/batch/photos/" + action + "_tag";
-    var data = new FormData();
     var photo_ids = Array.from(photo_clipboard).join(",");
+    var data = new FormData();
     data.append("photo_ids", photo_ids);
     data.append("tagname", tagname);
     post(url, data, callback);
@@ -206,6 +221,7 @@ function add_remove_callback(response)
 {
     response = response["data"];
     var tagname = response["tagname"];
+    var message_area = document.getElementById("message_area");
     var message_positivity;
     var message_text;
 
@@ -225,6 +241,38 @@ function add_remove_callback(response)
         {message_text = "Removed tag " + tagname;}
     }
     create_message_bubble(message_area, message_positivity, message_text, 8000);
+}
+
+var refresh_in_progress = false;
+function submit_refresh_metadata(callback)
+{
+    if (refresh_in_progress)
+        {return;}
+
+    if (photo_clipboard.size == 0)
+        {return;}
+
+    var url = "/batch/photos/refresh_metadata";
+    var photo_ids = Array.from(photo_clipboard).join(",");
+    var data = new FormData();
+    data.append("photo_ids", photo_ids);
+    refresh_in_progress = true;
+    post(url, data, callback);
+}
+function refresh_metadata_callback(response)
+{
+    refresh_in_progress = false;
+    if ("error_type" in response)
+    {
+        var message_area = document.getElementById("message_area");
+        var message_positivity = "message_negative";
+        var message_text = response["error_message"];
+        create_message_bubble(message_area, message_positivity, message_text, 8000);
+    }
+    else
+    {
+        location.reload();
+    }
 }
 </script>
 </html>
