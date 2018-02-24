@@ -84,7 +84,6 @@ If you are interested in helping, please raise an issue before making any pull r
 - Fix album size cache when photo reload metadata and generally improve that validation.
 - Better bookmark url validation.
 - Create a textbox which gives autocomplete tag names.
-- Clean up the textbox hooks & handlers and make them more like stackable decorators (entry with history + bind box to button).
 
 ### To do list: User permissions
 Here are some thoughts about the kinds of features that need to exist within the permission system. I don't know how I'll actually manage it just yet. Possibly a `permissions` table in the database with `user_id | permission` where `permission` is some reliably-formatted string.

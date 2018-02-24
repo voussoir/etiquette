@@ -270,22 +270,6 @@ function post(url, data, callback)
     request.send(data);
 }
 
-function bind_box_to_button(box, button, ctrl_enter)
-{
-    box.onkeydown=function()
-    {
-        // Thanks Yaroslav Yakovlev
-        // http://stackoverflow.com/a/9343095
-        if (
-            (event.keyCode == 13 || event.keyCode == 10) &&
-            ((ctrl_enter && event.ctrlKey) || (!ctrl_enter))
-        )
-        {
-            button.click();
-        }
-    };
-}
-
 function create_album_and_follow(parent)
 {
     var url = "/albums/create_album";
@@ -316,38 +300,54 @@ function delete_all_children(element)
     }
 }
 
-function entry_with_history_hook(box, button)
+function bind_box_to_button(box, button, ctrl_enter)
 {
-    //console.log(event.keyCode);
-    if (box.entry_history === undefined)
-    {box.entry_history = [];}
-    if (box.entry_history_pos === undefined)
-    {box.entry_history_pos = -1;}
-    if (event.keyCode == 13)
+    // Thanks Yaroslav Yakovlev
+    // http://stackoverflow.com/a/9343095
+    var bound_box_hook = function(event)
     {
-        /* Enter */
-        box.entry_history.push(box.value);
-        button.click();
-        box.value = "";
-    }
-    else if (event.keyCode == 38)
-    {
+        if (event.key !== "Enter")
+            {return;}
 
-        /* Up arrow */
+        ctrl_success = !ctrl_enter || (event.ctrlKey)
+
+        if (! ctrl_success)
+            {return;}
+
+        button.click();
+    }
+    box.addEventListener("keyup", bound_box_hook);
+}
+
+function entry_with_history_hook(event)
+{
+    //console.log(event);
+    var box = event.target;
+
+    if (box.entry_history === undefined)
+        {box.entry_history = [];}
+
+    if (box.entry_history_pos === undefined)
+        {box.entry_history_pos = -1;}
+
+    if (event.key === "Enter")
+    {
+        box.entry_history.push(box.value);
+    }
+    else if (event.key === "ArrowUp")
+    {
         if (box.entry_history.length == 0)
-        {return}
+            {return}
+
         if (box.entry_history_pos == -1)
-        {
-            box.entry_history_pos = box.entry_history.length - 1;
-        }
+            {box.entry_history_pos = box.entry_history.length - 1;}
         else if (box.entry_history_pos > 0)
-        {
-            box.entry_history_pos -= 1;
-        }
+            {box.entry_history_pos -= 1;}
+
         box.value = box.entry_history[box.entry_history_pos];
         setTimeout(function(){box.selectionStart = box.value.length;}, 0);
     }
-    else if (event.keyCode == 27)
+    else if (event.key === "Escape")
     {
         box.value = "";
     }

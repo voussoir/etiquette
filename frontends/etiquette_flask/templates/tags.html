@@ -147,7 +147,8 @@ body
 var box = document.getElementById('add_tag_textbox');
 var button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
-box.onkeydown = function(){entry_with_history_hook(box, button)};
+box.addEventListener("keyup", entry_with_history_hook);
+bind_box_to_button(box, button, false);
 
 function submit_tag(callback)
 {

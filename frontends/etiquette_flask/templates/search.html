@@ -589,9 +589,9 @@ for (var index = 0; index < found_on_page.length; index += 1)
     
 }
 
-input_musts.onkeydown = function(){tag_input_hook(this, inputted_musts, "search_builder_musts_inputted")};
-input_mays.onkeydown = function(){tag_input_hook(this, inputted_mays, "search_builder_mays_inputted")};
-input_forbids.onkeydown = function(){tag_input_hook(this, inputted_forbids, "search_builder_forbids_inputted")};
+input_musts.addEventListener("keyup", function(){tag_input_hook(this, inputted_musts, "search_builder_musts_inputted")});
+input_mays.addEventListener("keyup", function(){tag_input_hook(this, inputted_mays, "search_builder_mays_inputted")});
+input_forbids.addEventListener("keyup", function(){tag_input_hook(this, inputted_forbids, "search_builder_forbids_inputted")});
 bind_box_to_button(input_expression, document.getElementById("search_go_button"));
 </script>
 </html>
