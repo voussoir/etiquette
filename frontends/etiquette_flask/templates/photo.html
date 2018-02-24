@@ -251,7 +251,8 @@ var content_body = document.getElementById('content_body');
 var add_tag_box = document.getElementById('add_tag_textbox');
 var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
-add_tag_box.onkeydown = function(){entry_with_history_hook(add_tag_box, add_tag_button)};
+add_tag_box.addEventListener("keyup", entry_with_history_hook);
+bind_box_to_button(add_tag_box, add_tag_button, false);
 
 photo_img_holder = document.getElementById("photo_img_holder");
 photo_img = document.getElementById("photo_img");
