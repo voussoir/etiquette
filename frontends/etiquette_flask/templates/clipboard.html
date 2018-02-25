@@ -78,7 +78,8 @@ body
 <body>
 {{header.make_header(session=session)}}
 <div id="left">
-    <span>The clipboard contains <span class="clipboard_count">0</span> items</span>
+    <span>The clipboard contains <span class="clipboard_count">0</span> items.</span>
+    <button id="clear_clipboard_button" class="red_button" onclick="clear_photo_clipboard()">Clear it.</button>
     <div id="photo_card_holder">
     </div>
 </div>

@@ -4,6 +4,12 @@ var on_clipboard_save_hooks = [];
 
 // Load save ///////////////////////////////////////////////////////////////////////////////////////
 
+function clear_photo_clipboard()
+{
+    photo_clipboard.clear();
+    save_photo_clipboard();
+}
+
 function load_photo_clipboard(event)
 {
     console.log("Loading photo clipboard");
