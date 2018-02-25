@@ -170,7 +170,8 @@ def post_batch_photos_refresh_metadata():
 @site.route('/clipboard')
 @session_manager.give_token
 def get_clipboard_page():
-    return flask.render_template('clipboard.html')
+    session = session_manager.get(request)
+    return flask.render_template('clipboard.html', session=session)
 
 @site.route('/batch/photos/photo_card', methods=['POST'])
 @decorators.required_fields(['photo_ids'], forbid_whitespace=True)
