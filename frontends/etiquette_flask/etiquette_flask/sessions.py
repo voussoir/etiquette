@@ -10,10 +10,7 @@ SESSION_MAX_AGE = 86400
 REQUEST_TYPES = (flask.Request, werkzeug.wrappers.Request, werkzeug.local.LocalProxy)
 
 def _generate_token(length=32):
-    randbytes = os.urandom(math.ceil(length / 2))
-    token = ''.join('{:02x}'.format(x) for x in randbytes)
-    token = token[:length]
-    return token
+    return etiquette.helpers.random_hex(length=length)
 
 def _normalize_token(token):
     if isinstance(token, REQUEST_TYPES):
