@@ -267,6 +267,11 @@ form
                 <option value="yes"{%if search_kwargs['has_tags'] == True %}selected{%endif%}>Tagged only</option>
                 <option value="no" {%if search_kwargs['has_tags'] == False %}selected{%endif%}>Untagged only</option>
             </select>
+            <select name="has_thumbnail" class="basic_param">
+                <option value=""   {%if search_kwargs['has_thumbnail'] == None %}selected{%endif%}>Thumbnail doesn't matter</option>
+                <option value="yes"{%if search_kwargs['has_thumbnail'] == True %}selected{%endif%}>Has thumbnail</option>
+                <option value="no" {%if search_kwargs['has_thumbnail'] == False %}selected{%endif%}>No thumbnail</option>
+            </select>
             <select name="view" class="basic_param">
                 <option value="grid" {%if search_kwargs['view'] == "grid" %}selected{%endif%}>Grid</option>
                 <option value="list" {%if search_kwargs['view'] == "list" %}selected{%endif%}>List</option>

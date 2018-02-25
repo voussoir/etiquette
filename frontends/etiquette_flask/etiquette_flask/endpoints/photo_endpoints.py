@@ -235,6 +235,7 @@ def get_search_core():
     height = request.args.get('height')
     ratio = request.args.get('ratio')
     bytes = request.args.get('bytes')
+    has_thumbnail = request.args.get('has_thumbnail')
     duration = request.args.get('duration')
     created = request.args.get('created')
 
@@ -253,6 +254,7 @@ def get_search_core():
         'extension_not': extension_not,
         'filename': filename_terms,
         'has_tags': has_tags,
+        'has_thumbnail': has_thumbnail,
         'mimetype': mimetype,
         'tag_musts': tag_musts,
         'tag_mays': tag_mays,

@@ -348,6 +348,7 @@ class PDBPhotoMixin:
             extension_not=None,
             filename=None,
             has_tags=None,
+            has_thumbnail=None,
             mimetype=None,
             tag_musts=None,
             tag_mays=None,
@@ -392,6 +393,10 @@ class PDBPhotoMixin:
             If True, require that the Photo has >=1 tag.
             If False, require that the Photo has no tags.
             If None, any amount is okay.
+
+        has_thumbnail:
+            Require a thumbnail?
+            If None, anything is okay.
 
         mimetype:
             A string or list of strings of acceptable mimetypes.
@@ -481,6 +486,7 @@ class PDBPhotoMixin:
         filename = searchhelpers.normalize_filename(filename)
 
         limit = searchhelpers.normalize_limit(limit, warning_bag=warning_bag)
+        has_thumbnail = searchhelpers.normalize_has_thumbnail(has_thumbnail)
 
         offset = searchhelpers.normalize_offset(offset)
         if offset is None:
@@ -499,6 +505,7 @@ class PDBPhotoMixin:
         orderby = searchhelpers.normalize_orderby(orderby, warning_bag=warning_bag)
 
         notnulls = set()
+        yesnulls = set()
         if extension or mimetype:
             notnulls.add('extension')
         if width or height or ratio or area:
@@ -507,6 +514,11 @@ class PDBPhotoMixin:
             notnulls.add('bytes')
         if duration:
             notnulls.add('duration')
+
+        if has_thumbnail is True:
+            notnulls.add('thumbnail')
+        elif has_thumbnail is False:
+            yesnulls.add('thumbnail')
 
         if orderby is None:
             giveback_orderby = None
@@ -565,6 +577,7 @@ class PDBPhotoMixin:
                 'extension_not': extension_not,
                 'filename': filename,
                 'has_tags': has_tags,
+                'has_thumbnail': has_thumbnail,
                 'mimetype': mimetype,
                 'tag_musts': tag_musts,
                 'tag_mays': tag_mays,
@@ -596,6 +609,7 @@ class PDBPhotoMixin:
                 minimums=minimums,
                 mmf_results=mmf_results,
                 notnulls=notnulls,
+                yesnulls=yesnulls,
                 orderby=orderby,
             )
             print(query[:200])

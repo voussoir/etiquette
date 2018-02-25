@@ -694,7 +694,7 @@ class Photo(ObjectBase):
         return_filepath = None
 
         if self.simple_mimetype == 'image':
-            self.photodb.log.debug('Thumbnailing %s' % self.real_path.absolute_path)
+            self.photodb.log.debug('Thumbnailing %s', self.real_path.absolute_path)
             try:
                 image = PIL.Image.open(self.real_path.absolute_path)
             except (OSError, ValueError):
@@ -728,6 +728,7 @@ class Photo(ObjectBase):
 
         elif self.simple_mimetype == 'video' and constants.ffmpeg:
             #print('video')
+            self.photodb.log.debug('Thumbnailing %s', self.real_path.absolute_path)
             probe = constants.ffmpeg.probe(self.real_path.absolute_path)
             try:
                 if probe.video:

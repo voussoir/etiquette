@@ -18,11 +18,15 @@ def build_query(
         minimums=None,
         mmf_results=None,
         notnulls=None,
+        yesnulls=None,
         orderby=None,
     ):
 
     if notnulls is None:
         notnulls = set()
+
+    if yesnulls is None:
+        yesnulls = set()
 
     query = ['SELECT * FROM photos']
     wheres = set()
@@ -59,6 +63,9 @@ def build_query(
 
     for column in notnulls:
         wheres.add(column + ' IS NOT NULL')
+
+    for column in yesnulls:
+        wheres.add(column + ' IS NULL')
 
     if wheres:
         wheres = 'WHERE '  + ' AND '.join(wheres)
@@ -264,6 +271,9 @@ def normalize_has_tags(has_tags):
         return bool(has_tags)
 
     return None
+
+def normalize_has_thumbnail(has_thumbnail):
+    return helpers.truthystring(has_thumbnail)
 
 def normalize_limit(limit, warning_bag=None):
     if not limit and limit != 0:
