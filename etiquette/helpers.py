@@ -358,8 +358,12 @@ def truthystring(s):
 
     Case insensitive.
     '''
-    if isinstance(s, (bool, int)) or s is None:
-        return s
+    if s is None:
+        return None
+
+    if isinstance(s, (bool, int)):
+        return bool(s)
+
     s = s.lower()
     if s in constants.TRUTHYSTRING_TRUE:
         return True
