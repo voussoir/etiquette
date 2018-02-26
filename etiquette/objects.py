@@ -242,6 +242,7 @@ class Album(ObjectBase, GroupableMixin):
             parent._uncache_sums()
 
     @decorators.required_feature('album.edit')
+    # GroupableMixin.add_child already has @transaction.
     def add_child(self, *args, **kwargs):
         result = super().add_child(*args, **kwargs)
         self._uncache_sums()
@@ -301,7 +302,7 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - add photo to album')
             self.photodb.commit()
 
-    # No required_feature, let the photo.add_tag take care of that.
+    # Photo.add_tag already has @required_feature
     @decorators.transaction
     def add_tag_to_all(self, tag, *, nested_children=True, commit=True):
         '''
@@ -403,11 +404,13 @@ class Album(ObjectBase, GroupableMixin):
         return cur.fetchone() is not None
 
     @decorators.required_feature('album.edit')
+    # GroupableMixin.join_group already has @transaction.
     def join_group(self, *args, **kwargs):
         result = super().join_group(*args, **kwargs)
         return result
 
     @decorators.required_feature('album.edit')
+    # GroupableMixin.leave_group already has @transaction.
     def leave_group(self, *args, **kwargs):
         parent = self.get_parent()
         if parent is not None:
@@ -627,6 +630,7 @@ class Photo(ObjectBase):
         return '??? b'
 
     @decorators.required_feature('photo.add_remove_tag')
+    # Photo.add_tag already has @transaction.
     def copy_tags(self, other_photo):
         '''
         Take all of the tags owned by other_photo and apply them to this photo.
@@ -1016,6 +1020,8 @@ class Photo(ObjectBase):
 
         self.__reinit__()
 
+    @decorators.required_feature('photo.edit')
+    @decorators.transaction
     def set_override_filename(self, new_filename, *, commit=True):
         if new_filename is not None:
             cleaned = helpers.remove_path_badchars(new_filename)
@@ -1078,6 +1084,7 @@ class Tag(ObjectBase, GroupableMixin):
         self._cached_qualified_name = None
 
     @decorators.required_feature('tag.edit')
+    # GroupableMixin.add_child already has @transaction.
     def add_child(self, *args, **kwargs):
         return super().add_child(*args, **kwargs)
 
@@ -1206,10 +1213,12 @@ class Tag(ObjectBase, GroupableMixin):
         return fetches
 
     @decorators.required_feature('tag.edit')
+    # GroupableMixin.join_group already has @transaction.
     def join_group(self, *args, **kwargs):
         return super().join_group(*args, **kwargs)
 
     @decorators.required_feature('tag.edit')
+    # GroupableMixin.leave_group already has @transaction.
     def leave_group(self, *args, **kwargs):
         return super().leave_group(*args, **kwargs)
 
