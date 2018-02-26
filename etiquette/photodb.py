@@ -1326,12 +1326,24 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
             thing = thing_map['class'](self, db_row=thing)
             yield thing
 
+    def sql_delete(self, table, pairs, *, commit=False):
+        cur = self.sql.cursor()
+
+        (qmarks, bindings) = sqlhelpers.delete_filler(pairs)
+        query = 'DELETE FROM %s %s' % (table, qmarks)
+        #self.log.debug(query)
+        cur.execute(query, bindings)
+
+        if commit:
+            self.commit()
+
     def sql_insert(self, table, data, *, commit=False):
         column_names = constants.SQL_COLUMNS[table]
         cur = self.sql.cursor()
 
         (qmarks, bindings) = sqlhelpers.insert_filler(column_names, data)
         query = 'INSERT INTO %s VALUES(%s)' % (table, qmarks)
+        #self.log.debug(query)
         cur.execute(query, bindings)
 
         if commit:
@@ -1340,8 +1352,9 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
     def sql_update(self, table, pairs, where_key, *, commit=False):
         cur = self.sql.cursor()
 
-        (query, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
-        query = 'UPDATE %s %s' % (table, query)
+        (qmarks, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
+        query = 'UPDATE %s %s' % (table, qmarks)
+        #self.log.debug(query)
         cur.execute(query, bindings)
 
         if commit:
