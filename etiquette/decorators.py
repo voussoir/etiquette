@@ -21,9 +21,9 @@ def required_feature(features):
     if isinstance(features, str):
         features = [features]
 
-    def wrapper(function):
-        @functools.wraps(function)
-        def wrapped(self, *args, **kwargs):
+    def wrapper(method):
+        @functools.wraps(method)
+        def wrapped_required_feature(self, *args, **kwargs):
             photodb = _get_relevant_photodb(self)
             config = photodb.config['enable_feature']
 
@@ -36,12 +36,12 @@ def required_feature(features):
                 for piece in pieces:
                     cfg = cfg[piece]
                 if cfg is False:
-                    raise exceptions.FeatureDisabled(function.__qualname__)
+                    raise exceptions.FeatureDisabled(method.__qualname__)
                 if cfg is not True:
                     raise ValueError('Bad required_feature "%s" led to %s' % (feature, cfg))
 
-            return function(self, *args, **kwargs)
-        return wrapped
+            return method(self, *args, **kwargs)
+        return wrapped_required_feature
     return wrapper
 
 def not_implemented(function):
@@ -70,7 +70,7 @@ def transaction(method):
     If the method fails, roll back to that savepoint.
     '''
     @functools.wraps(method)
-    def wrapped(self, *args, **kwargs):
+    def wrapped_transaction(self, *args, **kwargs):
         photodb = _get_relevant_photodb(self)
         photodb.savepoint()
         try:
@@ -80,4 +80,4 @@ def transaction(method):
             raise
         else:
             return result
-    return wrapped
+    return wrapped_transaction
