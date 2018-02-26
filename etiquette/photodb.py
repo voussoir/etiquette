@@ -681,6 +681,60 @@ class PDBPhotoMixin:
         print('Search results took:', end_time - start_time)
 
 
+class PDBSQLMixin:
+    def __init__(self):
+        super().__init__()
+        self.on_commit_queue = []
+
+    def close(self):
+        self.sql.close()
+        if self.ephemeral:
+            self.ephemeral_directory.cleanup()
+
+    def commit(self):
+        while self.on_commit_queue:
+            task = self.on_commit_queue.pop()
+            print(task)
+            args = task.get('args', [])
+            kwargs = task.get('kwargs', {})
+            task['action'](*args, **kwargs)
+        self.sql.commit()
+
+    def sql_delete(self, table, pairs, *, commit=False):
+        cur = self.sql.cursor()
+
+        (qmarks, bindings) = sqlhelpers.delete_filler(pairs)
+        query = 'DELETE FROM %s %s' % (table, qmarks)
+        #self.log.debug(query)
+        cur.execute(query, bindings)
+
+        if commit:
+            self.commit()
+
+    def sql_insert(self, table, data, *, commit=False):
+        column_names = constants.SQL_COLUMNS[table]
+        cur = self.sql.cursor()
+
+        (qmarks, bindings) = sqlhelpers.insert_filler(column_names, data)
+        query = 'INSERT INTO %s VALUES(%s)' % (table, qmarks)
+        #self.log.debug(query)
+        cur.execute(query, bindings)
+
+        if commit:
+            self.commit()
+
+    def sql_update(self, table, pairs, where_key, *, commit=False):
+        cur = self.sql.cursor()
+
+        (qmarks, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
+        query = 'UPDATE %s %s' % (table, qmarks)
+        #self.log.debug(query)
+        cur.execute(query, bindings)
+
+        if commit:
+            self.commit()
+
+
 class PDBTagMixin:
     def __init__(self):
         super().__init__()
@@ -945,7 +999,14 @@ class PDBUserMixin:
         return objects.User(self, data)
 
 
-class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUserMixin):
+class PhotoDB(
+        PDBAlbumMixin,
+        PDBBookmarkMixin,
+        PDBPhotoMixin,
+        PDBSQLMixin,
+        PDBTagMixin,
+        PDBUserMixin,
+    ):
     def __init__(
             self,
             data_directory=None,
@@ -999,7 +1060,6 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
 
         # OTHER
 
-        self.on_commit_queue = []
         self._cached_frozen_children = None
 
         self._album_cache.maxlen = self.config['cache_size']['album']
@@ -1064,20 +1124,6 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
 
     def _uncache(self):
         self._cached_frozen_children = None
-
-    def close(self):
-        self.sql.close()
-        if self.ephemeral:
-            self.ephemeral_directory.cleanup()
-
-    def commit(self):
-        while self.on_commit_queue:
-            task = self.on_commit_queue.pop()
-            print(task)
-            args = task.get('args', [])
-            kwargs = task.get('kwargs', {})
-            task['action'](*args, **kwargs)
-        self.sql.commit()
 
     @decorators.transaction
     def digest_directory(
@@ -1325,40 +1371,6 @@ class PhotoDB(PDBAlbumMixin, PDBBookmarkMixin, PDBPhotoMixin, PDBTagMixin, PDBUs
         for thing in things:
             thing = thing_map['class'](self, db_row=thing)
             yield thing
-
-    def sql_delete(self, table, pairs, *, commit=False):
-        cur = self.sql.cursor()
-
-        (qmarks, bindings) = sqlhelpers.delete_filler(pairs)
-        query = 'DELETE FROM %s %s' % (table, qmarks)
-        #self.log.debug(query)
-        cur.execute(query, bindings)
-
-        if commit:
-            self.commit()
-
-    def sql_insert(self, table, data, *, commit=False):
-        column_names = constants.SQL_COLUMNS[table]
-        cur = self.sql.cursor()
-
-        (qmarks, bindings) = sqlhelpers.insert_filler(column_names, data)
-        query = 'INSERT INTO %s VALUES(%s)' % (table, qmarks)
-        #self.log.debug(query)
-        cur.execute(query, bindings)
-
-        if commit:
-            self.commit()
-
-    def sql_update(self, table, pairs, where_key, *, commit=False):
-        cur = self.sql.cursor()
-
-        (qmarks, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
-        query = 'UPDATE %s %s' % (table, qmarks)
-        #self.log.debug(query)
-        cur.execute(query, bindings)
-
-        if commit:
-            self.commit()
 
 
 _THING_CLASSES = {
