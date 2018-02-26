@@ -109,7 +109,6 @@ class GroupableMixin:
             Otherwise they'll just be raised up one level.
         '''
         self.photodb._cached_frozen_children = None
-        cur = self.photodb.sql.cursor()
         if delete_children:
             for child in self.get_children():
                 child.delete(delete_children=delete_children, commit=False)
@@ -119,10 +118,7 @@ class GroupableMixin:
             if parent is None:
                 # Since this group was a root, children become roots by removing
                 # the row.
-                cur.execute(
-                    'DELETE FROM %s WHERE parentid == ?' % self.group_table,
-                    [self.id]
-                )
+                self.photodb.sql_delete(table=self.group_table, pairs={'parentid': self.id})
             else:
                 # Since this group was a child, its parent adopts all its children.
                 data = {
@@ -132,10 +128,7 @@ class GroupableMixin:
 
         # Note that this part comes after the deletion of children to prevent
         # issues of recursion.
-        cur.execute(
-            'DELETE FROM %s WHERE memberid == ?' % self.group_table,
-            [self.id]
-        )
+        self.photodb.sql_delete(table=self.group_table, pairs={'memberid': self.id})
         self._uncache()
         if commit:
             self.photodb.log.debug('Committing - delete tag')
@@ -193,12 +186,8 @@ class GroupableMixin:
         '''
         Leave the current group and become independent.
         '''
-        cur = self.photodb.sql.cursor()
         self.photodb._cached_frozen_children = None
-        cur.execute(
-            'DELETE FROM %s WHERE memberid == ?' % self.group_table,
-            [self.id]
-        )
+        self.photodb.sql_delete(table=self.group_table, pairs={'memberid': self.id})
         if commit:
             self.photodb.log.debug('Committing - leave group')
             self.photodb.commit()
@@ -341,10 +330,9 @@ class Album(ObjectBase, GroupableMixin):
     def delete(self, *, delete_children=False, commit=True):
         self.photodb.log.debug('Deleting album {album:r}'.format(album=self))
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
-        cur = self.photodb.sql.cursor()
-        cur.execute('DELETE FROM albums WHERE id == ?', [self.id])
-        cur.execute('DELETE FROM album_photo_rel WHERE albumid == ?', [self.id])
-        cur.execute('DELETE FROM album_associated_directories WHERE albumid == ?', [self.id])
+        self.photodb.sql_delete(table='albums', pairs={'id': self.id})
+        self.photodb.sql_delete(table='album_photo_rel', pairs={'albumid': self.id})
+        self.photodb.sql_delete(table='album_associated_directories', pairs={'albumid': self.id})
         self._uncache()
         if commit:
             self.photodb.log.debug('Committing - delete album')
@@ -434,11 +422,8 @@ class Album(ObjectBase, GroupableMixin):
             return
 
         self.photodb.log.debug('Removing photo %s from %s', photo, self)
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'DELETE FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
-            [self.id, photo.id]
-        )
+        pairs = {'albumid': self.id, 'photoid': photo.id}
+        self.photodb.sql_delete(table='album_photo_rel', pairs=pairs)
         self._uncache_sums()
         if commit:
             self.photodb.log.debug('Committing - remove photo from album')
@@ -499,8 +484,7 @@ class Bookmark(ObjectBase):
     @decorators.required_feature('bookmark.edit')
     @decorators.transaction
     def delete(self, *, commit=True):
-        cur = self.photodb.sql.cursor()
-        cur.execute('DELETE FROM bookmarks WHERE id == ?', [self.id])
+        self.photodb.sql_delete(table='bookmarks', pairs={'id': self.id})
         if commit:
             self.photodb.commit()
 
@@ -657,10 +641,9 @@ class Photo(ObjectBase):
         Delete the Photo and its relation to any tags and albums.
         '''
         self.photodb.log.debug('Deleting photo {photo:r}'.format(photo=self))
-        cur = self.photodb.sql.cursor()
-        cur.execute('DELETE FROM photos WHERE id == ?', [self.id])
-        cur.execute('DELETE FROM photo_tag_rel WHERE photoid == ?', [self.id])
-        cur.execute('DELETE FROM album_photo_rel WHERE photoid == ?', [self.id])
+        self.photodb.sql_delete(table='photos', pairs={'id': self.id})
+        self.photodb.sql_delete(table='photo_tag_rel', pairs={'photoid': self.id})
+        self.photodb.sql_delete(table='album_photo_rel', pairs={'photoid': self.id})
 
         if delete_file:
             path = self.real_path.absolute_path
@@ -954,12 +937,9 @@ class Photo(ObjectBase):
         self.photodb.log.debug('Removing tag {t} from photo {p}'.format(t=repr(tag), p=repr(self)))
         tags = list(tag.walk_children())
 
-        cur = self.photodb.sql.cursor()
         for tag in tags:
-            cur.execute(
-                'DELETE FROM photo_tag_rel WHERE photoid == ? AND tagid == ?',
-                [self.id, tag.id]
-            )
+            pairs = {'photoid': self.id, 'tagid': tag.id}
+            self.photodb.sql_delete(table='photo_tag_rel', pairs=pairs)
 
         data = {
             'id': self.id,
@@ -1188,10 +1168,9 @@ class Tag(ObjectBase, GroupableMixin):
         self.photodb.log.debug('Deleting tag {tag:r}'.format(tag=self))
         self.photodb._cached_frozen_children = None
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
-        cur = self.photodb.sql.cursor()
-        cur.execute('DELETE FROM tags WHERE id == ?', [self.id])
-        cur.execute('DELETE FROM photo_tag_rel WHERE tagid == ?', [self.id])
-        cur.execute('DELETE FROM tag_synonyms WHERE mastername == ?', [self.name])
+        self.photodb.sql_delete(table='tags', pairs={'id': self.id})
+        self.photodb.sql_delete(table='photo_tag_rel', pairs={'tagid': self.id})
+        self.photodb.sql_delete(table='tag_synonyms', pairs={'mastername': self.name})
         self._uncache()
         if commit:
             self.photodb.log.debug('Committing - delete tag')
@@ -1291,7 +1270,7 @@ class Tag(ObjectBase, GroupableMixin):
             raise exceptions.NoSuchSynonym(synname)
 
         self.photodb._cached_frozen_children = None
-        cur.execute('DELETE FROM tag_synonyms WHERE name == ?', [synname])
+        self.photodb.sql_delete(table='tag_synonyms', pairs={'name': synname})
         if commit:
             self.photodb.log.debug('Committing - remove synonym')
             self.photodb.commit()
