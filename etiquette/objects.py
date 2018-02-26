@@ -631,12 +631,15 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.add_remove_tag')
     # Photo.add_tag already has @transaction.
-    def copy_tags(self, other_photo):
+    def copy_tags(self, other_photo, *, commit=True):
         '''
         Take all of the tags owned by other_photo and apply them to this photo.
         '''
         for tag in other_photo.get_tags():
-            self.add_tag(tag)
+            self.add_tag(tag, commit=False)
+        if commit:
+            self.photodb.log.debug('Committing - copy tags')
+            self.photodb.commit()
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
