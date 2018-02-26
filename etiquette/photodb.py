@@ -685,6 +685,7 @@ class PDBSQLMixin:
     def __init__(self):
         super().__init__()
         self.on_commit_queue = []
+        self.savepoints = []
 
     def close(self):
         self.sql.close()
@@ -698,7 +699,33 @@ class PDBSQLMixin:
             args = task.get('args', [])
             kwargs = task.get('kwargs', {})
             task['action'](*args, **kwargs)
+        self.savepoints.clear()
         self.sql.commit()
+
+    def rollback(self):
+        if len(self.savepoints) == 0:
+            self.log.debug('Nothing to rollback.')
+            return
+
+        if len(self.savepoints) == 1:
+            self.log.debug('Final rollback.')
+            self.sql.rollback()
+            self.savepoints.clear()
+            return
+
+        cur = self.sql.cursor()
+        restore_to = self.savepoints.pop(-1)
+        self.log.debug('Rolling back to %s', restore_to)
+        query = 'ROLLBACK TO "%s"' % restore_to
+        cur.execute(query)
+
+    def savepoint(self):
+        savepoint_id = helpers.random_hex(length=16)
+        self.log.debug('Savepoint %s.', savepoint_id)
+        query = 'SAVEPOINT "%s"' % savepoint_id
+        self.sql.execute(query)
+        self.savepoints.append(savepoint_id)
+        return savepoint_id
 
     def sql_delete(self, table, pairs, *, commit=False):
         cur = self.sql.cursor()

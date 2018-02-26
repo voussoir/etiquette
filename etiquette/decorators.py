@@ -5,24 +5,27 @@ import warnings
 from . import exceptions
 
 
+def _get_relevant_photodb(instance):
+    from . import objects
+    if isinstance(instance, objects.ObjectBase):
+        photodb = instance.photodb
+    else:
+        photodb = instance
+    return photodb
+
 def required_feature(features):
     '''
     Declare that the photodb or object method requires certain 'enable_*'
     fields in the config.
     '''
-    from . import objects
     if isinstance(features, str):
         features = [features]
 
     def wrapper(function):
         @functools.wraps(function)
         def wrapped(self, *args, **kwargs):
-            if isinstance(self, objects.ObjectBase):
-                config = self.photodb.config
-            else:
-                config = self.config
-
-            config = config['enable_feature']
+            photodb = _get_relevant_photodb(self)
+            config = photodb.config['enable_feature']
 
             # Using the received string like "photo.new", try to navigate the
             # config and wind up at a True.
@@ -62,13 +65,19 @@ def time_me(function):
     return timed_function
 
 def transaction(method):
+    '''
+    Open a savepoint before running the method.
+    If the method fails, roll back to that savepoint.
+    '''
     @functools.wraps(method)
     def wrapped(self, *args, **kwargs):
+        photodb = _get_relevant_photodb(self)
+        photodb.savepoint()
         try:
-            ret = method(self, *args, **kwargs)
-            return ret
+            result = method(self, *args, **kwargs)
         except Exception as e:
-            self.log.debug('Rolling back')
-            self.sql.rollback()
+            photodb.rollback()
             raise
+        else:
+            return result
     return wrapped
