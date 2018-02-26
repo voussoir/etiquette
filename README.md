@@ -12,6 +12,7 @@ Documentation is still a work in progress. In general,
 - You must make the `etiquette` package importable by placing it in one of your lib paths because I have not made a setup.py yet. Rather than actually moving the folder I just use filesystem junctions.
 - Run `python etiquette_flask_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
 - Run `python -i etiquette_repl_launch.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
+- Note: Do not `cd` into the frontends folder. Stay wherever you want the photodb to be created, and start the frontend by specifying full file path of the launch file.
 
 ### Project stability
 
@@ -19,38 +20,20 @@ You may notice that Etiquette doesn't have a version number anywhere. That's bec
 
 ### Project structure
 
-Here is a brief overview of the project 
+Here is a brief overview of the project to help you learn your way around:
 
 - `etiquette`  
     The core backend package.
-    - `constants`  
-        Strings, messages, column layouts, and other things that are constant during runtime.
-    - `decorators`  
-        Function decorators.
-    - `exceptions`  
-        Exception classes.
-    - `helpers`  
-        A variety of small, useful functions that wouldn't belong as a method on any class.
-    - `jsonify`  
-        Toolkit for serializing the Etiquette objects as JSON.
     - `objects`  
         Definition of the Etiquette data objects like Photos and Tags.
     - `photodb`  
         Definition of the PhotoDB class and its Mixins.
-    - `searchhelpers`  
-        A variety of validation, normalization, and processing functions used to handle search queries.
-    - `tag_export`  
-        Toolkit for exporting a PDB's tagset into a different formats e.g. varying levels of nesting or depicting tags with their full qualified names.
 - `frontends`  
-    Ideally the backend should be frontend-agnostic. Even though the Flask interface is my primary interest, it should not feel like it must be the only one. Therefore I place it in this folder to indicate that other frontends are possible too.
+    Ideally, the backend should be frontend-agnostic. Even though the Flask interface is my primary interest, it should not feel like it must be the only one. Therefore I place it in this folder to indicate that other frontends are possible too. Every folder here is essentially a completely separate project.
     - `etiquette_flask`  
-    This folder represents the flask server as somewhat of a black box, in the sense that you can move it around and just run the contained launch file.
+    This folder represents the flask server as somewhat of a black box, in the sense that you can move it around and just run the contained launch file. Subfolders contain the HTML templates, static files, and site code.
         - `etiquette_flask`  
-            This is the package that contains all of the site's actual API code.
-        - `static`  
-            User-facing, static, cacheable content like CSS, JS, and graphics.
-        - `templates`  
-            Jinja HTML templates, including reusable subunits as macros.
+        The package that contains the site's actual API code.
     - `etiquette_repl`  
         Preloads a few variables into the interpreter so you can quickly test functions within the Python REPL itself.
 - `utilities`  
