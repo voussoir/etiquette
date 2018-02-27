@@ -262,6 +262,7 @@ function submit_refresh_metadata(callback)
 }
 function refresh_metadata_callback(response)
 {
+    response = response["data"];
     refresh_in_progress = false;
     if ("error_type" in response)
     {
