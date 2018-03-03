@@ -693,9 +693,10 @@ class PDBSQLMixin:
             self.ephemeral_directory.cleanup()
 
     def commit(self):
-        while self.on_commit_queue:
+        while len(self.on_commit_queue) > 0:
             task = self.on_commit_queue.pop()
-            print(task)
+            if isinstance(task, str):
+                continue
             args = task.get('args', [])
             kwargs = task.get('kwargs', {})
             task['action'](*args, **kwargs)
@@ -711,6 +712,7 @@ class PDBSQLMixin:
             self.log.debug('Final rollback.')
             self.sql.rollback()
             self.savepoints.clear()
+            self.on_commit_queue.clear()
             return
 
         cur = self.sql.cursor()
@@ -718,6 +720,10 @@ class PDBSQLMixin:
         self.log.debug('Rolling back to %s', restore_to)
         query = 'ROLLBACK TO "%s"' % restore_to
         cur.execute(query)
+        while len(self.on_commit_queue) > 0:
+            item = self.on_commit_queue.pop(-1)
+            if item == restore_to:
+                break
 
     def savepoint(self):
         savepoint_id = helpers.random_hex(length=16)
@@ -725,6 +731,7 @@ class PDBSQLMixin:
         query = 'SAVEPOINT "%s"' % savepoint_id
         self.sql.execute(query)
         self.savepoints.append(savepoint_id)
+        self.on_commit_queue.append(savepoint_id)
         return savepoint_id
 
     def sql_delete(self, table, pairs, *, commit=False):
