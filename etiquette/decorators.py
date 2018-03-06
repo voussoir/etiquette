@@ -72,11 +72,11 @@ def transaction(method):
     @functools.wraps(method)
     def wrapped_transaction(self, *args, **kwargs):
         photodb = _get_relevant_photodb(self)
-        photodb.savepoint()
+        savepoint_id = photodb.savepoint()
         try:
             result = method(self, *args, **kwargs)
         except Exception as e:
-            photodb.rollback()
+            photodb.rollback(savepoint=savepoint_id)
             raise
         else:
             return result

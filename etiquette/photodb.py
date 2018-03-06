@@ -703,20 +703,27 @@ class PDBSQLMixin:
         self.savepoints.clear()
         self.sql.commit()
 
-    def rollback(self):
+    def rollback(self, savepoint=None):
+        if savepoint is not None:
+            valid_savepoint = savepoint in self.savepoints
+        else:
+            valid_savepoint = None
+
+        if valid_savepoint is False:
+            self.log.warn('Tried to restore to a nonexistent savepoint. Did you commit too early?')
+
         if len(self.savepoints) == 0:
             self.log.debug('Nothing to rollback.')
             return
 
-        if len(self.savepoints) == 1:
-            self.log.debug('Final rollback.')
-            self.sql.rollback()
-            self.savepoints.clear()
-            self.on_commit_queue.clear()
-            return
+        if valid_savepoint:
+            restore_to = savepoint
+            while self.savepoints.pop(-1) != restore_to:
+                pass
+        else:
+            restore_to = self.savepoints.pop(-1)
 
         cur = self.sql.cursor()
-        restore_to = self.savepoints.pop(-1)
         self.log.debug('Rolling back to %s', restore_to)
         query = 'ROLLBACK TO "%s"' % restore_to
         cur.execute(query)
