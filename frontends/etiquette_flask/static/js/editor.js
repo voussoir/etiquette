@@ -193,7 +193,7 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.open_button.classList.add("editor_button");
     this.open_button.classList.add("editor_open_button");
     this.open_button.classList.add("green_button");
-    this.open_button.onclick = this.binder(on_open);
+    this.open_button.onclick = this.binder(on_open, this.open);
     toolbox.appendChild(this.open_button);
 
     this.save_button = document.createElement("button");
