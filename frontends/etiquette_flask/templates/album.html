@@ -49,7 +49,7 @@ p
 {{header.make_header(session=session)}}
 <div id="content_body">
     <h2>
-        <span data-editor-id="title" data-editor-placeholder="title" id="title_text">
+        <span data-editor-id="title" data-editor-empty-text="Album {{album.id}}" data-editor-placeholder="title" id="title_text">
         {%- if album.title -%}
             {{album.title}}
         {%- else -%}
@@ -132,7 +132,6 @@ p
 
 <script type="text/javascript">
 var ALBUM_ID = "{{album.id}}";
-var BLANK_TITLE_TEXT = "Album {{album.id}}";
 
 function _paste_unpaste_photo_clipboard(add_or_remove)
 {
@@ -173,53 +172,51 @@ document.getElementById("clipboard_tray_toolbox").appendChild(unpaste_photo_clip
 
 function on_open(editor, edit_element_map, display_element_map)
 {
-    if (display_element_map["title"].innerText == BLANK_TITLE_TEXT)
-    {
-        display_element_map["title"].innerText = "";
-    }
     editor.open();
     edit_element_map["title"].focus();
 }
 
 function on_save(editor, edit_element_map, display_element_map)
 {
-    var title_editor = edit_element_map["title"];
-    var description_editor = edit_element_map["description"];
-
-    editor.show_spinner();
     function callback()
     {
+        var title_display = display_element_map["title"];
+        var description_display = display_element_map["description"];
+
         editor.hide_spinner();
         editor.save();
-        if (title_text.innerText == "")
+        if (title_display.innerText == title_display.dataset.editorEmptyText)
         {
-            document.title = BLANK_TITLE_TEXT;
-            title_text.innerText = BLANK_TITLE_TEXT;
+            document.title = title_display.dataset.editorEmptyText;
         }
         else
         {
-            document.title = "Album " + title_text.innerText;
+            document.title = "Album " + title_display.innerText;
         }
-        if (description_text.innerText == "")
+        if (description_display.innerText == "")
         {
-            description_text.classList.add("hidden");
+            description_display.classList.add("hidden");
         }
     }
 
+    var title_editor = edit_element_map["title"];
+    title_editor.value = title_editor.value.trim();
+    var description_editor = edit_element_map["description"];
+
     var url = "/album/{{album.id}}/edit";
+    var title = edit_element_map["title"].value.trim();
+    var description = edit_element_map["description"].value;
     var data = new FormData();
     data.append("title", title_editor.value);
     data.append("description", description_editor.value);
+
+    editor.show_spinner();
     post(url, data, callback);
 }
 
 function on_cancel(editor, edit_element_map, display_element_map)
 {
     editor.cancel();
-    if (display_element_map["title"].innerText == "")
-    {
-        display_element_map["title"].innerText = BLANK_TITLE_TEXT;
-    }
     if (display_element_map["description"].innerText == "")
     {
         display_element_map["description"].classList.add("hidden");

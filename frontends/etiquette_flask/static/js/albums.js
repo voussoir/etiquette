@@ -3,7 +3,6 @@ var create_child_title_entry;
 var create_child_submit_button;
 var create_child_cancel_button;
 
-console.log(create_child_title_entry);
 function on_pageload()
 {
     create_child_prompt_button = document.getElementById("create_child_prompt_button");
