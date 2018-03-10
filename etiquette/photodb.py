@@ -1203,6 +1203,35 @@ class PhotoDB(
         If a Photo object already exists for a file, it will be added to the
         correct album.
         '''
+        def _normalize_directory(directory):
+            directory = pathclass.Path(directory)
+            if not directory.is_dir:
+                raise ValueError('Not a directory: %s' % directory)
+            directory.correct_case()
+            return directory
+
+        def _normalize_exclude_directories(exclude_directories):
+            if exclude_directories is None:
+                exclude_directories = self.config['digest_exclude_dirs']
+            return exclude_directories
+
+        def _normalize_exclude_filenames(exclude_filenames):
+            if exclude_filenames is None:
+                exclude_filenames = self.config['digest_exclude_files']
+            return exclude_filenames
+
+        def _normalize_new_photo_kwargs(new_photo_kargs):
+            if 'commit' in new_photo_kwargs:
+                new_photo_kwargs.pop('commit')
+            if 'filepath' in new_photo_kwargs:
+                new_photo_kwargs.pop('filepath')
+            return new_photo_kwargs
+
+        def _normalize_new_photo_ratelimit(new_photo_ratelimit):
+            if isinstance(new_photo_ratelimit, (int, float)):
+                new_photo_ratelimit = ratelimiter.Ratelimiter(allowance=1, period=new_photo_ratelimit)
+            new_photo_ratelimit
+
         def create_or_fetch_photos(files):
             photos = []
             for filepath in files:
@@ -1218,16 +1247,18 @@ class PhotoDB(
 
         def create_or_fetch_current_album(albums_by_path, current_directory):
             current_album = albums_by_path.get(current_directory.absolute_path, None)
-            if current_album is None:
-                try:
-                    current_album = self.get_album_by_path(current_directory.absolute_path)
-                except exceptions.NoSuchAlbum:
-                    current_album = self.new_album(
-                        associated_directory=current_directory.absolute_path,
-                        commit=False,
-                        title=current_directory.basename,
-                    )
-                albums_by_path[current_directory.absolute_path] = current_album
+            if current_album is not None:
+                return current_album
+
+            try:
+                current_album = self.get_album_by_path(current_directory.absolute_path)
+            except exceptions.NoSuchAlbum:
+                current_album = self.new_album(
+                    associated_directory=current_directory.absolute_path,
+                    commit=False,
+                    title=current_directory.basename,
+                )
+            albums_by_path[current_directory.absolute_path] = current_album
             return current_album
 
         def orphan_join_parent_album(albums_by_path, current_album, current_directory):
@@ -1236,34 +1267,15 @@ class PhotoDB(
                 if parent is not None:
                     parent.add_child(current_album, commit=False)
 
-        directory = pathclass.Path(directory)
-        if not directory.is_dir:
-            raise ValueError('Not a directory: %s' % directory)
-        directory.correct_case()
-
-        if exclude_directories is None:
-            exclude_directories = self.config['digest_exclude_dirs']
-        if exclude_filenames is None:
-            exclude_filenames = self.config['digest_exclude_files']
-
-        if isinstance(new_photo_ratelimit, (int, float)):
-            new_photo_ratelimit = ratelimiter.Ratelimiter(allowance=1, period=new_photo_ratelimit)
-
-        if 'commit' in new_photo_kwargs:
-            new_photo_kwargs.pop('commit')
-        if 'filepath' in new_photo_kwargs:
-            new_photo_kwargs.pop('filepath')
+        directory = _normalize_directory(directory)
+        exclude_directories = _normalize_exclude_directories(exclude_directories)
+        exclude_filenames = _normalize_exclude_filenames(exclude_filenames)
+        new_photo_kwargs = _normalize_new_photo_kwargs(new_photo_kwargs)
+        new_photo_ratelimit = _normalize_new_photo_ratelimit(new_photo_ratelimit)
 
         if make_albums:
-            try:
-                album = self.get_album_by_path(directory.absolute_path)
-            except exceptions.NoSuchAlbum:
-                album = self.new_album(
-                    associated_directory=directory.absolute_path,
-                    commit=False,
-                    title=directory.basename,
-                )
-            albums_by_path = {directory.absolute_path: album}
+            albums_by_path = {}
+            main_album = create_or_fetch_current_album(albums_by_path, directory)
 
         walk_generator = spinal.walk_generator(
             directory,
@@ -1290,7 +1302,7 @@ class PhotoDB(
             self.commit()
 
         if make_albums:
-            return album
+            return main_album
         else:
             return None
 
