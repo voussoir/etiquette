@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
     <script src="/static/js/common.js"></script>
+    <script src="/static/js/albums.js"></script>
 
 <style>
 #content_body
@@ -25,12 +26,18 @@
         {% for album in albums %}
         <li><a href="/album/{{album.id}}">{{album.display_name}}</a></li>
         {% endfor %}
-        <li><button class="green_button" onclick="create_album_and_follow();">Create album</button></li>
+        <li>
+            <button id="create_child_prompt_button" class="green_button" onclick="open_creator_prompt(event);">Create album</button>
+            <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
+            <button id="create_child_submit_button" class="green_button hidden" onclick="submit_create_child(event);">Create</button>
+            <button id="create_child_cancel_button" class="red_button hidden" onclick="cancel_create_child(event);">Cancel</button>
+        </li>
     </ul>
 </div>
 </body>
 
 
 <script type="text/javascript">
+ALBUM_ID = undefined;
 </script>
 </html>

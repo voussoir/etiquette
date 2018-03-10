@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/static/css/clipboard_tray.css">
     <link rel="stylesheet" href="/static/css/photo_card.css">
     <script src="/static/js/common.js"></script>
+    <script src="/static/js/albums.js"></script>
     <script src="/static/js/editor.js"></script>
     <script src="/static/js/photoclipboard.js"></script>
 
@@ -81,7 +82,12 @@ p
                 {% for sub_album in sub_albums|sort(attribute='title') %}
                 <li><a href="/album/{{sub_album.id}}{{viewparam}}">{{sub_album.display_name}}</a></li>
                 {% endfor %}
-                <li><button class="green_button" onclick="var parent='{{album.id}}'; create_album_and_follow(parent);">Create child</button></li>
+                <li>
+                    <button id="create_child_prompt_button" class="green_button" onclick="open_creator_prompt(event);">Create child</button>
+                    <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
+                    <button id="create_child_submit_button" class="green_button hidden" onclick="submit_create_child(event);">Create</button>
+                    <button id="create_child_cancel_button" class="red_button hidden" onclick="cancel_create_child(event);">Cancel</button>
+                </li>
             </ul>
         </ul>
     </ul>
@@ -125,12 +131,12 @@ p
 
 
 <script type="text/javascript">
-var blank_title_text = "Album {{album.id}}";
+var ALBUM_ID = "{{album.id}}";
+var BLANK_TITLE_TEXT = "Album {{album.id}}";
 
 function _paste_unpaste_photo_clipboard(add_or_remove)
 {
-    var photo_ids = Array.from(photo_clipboard);
-    photo_ids = photo_ids.join(",");
+    var photo_ids = Array.from(photo_clipboard).join(",");
     var url = "/album/{{album.id}}/" + add_or_remove;
     var data = new FormData();
     data.append("photo_id", photo_ids);
@@ -150,7 +156,6 @@ function paste_photo_clipboard()
 {
     _paste_unpaste_photo_clipboard("add_photo");
 }
-
 function unpaste_photo_clipboard()
 {
     _paste_unpaste_photo_clipboard("remove_photo");
@@ -169,7 +174,7 @@ document.getElementById("clipboard_tray_toolbox").appendChild(unpaste_photo_clip
 
 function on_open(editor, edit_element_map, display_element_map)
 {
-    if (display_element_map["title"].innerText == blank_title_text)
+    if (display_element_map["title"].innerText == BLANK_TITLE_TEXT)
     {
         display_element_map["title"].innerText = "";
     }
@@ -189,8 +194,8 @@ function on_save(editor, edit_element_map, display_element_map)
         editor.save();
         if (title_text.innerText == "")
         {
-            document.title = blank_title_text;
-            title_text.innerText = blank_title_text;
+            document.title = BLANK_TITLE_TEXT;
+            title_text.innerText = BLANK_TITLE_TEXT;
         }
         else
         {
@@ -214,7 +219,7 @@ function on_cancel(editor, edit_element_map, display_element_map)
     editor.cancel();
     if (display_element_map["title"].innerText == "")
     {
-        display_element_map["title"].innerText = blank_title_text;
+        display_element_map["title"].innerText = BLANK_TITLE_TEXT;
     }
     if (display_element_map["description"].innerText == "")
     {

@@ -48,28 +48,6 @@ function post(url, data, callback)
     request.send(data);
 }
 
-function create_album_and_follow(parent)
-{
-    var url = "/albums/create_album";
-    var data = new FormData();
-    if (parent !== undefined)
-    {
-        data.append("parent", parent);
-    }
-    function receive_callback(response)
-    {
-        if (response["meta"]["status"] == 200 && response["data"]["id"])
-        {
-            window.location.href = "/album/" + response["data"]["id"];
-        }
-        else
-        {
-            console.log(response);
-        }
-    }
-    post(url, data, receive_callback);
-}
-
 function delete_all_children(element)
 {
     while (element.firstChild)
