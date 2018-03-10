@@ -165,6 +165,32 @@ def post_batch_photos_refresh_metadata():
     response = post_photo_refresh_metadata_core(photo_ids=request.form['photo_ids'])
     return response
 
+@decorators.catch_etiquette_exception
+def post_photo_searchhidden_core(photo_ids, searchhidden):
+    if isinstance(photo_ids, str):
+        photo_ids = etiquette.helpers.comma_space_split(photo_ids)
+
+    photos = [common.P_photo(photo_id, response_type='json') for photo_id in photo_ids]
+
+    for photo in photos:
+        photo.set_searchhidden(searchhidden, commit=False)
+
+    common.P.commit()
+
+    return jsonify.make_json_response({})
+
+@site.route('/batch/photos/set_searchhidden', methods=['POST'])
+@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
+def post_batch_photos_set_searchhidden():
+    response = post_photo_searchhidden_core(photo_ids=request.form['photo_ids'], searchhidden=True)
+    return response
+
+@site.route('/batch/photos/unset_searchhidden', methods=['POST'])
+@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
+def post_batch_photos_unset_searchhidden():
+    response = post_photo_searchhidden_core(photo_ids=request.form['photo_ids'], searchhidden=False)
+    return response
+
 # Clipboard ########################################################################################
 
 @site.route('/clipboard')
@@ -214,6 +240,7 @@ def get_search_core():
     extension = request.args.get('extension')
     extension_not = request.args.get('extension_not')
     mimetype = request.args.get('mimetype')
+    is_searchhidden = request.args.get('is_searchhidden', False)
 
     limit = request.args.get('limit')
     # This is being pre-processed because the site enforces a maximum value
@@ -255,6 +282,7 @@ def get_search_core():
         'filename': filename_terms,
         'has_tags': has_tags,
         'has_thumbnail': has_thumbnail,
+        'is_searchhidden': is_searchhidden,
         'mimetype': mimetype,
         'tag_musts': tag_musts,
         'tag_mays': tag_mays,

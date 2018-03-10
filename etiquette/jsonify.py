@@ -53,6 +53,7 @@ def photo(p, include_albums=True, include_tags=True):
         'created': p.created,
         'filename': p.basename,
         'mimetype': p.mimetype,
+        'searchhidden': bool(p.searchhidden),
     }
     if include_albums:
         j['albums'] = [album(a, minimal=True) for a in p.get_containing_albums()]

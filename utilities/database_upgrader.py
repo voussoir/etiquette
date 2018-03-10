@@ -3,7 +3,7 @@ import os
 import sqlite3
 import sys
 
-import etiquette.photodb
+import etiquette
 
 def upgrade_1_to_2(sql):
     '''
@@ -146,6 +146,14 @@ def upgrade_7_to_8(sql):
     cur = sql.cursor()
     cur.execute('ALTER TABLE tags ADD COLUMN description TEXT')
 
+def upgrade_8_to_9(sql):
+    '''
+    Give the Photos table a searchhidden field.
+    '''
+    cur = sql.cursor()
+    cur.execute('ALTER TABLE photos ADD COLUMN searchhidden INT')
+    cur.execute('UPDATE photos SET searchhidden = 0')
+    cur.execute('CREATE INDEX index_photos_searchhidden on photos(searchhidden)')
 
 def upgrade_all(database_filename):
     '''
@@ -160,7 +168,7 @@ def upgrade_all(database_filename):
 
     cur.execute('PRAGMA user_version')
     current_version = cur.fetchone()[0]
-    needed_version = etiquette.photodb.DATABASE_VERSION
+    needed_version = etiquette.constants.DATABASE_VERSION
 
     if current_version == needed_version:
         print('Already up-to-date with version %d.' % needed_version)

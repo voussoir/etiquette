@@ -554,6 +554,7 @@ class Photo(ObjectBase):
         self.height = db_row['height']
         self.ratio = db_row['ratio']
         self.thumbnail = db_row['thumbnail']
+        self.searchhidden = db_row['searchhidden']
 
         if self.duration and self.bytes is not None:
             self.bitrate = (self.bytes / 128) / self.duration
@@ -1022,6 +1023,21 @@ class Photo(ObjectBase):
             self.photodb.on_commit_queue.append(queue_action)
 
         self.__reinit__()
+
+    @decorators.required_feature('photo.edit')
+    @decorators.transaction
+    def set_searchhidden(self, searchhidden, *, commit=True):
+        data = {
+            'id': self.id,
+            'searchhidden': bool(searchhidden),
+        }
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+
+        self.searchhidden = searchhidden
+
+        if commit:
+            self.photodb.log.debug('Committing - set override filename')
+            self.photodb.commit()
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction

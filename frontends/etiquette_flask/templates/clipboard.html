@@ -41,11 +41,12 @@ body
     grid-area: right;
 
     display: grid;
-    grid-template-rows: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 75px 75px 75px 75px auto;
     grid-template-areas:
         "add_tag_area"
         "remove_tag_area"
         "refresh_metadata_area"
+        "searchhidden_area"
         "message_area";
 
     background-color: rgba(0, 0, 0, 0.1);
@@ -65,11 +66,15 @@ body
     grid-area: refresh_metadata_area;
     margin: auto;
 }
+#searchhidden_area
+{
+    grid-area: searchhidden_area;
+    margin: auto;
+}
 #message_area
 {
     grid-area: message_area;
     margin: 8px;
-    max-height: 300px;
 }
 </style>
 </head>
@@ -88,13 +93,23 @@ body
         <input type="text" id="add_tag_textbox">
         <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_add_tag(add_remove_callback);">Add tag</button>
     </div>
+
     <div id="remove_tag_area">
         <input type="text" id="remove_tag_textbox">
         <button class="red_button" id="remove_tag_button" onclick="submit_remove_tag(add_remove_callback);">Remove tag</button>
     </div>
+
     <div id="refresh_metadata_area">
         <button class="green_button" id="refresh_metadata_button" onclick="submit_refresh_metadata(refresh_metadata_callback);">Refresh metadata</button>
     </div>
+
+    <div id="searchhidden_area">
+        <span>
+        <button class="yellow_button" id="set_searchhidden_button" onclick="submit_set_searchhidden(searchhidden_callback)">Searchhide</button>
+        <button class="yellow_button" id="unset_searchhidden_button" onclick="submit_unset_searchhidden(searchhidden_callback)">Unhide</button>
+        </span>
+    </div>
+
     <div id="message_area">
     </div>
 </div>
@@ -275,6 +290,39 @@ function refresh_metadata_callback(response)
     {
         location.reload();
     }
+}
+
+function searchhidden_callback(response)
+{
+    response = response["data"];
+    var message_area = document.getElementById("message_area");
+    var message_positivity;
+    var message_text;
+    if ("error_type" in response)
+    {
+        message_positivity = "message_negative";
+        message_text = response["error_message"];
+    }
+    else
+    {
+        message_positivity = "message_positive";
+        message_text = "Success."
+    }
+    create_message_bubble(message_area, message_positivity, message_text, 8000);
+}
+function submit_set_searchhidden()
+{
+    var url = "/batch/photos/set_searchhidden";
+    var data = new FormData();
+    data.append("photo_ids", Array.from(photo_clipboard).join(","));
+    post(url, data, searchhidden_callback);
+}
+function submit_unset_searchhidden()
+{
+    var url = "/batch/photos/unset_searchhidden";
+    var data = new FormData();
+    data.append("photo_ids", Array.from(photo_clipboard).join(","));
+    post(url, data, searchhidden_callback);
 }
 </script>
 </html>

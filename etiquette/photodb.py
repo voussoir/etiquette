@@ -274,6 +274,7 @@ class PDBPhotoMixin:
             'created': created,
             'tagged_at': None,
             'author_id': author_id,
+            'searchhidden': False,
             # These will be filled in during the metadata stage.
             'bytes': None,
             'width': None,
@@ -349,6 +350,7 @@ class PDBPhotoMixin:
             filename=None,
             has_tags=None,
             has_thumbnail=None,
+            is_searchhidden=False,
             mimetype=None,
             tag_musts=None,
             tag_mays=None,
@@ -397,6 +399,13 @@ class PDBPhotoMixin:
         has_thumbnail:
             Require a thumbnail?
             If None, anything is okay.
+
+        is_searchhidden:
+            Find photos that are marked as searchhidden?
+            If True, find *only* searchhidden photos.
+            If False, find *only* nonhidden photos.
+            If None, either is okay.
+            Default False.
 
         mimetype:
             A string or list of strings of acceptable mimetypes.
@@ -487,6 +496,7 @@ class PDBPhotoMixin:
 
         limit = searchhelpers.normalize_limit(limit, warning_bag=warning_bag)
         has_thumbnail = searchhelpers.normalize_has_thumbnail(has_thumbnail)
+        is_searchhidden = searchhelpers.normalize_is_searchhidden(is_searchhidden)
 
         offset = searchhelpers.normalize_offset(offset)
         if offset is None:
@@ -506,6 +516,7 @@ class PDBPhotoMixin:
 
         notnulls = set()
         yesnulls = set()
+        wheres = []
         if extension or mimetype:
             notnulls.add('extension')
         if width or height or ratio or area:
@@ -519,6 +530,11 @@ class PDBPhotoMixin:
             notnulls.add('thumbnail')
         elif has_thumbnail is False:
             yesnulls.add('thumbnail')
+
+        if is_searchhidden is True:
+            wheres.append('searchhidden == 1')
+        elif is_searchhidden is False:
+            wheres.append('searchhidden == 0')
 
         if orderby is None:
             giveback_orderby = None
@@ -611,6 +627,7 @@ class PDBPhotoMixin:
                 notnulls=notnulls,
                 yesnulls=yesnulls,
                 orderby=orderby,
+                wheres=wheres,
             )
             print(query[:200])
             generator = helpers.select_generator(self.sql, query)

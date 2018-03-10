@@ -20,6 +20,7 @@ def build_query(
         notnulls=None,
         yesnulls=None,
         orderby=None,
+        wheres=None,
     ):
 
     if notnulls is None:
@@ -28,8 +29,12 @@ def build_query(
     if yesnulls is None:
         yesnulls = set()
 
+    if wheres is None:
+        wheres = set()
+    else:
+        wheres = set(wheres)
+
     query = ['SELECT * FROM photos']
-    wheres = set()
 
     if author_ids:
         notnulls.add('author_id')
@@ -274,6 +279,9 @@ def normalize_has_tags(has_tags):
 
 def normalize_has_thumbnail(has_thumbnail):
     return helpers.truthystring(has_thumbnail)
+
+def normalize_is_searchhidden(is_searchhidden):
+    return helpers.truthystring(is_searchhidden)
 
 def normalize_limit(limit, warning_bag=None):
     if not limit and limit != 0:
