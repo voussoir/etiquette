@@ -1,5 +1,5 @@
 '''
-This function provides helper functions used to normalize the arguments that
+This file provides helper functions used to normalize the arguments that
 go into search queries. Mainly converting the strings given by the user
 into proper data types.
 '''
