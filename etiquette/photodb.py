@@ -20,6 +20,7 @@ from . import tag_export
 from voussoirkit import cacheclass
 from voussoirkit import expressionmatch
 from voussoirkit import pathclass
+from voussoirkit import ratelimiter
 from voussoirkit import spinal
 from voussoirkit import sqlhelpers
 
@@ -1192,6 +1193,7 @@ class PhotoDB(
             exclude_filenames=None,
             make_albums=True,
             new_photo_kwargs={},
+            new_photo_ratelimit=None,
             recurse=True,
             commit=True,
         ):
@@ -1208,6 +1210,8 @@ class PhotoDB(
                     photo = self.get_photo_by_path(filepath)
                 except exceptions.NoSuchPhoto:
                     photo = self.new_photo(filepath.absolute_path, commit=False, **new_photo_kwargs)
+                    if new_photo_ratelimit is not None:
+                        new_photo_ratelimit.limit()
 
                 photos.append(photo)
             return photos
@@ -1241,6 +1245,9 @@ class PhotoDB(
             exclude_directories = self.config['digest_exclude_dirs']
         if exclude_filenames is None:
             exclude_filenames = self.config['digest_exclude_files']
+
+        if isinstance(new_photo_ratelimit, (int, float)):
+            new_photo_ratelimit = ratelimiter.Ratelimiter(allowance=1, period=new_photo_ratelimit)
 
         if 'commit' in new_photo_kwargs:
             new_photo_kwargs.pop('commit')
