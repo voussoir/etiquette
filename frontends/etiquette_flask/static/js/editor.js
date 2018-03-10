@@ -4,21 +4,32 @@ function Editor(elements, on_open, on_save, on_cancel)
 {
     /*
     This class wraps around display elements like headers and paragraphs, and
-    creates inputs / textareas to edit them with.
+    creates edit elements like inputs and textareas to edit them with.
 
-    The placeholder text for the edit elements comes from the
-    data-editor-placeholder attribute of the display elements if available.
+    You may add the following data- attributes to your display elements to
+    affect their corresponding edit elements:
+    data-editor-empty-text: If the display element contains this text, then
+        the edit element will be set to "" when opened.
+        If the edit element contains "", then the display element will
+        contain this text when saved.
+    data-editor-id: The string used as the key into display_element_map and
+        edit_element_map.
+    data-editor-placeholder: The placeholder attribute of the edit element.
 
-    The on_open, on_save and on_cancel callbacks will receive two arguments:
+    Your on_open, on_save and on_cancel hooks will be called with:
         1. This editor object.
-        2. the edit elements as either:
-            If the display elements ALL have data-editor-id attributes,
+        2. The edit elements as either:
+            If ALL of the display elements have a data-editor-id,
             then a dictionary of {data-editor-id: edit_element, ...}.
-            Otherwise, an array of [edit_element, ...] in their original order.
+            Otherwise, an array of [edit_element, ...] in the order they were
+            given to the constructor.
+        3. The display elements as either the map or the array, similarly.
 
     When your callbacks are used, the default `open`, `save`, `cancel`
     methods are not called automatically. You should call them from within
-    your function.
+    your function. That's because you may wish to do some of your own
+    normalization before the default handler, and some of your own cleanup
+    after it. So it is up to you when to call the default.
     */
     this.cancel = function()
     {
@@ -143,31 +154,34 @@ function Editor(elements, on_open, on_save, on_cancel)
         this.edit_elements.push(edit_element);
     }
 
-    var self = this;
-    var binder = function(func, fallback)
+    this.binder = function(func, fallback)
     {
+        /*
+        Given a function that takes an Editor as its first argument, and the
+        element arrays/maps as the second and third, return a new function
+        which requires no arguments and calls the given function with the
+        correct data.
+
+        This is done so that the new function can be used in an event handler.
+        */
         if (func == undefined)
         {
             return fallback;
         }
 
-        var bound = function()
+        var bindable = function()
         {
             if (this.can_use_element_map)
             {
-                func(self, self.edit_element_map, self.display_element_map);
+                func(this, this.edit_element_map, this.display_element_map);
             }
             else
             {
-                func(self, self.edit_elements, self.display_elements);
+                func(this, this.edit_elements, this.display_elements);
             }
         }
-        return bound;
+        return bindable.bind(this);
     }
-
-    this.bound_open = binder(on_open, this.open);
-    this.bound_save = binder(on_save, this.save);
-    this.bound_cancel = binder(on_cancel, this.cancel);
 
     var last_element = this.edit_elements[this.edit_elements.length - 1];
     var toolbox = document.createElement("div");
@@ -179,7 +193,7 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.open_button.classList.add("editor_button");
     this.open_button.classList.add("editor_open_button");
     this.open_button.classList.add("green_button");
-    this.open_button.onclick = this.bound_open.bind(this);
+    this.open_button.onclick = this.binder(on_open);
     toolbox.appendChild(this.open_button);
 
     this.save_button = document.createElement("button");
@@ -188,7 +202,7 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.save_button.classList.add("editor_save_button");
     this.save_button.classList.add("green_button");
     this.save_button.classList.add("hidden");
-    this.save_button.onclick = this.bound_save.bind(this);
+    this.save_button.onclick = this.binder(on_save, this.save);
     toolbox.appendChild(this.save_button);
 
     this.cancel_button = document.createElement("button");
@@ -197,7 +211,7 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.cancel_button.classList.add("editor_cancel_button");
     this.cancel_button.classList.add("red_button");
     this.cancel_button.classList.add("hidden");
-    this.cancel_button.onclick = this.bound_cancel.bind(this);
+    this.cancel_button.onclick = this.binder(on_cancel, this.cancel);
     toolbox.appendChild(this.cancel_button);
 
     this.spinner = document.createElement("span");
