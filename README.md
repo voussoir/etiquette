@@ -52,7 +52,6 @@ If you are interested in helping, please raise an issue before making any pull r
 - Ability to access user photos by user's ID, not just username.
 - Should album size be cached on disk?
 - Replace columns like area, ratio, bitrate by using expression indices or views (`width * height` etc).
-- Add some way to support large image albums without flooding the search results. Considering a "hidden" property so that a handful of representative images can appear in the search results, and the rest can be found on the actual Album page.
 - Add a `Photo.merge` to combine duplicate entries.
 - Generate thumbnails for vector files without falling victim to bombs.
 - Allow photos to have nonstandard, orderby-able properties like "release year". How?
