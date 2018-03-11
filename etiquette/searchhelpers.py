@@ -153,7 +153,7 @@ def mmf_photo_ids(photodb, tag_musts, tag_mays, tag_forbids, frozen_children):
 
     if tag_mays:
         for tag in tag_mays:
-            choices = helpers.sql_listify(tag.id for tag in frozen_children[tag])
+            choices = helpers.sql_listify(t.id for t in frozen_children[tag])
             query = 'SELECT photoid FROM photo_tag_rel WHERE tagid in %s' % choices
             cur.execute(query)
             results.update(fetch[0] for fetch in cur.fetchall())
@@ -161,7 +161,7 @@ def mmf_photo_ids(photodb, tag_musts, tag_mays, tag_forbids, frozen_children):
 
     if tag_musts:
         for tag in tag_musts:
-            choices = helpers.sql_listify(tag.id for tag in frozen_children[tag])
+            choices = helpers.sql_listify(t.id for t in frozen_children[tag])
             query = 'SELECT photoid FROM photo_tag_rel WHERE tagid in %s' % choices
             cur.execute(query)
             photo_ids = (fetch[0] for fetch in cur.fetchall())
@@ -178,7 +178,7 @@ def mmf_photo_ids(photodb, tag_musts, tag_mays, tag_forbids, frozen_children):
         if not results:
             operator = 'NOT IN'
         for tag in tag_forbids:
-            choices = helpers.sql_listify(tag.id for tag in frozen_children[tag])
+            choices = helpers.sql_listify(t.id for t in frozen_children[tag])
             query = 'SELECT photoid FROM photo_tag_rel WHERE tagid in %s' % choices
             cur.execute(query)
             photo_ids = (fetch[0] for fetch in cur.fetchall())
