@@ -49,13 +49,7 @@ p
 {{header.make_header(session=session)}}
 <div id="content_body">
     <h2>
-        <span data-editor-id="title" data-editor-empty-text="Album {{album.id}}" data-editor-placeholder="title" id="title_text">
-        {%- if album.title -%}
-            {{album.title}}
-        {%- else -%}
-            Album {{album.id}}
-        {%- endif -%}
-        </span>
+        <span data-editor-id="title" data-editor-empty-text="{{album.id}}" data-editor-placeholder="title" id="title_text">{{album.display_name}}</span>
     </h2>
     <pre
     id="description_text"
@@ -187,7 +181,7 @@ function on_save(editor, edit_element_map, display_element_map)
         editor.save();
         if (title_display.innerText == title_display.dataset.editorEmptyText)
         {
-            document.title = title_display.dataset.editorEmptyText;
+            document.title = "Album " + title_display.dataset.editorEmptyText;
         }
         else
         {
