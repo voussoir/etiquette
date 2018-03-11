@@ -346,7 +346,7 @@ class Album(ObjectBase, GroupableMixin):
     @decorators.required_feature('album.edit')
     @decorators.transaction
     def delete(self, *, delete_children=False, commit=True):
-        self.photodb.log.debug('Deleting album {album:r}'.format(album=self))
+        self.photodb.log.debug('Deleting %s', self)
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
         self.photodb.sql_delete(table='albums', pairs={'id': self.id})
         self.photodb.sql_delete(table='album_photo_rel', pairs={'albumid': self.id})
@@ -623,7 +623,7 @@ class Photo(ObjectBase):
                 self.photodb.log.debug(message)
                 self.remove_tag(parent)
 
-        self.photodb.log.debug('Applying tag {tag:s} to photo {pho:s}'.format(tag=tag, pho=self))
+        self.photodb.log.debug('Applying %s to %s', tag, self)
 
         data = {
             'photoid': self.id,
@@ -665,7 +665,7 @@ class Photo(ObjectBase):
         '''
         Delete the Photo and its relation to any tags and albums.
         '''
-        self.photodb.log.debug('Deleting photo {photo:r}'.format(photo=self))
+        self.photodb.log.debug('Deleting %s', self)
         self.photodb.sql_delete(table='photos', pairs={'id': self.id})
         self.photodb.sql_delete(table='photo_tag_rel', pairs={'photoid': self.id})
         self.photodb.sql_delete(table='album_photo_rel', pairs={'photoid': self.id})
@@ -867,17 +867,16 @@ class Photo(ObjectBase):
         self.ratio = None
         self.duration = None
 
-        self.photodb.log.debug('Reloading metadata for {photo:r}'.format(photo=self))
+        self.photodb.log.debug('Reloading metadata for %s', self)
 
         if self.simple_mimetype == 'image':
             try:
                 image = PIL.Image.open(self.real_path.absolute_path)
             except (OSError, ValueError):
-                self.photodb.log.debug('Failed to read image data for {photo:r}'.format(photo=self))
+                self.photodb.log.debug('Failed to read image data for %s', self)
             else:
                 (self.width, self.height) = image.size
                 image.close()
-                #self.photodb.log.debug('Loaded image data for {photo:r}'.format(photo=self))
 
         elif self.simple_mimetype == 'video' and constants.ffmpeg:
             try:
@@ -959,7 +958,7 @@ class Photo(ObjectBase):
     def remove_tag(self, tag, *, commit=True):
         tag = self.photodb.get_tag(name=tag)
 
-        self.photodb.log.debug('Removing tag {t} from photo {p}'.format(t=repr(tag), p=repr(self)))
+        self.photodb.log.debug('Removing %s from %s', tag, self)
         tags = list(tag.walk_children())
 
         for tag in tags:
@@ -1208,7 +1207,7 @@ class Tag(ObjectBase, GroupableMixin):
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def delete(self, *, delete_children=False, commit=True):
-        self.photodb.log.debug('Deleting tag {tag:r}'.format(tag=self))
+        self.photodb.log.debug('Deleting %s', self)
         self.photodb._cached_frozen_children = None
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
         self.photodb.sql_delete(table='tags', pairs={'id': self.id})
