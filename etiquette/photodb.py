@@ -1294,8 +1294,7 @@ class PhotoDB(
             current_album = create_or_fetch_current_album(albums_by_path, current_directory)
             orphan_join_parent_album(albums_by_path, current_album, current_directory)
 
-            for photo in photos:
-                current_album.add_photo(photo, commit=False)
+            current_album.add_photos(photos, commit=False)
 
         if commit:
             self.log.debug('Committing - digest_directory')

@@ -282,6 +282,15 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - add associated directory')
             self.photodb.commit()
 
+    def _add_photo(self, photo):
+        self.photodb.log.debug('Adding photo %s to %s', photo, self)
+        data = {
+            'albumid': self.id,
+            'photoid': photo.id,
+        }
+        self.photodb.sql_insert(table='album_photo_rel', data=data)
+        self._uncache_sums()
+
     @decorators.required_feature('album.edit')
     @decorators.transaction
     def add_photo(self, photo, *, commit=True):
@@ -290,16 +299,24 @@ class Album(ObjectBase, GroupableMixin):
         if self.has_photo(photo):
             return
 
-        self.photodb.log.debug('Adding photo %s to %s', photo, self)
-        data = {
-            'albumid': self.id,
-            'photoid': photo.id,
-        }
-        self.photodb.sql_insert(table='album_photo_rel', data=data)
+        self._add_photo(photo)
 
-        self._uncache_sums()
         if commit:
             self.photodb.log.debug('Committing - add photo to album')
+            self.photodb.commit()
+
+    @decorators.required_feature('album.edit')
+    @decorators.transaction
+    def add_photos(self, photos, *, commit=True):
+        existing_photos = set(self.get_photos())
+        photos = set(photos)
+        photos = photos.difference(existing_photos)
+
+        for photo in photos:
+            self._add_photo(photo)
+
+        if commit:
+            self.photodb.log.debug('Committing - add photos to album')
             self.photodb.commit()
 
     # Photo.add_tag already has @required_feature
