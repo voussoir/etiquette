@@ -762,11 +762,10 @@ class Photo(ObjectBase):
                         size=size,
                         time=timestamp,
                     )
-            except:
+            except Exception:
                 traceback.print_exc()
             else:
                 return_filepath = hopeful_filepath
-
 
         if return_filepath != self.thumbnail:
             data = {
@@ -1331,7 +1330,7 @@ class Tag(ObjectBase, GroupableMixin):
             return
 
         try:
-            existing_tag = self.photodb.get_tag(name=new_name)
+            self.photodb.get_tag(name=new_name)
         except exceptions.NoSuchTag:
             pass
         else:

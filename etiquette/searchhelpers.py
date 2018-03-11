@@ -55,7 +55,6 @@ def build_query(
         if column != 'RANDOM()':
             notnulls.add(column)
 
-
     if minimums:
         for (column, value) in minimums.items():
             wheres.add(column + ' >= ' + str(value))
@@ -73,7 +72,7 @@ def build_query(
         wheres.add(column + ' IS NULL')
 
     if wheres:
-        wheres = 'WHERE '  + ' AND '.join(wheres)
+        wheres = 'WHERE ' + ' AND '.join(wheres)
         query.append(wheres)
 
     if orderby:

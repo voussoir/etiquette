@@ -34,6 +34,7 @@ class EtiquetteException(Exception, metaclass=ErrorTypeAdder):
     Exception's constructor arguments.
     '''
     error_message = ''
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.given_args = args
@@ -77,6 +78,7 @@ class Exists(EtiquetteException):
 
 class AlbumExists(Exists):
     error_message = 'Album "{}" already exists.'
+
     def __init__(self, album):
         self.album = album
         EtiquetteException.__init__(self, album)
@@ -86,18 +88,21 @@ class GroupExists(Exists):
 
 class PhotoExists(Exists):
     error_message = 'Photo "{}" already exists.'
+
     def __init__(self, photo):
         self.photo = photo
         EtiquetteException.__init__(self, photo)
 
 class TagExists(Exists):
     error_message = 'Tag "{}" already exists.'
+
     def __init__(self, tag):
         self.tag = tag
         EtiquetteException.__init__(self, tag)
 
 class UserExists(Exists):
     error_message = 'User "{}" already exists.'
+
     def __init__(self, user):
         self.user = user
         EtiquetteException.__init__(self, user)

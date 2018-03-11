@@ -147,7 +147,15 @@ for statement in DB_INIT.split(';'):
     column_names = [x.strip().split(' ')[0] for x in column_names]
     SQL_COLUMNS[table_name] = column_names
 
-_sql_dictify = lambda columns: {key:index for (index, key) in enumerate(columns)}
+def _sql_dictify(columns):
+    '''
+    A dictionary where the key is the item and the value is the index.
+    Used to convert a stringy name into the correct number to then index into
+    an sql row.
+    ['test', 'toast'] -> {'test': 0, 'toast': 1}
+    '''
+    return {key: index for (index, key) in enumerate(columns)}
+
 SQL_INDEX = {key: _sql_dictify(value) for (key, value) in SQL_COLUMNS.items()}
 
 

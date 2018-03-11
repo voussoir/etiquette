@@ -60,7 +60,8 @@ def time_me(function):
         start = time.time()
         result = function(*args, **kwargs)
         end = time.time()
-        print('%s: %0.8f' % (function.__name__, end-start))
+        duration = end - start
+        print('%s: %0.8f' % (function.__name__, duration))
         return result
     return timed_function
 

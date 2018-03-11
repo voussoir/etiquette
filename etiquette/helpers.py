@@ -140,7 +140,9 @@ def fit_into_bounds(image_width, image_height, frame_width, frame_height):
 
     (1920, 1080, 400, 400) -> (400, 225)
     '''
-    ratio = min(frame_width/image_width, frame_height/image_height)
+    width_ratio = frame_width / image_width
+    height_ratio = frame_height / image_height
+    ratio = min(width_ratio, height_ratio)
 
     new_width = int(image_width * ratio)
     new_height = int(image_height * ratio)
@@ -193,10 +195,10 @@ def hms_to_seconds(hms):
     hms = hms.split(':')
     seconds = 0
     if len(hms) == 3:
-        seconds += int(hms[0])*3600
+        seconds += int(hms[0]) * 3600
         hms.pop(0)
     if len(hms) == 2:
-        seconds += int(hms[0])*60
+        seconds += int(hms[0]) * 60
         hms.pop(0)
     if len(hms) == 1:
         seconds += float(hms[0])
@@ -229,13 +231,11 @@ def read_filebytes(filepath, range_min, range_max, chunk_size=2 ** 20):
     '''
     range_span = range_max - range_min
 
-    #print('read span', range_min, range_max, range_span)
     f = open(filepath, 'rb')
     f.seek(range_min)
     sent_amount = 0
     with f:
         while sent_amount < range_span:
-            #print(sent_amount)
             chunk = f.read(chunk_size)
             if len(chunk) == 0:
                 break

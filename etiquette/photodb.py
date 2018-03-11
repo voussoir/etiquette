@@ -1313,6 +1313,7 @@ class PhotoDB(
         etc
         '''
         output_notes = []
+
         def create_or_get(name):
             #print('cog', name)
             try:
