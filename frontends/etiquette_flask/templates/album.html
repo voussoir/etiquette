@@ -76,7 +76,7 @@ p
         {% endif %}
 
         <ul>
-            <li>You are here</li>
+            <li>{{album.display_name}}</li>
             <ul>
                 {% set sub_albums = album.get_children() %}
                 {% for sub_album in sub_albums|sort(attribute='title') %}
