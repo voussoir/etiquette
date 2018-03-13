@@ -1078,6 +1078,7 @@ class PhotoDB(
             *,
             create=True,
             ephemeral=False,
+            skip_version_check=False,
         ):
         super().__init__()
 
@@ -1120,7 +1121,8 @@ class PhotoDB(
             self.sql = sqlite3.connect(self.database_filepath.absolute_path)
 
         if existing_database:
-            self._check_version()
+            if not skip_version_check:
+                self._check_version()
         else:
             self._first_time_setup()
 
