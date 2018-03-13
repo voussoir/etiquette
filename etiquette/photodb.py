@@ -706,9 +706,15 @@ class PDBSQLMixin:
         self.savepoints = []
 
     def close(self):
-        self.sql.close()
-        if self.ephemeral:
-            self.ephemeral_directory.cleanup()
+        # Wrapped in hasattr because if the object fails __init__, Python will
+        # still call __del__ and thus close(), even though the attributes
+        # we're trying to clean up never got set.
+        if hasattr(self, 'sql'):
+            self.sql.close()
+
+        if hasattr(self, 'ephemeral'):
+            if self.ephemeral:
+                self.ephemeral_directory.cleanup()
 
     def commit(self):
         while len(self.on_commit_queue) > 0:
