@@ -1075,6 +1075,8 @@ class PhotoDB(
     def __init__(
             self,
             data_directory=None,
+            *,
+            create=True,
             ephemeral=False,
         ):
         super().__init__()
@@ -1098,7 +1100,6 @@ class PhotoDB(
 
         if self.data_directory.exists and not self.data_directory.is_dir:
             raise exceptions.BadDataDirectory(self.data_directory.absolute_path)
-        os.makedirs(self.data_directory.absolute_path, exist_ok=True)
 
         self.log = logging.getLogger('etiquette:%s' % self.data_directory.absolute_path)
         self.log.setLevel(logging.DEBUG)
@@ -1110,6 +1111,12 @@ class PhotoDB(
         else:
             self.database_filepath = self.data_directory.with_child(constants.DEFAULT_DBNAME)
             existing_database = self.database_filepath.exists
+
+        if not create and not self.ephemeral and not existing_database:
+            raise FileNotFoundError('"%s" does not exist and create is off.' % self.data_directory)
+
+        if not self.ephemeral:
+            os.makedirs(self.data_directory.absolute_path, exist_ok=True)
             self.sql = sqlite3.connect(self.database_filepath.absolute_path)
 
         if existing_database:
