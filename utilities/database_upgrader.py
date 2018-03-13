@@ -5,21 +5,21 @@ import sys
 
 import etiquette
 
-def upgrade_1_to_2(sql):
+def upgrade_1_to_2(photodb):
     '''
     In this version, a column `tagged_at` was added to the Photos table, to keep
     track of the last time the photo's tags were edited (added or removed).
     '''
-    cur = sql.cursor()
+    cur = photodb.sql.cursor()
     cur.execute('ALTER TABLE photos ADD COLUMN tagged_at INT')
 
-def upgrade_2_to_3(sql):
+def upgrade_2_to_3(photodb):
     '''
     Preliminary support for user account management was added. This includes a `user` table
     with id, username, password hash, and a timestamp.
     Plus some indices.
     '''
-    cur = sql.cursor()
+    cur = photodb.sql.cursor()
     cur.execute('''
     CREATE TABLE IF NOT EXISTS users(
         id TEXT,
@@ -31,19 +31,19 @@ def upgrade_2_to_3(sql):
     cur.execute('CREATE INDEX IF NOT EXISTS index_user_id ON users(id)')
     cur.execute('CREATE INDEX IF NOT EXISTS index_user_username ON users(username COLLATE NOCASE)')
 
-def upgrade_3_to_4(sql):
+def upgrade_3_to_4(photodb):
     '''
     Add an `author_id` column to Photos.
     '''
-    cur = sql.cursor()
+    cur = photodb.sql.cursor()
     cur.execute('ALTER TABLE photos ADD COLUMN author_id TEXT')
     cur.execute('CREATE INDEX IF NOT EXISTS index_photo_author ON photos(author_id)')
 
-def upgrade_4_to_5(sql):
+def upgrade_4_to_5(photodb):
     '''
     Add table `bookmarks` and its indices.
     '''
-    cur = sql.cursor()
+    cur = photodb.sql.cursor()
     cur.execute('''
     CREATE TABLE IF NOT EXISTS bookmarks(
         id TEXT,
@@ -55,7 +55,7 @@ def upgrade_4_to_5(sql):
     cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_id ON bookmarks(id)')
     cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_author ON bookmarks(author_id)')
 
-def upgrade_5_to_6(sql):
+def upgrade_5_to_6(photodb):
     '''
     When Albums were first introduced, they shared the ID counter and
     relationship table with tags, because they were mostly identical at the time.
@@ -70,7 +70,7 @@ def upgrade_5_to_6(sql):
     # 1. Start the id_numbers.albums value at the tags value so that the number
     # can continue to increment safely and separately, instead of starting at
     # zero and bumping into existing albums.
-    cur = sql.cursor()
+    cur = photodb.sql.cursor()
     cur.execute('SELECT * FROM id_numbers WHERE tab == "tags"')
     last_id = cur.fetchone()[1]
     cur.execute('INSERT INTO id_numbers VALUES("albums", ?)', [last_id])
@@ -103,7 +103,7 @@ def upgrade_5_to_6(sql):
             [album_id, album_id]
         )
 
-def upgrade_6_to_7(sql):
+def upgrade_6_to_7(photodb):
     '''
     Most of the indices were renamed, so delete them and let them regenerate
     next time.
@@ -112,7 +112,7 @@ def upgrade_6_to_7(sql):
     separate table `album_associated_directories`, so that we can have albums
     which load from multiple directories.
     '''
-    cur = sql.cursor()
+    cur = photodb.sql.cursor()
     cur.execute('SELECT name FROM sqlite_master WHERE type == "index"')
     indices = [x[0] for x in cur.fetchall()]
     for index in indices:
@@ -139,32 +139,30 @@ def upgrade_6_to_7(sql):
     ''')
     cur.execute('DROP TABLE deleting_albums')
 
-def upgrade_7_to_8(sql):
+def upgrade_7_to_8(photodb):
     '''
     Give the Tags table a description field.
     '''
-    cur = sql.cursor()
+    cur = photodb.sql.cursor()
     cur.execute('ALTER TABLE tags ADD COLUMN description TEXT')
 
-def upgrade_8_to_9(sql):
+def upgrade_8_to_9(photodb):
     '''
     Give the Photos table a searchhidden field.
     '''
-    cur = sql.cursor()
+    cur = photodb.sql.cursor()
     cur.execute('ALTER TABLE photos ADD COLUMN searchhidden INT')
     cur.execute('UPDATE photos SET searchhidden = 0')
     cur.execute('CREATE INDEX index_photos_searchhidden on photos(searchhidden)')
 
-def upgrade_all(database_filename):
+def upgrade_all(data_directory):
     '''
-    Given the filename of a phototagger database, apply all of the needed
-    upgrade_x_to_y functions in order.
+    Given the directory containing a phototagger database, apply all of the
+    needed upgrade_x_to_y functions in order.
     '''
-    if not os.path.isfile(database_filename):
-        raise FileNotFoundError(database_filename)
+    photodb = etiquette.photodb.PhotoDB(data_directory, create=False, skip_version_check=True)
 
-    sql = sqlite3.connect(database_filename)
-    cur = sql.cursor()
+    cur = photodb.sql.cursor()
 
     cur.execute('PRAGMA user_version')
     current_version = cur.fetchone()[0]
@@ -178,20 +176,20 @@ def upgrade_all(database_filename):
         print('Upgrading from %d to %d' % (current_version, version_number))
         upgrade_function = 'upgrade_%d_to_%d' % (current_version, version_number)
         upgrade_function = eval(upgrade_function)
-        upgrade_function(sql)
-        sql.cursor().execute('PRAGMA user_version = %d' % version_number)
-        sql.commit()
+        upgrade_function(photodb)
+        photodb.sql.cursor().execute('PRAGMA user_version = %d' % version_number)
+        photodb.commit()
         current_version = version_number
     print('Upgrades finished.')
 
 
 def upgrade_all_argparse(args):
-    return upgrade_all(database_filename=args.database_filename)
+    return upgrade_all(data_directory=args.data_directory)
 
 def main(argv):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('database_filename')
+    parser.add_argument('data_directory')
     parser.set_defaults(func=upgrade_all_argparse)
 
     args = parser.parse_args(argv)
