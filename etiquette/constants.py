@@ -21,7 +21,7 @@ FILENAME_BADCHARS = '\\/:*?<>|"'
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
-DATABASE_VERSION = 9
+DATABASE_VERSION = 10
 DB_INIT = '''
 PRAGMA count_changes = OFF;
 PRAGMA cache_size = 10000;
@@ -266,7 +266,9 @@ DEFAULT_CONFIGURATION = {
         'thumbs.db',
     ],
     'digest_exclude_dirs': [
+        '_etiquette',
         '_site_thumbnails',
+        'site_thumbnails',
     ],
 
     'file_read_chunk': 2 ** 20,

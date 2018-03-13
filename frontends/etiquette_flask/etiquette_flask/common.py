@@ -95,6 +95,9 @@ def send_file(filepath, override_mimetype=None):
     '''
     Range-enabled file sending.
     '''
+    if isinstance(filepath, pathclass.Path):
+        filepath = filepath.absolute_path
+
     try:
         file_size = os.path.getsize(filepath)
     except FileNotFoundError:

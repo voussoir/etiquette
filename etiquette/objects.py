@@ -570,7 +570,12 @@ class Photo(ObjectBase):
         self.width = db_row['width']
         self.height = db_row['height']
         self.ratio = db_row['ratio']
-        self.thumbnail = db_row['thumbnail']
+
+        if db_row['thumbnail'] is not None:
+            self.thumbnail = self.photodb.thumbnail_directory.join(db_row['thumbnail'])
+        else:
+            self.thumbnail = None
+
         self.searchhidden = db_row['searchhidden']
 
         if self.duration and self.bytes is not None:
@@ -697,8 +702,6 @@ class Photo(ObjectBase):
             For videos, you can provide a `timestamp` to take the thumbnail at.
         '''
         hopeful_filepath = self.make_thumbnail_filepath()
-        hopeful_filepath = hopeful_filepath.relative_path
-        #print(hopeful_filepath)
         return_filepath = None
 
         if self.simple_mimetype == 'image':
@@ -731,7 +734,7 @@ class Photo(ObjectBase):
                     image = background
 
                 image = image.convert('RGB')
-                image.save(hopeful_filepath, quality=50)
+                image.save(hopeful_filepath.absolute_path, quality=50)
                 return_filepath = hopeful_filepath
 
         elif self.simple_mimetype == 'video' and constants.ffmpeg:
@@ -757,7 +760,7 @@ class Photo(ObjectBase):
                             timestamp = 2
                     constants.ffmpeg.thumbnail(
                         self.real_path.absolute_path,
-                        outfile=hopeful_filepath,
+                        outfile=hopeful_filepath.absolute_path,
                         quality=2,
                         size=size,
                         time=timestamp,
@@ -770,7 +773,7 @@ class Photo(ObjectBase):
         if return_filepath != self.thumbnail:
             data = {
                 'id': self.id,
-                'thumbnail': return_filepath,
+                'thumbnail': return_filepath.relative_to(self.photodb.thumbnail_directory),
             }
             self.photodb.sql_update(table='photos', pairs=data, where_key='id')
             self.thumbnail = return_filepath

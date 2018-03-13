@@ -155,6 +155,25 @@ def upgrade_8_to_9(photodb):
     cur.execute('UPDATE photos SET searchhidden = 0')
     cur.execute('CREATE INDEX index_photos_searchhidden on photos(searchhidden)')
 
+def upgrade_9_to_10(photodb):
+    '''
+    From now on, the filepath stored in Photo's thumbnail column should be a
+    relative path where . is the PhotoDB's thumbnail_directory.
+    Previously, the stored path was unnecessarily high and contained the PDB's
+    data_directory, reducing portability.
+    '''
+    cur = photodb.sql.cursor()
+    photos = list(photodb.search(has_thumbnail=True, is_searchhidden=None))
+
+    # Since we're doing it all at once, I'm going to cheat and skip the
+    # relative_to() calculation.
+    thumbnail_dir = photodb.thumbnail_directory.absolute_path
+    for photo in photos:
+        new_thumbnail_path = photo.make_thumbnail_filepath()
+        new_thumbnail_path = new_thumbnail_path.absolute_path
+        new_thumbnail_path = '.' + new_thumbnail_path.replace(thumbnail_dir, '')
+        cur.execute('UPDATE photos SET thumbnail = ? WHERE id == ?', [new_thumbnail_path, photo.id])
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

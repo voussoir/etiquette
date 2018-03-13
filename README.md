@@ -61,7 +61,6 @@ If you are interested in helping, please raise an issue before making any pull r
 - Currently, the Jinja templates are having a tangling influence on the backend objects, because Jinja cannot import my other modules like bytestring, but it can access the methods of the objects I pass into the template. As a result, the objects have excess helper methods. Consider making them into Jinja filters instead. Which is also kind of ugly but will move that pollution out of the backend at least.
 - Perhaps instead of actually deleting objects, they should just have a `deleted` flag, to make easy restoration possible. Also consider regrouping the children of restored Groupables if those children haven't already been reassigned somewhere else.
 - Add a new table to store permanent history of add/remove of tags on photos, so that accidents or trolling can be reversed.
-- Photo thumbnail paths should be relative to the data_dir, they are currently one level up. Or maybe should remove the paths entirely and just recalculate it by the ID. Can't think of any reason to have a thumbnail point elsewhere.
 - Fix album size cache when photo reload metadata and generally improve that validation.
 - Better bookmark url validation.
 - Create a textbox which gives autocomplete tag names.
