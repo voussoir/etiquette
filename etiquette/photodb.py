@@ -1095,6 +1095,9 @@ class PhotoDB(
 
         data_directory = helpers.remove_path_badchars(data_directory, allowed=':/\\')
         self.data_directory = pathclass.Path(data_directory)
+
+        if self.data_directory.exists and not self.data_directory.is_dir:
+            raise exceptions.BadDataDirectory(self.data_directory.absolute_path)
         os.makedirs(self.data_directory.absolute_path, exist_ok=True)
 
         self.log = logging.getLogger('etiquette:%s' % self.data_directory.absolute_path)

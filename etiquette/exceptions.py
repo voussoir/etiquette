@@ -152,6 +152,12 @@ class WrongLogin(EtiquetteException):
 
 
 # GENERAL ERRORS
+class BadDataDirectory(EtiquetteException):
+    '''
+    Raised by PhotoDB __init__ if the requested data_directory is invalid.
+    '''
+    error_message = 'Bad data directory "{}"'
+
 OUTOFDATE = '''
 Database is out of date. {current} should be {new}.
 Please use utilities\\database_upgrader.py
