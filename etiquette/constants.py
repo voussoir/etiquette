@@ -154,9 +154,9 @@ def _sql_dictify(columns):
     an sql row.
     ['test', 'toast'] -> {'test': 0, 'toast': 1}
     '''
-    return {key: index for (index, key) in enumerate(columns)}
+    return {column: index for (index, column) in enumerate(columns)}
 
-SQL_INDEX = {key: _sql_dictify(value) for (key, value) in SQL_COLUMNS.items()}
+SQL_INDEX = {table: _sql_dictify(columns) for (table, columns) in SQL_COLUMNS.items()}
 
 
 ALLOWED_ORDERBY_COLUMNS = [
