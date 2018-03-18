@@ -23,33 +23,20 @@ FILENAME_BADCHARS = '\\/:*?<>|"'
 # overwriting it.
 DATABASE_VERSION = 10
 DB_INIT = '''
-PRAGMA count_changes = OFF;
 PRAGMA cache_size = 10000;
+PRAGMA count_changes = OFF;
+PRAGMA foreign_keys = ON;
 PRAGMA user_version = {user_version};
 
 ----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS album_associated_directories(
-    albumid TEXT,
-    directory TEXT COLLATE NOCASE
+CREATE TABLE IF NOT EXISTS users(
+    id TEXT,
+    username TEXT COLLATE NOCASE,
+    password BLOB,
+    created INT
 );
-CREATE INDEX IF NOT EXISTS index_album_associated_directories_albumid on
-    album_associated_directories(albumid);
-CREATE INDEX IF NOT EXISTS index_album_associated_directories_directory on
-    album_associated_directories(directory);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS album_group_rel(
-    parentid TEXT,
-    memberid TEXT
-);
-CREATE INDEX IF NOT EXISTS index_album_group_rel_parentid on album_group_rel(parentid);
-CREATE INDEX IF NOT EXISTS index_album_group_rel_memberid on album_group_rel(memberid);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS album_photo_rel(
-    albumid TEXT,
-    photoid TEXT
-);
-CREATE INDEX IF NOT EXISTS index_album_photo_rel_albumid on album_photo_rel(albumid);
-CREATE INDEX IF NOT EXISTS index_album_photo_rel_photoid on album_photo_rel(photoid);
+CREATE INDEX IF NOT EXISTS index_users_id on users(id);
+CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE);
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS albums(
     id TEXT,
@@ -66,18 +53,6 @@ CREATE TABLE IF NOT EXISTS bookmarks(
 );
 CREATE INDEX IF NOT EXISTS index_bookmarks_id on bookmarks(id);
 CREATE INDEX IF NOT EXISTS index_bookmarks_author on bookmarks(author_id);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS id_numbers(
-    tab TEXT,
-    last_id TEXT
-);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS photo_tag_rel(
-    photoid TEXT,
-    tagid TEXT
-);
-CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid on photo_tag_rel(photoid);
-CREATE INDEX IF NOT EXISTS index_photo_tag_rel_tagid on photo_tag_rel(tagid);
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS photos(
     id TEXT,
@@ -105,6 +80,51 @@ CREATE INDEX IF NOT EXISTS index_photos_extension on photos(extension);
 CREATE INDEX IF NOT EXISTS index_photos_author_id on photos(author_id);
 CREATE INDEX IF NOT EXISTS index_photos_searchhidden on photos(searchhidden);
 ----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tags(
+    id TEXT,
+    name TEXT,
+    description TEXT
+);
+CREATE INDEX IF NOT EXISTS index_tags_id on tags(id);
+CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
+----------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS album_associated_directories(
+    albumid TEXT,
+    directory TEXT COLLATE NOCASE
+);
+CREATE INDEX IF NOT EXISTS index_album_associated_directories_albumid on
+    album_associated_directories(albumid);
+CREATE INDEX IF NOT EXISTS index_album_associated_directories_directory on
+    album_associated_directories(directory);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS album_group_rel(
+    parentid TEXT,
+    memberid TEXT
+);
+CREATE INDEX IF NOT EXISTS index_album_group_rel_parentid on album_group_rel(parentid);
+CREATE INDEX IF NOT EXISTS index_album_group_rel_memberid on album_group_rel(memberid);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS album_photo_rel(
+    albumid TEXT,
+    photoid TEXT
+);
+CREATE INDEX IF NOT EXISTS index_album_photo_rel_albumid on album_photo_rel(albumid);
+CREATE INDEX IF NOT EXISTS index_album_photo_rel_photoid on album_photo_rel(photoid);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS id_numbers(
+    tab TEXT,
+    last_id TEXT
+);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS photo_tag_rel(
+    photoid TEXT,
+    tagid TEXT
+);
+CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid on photo_tag_rel(photoid);
+CREATE INDEX IF NOT EXISTS index_photo_tag_rel_tagid on photo_tag_rel(tagid);
 CREATE TABLE IF NOT EXISTS tag_group_rel(
     parentid TEXT,
     memberid TEXT
@@ -118,22 +138,6 @@ CREATE TABLE IF NOT EXISTS tag_synonyms(
 );
 CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
 ----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS tags(
-    id TEXT,
-    name TEXT,
-    description TEXT
-);
-CREATE INDEX IF NOT EXISTS index_tags_id on tags(id);
-CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
-----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS users(
-    id TEXT,
-    username TEXT COLLATE NOCASE,
-    password BLOB,
-    created INT
-);
-CREATE INDEX IF NOT EXISTS index_users_id on users(id);
-CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE);
 '''.format(user_version=DATABASE_VERSION)
 
 SQL_COLUMNS = {}
