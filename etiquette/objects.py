@@ -46,6 +46,14 @@ class ObjectBase:
     def __hash__(self):
         return hash(self.id)
 
+    def get_author(self):
+        '''
+        Return the User who created this object, or None if it is unassigned.
+        '''
+        if self.author_id is None:
+            return None
+        return self.photodb.get_user(id=self.author_id)
+
 
 class GroupableMixin:
     group_getter = None
@@ -787,14 +795,6 @@ class Photo(ObjectBase):
 
         self.__reinit__()
         return self.thumbnail
-
-    def get_author(self):
-        '''
-        Return the User object who owns this photo, or None if it is unassigned.
-        '''
-        if self.author_id is None:
-            return None
-        return self.photodb.get_user(id=self.author_id)
 
     def get_containing_albums(self):
         '''
