@@ -1470,10 +1470,11 @@ class PhotoDB(
         else:
             needs_dump = True
 
+        self.config = config
+
         if needs_dump:
             self.save_config()
 
-        self.config = config
         return config
 
     def save_config(self):
