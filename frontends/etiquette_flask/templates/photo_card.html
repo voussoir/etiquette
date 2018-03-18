@@ -20,7 +20,7 @@
 <div class="photo_card photo_card_list" data-id="{{photo.id}}">
     <input type="checkbox" class="photo_card_selector_checkbox" onclick="on_photo_select(event)"/>
     <span class="photo_card_filename"><a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a></span>
-    <a class="photo_card_metadata" target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring}}</a>
+    <a class="photo_card_metadata" target="_blank" href="/file/{{photo.id + photo.dot_extension}}">{{photo.bytestring}}</a>
 </div>
 {% else %}
 
@@ -69,7 +69,7 @@
 
     <span class="photo_card_metadata">
     {{- metadata_inner|safe -}}
-    <a target="_blank" href="/file/{{photo.id}}.{{photo.extension}}">{{photo.bytestring}}</a>
+    <a target="_blank" href="/file/{{photo.id + photo.dot_extension}}">{{photo.bytestring}}</a>
     </span>
 
     <input type="checkbox" class="photo_card_selector_checkbox" onclick="on_photo_select(event)"/>
