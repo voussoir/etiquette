@@ -1184,11 +1184,18 @@ class PhotoDB(
             stored_keys = helpers.recursive_dict_keys(user_config)
             needs_dump = not my_keys.issubset(stored_keys)
             helpers.recursive_dict_update(target=config, supply=user_config)
+        else:
+            needs_dump = True
 
-        if (not user_config_exists) or needs_dump:
-            with open(self.config_filepath.absolute_path, 'w') as handle:
-                handle.write(json.dumps(config, indent=4, sort_keys=True))
+        if needs_dump:
+            self._save_config()
+
+        self.config = config
         return config
+
+    def _save_config(self):
+        with open(self.config_filepath.absolute_path, 'w') as handle:
+            handle.write(json.dumps(self.config, indent=4, sort_keys=True))
 
     def __del__(self):
         self.close()
