@@ -58,7 +58,8 @@ def get_bookmarks_json():
 def post_bookmarks_create():
     url = request.form['url']
     title = request.form.get('title', None)
-    bookmark = common.P.new_bookmark(url=url, title=title)
+    user = session_manager.get(request).user
+    bookmark = common.P.new_bookmark(url=url, title=title, author=user)
     response = etiquette.jsonify.bookmark(bookmark)
     response = jsonify.make_json_response(response)
     return response
