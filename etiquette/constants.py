@@ -152,17 +152,21 @@ CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
 ----------------------------------------------------------------------------------------------------
 '''.format(user_version=DATABASE_VERSION)
 
+def _extract_columns(create_table_statement):
+    column_names = create_table_statement.split('(')[1].rsplit(')', 1)[0]
+    column_names = column_names.split(',')
+    column_names = [x.strip() for x in column_names]
+    column_names = [x.split(' ')[0] for x in column_names]
+    column_names = [c for c in column_names if c.lower() != 'foreign']
+    return column_names
+
 SQL_COLUMNS = {}
 for statement in DB_INIT.split(';'):
     if 'create table' not in statement.lower():
         continue
 
     table_name = statement.split('(')[0].strip().split(' ')[-1]
-    column_names = statement.split('(')[1].rsplit(')', 1)[0]
-    column_names = column_names.split(',')
-    column_names = [x.strip().split(' ')[0] for x in column_names]
-    column_names = [c for c in column_names if c.lower() != 'foreign']
-    SQL_COLUMNS[table_name] = column_names
+    SQL_COLUMNS[table_name] = _extract_columns(statement)
 
 def _sql_dictify(columns):
     '''
