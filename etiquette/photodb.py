@@ -1132,7 +1132,7 @@ class PhotoDB(
 
         # CONFIG
         self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
-        self.config = self._load_config()
+        self.config = self.load_config()
         self.log.setLevel(self.config['log_level'])
 
         # OTHER
@@ -1172,30 +1172,6 @@ class PhotoDB(
         for statement in statements:
             cur.execute(statement)
         self.sql.commit()
-
-    def _load_config(self):
-        config = copy.deepcopy(constants.DEFAULT_CONFIGURATION)
-        user_config_exists = self.config_filepath.is_file
-        needs_dump = False
-        if user_config_exists:
-            with open(self.config_filepath.absolute_path, 'r') as handle:
-                user_config = json.load(handle)
-            my_keys = helpers.recursive_dict_keys(config)
-            stored_keys = helpers.recursive_dict_keys(user_config)
-            needs_dump = not my_keys.issubset(stored_keys)
-            helpers.recursive_dict_update(target=config, supply=user_config)
-        else:
-            needs_dump = True
-
-        if needs_dump:
-            self._save_config()
-
-        self.config = config
-        return config
-
-    def _save_config(self):
-        with open(self.config_filepath.absolute_path, 'w') as handle:
-            handle.write(json.dumps(self.config, indent=4, sort_keys=True))
 
     def __del__(self):
         self.close()
@@ -1473,6 +1449,30 @@ class PhotoDB(
         for thing in things:
             thing = thing_map['class'](self, db_row=thing)
             yield thing
+
+    def load_config(self):
+        config = copy.deepcopy(constants.DEFAULT_CONFIGURATION)
+        user_config_exists = self.config_filepath.is_file
+        needs_dump = False
+        if user_config_exists:
+            with open(self.config_filepath.absolute_path, 'r') as handle:
+                user_config = json.load(handle)
+            my_keys = helpers.recursive_dict_keys(config)
+            stored_keys = helpers.recursive_dict_keys(user_config)
+            needs_dump = not my_keys.issubset(stored_keys)
+            helpers.recursive_dict_update(target=config, supply=user_config)
+        else:
+            needs_dump = True
+
+        if needs_dump:
+            self.save_config()
+
+        self.config = config
+        return config
+
+    def save_config(self):
+        with open(self.config_filepath.absolute_path, 'w') as handle:
+            handle.write(json.dumps(self.config, indent=4, sort_keys=True))
 
 
 _THING_CLASSES = {
