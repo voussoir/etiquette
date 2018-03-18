@@ -1064,126 +1064,9 @@ class PDBUserMixin:
         return objects.User(self, data)
 
 
-class PhotoDB(
-        PDBAlbumMixin,
-        PDBBookmarkMixin,
-        PDBPhotoMixin,
-        PDBSQLMixin,
-        PDBTagMixin,
-        PDBUserMixin,
-    ):
-    def __init__(
-            self,
-            data_directory=None,
-            *,
-            create=True,
-            ephemeral=False,
-            skip_version_check=False,
-        ):
+class PDBUtilMixin:
+    def __init__(self):
         super().__init__()
-
-        self.ephemeral = ephemeral
-
-        # DATA DIR PREP
-        if data_directory is None:
-            if self.ephemeral:
-                # In addition to the data_dir as a pathclass object, keep the
-                # TempDir object so we can use the cleanup method later.
-                self.ephemeral_directory = tempfile.TemporaryDirectory(prefix='etiquette_ephem_')
-                data_directory = self.ephemeral_directory.name
-            else:
-                data_directory = constants.DEFAULT_DATADIR
-        elif self.ephemeral:
-            raise exceptions.NotExclusive(['data_directory', 'ephemeral'])
-
-        data_directory = helpers.remove_path_badchars(data_directory, allowed=':/\\')
-        self.data_directory = pathclass.Path(data_directory)
-
-        if self.data_directory.exists and not self.data_directory.is_dir:
-            raise exceptions.BadDataDirectory(self.data_directory.absolute_path)
-
-        self.log = logging.getLogger('etiquette:%s' % self.data_directory.absolute_path)
-        self.log.setLevel(logging.DEBUG)
-
-        # DATABASE
-        if self.ephemeral:
-            self.sql = sqlite3.connect(':memory:')
-            existing_database = False
-        else:
-            self.database_filepath = self.data_directory.with_child(constants.DEFAULT_DBNAME)
-            existing_database = self.database_filepath.exists
-
-        if not create and not self.ephemeral and not existing_database:
-            raise FileNotFoundError('"%s" does not exist and create is off.' % self.data_directory)
-
-        if not self.ephemeral:
-            os.makedirs(self.data_directory.absolute_path, exist_ok=True)
-            self.sql = sqlite3.connect(self.database_filepath.absolute_path)
-
-        if existing_database:
-            if not skip_version_check:
-                self._check_version()
-        else:
-            self._first_time_setup()
-
-        # THUMBNAIL DIRECTORY
-        self.thumbnail_directory = self.data_directory.with_child(constants.DEFAULT_THUMBDIR)
-        os.makedirs(self.thumbnail_directory.absolute_path, exist_ok=True)
-
-        # CONFIG
-        self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
-        self.config = self.load_config()
-        self.log.setLevel(self.config['log_level'])
-
-        # OTHER
-
-        self._cached_frozen_children = None
-
-        self._album_cache.maxlen = self.config['cache_size']['album']
-        self._bookmark_cache.maxlen = self.config['cache_size']['bookmark']
-        self._photo_cache.maxlen = self.config['cache_size']['photo']
-        self._tag_cache.maxlen = self.config['cache_size']['tag']
-        self._user_cache.maxlen = self.config['cache_size']['user']
-        self.caches = {
-            'album': self._album_cache,
-            'bookmark': self._bookmark_cache,
-            'photo': self._photo_cache,
-            'tag': self._tag_cache,
-            'user': self._user_cache,
-        }
-
-    def _check_version(self):
-        cur = self.sql.cursor()
-
-        cur.execute('PRAGMA user_version')
-        existing_version = cur.fetchone()[0]
-        if existing_version != constants.DATABASE_VERSION:
-            exc = exceptions.DatabaseOutOfDate(
-                current=existing_version,
-                new=constants.DATABASE_VERSION,
-            )
-            raise exc
-
-    def _first_time_setup(self):
-        self.log.debug('Running first-time setup.')
-        cur = self.sql.cursor()
-
-        statements = constants.DB_INIT.split(';')
-        for statement in statements:
-            cur.execute(statement)
-        self.sql.commit()
-
-    def __del__(self):
-        self.close()
-
-    def __repr__(self):
-        if self.ephemeral:
-            return 'PhotoDB(ephemeral=True)'
-        else:
-            return 'PhotoDB(data_directory={datadir})'.format(datadir=repr(self.data_directory))
-
-    def _uncache(self):
-        self._cached_frozen_children = None
 
     @decorators.transaction
     def digest_directory(
@@ -1381,6 +1264,129 @@ class PhotoDB(
             note = ('new_synonym', '%s+%s' % (tag.name, synonym))
             output_notes.append(note)
         return output_notes
+
+
+class PhotoDB(
+        PDBAlbumMixin,
+        PDBBookmarkMixin,
+        PDBPhotoMixin,
+        PDBSQLMixin,
+        PDBTagMixin,
+        PDBUserMixin,
+        PDBUtilMixin,
+    ):
+    def __init__(
+            self,
+            data_directory=None,
+            *,
+            create=True,
+            ephemeral=False,
+            skip_version_check=False,
+        ):
+        super().__init__()
+
+        self.ephemeral = ephemeral
+
+        # DATA DIR PREP
+        if data_directory is None:
+            if self.ephemeral:
+                # In addition to the data_dir as a pathclass object, keep the
+                # TempDir object so we can use the cleanup method later.
+                self.ephemeral_directory = tempfile.TemporaryDirectory(prefix='etiquette_ephem_')
+                data_directory = self.ephemeral_directory.name
+            else:
+                data_directory = constants.DEFAULT_DATADIR
+        elif self.ephemeral:
+            raise exceptions.NotExclusive(['data_directory', 'ephemeral'])
+
+        data_directory = helpers.remove_path_badchars(data_directory, allowed=':/\\')
+        self.data_directory = pathclass.Path(data_directory)
+
+        if self.data_directory.exists and not self.data_directory.is_dir:
+            raise exceptions.BadDataDirectory(self.data_directory.absolute_path)
+
+        self.log = logging.getLogger('etiquette:%s' % self.data_directory.absolute_path)
+        self.log.setLevel(logging.DEBUG)
+
+        # DATABASE
+        if self.ephemeral:
+            self.sql = sqlite3.connect(':memory:')
+            existing_database = False
+        else:
+            self.database_filepath = self.data_directory.with_child(constants.DEFAULT_DBNAME)
+            existing_database = self.database_filepath.exists
+
+        if not create and not self.ephemeral and not existing_database:
+            raise FileNotFoundError('"%s" does not exist and create is off.' % self.data_directory)
+
+        if not self.ephemeral:
+            os.makedirs(self.data_directory.absolute_path, exist_ok=True)
+            self.sql = sqlite3.connect(self.database_filepath.absolute_path)
+
+        if existing_database:
+            if not skip_version_check:
+                self._check_version()
+        else:
+            self._first_time_setup()
+
+        # THUMBNAIL DIRECTORY
+        self.thumbnail_directory = self.data_directory.with_child(constants.DEFAULT_THUMBDIR)
+        os.makedirs(self.thumbnail_directory.absolute_path, exist_ok=True)
+
+        # CONFIG
+        self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
+        self.config = self.load_config()
+        self.log.setLevel(self.config['log_level'])
+
+        # OTHER
+
+        self._cached_frozen_children = None
+
+        self._album_cache.maxlen = self.config['cache_size']['album']
+        self._bookmark_cache.maxlen = self.config['cache_size']['bookmark']
+        self._photo_cache.maxlen = self.config['cache_size']['photo']
+        self._tag_cache.maxlen = self.config['cache_size']['tag']
+        self._user_cache.maxlen = self.config['cache_size']['user']
+        self.caches = {
+            'album': self._album_cache,
+            'bookmark': self._bookmark_cache,
+            'photo': self._photo_cache,
+            'tag': self._tag_cache,
+            'user': self._user_cache,
+        }
+
+    def _check_version(self):
+        cur = self.sql.cursor()
+
+        cur.execute('PRAGMA user_version')
+        existing_version = cur.fetchone()[0]
+        if existing_version != constants.DATABASE_VERSION:
+            exc = exceptions.DatabaseOutOfDate(
+                current=existing_version,
+                new=constants.DATABASE_VERSION,
+            )
+            raise exc
+
+    def _first_time_setup(self):
+        self.log.debug('Running first-time setup.')
+        cur = self.sql.cursor()
+
+        statements = constants.DB_INIT.split(';')
+        for statement in statements:
+            cur.execute(statement)
+        self.sql.commit()
+
+    def __del__(self):
+        self.close()
+
+    def __repr__(self):
+        if self.ephemeral:
+            return 'PhotoDB(ephemeral=True)'
+        else:
+            return 'PhotoDB(data_directory={datadir})'.format(datadir=repr(self.data_directory))
+
+    def _uncache(self):
+        self._cached_frozen_children = None
 
     def generate_id(self, table):
         '''
