@@ -5,6 +5,8 @@ import sys
 
 import etiquette
 
+import old_inits
+
 def upgrade_1_to_2(photodb):
     '''
     In this version, a column `tagged_at` was added to the Photos table, to keep
@@ -174,6 +176,57 @@ def upgrade_9_to_10(photodb):
         new_thumbnail_path = '.' + new_thumbnail_path.replace(thumbnail_dir, '')
         cur.execute('UPDATE photos SET thumbnail = ? WHERE id == ?', [new_thumbnail_path, photo.id])
 
+def upgrade_10_to_11(photodb):
+    '''
+    Added Primary keys, Foreign keys, and NOT NULL constraints which cannot be
+    done in-place and requires the reconstruction of all the affected tables.
+    '''
+    tables_to_delete = [
+        'users',
+        'albums',
+        'bookmarks',
+        'photos',
+        'tags',
+        'album_associated_directories',
+        'album_group_rel',
+        'album_photo_rel',
+        'id_numbers',
+        'photo_tag_rel',
+        'tag_group_rel',
+        'tag_synonyms',
+    ]
+    cur = photodb.sql.cursor()
+    cur.execute('PRAGMA foreign_keys = OFF')
+
+    print('Renaming existing tables.')
+    for table in tables_to_delete:
+        statement = 'ALTER TABLE %s RENAME TO %s_old' % (table, table)
+        cur.execute(statement)
+
+    lines = [line.strip() for line in old_inits.V11.splitlines()]
+    lines = [line for line in lines if not line.startswith('--')]
+    statements = '\n'.join(lines).split(';')
+    statements = [x.strip() for x in statements]
+    create_tables = [x for x in statements if x.lower().startswith('create table')]
+    create_indices = [x for x in statements if x.lower().startswith('create index')]
+
+    print('Recreating tables.')
+    for statement in create_tables:
+        cur.execute(statement)
+
+    print('Migrating table data.')
+    for table in tables_to_delete:
+        statement = 'INSERT INTO %s SELECT * FROM %s_old' % (table, table)
+        cur.execute(statement)
+        statement = 'DROP TABLE %s_old' % table
+        cur.execute(statement)
+
+    print('Recreating indices.')
+    for statement in create_indices:
+        cur.execute(statement)
+
+    cur.execute('PRAGMA foreign_keys = ON')
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the
@@ -188,11 +241,11 @@ def upgrade_all(data_directory):
     needed_version = etiquette.constants.DATABASE_VERSION
 
     if current_version == needed_version:
-        print('Already up-to-date with version %d.' % needed_version)
+        print('Already up to date with version %d.' % needed_version)
         return
 
     for version_number in range(current_version + 1, needed_version + 1):
-        print('Upgrading from %d to %d' % (current_version, version_number))
+        print('Upgrading from %d to %d.' % (current_version, version_number))
         upgrade_function = 'upgrade_%d_to_%d' % (current_version, version_number)
         upgrade_function = eval(upgrade_function)
         upgrade_function(photodb)
