@@ -97,7 +97,8 @@ def post_tag_create():
     Create a tag.
     '''
     easybake_string = request.form['tagname']
-    notes = common.P.easybake(easybake_string)
+    user = session_manager.get(request).user
+    notes = common.P.easybake(easybake_string, author=user)
     notes = [{'action': action, 'tagname': tagname} for (action, tagname) in notes]
     return jsonify.make_json_response(notes)
 

@@ -193,8 +193,11 @@ def post_albums_create():
     if parent is not None:
         parent = common.P_album(parent)
 
-    album = common.P.new_album(title=title, description=description)
+    user = session_manager.get(request).user
+
+    album = common.P.new_album(title=title, description=description, author=user)
     if parent is not None:
         parent.add_child(album)
+
     response = etiquette.jsonify.album(album, minimal=False)
     return jsonify.make_json_response(response)

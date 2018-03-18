@@ -108,6 +108,7 @@ class PDBAlbumMixin:
             description=None,
             *,
             associated_directory=None,
+            author=None,
             commit=True,
             photos=None,
         ):
@@ -124,10 +125,14 @@ class PDBAlbumMixin:
             raise TypeError('Description must be string, not %s' % type(description))
 
         self.log.debug('New Album: %s %s', album_id, title)
+
+        author_id = self.get_user_id_or_none(author)
+
         data = {
             'id': album_id,
             'title': title,
             'description': description,
+            'author_id': author_id,
         }
         self.sql_insert(table='albums', data=data)
 
@@ -860,7 +865,7 @@ class PDBTagMixin:
 
     @decorators.required_feature('tag.new')
     @decorators.transaction
-    def new_tag(self, tagname, description=None, *, commit=True):
+    def new_tag(self, tagname, description=None, *, author=None, commit=True):
         '''
         Register a new tag and return the Tag object.
         '''
@@ -876,10 +881,12 @@ class PDBTagMixin:
 
         tagid = self.generate_id('tags')
         self._cached_frozen_children = None
+        author_id = self.get_user_id_or_none(author)
         data = {
             'id': tagid,
             'name': tagname,
             'description': description,
+            'author_id': author_id,
         }
         self.sql_insert(table='tags', data=data)
 
@@ -1189,7 +1196,7 @@ class PDBUtilMixin:
         else:
             return None
 
-    def easybake(self, ebstring):
+    def easybake(self, ebstring, author=None):
         '''
         Easily create tags, groups, and synonyms with a string like
         "group1.group2.tag+synonym"
@@ -1204,7 +1211,7 @@ class PDBUtilMixin:
                 item = self.get_tag(name=name)
                 note = ('existing_tag', item.qualified_name())
             except exceptions.NoSuchTag:
-                item = self.new_tag(name, commit=False)
+                item = self.new_tag(name, author=author, commit=False)
                 note = ('new_tag', item.qualified_name())
             output_notes.append(note)
             return item

@@ -178,28 +178,28 @@ def upgrade_9_to_10(photodb):
 
 def upgrade_10_to_11(photodb):
     '''
-    Added Primary keys, Foreign keys, and NOT NULL constraints which cannot be
-    done in-place and requires the reconstruction of all the affected tables.
+    Added Primary keys, Foreign keys, and NOT NULL constraints.
+    Added author_id column to Album and Tag tables.
     '''
-    tables_to_delete = [
-        'users',
-        'albums',
-        'bookmarks',
-        'photos',
-        'tags',
-        'album_associated_directories',
-        'album_group_rel',
-        'album_photo_rel',
-        'id_numbers',
-        'photo_tag_rel',
-        'tag_group_rel',
-        'tag_synonyms',
-    ]
+    tables_to_copy = {
+        'users': '*',
+        'albums': '*, NULL',
+        'bookmarks': '*',
+        'photos': '*',
+        'tags': '*, NULL',
+        'album_associated_directories': '*',
+        'album_group_rel': '*',
+        'album_photo_rel': '*',
+        'id_numbers': '*',
+        'photo_tag_rel': '*',
+        'tag_group_rel': '*',
+        'tag_synonyms': '*',
+    }
     cur = photodb.sql.cursor()
     cur.execute('PRAGMA foreign_keys = OFF')
 
     print('Renaming existing tables.')
-    for table in tables_to_delete:
+    for table in tables_to_copy:
         statement = 'ALTER TABLE %s RENAME TO %s_old' % (table, table)
         cur.execute(statement)
 
@@ -215,8 +215,8 @@ def upgrade_10_to_11(photodb):
         cur.execute(statement)
 
     print('Migrating table data.')
-    for table in tables_to_delete:
-        statement = 'INSERT INTO %s SELECT * FROM %s_old' % (table, table)
+    for (table, select_columns) in tables_to_copy.items():
+        statement = 'INSERT INTO %s SELECT %s FROM %s_old' % (table, select_columns, table)
         cur.execute(statement)
         statement = 'DROP TABLE %s_old' % table
         cur.execute(statement)

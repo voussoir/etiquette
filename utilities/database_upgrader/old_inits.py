@@ -17,9 +17,12 @@ CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE
 CREATE TABLE IF NOT EXISTS albums(
     id TEXT PRIMARY KEY NOT NULL,
     title TEXT,
-    description TEXT
+    description TEXT,
+    author_id TEXT,
+    FOREIGN KEY(author_id) REFERENCES users(id)
 );
 CREATE INDEX IF NOT EXISTS index_albums_id on albums(id);
+CREATE INDEX IF NOT EXISTS index_albums_author_id on albums(author_id);
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS bookmarks(
     id TEXT PRIMARY KEY NOT NULL,
@@ -29,7 +32,7 @@ CREATE TABLE IF NOT EXISTS bookmarks(
     FOREIGN KEY(author_id) REFERENCES users(id)
 );
 CREATE INDEX IF NOT EXISTS index_bookmarks_id on bookmarks(id);
-CREATE INDEX IF NOT EXISTS index_bookmarks_author on bookmarks(author_id);
+CREATE INDEX IF NOT EXISTS index_bookmarks_author_id on bookmarks(author_id);
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS photos(
     id TEXT PRIMARY KEY NOT NULL,
@@ -61,10 +64,13 @@ CREATE INDEX IF NOT EXISTS index_photos_searchhidden on photos(searchhidden);
 CREATE TABLE IF NOT EXISTS tags(
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
-    description TEXT
+    description TEXT,
+    author_id TEXT,
+    FOREIGN KEY(author_id) REFERENCES users(id)
 );
 CREATE INDEX IF NOT EXISTS index_tags_id on tags(id);
 CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
+CREATE INDEX IF NOT EXISTS index_tags_author_id on tags(author_id);
 ----------------------------------------------------------------------------------------------------
 
 

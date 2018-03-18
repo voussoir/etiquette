@@ -216,6 +216,8 @@ class Album(ObjectBase, GroupableMixin):
         self.id = db_row['id']
         self.title = db_row['title'] or ''
         self.description = db_row['description'] or ''
+        self.author_id = db_row['author_id']
+
         self.name = 'Album %s' % self.id
         self.group_getter = self.photodb.get_album
 
@@ -1099,6 +1101,8 @@ class Tag(ObjectBase, GroupableMixin):
         self.id = db_row['id']
         self.name = db_row['name']
         self.description = db_row['description'] or ''
+        self.author_id = db_row['author_id']
+
         self.group_getter = self.photodb.get_tag
         self._cached_qualified_name = None
 
