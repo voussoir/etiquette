@@ -8,6 +8,7 @@ def album(a, minimal=False):
         'id': a.id,
         'description': a.description,
         'title': a.title,
+        'author': user_or_none(a.get_author()),
     }
     if not minimal:
         j['photos'] = [photo(p) for p in a.get_photos()]
@@ -23,6 +24,7 @@ def album(a, minimal=False):
 def bookmark(b):
     j = {
         'id': b.id,
+        'author': user_or_none(b.get_author()),
         'url': b.url,
         'title': b.title,
     }
@@ -40,6 +42,7 @@ def photo(p, include_albums=True, include_tags=True):
     tags.sort(key=lambda x: x.name)
     j = {
         'id': p.id,
+        'author': user_or_none(p.get_author()),
         'extension': p.extension,
         'width': p.width,
         'height': p.height,
@@ -66,6 +69,7 @@ def photo(p, include_albums=True, include_tags=True):
 def tag(t, include_synonyms=False):
     j = {
         'id': t.id,
+        'author': user_or_none(t.get_author()),
         'name': t.name,
         'description': t.description,
         'qualified_name': t.qualified_name(),
@@ -81,3 +85,8 @@ def user(u):
         'created': u.created,
     }
     return j
+
+def user_or_none(u):
+    if u is None:
+        return None
+    return user(u)
