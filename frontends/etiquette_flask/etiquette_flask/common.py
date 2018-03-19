@@ -33,7 +33,7 @@ site.debug = True
 
 P = etiquette.photodb.PhotoDB()
 
-session_manager = sessions.SessionManager()
+session_manager = sessions.SessionManager(maxlen=10000)
 
 
 def P_wrapper(function):

@@ -6,6 +6,8 @@ import werkzeug.wrappers
 
 import etiquette
 
+from voussoirkit import cacheclass
+
 SESSION_MAX_AGE = 86400
 REQUEST_TYPES = (flask.Request, werkzeug.wrappers.Request, werkzeug.local.LocalProxy)
 
@@ -30,8 +32,8 @@ def _normalize_token(token):
 
 
 class SessionManager:
-    def __init__(self):
-        self.sessions = {}
+    def __init__(self, maxlen=None):
+        self.sessions = cacheclass.Cache(maxlen=maxlen)
 
     def add(self, session):
         self.sessions[session.token] = session
