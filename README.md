@@ -60,7 +60,6 @@ Here is a brief overview of the project to help you learn your way around:
 - Add a `Photo.merge` to combine duplicate entries.
 - Generate thumbnails for vector files without falling victim to bombs.
 - Allow photos to have nonstandard, orderby-able properties like "release year". How?
-- Improve the appearance of album page. Too many section headers and the "Create album" interface should allow giving a title immediately.
 - When users have '%' or '#', etc. in their username, it is difficult to access their /user/ URL. I would prefer to fix it without simply blacklisting those characters.
 - Currently, the Jinja templates are having a tangling influence on the backend objects, because Jinja cannot import my other modules like bytestring, but it can access the methods of the objects I pass into the template. As a result, the objects have excess helper methods. Consider making them into Jinja filters instead. Which is also kind of ugly but will move that pollution out of the backend at least.
 - Perhaps instead of actually deleting objects, they should just have a `deleted` flag, to make easy restoration possible. Also consider regrouping the children of restored Groupables if those children haven't already been reassigned somewhere else.
