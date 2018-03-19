@@ -5,8 +5,10 @@ import traceback
 
 import etiquette
 
+from voussoirkit import bytestring
 from voussoirkit import pathclass
 
+from . import caching
 from . import jsonify
 from . import sessions
 
@@ -34,7 +36,11 @@ site.debug = True
 P = etiquette.photodb.PhotoDB()
 
 session_manager = sessions.SessionManager(maxlen=10000)
-
+file_cache_manager = caching.FileCacheManager(
+    maxlen=10000,
+    max_filesize=5 * bytestring.MIBIBYTE,
+    max_age=180,
+)
 
 def P_wrapper(function):
     def P_wrapped(thingid, response_type='html'):
@@ -100,6 +106,13 @@ def send_file(filepath, override_mimetype=None):
     if not filepath.is_file:
         flask.abort(404)
 
+    cache_file = file_cache_manager.get(filepath)
+    if cache_file is not None:
+        client_etag = request.headers.get('If-None-Match', None)
+        if client_etag and client_etag == cache_file.get_etag():
+            response = flask.Response(status=304, headers=cache_file.get_headers())
+            return response
+
     outgoing_headers = {}
     if override_mimetype is not None:
         mimetype = override_mimetype
@@ -147,6 +160,8 @@ def send_file(filepath, override_mimetype=None):
 
     outgoing_headers['Accept-Ranges'] = 'bytes'
     outgoing_headers['Content-Length'] = (range_max - range_min) + 1
+    if cache_file is not None:
+        outgoing_headers.update(cache_file.get_headers())
 
     if request.method == 'HEAD':
         outgoing_data = bytes()
