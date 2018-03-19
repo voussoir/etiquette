@@ -95,19 +95,16 @@ def send_file(filepath, override_mimetype=None):
     '''
     Range-enabled file sending.
     '''
-    if isinstance(filepath, pathclass.Path):
-        filepath = filepath.absolute_path
+    filepath = pathclass.Path(filepath)
 
-    try:
-        file_size = os.path.getsize(filepath)
-    except FileNotFoundError:
+    if not filepath.is_file:
         flask.abort(404)
 
     outgoing_headers = {}
     if override_mimetype is not None:
         mimetype = override_mimetype
     else:
-        mimetype = mimetypes.guess_type(filepath)[0]
+        mimetype = mimetypes.guess_type(filepath.absolute_path)[0]
 
     if mimetype is not None:
         if 'text/' in mimetype:
@@ -125,25 +122,26 @@ def send_file(filepath, override_mimetype=None):
             range_max = int_helper(desired_max)
         else:
             range_min = int_helper(desired_range)
+            range_max = None
 
         if range_min is None:
             range_min = 0
         if range_max is None:
-            range_max = file_size
+            range_max = filepath.size
 
         # because ranges are 0-indexed
-        range_max = min(range_max, file_size - 1)
+        range_max = min(range_max, filepath.size - 1)
         range_min = max(range_min, 0)
 
         range_header = 'bytes {min}-{max}/{outof}'.format(
             min=range_min,
             max=range_max,
-            outof=file_size,
+            outof=filepath.size,
         )
         outgoing_headers['Content-Range'] = range_header
         status = 206
     else:
-        range_max = file_size - 1
+        range_max = filepath.size - 1
         range_min = 0
         status = 200
 
@@ -154,7 +152,7 @@ def send_file(filepath, override_mimetype=None):
         outgoing_data = bytes()
     else:
         outgoing_data = etiquette.helpers.read_filebytes(
-            filepath,
+            filepath.absolute_path,
             range_min=range_min,
             range_max=range_max,
             chunk_size=P.config['file_read_chunk'],
