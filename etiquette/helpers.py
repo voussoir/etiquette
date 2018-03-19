@@ -4,6 +4,7 @@ codebase but don't deserve to be methods of any class.
 '''
 
 import datetime
+import hashlib
 import math
 import mimetypes
 import os
@@ -160,6 +161,15 @@ def get_mimetype(filepath):
     if mimetype is None:
         mimetype = mimetypes.guess_type(filepath)[0]
     return mimetype
+
+def hash_file(filepath, hasher):
+    bytestream = read_filebytes(filepath)
+    for chunk in bytestream:
+        hasher.update(chunk)
+    return hasher.hexdigest()
+
+def hash_file_md5(filepath):
+    return hash_file(filepath, hasher=hashlib.md5())
 
 def hyphen_range(s):
     '''
