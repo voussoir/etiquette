@@ -14,6 +14,7 @@ from . import constants
 from . import exceptions
 
 from voussoirkit import bytestring
+from voussoirkit import pathclass
 
 def album_zip_directories(album, recursive=True):
     '''
@@ -225,13 +226,16 @@ def random_hex(length=12):
     token = token[:length]
     return token
 
-def read_filebytes(filepath, range_min, range_max, chunk_size=2 ** 20):
+def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=2 ** 20):
     '''
     Yield chunks of bytes from the file between the endpoints.
     '''
+    filepath = pathclass.Path(filepath)
+    if range_max is None:
+        range_max = filepath.size
     range_span = range_max - range_min
 
-    f = open(filepath, 'rb')
+    f = open(filepath.absolute_path, 'rb')
     f.seek(range_min)
     sent_amount = 0
     with f:
