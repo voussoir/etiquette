@@ -529,9 +529,12 @@ function tags_on_this_page_hook()
     This is hooked onto the tag objects listed under "Found on this page".
     Clicking them will add it to your current search query under Musts
     */
+    var tagname = this.innerHTML.split(/\./);
+    tagname = tagname[tagname.length-1];
+    var qualname = QUALNAME_MAP[tagname];
     add_searchtag(
         input_musts,
-        QUALNAME_MAP[this.innerHTML],
+        qualname,
         inputted_musts,
         "search_builder_musts_inputted"
     );
