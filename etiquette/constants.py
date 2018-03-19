@@ -4,17 +4,38 @@ This file provides data and objects that do not change throughout the runtime.
 
 import converter
 import logging
+import shutil
 import string
 import traceback
+import warnings
 
-try:
-    ffmpeg = converter.Converter(
-        ffmpeg_path='D:\\software\\ffmpeg\\bin\\ffmpeg.exe',
-        ffprobe_path='D:\\software\\ffmpeg\\bin\\ffprobe.exe',
-    )
-except converter.ffmpeg.FFMpegError:
-    traceback.print_exc()
-    ffmpeg = None
+FFMPEG_NOT_FOUND = '''
+ffmpeg or ffprobe not found.
+Add them to your PATH or use symlinks such that they appear in:
+Linux: which ffmpeg & which ffprobe
+Windows: where ffmpeg & where ffprobe
+'''
+
+def _load_ffmpeg():
+    ffmpeg_path = shutil.which('ffmpeg')
+    ffprobe_path = shutil.which('ffprobe')
+
+    if (not ffmpeg_path) or (not ffprobe_path):
+        warnings.warn(FFMPEG_NOT_FOUND)
+        return None
+
+    try:
+        ffmpeg = converter.Converter(
+            ffmpeg_path=ffmpeg_path,
+            ffprobe_path=ffprobe_path,
+        )
+    except converter.ffmpeg.FFMpegError:
+        traceback.print_exc()
+        ffmpeg = None
+
+    return ffmpeg
+
+ffmpeg = _load_ffmpeg()
 
 FILENAME_BADCHARS = '\\/:*?<>|"'
 
