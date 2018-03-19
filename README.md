@@ -9,7 +9,16 @@ Etiquette is a tag-based file organization system with a web front-end.
 
 Documentation is still a work in progress. In general,
 
-- You must make the `etiquette` package importable by placing it in one of your lib paths because I have not made a setup.py yet. Rather than actually moving the folder I just use filesystem junctions.
+- You must make the `etiquette` package importable by placing it in one of your lib paths because I have not made a setup.py yet. The easiest way to find your lib path is `python -c "import os; print(os)"`. Rather than actually moving the folder I just use filesystem junctions.
+
+    Windows: `mklink /J fakepath realpath`  
+    for example `mklink /J "C:\Python36\Lib\etiquette" "D:\Git\Etiquette\etiquette"`
+
+    Linux: `ln --symbolic realpath fakepath`  
+    for example `ln --symbolic "/home/Owner/Git/Etiquette/etiquette" "/usr/local/lib/python3.6/etiquette"`
+
+    I'm sure you'll figure it out.
+
 - Run `python etiquette_flask_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
 - Run `python -i etiquette_repl_launch.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 - Note: Do not `cd` into the frontends folder. Stay wherever you want the photodb to be created, and start the frontend by specifying full file path of the launch file.
@@ -38,10 +47,6 @@ Here is a brief overview of the project to help you learn your way around:
         Preloads a few variables into the interpreter so you can quickly test functions within the Python REPL itself.
 - `utilities`  
     For other scripts that will be used with etiquette databases, but are not part of the library itself.
-
-### Contributing
-
-If you are interested in helping, please raise an issue before making any pull requests!
 
 ### To do list
 - Make the wording between "new", "create", "add"; and "remove", "delete" more consistent.
