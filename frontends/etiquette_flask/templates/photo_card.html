@@ -22,7 +22,7 @@
     <span class="photo_card_filename"><a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a></span>
     <a class="photo_card_metadata" target="_blank" href="/file/{{photo.id + photo.dot_extension}}">{{photo.bytestring}}</a>
 </div>
-{% else %}
+{% else -%}
 
 {% if photo.thumbnail %}
     {% set thumbnail_src = "/thumbnail/" + photo.id + ".jpg" %}
@@ -34,19 +34,19 @@
         "other"
     %}
     {% set thumbnail_src = "/static/basic_thumbnails/" + thumbnail_src + ".png" %}
-{% endif %}
+{% endif -%}
 
 {% set tag_names_title = [] %}
 {% for tag in photo.get_tags() %}
     {% do tag_names_title.append(tag.name) %}
-{% endfor %}
+{% endfor -%}
 
 {% set tag_names_title = ", ".join(tag_names_title) %}
 {% if tag_names_title %}
     {% set tag_names_inner = "T" %}
 {% else %}
     {% set tag_names_inner = "" %}
-{% endif %}
+{% endif -%}
 
 {% set metadata_inner = "" %}
 {% if photo.width %}
@@ -54,7 +54,7 @@
 {% endif %}
 {% if photo.duration %}
     {% set metadata_inner = "{m}{d}, ".format(m=metadata_inner, d=photo.duration_string) %}
-{% endif %}
+{% endif -%}
 
 <div class="photo_card photo_card_grid" data-id="{{photo.id}}">
     <a class="photo_card_thumbnail" target="_blank" href="/photo/{{photo.id}}">
