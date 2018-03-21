@@ -423,12 +423,7 @@ def normalize_tag_mmf(tags, photodb, warning_bag=None):
 
         try:
             tag = photodb.get_tag(name=tag)
-            exc = None
-        except exceptions.NoSuchTag as e:
-            exc = e
-        except (exceptions.TagTooShort, exceptions.TagTooLong) as e:
-            exc = exceptions.NoSuchTag(tag)
-        if exc is not None:
+        except exceptions.NoSuchTag as exc:
             if warning_bag:
                 warning_bag.add(exc.error_message)
                 continue

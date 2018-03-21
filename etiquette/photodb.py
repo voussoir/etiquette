@@ -831,7 +831,11 @@ class PDBTagMixin:
 
         tagname = tagname.strip('.+')
         tagname = tagname.split('.')[-1].split('+')[0]
-        tagname = self.normalize_tagname(tagname)
+
+        try:
+            tagname = self.normalize_tagname(tagname)
+        except (exceptions.TagTooShort, exceptions.TagTooLong):
+            raise exceptions.NoSuchTag(tagname)
 
         cur = self.sql.cursor()
         while True:
