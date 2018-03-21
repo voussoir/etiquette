@@ -84,16 +84,7 @@ def build_query(
     query = ' '.join(query)
     return query
 
-def get_user(photodb, username_or_id):
-    try:
-        user = photodb.get_user(username=username_or_id)
-    except exceptions.NoSuchUser:
-        try:
-            user = photodb.get_user(id=username_or_id)
-        except exceptions.NoSuchUser:
-            raise
 
-    return user
 
 def minmax(key, value, minimums, maximums, warning_bag=None):
     '''
@@ -217,7 +208,7 @@ def normalize_authors(authors, photodb, warning_bag=None):
                 requested_author = requested_author.username
 
         try:
-            user = get_user(photodb, username_or_id=requested_author)
+            user = photodb.get_user(username=requested_author)
         except exceptions.NoSuchUser as e:
             if warning_bag:
                 warning_bag.add(e.error_message)
