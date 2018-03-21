@@ -283,48 +283,10 @@ def normalize_is_searchhidden(is_searchhidden):
     return helpers.truthystring(is_searchhidden)
 
 def normalize_limit(limit, warning_bag=None):
-    if not limit and limit != 0:
-        return None
-
-    if isinstance(limit, str):
-        limit = limit.strip()
-        if limit.isdigit():
-            limit = int(limit)
-
-    if isinstance(limit, float):
-        limit = int(limit)
-
-    if not isinstance(limit, int):
-        message = 'Invalid limit "%s"' % limit
-        if warning_bag:
-            warning_bag.add(message)
-            limit = None
-        else:
-            raise ValueError(message)
-
-    return limit
+    return normalize_positive_integer(limit, warning_bag)
 
 def normalize_offset(offset, warning_bag=None):
-    if not offset:
-        return None
-
-    if isinstance(offset, str):
-        offset = offset.strip()
-        if offset.isdigit():
-            offset = int(offset)
-
-    if isinstance(offset, float):
-        offset = int(offset)
-
-    if not isinstance(offset, int):
-        message = 'Invalid offset "%s"' % offset
-        if warning_bag:
-            warning_bag.add(message)
-            offset = None
-        else:
-            raise ValueError(message)
-
-    return offset
+    return normalize_positive_integer(limit, warning_bag)
 
 def normalize_orderby(orderby, warning_bag=None):
     if not orderby:
@@ -385,6 +347,36 @@ def normalize_orderby(orderby, warning_bag=None):
         final_orderby.append(requested_order)
 
     return final_orderby
+
+def normalize_positive_integer(number, warning_bag=None):
+    if not number:
+        number = 0
+
+    elif isinstance(number, str):
+        number = number.strip()
+        try:
+            number = int(number)
+        except ValueError as exc:
+            if warning_bag:
+                warning_bag.add(exc)
+            else:
+                raise
+
+    elif isinstance(number, float):
+        number = int(number)
+
+    if not isinstance(number, int):
+        message = 'Invalid number "%s"' % number
+        if warning_bag:
+            warning_bag.add(message)
+            number = None
+        else:
+            raise ValueError(message)
+
+    if number < 0:
+        raise ValueError('Invalid number %d' % number)
+
+    return number
 
 def normalize_tag_expression(expression):
     if not expression:
