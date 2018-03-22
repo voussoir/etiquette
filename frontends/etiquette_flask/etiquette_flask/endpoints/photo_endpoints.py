@@ -367,7 +367,7 @@ def get_search_core():
 def get_search_html():
     search_results = get_search_core()
     search_kwargs = search_results['search_kwargs']
-    qualname_map = etiquette.tag_export.qualified_names(common.P.get_tags())
+    qualname_map = common.P.get_cached_qualname_map()
     session = session_manager.get(request)
     response = flask.render_template(
         'search.html',
@@ -388,5 +388,8 @@ def get_search_json():
     search_results = get_search_core()
     search_results['photos'] = [
         etiquette.jsonify.photo(photo, include_albums=False) for photo in search_results['photos']
+    ]
+    search_results['total_tags'] = [
+        etiquette.jsonify.tag(tag, minimal=True) for tag in search_results['total_tags']
     ]
     return jsonify.make_json_response(search_results)

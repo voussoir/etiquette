@@ -28,41 +28,6 @@ from voussoirkit import sqlhelpers
 logging.basicConfig()
 
 
-def _helper_filenamefilter(subject, terms):
-    basename = subject.lower()
-    return all(term in basename for term in terms)
-
-def searchfilter_must_may_forbid(photo_tags, tag_musts, tag_mays, tag_forbids, frozen_children):
-    if tag_musts:
-        for must in tag_musts:
-            for option in frozen_children[must]:
-                if option in photo_tags:
-                    break
-            else:
-                # Fail when ANY of the tags fails to find an option.
-                return False
-
-    if tag_mays:
-        for may in tag_mays:
-            for option in frozen_children[may]:
-                if option in photo_tags:
-                    break
-            else:
-                continue
-            break
-        else:
-            # Fail when ALL of the tags fail to find an option.
-            return False
-
-    if tag_forbids:
-        for forbid in tag_forbids:
-            for option in frozen_children[forbid]:
-                if option in photo_tags:
-                    return False
-
-    return True
-
-
 ####################################################################################################
 ####################################################################################################
 
@@ -461,53 +426,6 @@ class PDBPhotoMixin:
         '''
         start_time = time.time()
 
-        # MINMAXERS
-
-        has_tags = searchhelpers.normalize_has_tags(has_tags)
-        if has_tags is False:
-            tag_musts = None
-            tag_mays = None
-            tag_forbids = None
-            tag_expression = None
-        else:
-            _helper = lambda tagset: searchhelpers.normalize_tag_mmf(
-                photodb=self,
-                tags=tagset,
-                warning_bag=warning_bag,
-            )
-            tag_musts = _helper(tag_musts)
-            tag_mays = _helper(tag_mays)
-            tag_forbids = _helper(tag_forbids)
-            tag_expression = searchhelpers.normalize_tag_expression(tag_expression)
-
-        #print(tag_musts, tag_mays, tag_forbids)
-        if (tag_musts or tag_mays or tag_forbids) and tag_expression:
-            exc = exceptions.NotExclusive(['tag_musts+mays+forbids', 'tag_expression'])
-            if warning_bag:
-                warning_bag.add(exc.error_message)
-                tag_musts = None
-                tag_mays = None
-                tag_forbids = None
-                tag_expression = None
-            else:
-                raise exc
-
-        extension = searchhelpers.normalize_extensions(extension)
-        extension_not = searchhelpers.normalize_extensions(extension_not)
-        mimetype = searchhelpers.normalize_extensions(mimetype)
-
-        authors = searchhelpers.normalize_authors(authors, photodb=self, warning_bag=warning_bag)
-
-        filename = searchhelpers.normalize_filename(filename)
-
-        limit = searchhelpers.normalize_limit(limit, warning_bag=warning_bag)
-        has_thumbnail = searchhelpers.normalize_has_thumbnail(has_thumbnail)
-        is_searchhidden = searchhelpers.normalize_is_searchhidden(is_searchhidden)
-
-        offset = searchhelpers.normalize_offset(offset)
-        if offset is None:
-            offset = 0
-
         maximums = {}
         minimums = {}
         searchhelpers.minmax('area', area, minimums, maximums, warning_bag=warning_bag)
@@ -518,52 +436,44 @@ class PDBPhotoMixin:
         searchhelpers.minmax('bytes', bytes, minimums, maximums, warning_bag=warning_bag)
         searchhelpers.minmax('duration', duration, minimums, maximums, warning_bag=warning_bag)
 
-        orderby = searchhelpers.normalize_orderby(orderby, warning_bag=warning_bag)
+        authors = searchhelpers.normalize_authors(authors, photodb=self, warning_bag=warning_bag)
+        extension = searchhelpers.normalize_extensions(extension)
+        extension_not = searchhelpers.normalize_extensions(extension_not)
+        filename = searchhelpers.normalize_filename(filename)
+        has_tags = searchhelpers.normalize_has_tags(has_tags)
+        has_thumbnail = searchhelpers.normalize_has_thumbnail(has_thumbnail)
+        is_searchhidden = searchhelpers.normalize_is_searchhidden(is_searchhidden)
+        mimetype = searchhelpers.normalize_extensions(mimetype)
 
-        notnulls = set()
-        yesnulls = set()
-        wheres = []
-        if extension or mimetype:
-            notnulls.add('extension')
-        if width or height or ratio or area:
-            notnulls.add('width')
-        if bytes:
-            notnulls.add('bytes')
-        if duration:
-            notnulls.add('duration')
-
-        if has_thumbnail is True:
-            notnulls.add('thumbnail')
-        elif has_thumbnail is False:
-            yesnulls.add('thumbnail')
-
-        if is_searchhidden is True:
-            wheres.append('searchhidden == 1')
-        elif is_searchhidden is False:
-            wheres.append('searchhidden == 0')
-
-        if orderby is None:
-            giveback_orderby = None
+        if has_tags is False:
+            tag_musts = None
+            tag_mays = None
+            tag_forbids = None
+            tag_expression = None
         else:
-            giveback_orderby = [term.replace('RANDOM()', 'random') for term in orderby]
+            tag_musts = searchhelpers.normalize_tagset(self, tag_musts, warning_bag=warning_bag)
+            tag_mays = searchhelpers.normalize_tagset(self, tag_mays, warning_bag=warning_bag)
+            tag_forbids = searchhelpers.normalize_tagset(self, tag_forbids, warning_bag=warning_bag)
+            tag_expression = searchhelpers.normalize_tag_expression(tag_expression)
 
-        # FROZEN CHILDREN
-        # To lighten the amount of database reading here, `frozen_children` is a dict where
-        # EVERY tag in the db is a key, and the value is a list of ALL ITS NESTED CHILDREN.
-        # This representation is memory inefficient, but it is faster than repeated
-        # database lookups
-        is_must_may_forbid = bool(tag_musts or tag_mays or tag_forbids)
-        is_tagsearch = is_must_may_forbid or tag_expression
-        if is_tagsearch:
-            if self._cached_frozen_children:
-                frozen_children = self._cached_frozen_children
-            else:
-                frozen_children = tag_export.flat_dict(self.get_tags())
-                self._cached_frozen_children = frozen_children
-        else:
-            frozen_children = None
+        if extension is not None and extension_not is not None:
+            extension = extension.difference(extension_not)
+
+        mmf_expression_noconflict = searchhelpers.check_mmf_expression_exclusive(
+            tag_musts,
+            tag_mays,
+            tag_forbids,
+            tag_expression,
+            warning_bag
+        )
+        if not mmf_expression_noconflict:
+            tag_musts = None
+            tag_mays = None
+            tag_forbids = None
+            tag_expression = None
 
         if tag_expression:
+            frozen_children = self.get_cached_frozen_children()
             tag_expression_tree = searchhelpers.tag_expression_tree_builder(
                 tag_expression=tag_expression,
                 photodb=self,
@@ -571,10 +481,22 @@ class PDBPhotoMixin:
                 warning_bag=warning_bag,
             )
             if tag_expression_tree is None:
+                giveback_tag_expression = None
                 tag_expression = None
             else:
-                print(tag_expression_tree)
+                giveback_tag_expression = str(tag_expression_tree)
+                print(giveback_tag_expression)
                 tag_match_function = searchhelpers.tag_expression_matcher_builder(frozen_children)
+        else:
+            giveback_tag_expression = None
+
+        if has_tags is True and (tag_musts or tag_mays):
+            # has_tags check is redundant then, so disable it.
+            has_tags = None
+
+        limit = searchhelpers.normalize_positive_integer(limit, warning_bag=warning_bag)
+        offset = searchhelpers.normalize_positive_integer(offset, warning_bag=warning_bag)
+        orderby = searchhelpers.normalize_orderby(orderby, warning_bag=warning_bag)
 
         if filename:
             try:
@@ -584,6 +506,14 @@ class PDBPhotoMixin:
                 filename_tree = None
         else:
             filename_tree = None
+
+        giveback_orderby = [
+            '%s-%s' % (column.replace('RANDOM()', 'random'), direction)
+            for (column, direction) in orderby
+        ]
+
+        if not orderby:
+            orderby = [('created', 'desc')]
 
         if give_back_parameters:
             parameters = {
@@ -595,74 +525,119 @@ class PDBPhotoMixin:
                 'duration': duration,
                 'authors': authors,
                 'created': created,
-                'extension': extension,
-                'extension_not': extension_not,
-                'filename': filename,
+                'extension': extension or None,
+                'extension_not': extension_not or None,
+                'filename': filename or None,
                 'has_tags': has_tags,
                 'has_thumbnail': has_thumbnail,
-                'mimetype': mimetype,
-                'tag_musts': tag_musts,
-                'tag_mays': tag_mays,
-                'tag_forbids': tag_forbids,
-                'tag_expression': tag_expression,
+                'mimetype': mimetype or None,
+                'tag_musts': tag_musts or None,
+                'tag_mays': tag_mays or None,
+                'tag_forbids': tag_forbids or None,
+                'tag_expression': giveback_tag_expression or None,
                 'limit': limit,
-                'offset': offset,
+                'offset': offset or None,
                 'orderby': giveback_orderby,
             }
             yield parameters
 
-        if is_must_may_forbid:
-            mmf_results = searchhelpers.mmf_photo_ids(
-                self,
-                tag_musts,
-                tag_mays,
-                tag_forbids,
-                frozen_children,
-            )
-        else:
-            mmf_results = None
+        photo_tag_rel_intersections = searchhelpers.photo_tag_rel_intersections(
+            tag_musts,
+            tag_mays,
+            tag_forbids,
+        )
 
-        if mmf_results is not None and mmf_results['photo_ids'] == set():
-            generator = []
-        else:
-            query = searchhelpers.build_query(
-                author_ids=authors,
-                maximums=maximums,
-                minimums=minimums,
-                mmf_results=mmf_results,
-                notnulls=notnulls,
-                yesnulls=yesnulls,
-                orderby=orderby,
-                wheres=wheres,
-            )
-            print(query[:200])
-            generator = helpers.select_generator(self.sql, query)
+        notnulls = set()
+        yesnulls = set()
+        wheres = []
+        bindings = []
 
+        if authors:
+            wheres.append('author_id IN %s' % helpers.sql_listify(authors))
+
+        if extension:
+            if '*' in extension:
+                wheres.append('extension != ""')
+            else:
+                binders = ', '.join('?' * len(extension))
+                wheres.append('extension IN (%s)' % binders)
+                bindings.extend(extension)
+
+        if extension_not:
+            if '*' in extension_not:
+                wheres.append('extension == ""')
+            else:
+                binders = ', '.join('?' * len(extension_not))
+                wheres.append('extension NOT IN (%s)' % binders)
+                bindings.extend(extension_not)
+
+        if mimetype:
+            notnulls.add('extension')
+
+        if has_tags is True:
+            wheres.append('EXISTS (SELECT 1 FROM photo_tag_rel WHERE photoid == photos.id)')
+        if has_tags is False:
+            wheres.append('NOT EXISTS (SELECT 1 FROM photo_tag_rel WHERE photoid == photos.id)')
+
+        if has_thumbnail is True:
+            notnulls.add('thumbnail')
+        elif has_thumbnail is False:
+            yesnulls.add('thumbnail')
+
+        for (column, direction) in orderby:
+            if column != 'RANDOM()':
+                notnulls.add(column)
+
+        if is_searchhidden is True:
+            wheres.append('searchhidden == 1')
+        elif is_searchhidden is False:
+            wheres.append('searchhidden == 0')
+
+        for column in notnulls:
+            wheres.append(column + ' IS NOT NULL')
+        for column in yesnulls:
+            wheres.append(column + ' IS NULL')
+
+        for (column, value) in minimums.items():
+            wheres.append(column + ' >= ' + str(value))
+
+        for (column, value) in maximums.items():
+            wheres.append(column + ' <= ' + str(value))
+
+        # In order to use ORDER BY RANDOM(), we must place all of the intersect
+        # tag searches into a subquery. If we simply try to do
+        # SELECT * ... INTERSECT SELECT * ... ORDER BY RANDOM()
+        # we get an error that random is not a column. But placing all of the
+        # selects into a named subquery fixes that.
+        query = ['SELECT * FROM']
+        if photo_tag_rel_intersections:
+            intersections = '(%s) photos' % '\nINTERSECT\n'.join(photo_tag_rel_intersections)
+            query.append(intersections)
+        else:
+            query.append('photos')
+
+        if wheres:
+            wheres = 'WHERE ' + ' AND '.join(wheres)
+            query.append(wheres)
+
+        if orderby:
+            orderby = ['%s %s' % (column, direction) for (column, direction) in orderby]
+            orderby = ', '.join(orderby)
+            orderby = 'ORDER BY ' + orderby
+            query.append(orderby)
+
+        query = ' '.join(query)
+
+        query = '%s\n%s\n%s' % ('-' * 80, query, '-' * 80)
+
+        print(query, bindings)
+        #cur = self.sql.cursor()
+        #cur.execute('EXPLAIN QUERY PLAN ' + query, bindings)
+        #print('\n'.join(str(x) for x in cur.fetchall()))
+        generator = helpers.select_generator(self.sql, query, bindings)
         photos_received = 0
-
-        # LET'S GET STARTED
-        for fetch in generator:
-            photo = objects.Photo(self, fetch)
-
-            ext_okay = (
-                not extension or
-                (
-                    ('*' in extension and photo.extension) or
-                    photo.extension in extension
-                )
-            )
-            if not ext_okay:
-                continue
-
-            ext_fail = (
-                extension_not and
-                (
-                    ('*' in extension_not and photo.extension) or
-                    photo.extension in extension_not
-                )
-            )
-            if ext_fail:
-                continue
+        for row in generator:
+            photo = objects.Photo(self, row)
 
             if mimetype and photo.simple_mimetype not in mimetype:
                 continue
@@ -670,24 +645,16 @@ class PDBPhotoMixin:
             if filename_tree and not filename_tree.evaluate(photo.basename.lower()):
                 continue
 
-            if (has_tags is not None) or is_tagsearch:
+            if tag_expression:
                 photo_tags = set(photo.get_tags())
-
-                if has_tags is False and len(photo_tags) > 0:
+                success = tag_expression_tree.evaluate(
+                    photo_tags,
+                    match_function=tag_match_function,
+                )
+                if not success:
                     continue
 
-                if has_tags is True and len(photo_tags) == 0:
-                    continue
-
-                if tag_expression:
-                    success = tag_expression_tree.evaluate(
-                        photo_tags,
-                        match_function=tag_match_function,
-                    )
-                    if not success:
-                        continue
-
-            if offset > 0:
+            if offset is not None and offset > 0:
                 offset -= 1
                 continue
 
@@ -701,7 +668,7 @@ class PDBPhotoMixin:
             yield warning_bag
 
         end_time = time.time()
-        print('Search results took:', end_time - start_time)
+        print('Search took:', end_time - start_time)
 
 
 class PDBSQLMixin:
@@ -884,7 +851,7 @@ class PDBTagMixin:
         self.log.debug('New Tag: %s', tagname)
 
         tagid = self.generate_id('tags')
-        self._cached_frozen_children = None
+        self._uncache()
         author_id = self.get_user_id_or_none(author)
         data = {
             'id': tagid,
@@ -1352,6 +1319,7 @@ class PhotoDB(
         # OTHER
 
         self._cached_frozen_children = None
+        self._cached_qualname_map = None
 
         self._album_cache.maxlen = self.config['cache_size']['album']
         self._bookmark_cache.maxlen = self.config['cache_size']['bookmark']
@@ -1398,6 +1366,7 @@ class PhotoDB(
 
     def _uncache(self):
         self._cached_frozen_children = None
+        self._cached_qualname_map = None
 
     def generate_id(self, table):
         '''
@@ -1428,6 +1397,16 @@ class PhotoDB(
         else:
             cur.execute('UPDATE id_numbers SET last_id = ? WHERE tab == ?', [new_id, table])
         return new_id
+
+    def get_cached_frozen_children(self):
+        if self._cached_frozen_children is None:
+            self._cached_frozen_children = tag_export.flat_dict(self.get_tags())
+        return self._cached_frozen_children
+
+    def get_cached_qualname_map(self):
+        if self._cached_qualname_map is None:
+            self._cached_qualname_map = tag_export.qualified_names(self.get_tags())
+        return self._cached_qualname_map
 
     def get_thing_by_id(self, thing_type, thing_id):
         thing_map = _THING_CLASSES[thing_type]

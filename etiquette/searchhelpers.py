@@ -12,79 +12,71 @@ from . import objects
 from voussoirkit import expressionmatch
 
 
-def build_query(
-        author_ids=None,
-        maximums=None,
-        minimums=None,
-        mmf_results=None,
-        notnulls=None,
-        yesnulls=None,
-        orderby=None,
-        wheres=None,
+def check_mmf_expression_exclusive(
+        tag_musts,
+        tag_mays,
+        tag_forbids,
+        tag_expression,
+        warning_bag=None
     ):
+    if (tag_musts or tag_mays or tag_forbids) and tag_expression:
+        exc = exceptions.NotExclusive(['tag_musts+mays+forbids', 'tag_expression'])
+        if warning_bag:
+            warning_bag.add(exc.error_message)
+        else:
+            raise exc
 
-    if notnulls is None:
-        notnulls = set()
+        return False
+    return True
 
-    if yesnulls is None:
-        yesnulls = set()
+def expand_mmf(tag_musts, tag_mays, tag_forbids):
+    def _set(x):
+        if x is None:
+            return set()
+        return set(x)
 
-    if wheres is None:
-        wheres = set()
-    else:
-        wheres = set(wheres)
+    tag_musts = _set(tag_musts)
+    tag_mays = _set(tag_mays)
+    tag_forbids = _set(tag_forbids)
 
-    query = ['SELECT * FROM photos']
+    forbids_expanded = set()
 
-    if author_ids:
-        notnulls.add('author_id')
-        wheres.add('author_id in %s' % helpers.sql_listify(author_ids))
+    def _expand_flat(tagset):
+        '''
+        I am not using tag.walk_children because if the user happens to give us
+        two tags in the same lineage, we have the opportunity to bail early,
+        which walk_children won't know about. So instead I'm doing the queue
+        popping and pushing myself.
+        '''
+        expanded = set()
+        while len(tagset) > 0:
+            tag = tagset.pop()
+            if tag in forbids_expanded:
+                continue
+            if tag in expanded:
+                continue
+            expanded.add(tag)
+            tagset.update(tag.get_children())
+        return expanded
 
-    if mmf_results:
-        # "id IN/NOT IN (1, 2, 3)"
-        operator = mmf_results['operator']
-        photo_ids = helpers.sql_listify(mmf_results['photo_ids'])
-        wheres.add('id %s %s' % (operator, photo_ids))
+    def _expand_nested(tagset):
+        expanded = []
+        total = set()
+        for tag in tagset:
+            if tag in total:
+                continue
+            this_expanded = _expand_flat(set([tag]))
+            total.update(this_expanded)
+            expanded.append(this_expanded)
+        return expanded
 
-    if orderby:
-        orderby = [o.split('-') for o in orderby]
-    else:
-        orderby = [('created', 'DESC')]
+    # forbids must come first so that musts and mays don't waste their time
+    # expanding the forbidden subtrees.
+    forbids_expanded = _expand_flat(tag_forbids)
+    musts_expanded = _expand_nested(tag_musts)
+    mays_expanded = _expand_flat(tag_mays)
 
-    for (column, direction) in orderby:
-        if column != 'RANDOM()':
-            notnulls.add(column)
-
-    if minimums:
-        for (column, value) in minimums.items():
-            wheres.add(column + ' >= ' + str(value))
-
-    if maximums:
-        for (column, value) in maximums.items():
-            wheres.add(column + ' <= ' + str(value))
-
-    ## Assemble
-
-    for column in notnulls:
-        wheres.add(column + ' IS NOT NULL')
-
-    for column in yesnulls:
-        wheres.add(column + ' IS NULL')
-
-    if wheres:
-        wheres = 'WHERE ' + ' AND '.join(wheres)
-        query.append(wheres)
-
-    if orderby:
-        orderby = [' '.join(o) for o in orderby]
-        orderby = ', '.join(orderby)
-        orderby = 'ORDER BY ' + orderby
-        query.append(orderby)
-
-    query = ' '.join(query)
-    return query
-
-
+    return (musts_expanded, mays_expanded, forbids_expanded)
 
 def minmax(key, value, minimums, maximums, warning_bag=None):
     '''
@@ -130,58 +122,6 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
     if high is not None:
         maximums[key] = high
 
-def mmf_photo_ids(photodb, tag_musts, tag_mays, tag_forbids, frozen_children):
-    if not(tag_musts or tag_mays or tag_forbids):
-        return None
-
-    cur = photodb.sql.cursor()
-
-    operator = 'IN'
-    first_time = True
-    no_results = False
-    results = set()
-
-    if tag_mays:
-        for tag in tag_mays:
-            choices = helpers.sql_listify(t.id for t in frozen_children[tag])
-            query = 'SELECT photoid FROM photo_tag_rel WHERE tagid in %s' % choices
-            cur.execute(query)
-            results.update(fetch[0] for fetch in cur.fetchall())
-        first_time = False
-
-    if tag_musts:
-        for tag in tag_musts:
-            choices = helpers.sql_listify(t.id for t in frozen_children[tag])
-            query = 'SELECT photoid FROM photo_tag_rel WHERE tagid in %s' % choices
-            cur.execute(query)
-            photo_ids = (fetch[0] for fetch in cur.fetchall())
-            if first_time:
-                results.update(photo_ids)
-                first_time = False
-            else:
-                results = results.intersection(photo_ids)
-                if not results:
-                    no_results = True
-                    break
-
-    if tag_forbids and not no_results:
-        if not results:
-            operator = 'NOT IN'
-        for tag in tag_forbids:
-            choices = helpers.sql_listify(t.id for t in frozen_children[tag])
-            query = 'SELECT photoid FROM photo_tag_rel WHERE tagid in %s' % choices
-            cur.execute(query)
-            photo_ids = (fetch[0] for fetch in cur.fetchall())
-            if operator == 'IN':
-                results = results.difference(photo_ids)
-                if not results:
-                    no_results = True
-                    break
-            else:
-                results.update(photo_ids)
-
-    return {'operator': operator, 'photo_ids': results}
-
 def normalize_authors(authors, photodb, warning_bag=None):
     '''
     Either:
@@ -223,21 +163,14 @@ def normalize_authors(authors, photodb, warning_bag=None):
     return user_ids
 
 def normalize_extensions(extensions):
-    if not extensions:
-        return None
+    if extensions is None:
+        extensions = set()
 
-    if isinstance(extensions, str):
+    elif isinstance(extensions, str):
         extensions = helpers.comma_space_split(extensions)
 
-    if len(extensions) == 0:
-        return None
-
     extensions = [e.lower().strip('.').strip() for e in extensions]
-    extensions = set(extensions)
-    extensions = {e for e in extensions if e}
-
-    if len(extensions) == 0:
-        return None
+    extensions = set(e for e in extensions if e)
 
     return extensions
 
@@ -280,15 +213,12 @@ def normalize_offset(offset, warning_bag=None):
     return normalize_positive_integer(limit, warning_bag)
 
 def normalize_orderby(orderby, warning_bag=None):
-    if not orderby:
-        return None
+    if orderby is None:
+        orderby = []
 
     if isinstance(orderby, str):
         orderby = orderby.replace('-', ' ')
         orderby = orderby.split(',')
-
-    if not orderby:
-        return None
 
     final_orderby = []
     for requested_order in orderby:
@@ -334,12 +264,15 @@ def normalize_orderby(orderby, warning_bag=None):
                 raise ValueError(message)
             direction = 'desc'
 
-        requested_order = '%s-%s' % (column, direction)
+        requested_order = (column, direction)
         final_orderby.append(requested_order)
 
     return final_orderby
 
 def normalize_positive_integer(number, warning_bag=None):
+    if number is None:
+        return None
+
     if not number:
         number = 0
 
@@ -383,7 +316,39 @@ def normalize_tag_expression(expression):
 
     return expression
 
-def normalize_tag_mmf(tags, photodb, warning_bag=None):
+INTERSECT_FORMAT = '''
+SELECT * FROM photos WHERE {operator} (
+    SELECT 1 FROM photo_tag_rel WHERE photos.id == photo_tag_rel.photoid
+    AND tagid IN {tagset}
+)
+'''.strip()
+def photo_tag_rel_intersections(tag_musts, tag_mays, tag_forbids):
+    (tag_musts, tag_mays, tag_forbids) = expand_mmf(
+        tag_musts,
+        tag_mays,
+        tag_forbids,
+    )
+
+    intersections = []
+    for tag_must_group in tag_musts:
+        intersections.append( ('EXISTS', tag_must_group) )
+    if tag_mays:
+        intersections.append( ('EXISTS', tag_mays) )
+    if tag_forbids:
+        intersections.append( ('NOT EXISTS', tag_forbids) )
+
+    intersections = [
+        #(operator, helpers.sql_listify([tag.id for tag in tagset] + [""]))
+        (operator, helpers.sql_listify(tag.id for tag in tagset))
+        for (operator, tagset) in intersections
+    ]
+    intersections = [
+        INTERSECT_FORMAT.format(operator=operator, tagset=tagset)
+        for (operator, tagset) in intersections
+    ]
+    return intersections
+
+def normalize_tagset(photodb, tags, warning_bag=None):
     if not tags:
         return None
 
@@ -413,10 +378,6 @@ def normalize_tag_mmf(tags, photodb, warning_bag=None):
             else:
                 raise exc
         tagset.add(tag)
-
-    if len(tagset) == 0:
-        return None
-
     return tagset
 
 def tag_expression_tree_builder(
@@ -425,6 +386,8 @@ def tag_expression_tree_builder(
         frozen_children,
         warning_bag=None
     ):
+    if not tag_expression:
+        return None
     try:
         expression_tree = expressionmatch.ExpressionTree.parse(tag_expression)
     except expressionmatch.NoTokens:
@@ -464,7 +427,7 @@ def tag_expression_matcher_builder(frozen_children):
         '''
         Used as the `match_function` for the ExpressionTree evaluation.
 
-        photo:
+        photo_tags:
             The set of tag names owned by the photo in question.
         tagname:
             The tag which the ExpressionTree wants it to have.
