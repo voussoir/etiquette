@@ -62,18 +62,20 @@ def photo(p, include_albums=True, include_tags=True):
         j['albums'] = [album(a, minimal=True) for a in p.get_containing_albums()]
 
     if include_tags:
-        j['tags'] = [tag(t) for t in tags]
+        j['tags'] = [tag(t, minimal=True) for t in tags]
 
     return j
 
-def tag(t, include_synonyms=False):
+def tag(t, include_synonyms=False, minimal=False):
     j = {
         'id': t.id,
-        'author': user_or_none(t.get_author()),
         'name': t.name,
-        'description': t.description,
-        'qualified_name': t.qualified_name(),
     }
+    if not minimal:
+        j['author'] = user_or_none(t.get_author())
+        j['description'] = t.description
+        j['qualified_name'] = t.qualified_name()
+
     if include_synonyms:
         j['synonyms'] = list(t.get_synonyms())
     return j
