@@ -227,6 +227,17 @@ def upgrade_10_to_11(photodb):
 
     cur.execute('PRAGMA foreign_keys = ON')
 
+def upgrade_11_to_12(photodb):
+    '''
+    Added multicolumn (photoid, tagid) index to the photo_tag_rel table to
+    improve the speed of individual relation searching, important for the
+    new intersection-based search.
+    '''
+    query = '''
+    CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid_tagid on photo_tag_rel(photoid, tagid)
+    '''
+    photodb.sql.cursor().execute(query)
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

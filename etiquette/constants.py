@@ -42,7 +42,7 @@ FILENAME_BADCHARS = '\\/:*?<>|"'
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
-DATABASE_VERSION = 11
+DATABASE_VERSION = 12
 DB_INIT = '''
 PRAGMA cache_size = 10000;
 PRAGMA count_changes = OFF;
@@ -161,6 +161,7 @@ CREATE TABLE IF NOT EXISTS photo_tag_rel(
 );
 CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid on photo_tag_rel(photoid);
 CREATE INDEX IF NOT EXISTS index_photo_tag_rel_tagid on photo_tag_rel(tagid);
+CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid_tagid on photo_tag_rel(photoid, tagid);
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tag_group_rel(
     parentid TEXT NOT NULL,
