@@ -68,6 +68,7 @@ Here is a brief overview of the project to help you learn your way around:
 - Better bookmark url validation.
 - Create a textbox which gives autocomplete tag names.
 - Consider if the "did you commit too early" warning should actually be an exception.
+- Extension currently does not believe in the override filename. On one hand this is kind of good because if they override the name to have no extension, we can still provide a downloadable file with the correct extension by remembering it. But on the other hand it does break the illusion of override_filename.
 
 ### To do list: User permissions
 Here are some thoughts about the kinds of features that need to exist within the permission system. I don't know how I'll actually manage it just yet. Possibly a `permissions` table in the database with `user_id | permission` where `permission` is some reliably-formatted string.
