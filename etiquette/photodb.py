@@ -107,9 +107,8 @@ class PDBAlbumMixin:
             album.add_associated_directory(associated_directory, commit=False)
 
         if photos is not None:
-            for photo in photos:
-                photo = self.get_photo(photo)
-                album.add_photo(photo, commit=False)
+            photos = [self.get_photo(photo) for photo in photos]
+            album.add_photos(photos, commit=False)
 
         if commit:
             self.log.debug('Committing - new Album')
