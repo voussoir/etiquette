@@ -126,14 +126,11 @@ class PDBBookmarkMixin:
     @decorators.required_feature('bookmark.new')
     @decorators.transaction
     def new_bookmark(self, url, title=None, *, author=None, commit=True):
-        if not url:
-            raise ValueError('Must provide a URL')
+        title = objects.Bookmark.normalize_title(title)
+        url = objects.Bookmark.normalize_url(url)
 
         bookmark_id = self.generate_id('bookmarks')
-        title = title or None
         author_id = self.get_user_id_or_none(author)
-
-        # To do: NORMALIZATION AND VALIDATION
 
         data = {
             'author_id': author_id,

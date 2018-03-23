@@ -541,12 +541,41 @@ class Bookmark(ObjectBase):
             db_row = dict(zip(constants.SQL_COLUMNS['bookmarks'], db_row))
 
         self.id = db_row['id']
-        self.title = db_row['title']
-        self.url = db_row['url']
+        self.title = self.normalize_title(db_row['title'])
+        self.url = self.normalize_url(db_row['url'])
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
     def __repr__(self):
         return 'Bookmark:{id}'.format(id=self.id)
+
+    @staticmethod
+    def normalize_title(title):
+        if title is None:
+            return ''
+
+        if not isinstance(title, str):
+            raise TypeError('Title must be string, not %s' % type(title))
+
+        title = title.strip()
+        for whitespace in string.whitespace:
+            title = title.replace(whitespace, ' ')
+
+        return title
+
+    @staticmethod
+    def normalize_url(url):
+        if url is None:
+            return ''
+
+        if not isinstance(url, str):
+            raise TypeError('URL must be string, not %s' % type(title))
+
+        url = url.strip()
+
+        if not url:
+            raise ValueError('Invalid URL "%s"' % url)
+
+        return url
 
     @decorators.required_feature('bookmark.edit')
     @decorators.transaction
@@ -565,12 +594,10 @@ class Bookmark(ObjectBase):
             return
 
         if title is not None:
-            self.title = title
+            self.title = self.normalize_title(title)
 
         if url is not None:
-            if not url:
-                raise ValueError('Need a URL')
-            self.url = url
+            self.url = self.normalize_url(url)
 
         data = {
             'id': self.id,
