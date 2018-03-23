@@ -152,6 +152,14 @@ class PDBPhotoMixin:
         super().__init__()
         self._photo_cache = cacheclass.Cache()
 
+    def _assert_no_such_photo(self, filepath):
+        try:
+            existing = self.get_photo_by_path(filepath)
+        except exceptions.NoSuchPhoto:
+            return
+        else:
+            raise exceptions.PhotoExists(existing)
+
     def get_photo(self, id):
         return self.get_thing_by_id('photo', id)
 
@@ -216,12 +224,7 @@ class PDBPhotoMixin:
             raise FileNotFoundError(filepath.absolute_path)
 
         if not allow_duplicates:
-            try:
-                existing = self.get_photo_by_path(filepath)
-            except exceptions.NoSuchPhoto:
-                pass
-            else:
-                raise exceptions.PhotoExists(existing)
+            self._assert_no_such_photo(filepath=filepath)
 
         self.log.debug('New Photo: %s', filepath.absolute_path)
         author_id = self.get_user_id_or_none(author)
@@ -772,6 +775,14 @@ class PDBTagMixin:
         super().__init__()
         self._tag_cache = cacheclass.Cache()
 
+    def _assert_no_such_tag(self, tagname):
+        try:
+            existing_tag = self.get_tag_by_name(tagname)
+        except exceptions.NoSuchTag:
+            return
+        else:
+            raise exceptions.TagExists(existing_tag)
+
     def get_tag(self, name=None, id=None):
         '''
         Redirect to get_tag_by_id or get_tag_by_name after xor-checking the parameters.
@@ -836,12 +847,7 @@ class PDBTagMixin:
         Register a new tag and return the Tag object.
         '''
         tagname = self.normalize_tagname(tagname)
-        try:
-            existing_tag = self.get_tag_by_name(tagname)
-        except exceptions.NoSuchTag:
-            pass
-        else:
-            raise exceptions.TagExists(existing_tag)
+        self._assert_no_such_tag(tagname=tagname)
         description = objects.Tag.normalize_description(description)
 
         self.log.debug('New Tag: %s', tagname)
@@ -891,6 +897,14 @@ class PDBUserMixin:
     def __init__(self):
         super().__init__()
         self._user_cache = cacheclass.Cache()
+
+    def _assert_no_such_user(self, username):
+        try:
+            existing_user = self.get_user(username=username)
+        except exceptions.NoSuchUser:
+            return
+        else:
+            raise exceptions.UserExists(existing_user)
 
     def _assert_valid_password(self, password):
         if len(password) < self.config['user']['min_password_length']:
@@ -1012,13 +1026,7 @@ class PDBUserMixin:
             password = password.encode('utf-8')
 
         self._assert_valid_password(password)
-
-        try:
-            existing_user = self.get_user(username=username)
-        except exceptions.NoSuchUser:
-            pass
-        else:
-            raise exceptions.UserExists(existing_user)
+        self._assert_no_such_user(username=username)
 
         self.log.debug('New User: %s', username)
 
