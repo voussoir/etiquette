@@ -94,7 +94,7 @@ class SessionManager:
     def remove(self, token):
         token = _normalize_token(token)
         try:
-            self.sessions.pop(token)
+            self.sessions.remove(token)
         except KeyError:
             pass
 
