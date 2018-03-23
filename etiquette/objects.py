@@ -46,6 +46,16 @@ class ObjectBase:
     def __hash__(self):
         return hash(self.id)
 
+    @staticmethod
+    def normalize_author_id(author_id):
+        if author_id is None or author_id == '':
+            return None
+
+        if not isinstance(author_id, str):
+            raise TypeError('author_id must be string, not %s' % type(author_id))
+
+        return author_id
+
     def get_author(self):
         '''
         Return the User who created this object, or None if it is unassigned.
@@ -224,7 +234,7 @@ class Album(ObjectBase, GroupableMixin):
         self.id = db_row['id']
         self.title = db_row['title'] or ''
         self.description = db_row['description'] or ''
-        self.author_id = db_row['author_id']
+        self.author_id = self.normalize_author_id(db_row['author_id'])
 
         self.name = 'Album %s' % self.id
         self.group_getter = self.photodb.get_album
@@ -506,7 +516,7 @@ class Bookmark(ObjectBase):
         self.id = db_row['id']
         self.title = db_row['title']
         self.url = db_row['url']
-        self.author_id = db_row['author_id']
+        self.author_id = self.normalize_author_id(db_row['author_id'])
 
     def __repr__(self):
         return 'Bookmark:{id}'.format(id=self.id)
@@ -564,7 +574,7 @@ class Photo(ObjectBase):
 
         self.id = db_row['id']
         self.created = db_row['created']
-        self.author_id = db_row['author_id']
+        self.author_id = self.normalize_author_id(db_row['author_id'])
         self.basename = db_row['override_filename'] or self.real_path.basename
         self.extension = db_row['extension']
         self.tagged_at = db_row['tagged_at']
@@ -1101,7 +1111,7 @@ class Tag(ObjectBase, GroupableMixin):
         self.id = db_row['id']
         self.name = db_row['name']
         self.description = db_row['description'] or ''
-        self.author_id = db_row['author_id']
+        self.author_id = self.normalize_author_id(db_row['author_id'])
 
         self.group_getter = self.photodb.get_tag
         self._cached_qualified_name = None
