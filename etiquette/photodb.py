@@ -842,6 +842,7 @@ class PDBTagMixin:
             pass
         else:
             raise exceptions.TagExists(existing_tag)
+        description = objects.Tag.normalize_description(description)
 
         self.log.debug('New Tag: %s', tagname)
 

@@ -1164,7 +1164,7 @@ class Tag(ObjectBase, GroupableMixin):
             db_row = dict(zip(constants.SQL_COLUMNS['tags'], db_row))
         self.id = db_row['id']
         self.name = db_row['name']
-        self.description = db_row['description'] or ''
+        self.description = self.normalize_description(db_row['description'])
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
         self.group_getter = self.photodb.get_tag
@@ -1183,6 +1183,18 @@ class Tag(ObjectBase, GroupableMixin):
     def __str__(self):
         rep = 'Tag:{name}'.format(name=self.name)
         return rep
+
+    @staticmethod
+    def normalize_description(description):
+        if description is None:
+            return ''
+
+        if not isinstance(description, str):
+            raise TypeError('Description must be string, not %s' % type(description))
+
+        description = description.strip()
+
+        return description
 
     def _uncache(self):
         self.photodb.caches['tag'].remove(self.id)
@@ -1297,7 +1309,7 @@ class Tag(ObjectBase, GroupableMixin):
         if description is None:
             return
 
-        self.description = description
+        self.description = self.normalize_description(description)
 
         data = {
             'id': self.id,
