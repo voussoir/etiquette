@@ -166,7 +166,7 @@ function Editor(elements, on_open, on_save, on_cancel)
         */
         if (func == undefined)
         {
-            return fallback;
+            return fallback.bind(this);
         }
 
         var bindable = function()
