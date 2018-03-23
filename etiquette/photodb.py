@@ -981,6 +981,9 @@ class PDBUserMixin:
 
         return author_id
 
+    def get_users(self):
+        yield from self.get_things('user')
+
     @decorators.required_feature('user.login')
     def login(self, user_id, password):
         '''
