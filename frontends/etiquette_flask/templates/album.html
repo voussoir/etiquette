@@ -55,7 +55,7 @@ p
     id="description_text"
     data-editor-id="description"
     data-editor-placeholder="description"
-    {% if album.description == "" %}class="hidden"{% endif %}
+    {% if not album.description %}class="hidden"{% endif %}
     >
         {{-album.description-}}
     </pre>

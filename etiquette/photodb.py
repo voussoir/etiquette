@@ -80,14 +80,10 @@ class PDBAlbumMixin:
         '''
         Create a new album. Photos can be added now or later.
         '''
-        album_id = self.generate_id('albums')
-        title = title or ''
-        description = description or ''
-        if not isinstance(title, str):
-            raise TypeError('Title must be string, not %s' % type(title))
+        title = objects.Album.normalize_title(title)
+        description = objects.Album.normalize_description(description)
 
-        if not isinstance(description, str):
-            raise TypeError('Description must be string, not %s' % type(description))
+        album_id = self.generate_id('albums')
 
         self.log.debug('New Album: %s %s', album_id, title)
 

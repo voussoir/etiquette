@@ -5,6 +5,7 @@ but are returned by the PDB accesses.
 
 import os
 import PIL.Image
+import string
 import traceback
 
 from . import constants
@@ -232,8 +233,8 @@ class Album(ObjectBase, GroupableMixin):
             db_row = dict(zip(constants.SQL_COLUMNS['albums'], db_row))
 
         self.id = db_row['id']
-        self.title = db_row['title'] or ''
-        self.description = db_row['description'] or ''
+        self.title = self.normalize_title(db_row['title'])
+        self.description = self.normalize_description(db_row['description'])
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
         self.name = 'Album %s' % self.id
@@ -248,6 +249,32 @@ class Album(ObjectBase, GroupableMixin):
 
     def __repr__(self):
         return 'Album:{id}'.format(id=self.id)
+
+    @staticmethod
+    def normalize_description(description):
+        if description is None:
+            return ''
+
+        if not isinstance(description, str):
+            raise TypeError('Description must be string, not %s' % type(description))
+
+        description = description.strip()
+
+        return description
+
+    @staticmethod
+    def normalize_title(title):
+        if title is None:
+            return ''
+
+        if not isinstance(title, str):
+            raise TypeError('Title must be string, not %s' % type(title))
+
+        title = title.strip()
+        for whitespace in string.whitespace:
+            title = title.replace(whitespace, ' ')
+
+        return title
 
     def _uncache(self):
         self._uncache_sums()
@@ -393,10 +420,10 @@ class Album(ObjectBase, GroupableMixin):
             return
 
         if title is not None:
-            self.title = title
+            self.title = self.normalize_title(title)
 
         if description is not None:
-            self.description = description
+            self.description = self.normalize_description(description)
 
         data = {
             'id': self.id,
