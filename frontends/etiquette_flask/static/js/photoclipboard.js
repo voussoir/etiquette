@@ -77,6 +77,8 @@ function apply_check_all()
     photo_divs.forEach(apply_check);
 }
 
+var _action_select = function(photo_div){photo_clipboard.add(photo_div.dataset.id)}
+var _action_unselect = function(photo_div){photo_clipboard.delete(photo_div.dataset.id)}
 var previous_photo_select;
 function on_photo_select(event)
 {
@@ -89,22 +91,14 @@ function on_photo_select(event)
     */
     if (event.target.checked)
     {
-        action = function(photo_div)
-        {
-            photo_div.getElementsByClassName("photo_card_selector_checkbox")[0].checked = true;
-            photo_clipboard.add(photo_div.dataset.id);
-        }
+        action = _action_select;
     }
     else
     {
-        action = function(photo_div)
-        {
-            photo_div.getElementsByClassName("photo_card_selector_checkbox")[0].checked = false;
-            photo_clipboard.delete(photo_div.dataset.id);
-        }
+        action = _action_unselect;
     }
 
-    if (event.shiftKey && previous_photo_select !== undefined)
+    if (event.shiftKey && previous_photo_select)
     {
         var current_photo_div = event.target.parentElement;
         var previous_photo_div = previous_photo_select.target.parentElement;
@@ -136,6 +130,58 @@ function on_photo_select(event)
     }
     previous_photo_select = event;
     save_photo_clipboard();
+}
+
+function select_photo(photo_div)
+{
+    photo_div.getElementsByClassName("photo_card_selector_checkbox")[0].checked = true;
+    _action_select(photo_div);
+    save_photo_clipboard();
+}
+
+function unselect_photo(photo_div)
+{
+    photo_div.getElementsByClassName("photo_card_selector_checkbox")[0].checked = false;
+    _action_unselect(photo_div)
+    save_photo_clipboard();
+}
+
+function select_all_photos()
+{
+    var photo_divs = Array.from(document.getElementsByClassName("photo_card"));
+    photo_divs.forEach(_action_select);
+    apply_check_all();
+    save_photo_clipboard();
+}
+
+function unselect_all_photos()
+{
+    var photo_divs = Array.from(document.getElementsByClassName("photo_card"));
+    photo_divs.forEach(_action_unselect);
+    apply_check_all()
+    previous_photo_select = null;
+    save_photo_clipboard();
+}
+
+function set_keybinds()
+{
+    window.addEventListener("keydown", function(event)
+    {
+        if (event.key == "a" && event.ctrlKey)
+        {
+            select_all_photos();
+            event.preventDefault();
+        }
+    });
+
+    window.addEventListener("keydown", function(event)
+    {
+        if (event.key == "d" && event.ctrlKey)
+        {
+            unselect_all_photos();
+            event.preventDefault();
+        }
+    });
 }
 
 
@@ -249,6 +295,8 @@ function update_pagestate()
 function on_pageload()
 {
     window.addEventListener("storage", on_storage, false);
-    on_storage();
+    set_keybinds();
+    load_photo_clipboard();
+    update_pagestate();
 }
 document.addEventListener("DOMContentLoaded", on_pageload);
