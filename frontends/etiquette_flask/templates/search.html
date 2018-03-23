@@ -244,8 +244,12 @@ form
             name="extension" placeholder="Extension(s)">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['extension_not']%}{{search_kwargs['extension_not']}}{%endif%}" 
+            value="{%if search_kwargs['extension_not']%}{{search_kwargs['extension_not']}}{%endif%}"
             name="extension_not" placeholder="Forbid extension(s)">
+
+            <input type="text" class="basic_param"
+            value="{%if search_kwargs['author']%}{{search_kwargs['author']}}{%endif%}"
+            name="author" placeholder="Author">
             
             <select name="limit" class="basic_param">
                 {% set limit_options = [20, 50, 100] %}

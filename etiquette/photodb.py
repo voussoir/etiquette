@@ -314,7 +314,7 @@ class PDBPhotoMixin:
             bytes=None,
             duration=None,
 
-            authors=None,
+            author=None,
             created=None,
             extension=None,
             extension_not=None,
@@ -341,7 +341,7 @@ class PDBPhotoMixin:
             for lower bound.
 
         TAGS AND FILTERS
-        authors:
+        author:
             A list of User objects, or usernames, or user ids.
 
         created:
@@ -381,6 +381,8 @@ class PDBPhotoMixin:
         mimetype:
             A string or list of strings of acceptable mimetypes.
             'image', 'video', ...
+            Note we are only interested in the simple "video", "audio" etc.
+            For exact mimetypes you might as well use an extension search.
 
         tag_musts:
             A list of tag names or Tag objects.
@@ -436,14 +438,14 @@ class PDBPhotoMixin:
         searchhelpers.minmax('bytes', bytes, minimums, maximums, warning_bag=warning_bag)
         searchhelpers.minmax('duration', duration, minimums, maximums, warning_bag=warning_bag)
 
-        authors = searchhelpers.normalize_authors(authors, photodb=self, warning_bag=warning_bag)
-        extension = searchhelpers.normalize_extensions(extension)
-        extension_not = searchhelpers.normalize_extensions(extension_not)
+        author = searchhelpers.normalize_author(author, photodb=self, warning_bag=warning_bag)
+        extension = searchhelpers.normalize_extension(extension)
+        extension_not = searchhelpers.normalize_extension(extension_not)
         filename = searchhelpers.normalize_filename(filename)
         has_tags = searchhelpers.normalize_has_tags(has_tags)
         has_thumbnail = searchhelpers.normalize_has_thumbnail(has_thumbnail)
         is_searchhidden = searchhelpers.normalize_is_searchhidden(is_searchhidden)
-        mimetype = searchhelpers.normalize_extensions(mimetype)
+        mimetype = searchhelpers.normalize_extension(mimetype)
 
         if has_tags is False:
             tag_musts = None
@@ -494,8 +496,8 @@ class PDBPhotoMixin:
             # has_tags check is redundant then, so disable it.
             has_tags = None
 
-        limit = searchhelpers.normalize_positive_integer(limit, warning_bag=warning_bag)
-        offset = searchhelpers.normalize_positive_integer(offset, warning_bag=warning_bag)
+        limit = searchhelpers.normalize_limit(limit, warning_bag=warning_bag)
+        offset = searchhelpers.normalize_offset(offset, warning_bag=warning_bag)
         orderby = searchhelpers.normalize_orderby(orderby, warning_bag=warning_bag)
 
         if filename:
@@ -523,14 +525,14 @@ class PDBPhotoMixin:
                 'ratio': ratio,
                 'bytes': bytes,
                 'duration': duration,
-                'authors': authors,
+                'author': list(author) or None,
                 'created': created,
-                'extension': extension or None,
-                'extension_not': extension_not or None,
+                'extension': list(extension) or None,
+                'extension_not': list(extension_not) or None,
                 'filename': filename or None,
                 'has_tags': has_tags,
                 'has_thumbnail': has_thumbnail,
-                'mimetype': mimetype or None,
+                'mimetype': list(mimetype) or None,
                 'tag_musts': tag_musts or None,
                 'tag_mays': tag_mays or None,
                 'tag_forbids': tag_forbids or None,
@@ -552,8 +554,9 @@ class PDBPhotoMixin:
         wheres = []
         bindings = []
 
-        if authors:
-            wheres.append('author_id IN %s' % helpers.sql_listify(authors))
+        if author:
+            author_ids = [user.id for user in author]
+            wheres.append('author_id IN %s' % helpers.sql_listify(author_ids))
 
         if extension:
             if '*' in extension:
@@ -654,7 +657,7 @@ class PDBPhotoMixin:
                 if not success:
                     continue
 
-            if offset is not None and offset > 0:
+            if offset > 0:
                 offset -= 1
                 continue
 

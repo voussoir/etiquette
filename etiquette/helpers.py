@@ -366,17 +366,19 @@ def sql_listify(items):
 
 def truthystring(s):
     '''
-    Convert strings to True, False, or None based on the options presented
+    If s is already a boolean, int, or None, return a boolean or None.
+    If s is a string, return True, False, or None based on the options presented
     in constants.TRUTHYSTRING_TRUE, constants.TRUTHYSTRING_NONE, or False
-    for all else.
-
-    Case insensitive.
+    for all else. Case insensitive.
     '''
     if s is None:
         return None
 
     if isinstance(s, (bool, int)):
         return bool(s)
+
+    if not isinstance(s, str):
+        raise TypeError('Unsupported type %s' % type(s))
 
     s = s.lower()
     if s in constants.TRUTHYSTRING_TRUE:

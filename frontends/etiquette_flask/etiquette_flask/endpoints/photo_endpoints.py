@@ -254,7 +254,7 @@ def get_search_core():
 
     offset = request.args.get('offset')
 
-    authors = request.args.get('author')
+    author = request.args.get('author')
 
     orderby = request.args.get('orderby')
     area = request.args.get('area')
@@ -275,7 +275,7 @@ def get_search_core():
         'bytes': bytes,
         'duration': duration,
 
-        'authors': authors,
+        'author': author,
         'created': created,
         'extension': extension,
         'extension_not': extension_not,
@@ -307,6 +307,9 @@ def get_search_core():
     search_kwargs['extension'] = join_helper(search_kwargs['extension'])
     search_kwargs['extension_not'] = join_helper(search_kwargs['extension_not'])
     search_kwargs['mimetype'] = join_helper(search_kwargs['mimetype'])
+
+    author_helper = lambda users: ', '.join(user.username for user in users) if users else None
+    search_kwargs['author'] = author_helper(search_kwargs['author'])
 
     tagname_helper = lambda tags: [tag.qualified_name() for tag in tags] if tags else None
     search_kwargs['tag_musts'] = tagname_helper(search_kwargs['tag_musts'])

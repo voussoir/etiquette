@@ -122,24 +122,23 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
     if high is not None:
         maximums[key] = high
 
-def normalize_authors(authors, photodb, warning_bag=None):
+def normalize_author(authors, photodb, warning_bag=None):
     '''
     Either:
     - A string, where the usernames are separated by commas
     - An iterable containing
-        - Usernames
-        - User IDs
+        - Usernames as strings
         - User objects
 
     Returns: A set of user IDs.
     '''
-    if not authors:
-        return None
+    if authors is None:
+        authors = []
 
     if isinstance(authors, str):
         authors = helpers.comma_space_split(authors)
 
-    user_ids = set()
+    users = set()
     for requested_author in authors:
         if isinstance(requested_author, objects.User):
             if requested_author.photodb == photodb:
@@ -155,14 +154,18 @@ def normalize_authors(authors, photodb, warning_bag=None):
             else:
                 raise
         else:
-            user_ids.add(user.id)
+            users.add(user)
 
-    if len(user_ids) == 0:
-        return None
+    return users
 
-    return user_ids
+def normalize_extension(extensions):
+    '''
+    Either:
+    - A string, where extensions are separated by commas or spaces.
+    - An iterable containing extensions as strings.
 
-def normalize_extensions(extensions):
+    Returns: A set of strings with no leading dots.
+    '''
     if extensions is None:
         extensions = set()
 
@@ -175,44 +178,97 @@ def normalize_extensions(extensions):
     return extensions
 
 def normalize_filename(filename_terms):
-    if not filename_terms:
-        return None
+    '''
+    Either:
+    - A string.
+    - An iterable containing search terms as strings.
+
+    Returns: A string where terms are separated by spaces.
+    '''
+    if filename_terms is None:
+        filename_terms = ''
 
     if not isinstance(filename_terms, str):
         filename_terms = ' '.join(filename_terms)
 
     filename_terms = filename_terms.strip()
 
-    if not filename_terms:
-        return None
-
     return filename_terms
 
 def normalize_has_tags(has_tags):
-    if not has_tags:
-        return None
-
-    if isinstance(has_tags, str):
-        return helpers.truthystring(has_tags)
-
-    if isinstance(has_tags, int):
-        return bool(has_tags)
-
-    return None
+    '''
+    See etiquette.helpers.truthystring.
+    '''
+    return helpers.truthystring(has_tags)
 
 def normalize_has_thumbnail(has_thumbnail):
+    '''
+    See etiquette.helpers.truthystring.
+    '''
     return helpers.truthystring(has_thumbnail)
 
 def normalize_is_searchhidden(is_searchhidden):
+    '''
+    See etiquette.helpers.truthystring.
+    '''
     return helpers.truthystring(is_searchhidden)
 
+def _limit_offset(number, warning_bag):
+    if number is None:
+        return None
+
+    try:
+        number = normalize_positive_integer(number)
+    except ValueError as exc:
+        if warning_bag:
+            warning_bag.add(exc)
+        number = 0
+    return number
+
 def normalize_limit(limit, warning_bag=None):
-    return normalize_positive_integer(limit, warning_bag)
+    '''
+    Either:
+    - None to indicate unlimited.
+    - A non-negative number as an int, float, or string.
+
+    Returns: None or a positive integer.
+    '''
+    return _limit_offset(limit, warning_bag)
+
+def normalize_mimetype(mimetype, warning_bag=None):
+    '''
+    Either:
+    - A string, where mimetypes are separated by commas or spaces.
+    - An iterable containing mimetypes as strings.
+
+    Returns: A set of strings.
+    '''
+    return normalize_extensions(mimetype, warning_bag)
 
 def normalize_offset(offset, warning_bag=None):
-    return normalize_positive_integer(limit, warning_bag)
+    '''
+    Either:
+    - None.
+    - A non-negative number as an int, float, or string.
+
+    Returns: None or a positive integer.
+    '''
+    if offset is None:
+        return 0
+    return _limit_offset(offset, warning_bag)
 
 def normalize_orderby(orderby, warning_bag=None):
+    '''
+    Either:
+    - A string of orderbys separated by commas, where a single orderby consists
+    of 'column' or 'column-direction' or 'column direction'.
+    - A list of such orderby strings.
+    - A list of tuples of (column, direction)
+
+    With no direction, direction is implied desc.
+
+    Returns: A list of tuples of (column, direction)
+    '''
     if orderby is None:
         orderby = []
 
@@ -222,11 +278,14 @@ def normalize_orderby(orderby, warning_bag=None):
 
     final_orderby = []
     for requested_order in orderby:
-        requested_order = requested_order.lower().strip()
-        if not requested_order:
-            continue
+        if isinstance(requested_order, str):
+            requested_order = requested_order.strip().lower()
+            if not requested_order:
+                continue
+            split_order = requested_order.split()
+        else:
+            split_order = tuple(x.strip().lower() for x in requested_order)
 
-        split_order = requested_order.split(' ')
         if len(split_order) == 2:
             (column, direction) = split_order
 
@@ -235,7 +294,7 @@ def normalize_orderby(orderby, warning_bag=None):
             direction = 'desc'
 
         else:
-            message = constants.WARNING_ORDERBY_INVALID.format(requested=requested_order)
+            message = constants.WARNING_ORDERBY_INVALID.format(request=requested_order)
             if warning_bag:
                 warning_bag.add(message)
             else:
@@ -269,36 +328,19 @@ def normalize_orderby(orderby, warning_bag=None):
 
     return final_orderby
 
-def normalize_positive_integer(number, warning_bag=None):
+def normalize_positive_integer(number):
     if number is None:
-        return None
-
-    if not number:
         number = 0
 
     elif isinstance(number, str):
-        number = number.strip()
-        try:
-            number = int(number)
-        except ValueError as exc:
-            if warning_bag:
-                warning_bag.add(exc)
-            else:
-                raise
+        # Convert to float, then int, just in case they type '-4.5'
+        # because int('-4.5') does not work.
+        number = float(number)
 
-    elif isinstance(number, float):
-        number = int(number)
-
-    if not isinstance(number, int):
-        message = 'Invalid number "%s"' % number
-        if warning_bag:
-            warning_bag.add(message)
-            number = None
-        else:
-            raise ValueError(message)
+    number = int(number)
 
     if number < 0:
-        raise ValueError('Invalid number %d' % number)
+        raise ValueError('%d must be >= 0.' % number)
 
     return number
 
