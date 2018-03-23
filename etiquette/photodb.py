@@ -1089,7 +1089,7 @@ class PDBUtilMixin:
                 exclude_filenames = self.config['digest_exclude_files']
             return exclude_filenames
 
-        def _normalize_new_photo_kwargs(new_photo_kargs):
+        def _normalize_new_photo_kwargs(new_photo_kwargs):
             if 'commit' in new_photo_kwargs:
                 new_photo_kwargs.pop('commit')
             if 'filepath' in new_photo_kwargs:

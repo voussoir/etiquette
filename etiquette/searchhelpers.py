@@ -142,7 +142,7 @@ def normalize_author(authors, photodb, warning_bag=None):
     for requested_author in authors:
         if isinstance(requested_author, objects.User):
             if requested_author.photodb == photodb:
-                user_ids.add(requested_author.id)
+                users.add(requested_author)
             else:
                 requested_author = requested_author.username
 
@@ -243,7 +243,7 @@ def normalize_mimetype(mimetype, warning_bag=None):
 
     Returns: A set of strings.
     '''
-    return normalize_extensions(mimetype, warning_bag)
+    return normalize_extension(mimetype, warning_bag)
 
 def normalize_offset(offset, warning_bag=None):
     '''

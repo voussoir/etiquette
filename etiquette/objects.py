@@ -568,7 +568,7 @@ class Bookmark(ObjectBase):
             return ''
 
         if not isinstance(url, str):
-            raise TypeError('URL must be string, not %s' % type(title))
+            raise TypeError('URL must be string, not %s' % type(url))
 
         url = url.strip()
 
