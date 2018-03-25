@@ -448,8 +448,7 @@ class Album(ObjectBase, GroupableMixin):
 
     def get_photos(self):
         photos = []
-        generator = helpers.select_generator(
-            self.photodb.sql,
+        generator = self.photodb.sql_select(
             'SELECT photoid FROM album_photo_rel WHERE albumid == ?',
             [self.id]
         )
@@ -874,8 +873,7 @@ class Photo(ObjectBase):
         '''
         Return the tags assigned to this Photo.
         '''
-        generator = helpers.select_generator(
-            self.photodb.sql,
+        generator = self.photodb.sql_select(
             'SELECT tagid FROM photo_tag_rel WHERE photoid == ?',
             [self.id]
         )

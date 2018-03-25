@@ -632,7 +632,7 @@ class PDBPhotoMixin:
         #cur = self.sql.cursor()
         #cur.execute('EXPLAIN QUERY PLAN ' + query, bindings)
         #print('\n'.join(str(x) for x in cur.fetchall()))
-        generator = helpers.select_generator(self.sql, query, bindings)
+        generator = self.sql_select(query, bindings)
         photos_received = 0
         for row in generator:
             photo = objects.Photo(self, row)
@@ -757,6 +757,20 @@ class PDBSQLMixin:
 
         if commit:
             self.commit()
+
+    def sql_select(self, query, bindings=None):
+        cur = self.sql.cursor()
+        cur.execute(query, bindings)
+        while True:
+            fetch = cur.fetchone()
+            if fetch is None:
+                break
+            yield fetch
+
+    def sql_select_one(self, query, bindings=None):
+        cur = self.sql.cursor()
+        cur.execute(query, bindings)
+        return cur.fetchone()
 
     def sql_update(self, table, pairs, where_key, *, commit=False):
         cur = self.sql.cursor()

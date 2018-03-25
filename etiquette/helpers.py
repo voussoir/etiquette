@@ -343,19 +343,6 @@ def seconds_to_hms(seconds):
     hms = ':'.join('%02d' % part for part in parts)
     return hms
 
-def select_generator(sql, query, bindings=None):
-    '''
-    Perform the query, and yield the results.
-    '''
-    bindings = bindings or []
-    cursor = sql.cursor()
-    cursor.execute(query, bindings)
-    while True:
-        fetch = cursor.fetchone()
-        if fetch is None:
-            break
-        yield fetch
-
 def sql_listify(items):
     '''
     Given a list of strings, return a string in the form of an SQL list.
