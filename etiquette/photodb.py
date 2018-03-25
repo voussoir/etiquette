@@ -736,31 +736,32 @@ class PDBSQLMixin:
         return savepoint_id
 
     def sql_delete(self, table, pairs, *, commit=False):
-        cur = self.sql.cursor()
-
         (qmarks, bindings) = sqlhelpers.delete_filler(pairs)
         query = 'DELETE FROM %s %s' % (table, qmarks)
-        #self.log.debug(query)
-        cur.execute(query, bindings)
+        self.sql_execute(query, bindings)
 
         if commit:
             self.commit()
 
+    def sql_execute(self, query, bindings=[]):
+        if bindings is None:
+            bindings = []
+        cur = self.sql.cursor()
+        cur.execute(query, bindings)
+        return cur
+
     def sql_insert(self, table, data, *, commit=False):
         column_names = constants.SQL_COLUMNS[table]
-        cur = self.sql.cursor()
-
         (qmarks, bindings) = sqlhelpers.insert_filler(column_names, data)
+
         query = 'INSERT INTO %s VALUES(%s)' % (table, qmarks)
-        #self.log.debug(query)
-        cur.execute(query, bindings)
+        self.sql_execute(query, bindings)
 
         if commit:
             self.commit()
 
     def sql_select(self, query, bindings=None):
-        cur = self.sql.cursor()
-        cur.execute(query, bindings)
+        cur = self.sql_execute(query, bindings)
         while True:
             fetch = cur.fetchone()
             if fetch is None:
@@ -768,17 +769,13 @@ class PDBSQLMixin:
             yield fetch
 
     def sql_select_one(self, query, bindings=None):
-        cur = self.sql.cursor()
-        cur.execute(query, bindings)
+        cur = self.sql_execute(query, bindings)
         return cur.fetchone()
 
     def sql_update(self, table, pairs, where_key, *, commit=False):
-        cur = self.sql.cursor()
-
         (qmarks, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
         query = 'UPDATE %s %s' % (table, qmarks)
-        #self.log.debug(query)
-        cur.execute(query, bindings)
+        self.sql_execute(query, bindings)
 
         if commit:
             self.commit()
