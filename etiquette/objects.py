@@ -87,11 +87,12 @@ class GroupableMixin:
 
         # Groupables are only allowed to have 1 parent.
         # Unlike photos which can exist in multiple albums.
-        cur = self.photodb.sql.cursor()
-        cur.execute('SELECT parentid FROM %s WHERE memberid == ?' % self.group_table, [member.id])
-        fetch = cur.fetchone()
-        if fetch is not None:
-            parent_id = fetch[0]
+        parent_row = self.photodb.sql_select_one(
+            'SELECT parentid FROM %s WHERE memberid == ?' % self.group_table,
+            [member.id]
+        )
+        if parent_row is not None:
+            parent_id = parent_row[0]
             if parent_id == self.id:
                 return
             that_group = self.group_getter(id=parent_id)
@@ -154,37 +155,32 @@ class GroupableMixin:
             self.photodb.commit()
 
     def get_children(self):
-        cur = self.photodb.sql.cursor()
+        child_rows = self.photodb.sql_select(
+            'SELECT memberid FROM %s WHERE parentid == ?' % self.group_table,
+            [self.id]
+        )
+        child_ids = [row[0] for row in child_rows]
+        children = [self.group_getter(id=child_id) for child_id in child_ids]
 
-        cur.execute('SELECT memberid FROM %s WHERE parentid == ?' % self.group_table, [self.id])
-        fetches = cur.fetchall()
-        results = []
-        for fetch in fetches:
-            memberid = fetch[0]
-            child = self.group_getter(id=memberid)
-            results.append(child)
         if isinstance(self, Tag):
-            results.sort(key=lambda x: x.name)
+            children.sort(key=lambda x: x.name)
         else:
-            results.sort(key=lambda x: x.id)
-        return results
+            children.sort(key=lambda x: x.id)
+        return children
 
     def get_parent(self):
         '''
         Return the group of which this is a member, or None.
         Returned object will be of the same type as calling object.
         '''
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'SELECT * FROM %s WHERE memberid == ?' % self.group_table,
+        parent_row = self.photodb.sql_select_one(
+            'SELECT parentid FROM %s WHERE memberid == ?' % self.group_table,
             [self.id]
         )
-        fetch = cur.fetchone()
-        if fetch is None:
+        if parent_row is None:
             return None
 
-        parentid = fetch[self.group_sql_index['parentid']]
-        return self.group_getter(id=parentid)
+        return self.group_getter(id=parent_row[0])
 
     @decorators.transaction
     def join_group(self, group, *, commit=True):
@@ -437,12 +433,11 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.commit()
 
     def get_associated_directories(self):
-        cur = self.photodb.sql.cursor()
-        cur.execute(
+        directory_rows = self.photodb.sql_select(
             'SELECT directory FROM album_associated_directories WHERE albumid == ?',
             [self.id]
         )
-        directories = [x[0] for x in cur.fetchall()]
+        directories = [x[0] for x in directory_rows]
         directories = [pathclass.Path(x) for x in directories]
         return directories
 
@@ -459,12 +454,12 @@ class Album(ObjectBase, GroupableMixin):
     def has_photo(self, photo):
         if not isinstance(photo, Photo):
             raise TypeError('`photo` must be of type %s' % Photo)
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'SELECT * FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
+
+        rel_row = self.photodb.sql_select_one(
+            'SELECT 1 FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
             [self.id, photo.id]
         )
-        return cur.fetchone() is not None
+        return rel_row is not None
 
     @decorators.required_feature('album.edit')
     # GroupableMixin.join_group already has @transaction.
@@ -666,9 +661,7 @@ class Photo(ObjectBase):
         '''
         Reload the row from the database and do __init__ with them.
         '''
-        cur = self.photodb.sql.cursor()
-        cur.execute('SELECT * FROM photos WHERE id == ?', [self.id])
-        row = cur.fetchone()
+        row = self.photodb.sql_select_one('SELECT * FROM photos WHERE id == ?', [self.id])
         self.__init__(self.photodb, row)
 
     def __repr__(self):
@@ -863,10 +856,11 @@ class Photo(ObjectBase):
         '''
         Return the albums of which this photo is a member.
         '''
-        cur = self.photodb.sql.cursor()
-        cur.execute('SELECT albumid FROM album_photo_rel WHERE photoid == ?', [self.id])
-        fetches = cur.fetchall()
-        albums = [self.photodb.get_album(id=fetch[0]) for fetch in fetches]
+        album_rows = self.photodb.sql_select(
+            'SELECT albumid FROM album_photo_rel WHERE photoid == ?',
+            [self.id]
+        )
+        albums = [self.photodb.get_album(id=row[0]) for row in album_rows]
         return albums
 
     def get_tags(self):
@@ -891,20 +885,21 @@ class Photo(ObjectBase):
         tag = self.photodb.get_tag(name=tag)
 
         if check_children:
-            tags = tag.walk_children()
+            tag_options = tag.walk_children()
         else:
-            tags = [tag]
+            tag_options = [tag]
 
-        cur = self.photodb.sql.cursor()
-        for tag in tags:
-            cur.execute(
-                'SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid == ?',
-                [self.id, tag.id]
-            )
-            if cur.fetchone() is not None:
-                return tag
+        tag_by_id = {t.id: t for t in tag_options}
+        tag_option_ids = helpers.sql_listify(tag_by_id)
+        rel_row = self.photodb.sql_select_one(
+            'SELECT tagid FROM photo_tag_rel WHERE photoid == ? AND tagid IN %s' % tag_option_ids,
+            [self.id]
+        )
 
-        return False
+        if rel_row is None:
+            return False
+
+        return tag_by_id[rel_row[0]]
 
     def make_thumbnail_filepath(self):
         '''
@@ -1247,36 +1242,51 @@ class Tag(ObjectBase, GroupableMixin):
         '''
         mastertag = self.photodb.get_tag(name=mastertag)
 
-        # Migrate the old tag's synonyms to the new one
-        # UPDATE is safe for this operation because there is no chance of duplicates.
         self.photodb._cached_frozen_children = None
 
+        # Migrate the old tag's synonyms to the new one
+        # UPDATE is safe for this operation because there is no chance of duplicates.
         data = {
             'mastername': (self.name, mastertag.name),
         }
         self.photodb.sql_update(table='tag_synonyms', pairs=data, where_key='mastername')
 
-        # Iterate over all photos with the old tag, and swap them to the new tag
-        # if they don't already have it.
-        cur = self.photodb.sql.cursor()
-        cur.execute('SELECT photoid FROM photo_tag_rel WHERE tagid == ?', [self.id])
-        fetches = cur.fetchall()
+        # Because these were two separate tags, perhaps in separate trees, it
+        # is possible for a photo to have both at the moment.
+        #
+        # If they already have both, the deletion of the syn rel will happen
+        #    when the syn tag is deleted.
+        # If they only have the syn, we will UPDATE it to the master.
+        # If they only have the master, nothing needs to happen.
 
-        for fetch in fetches:
-            photoid = fetch[0]
-            cur.execute(
-                'SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid == ?',
-                [photoid, mastertag.id]
-            )
-            if cur.fetchone() is None:
-                data = {
-                    'photoid': photoid,
-                    'tagid': mastertag.id,
-                }
-                self.photodb.sql_insert(table='photo_tag_rel', data=data)
+        # Find photos that have the old tag and DON'T already have the new one.
+        query = '''
+        SELECT photoid FROM photo_tag_rel p1
+        WHERE tagid == ?
+        AND NOT EXISTS (
+            SELECT 1 FROM photo_tag_rel p2
+            WHERE p1.photoid == p2.photoid
+            AND tagid == ?
+        )
+        '''
+        bindings = [self.id, mastertag.id]
+        replace_photoids = [row[0] for row in self.photodb.sql_execute(query, bindings)]
 
-        # Then delete the relationships with the old tag
-        self.delete()
+        # For those photos that only had the syn, simply replace with master.
+        if replace_photoids:
+            query = '''
+            UPDATE photo_tag_rel
+            SET tagid = ?
+            WHERE tagid == ?
+            AND photoid IN %s
+            ''' % helpers.sql_listify(replace_photoids)
+            bindings = [mastertag.id, self.id]
+            self.photodb.sql_execute(query, bindings)
+
+        # For photos that have the old tag and DO already have the new one,
+        # don't worry because the old rels will be deleted when the tag is
+        # deleted.
+        self.delete(commit=False)
 
         # Enjoy your new life as a monk.
         mastertag.add_synonym(self.name, commit=False)
@@ -1321,11 +1331,13 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.commit()
 
     def get_synonyms(self):
-        cur = self.photodb.sql.cursor()
-        cur.execute('SELECT name FROM tag_synonyms WHERE mastername == ?', [self.name])
-        fetches = [fetch[0] for fetch in cur.fetchall()]
-        fetches.sort()
-        return fetches
+        syn_rows = self.photodb.sql_select(
+            'SELECT name FROM tag_synonyms WHERE mastername == ?',
+            [self.name]
+        )
+        syn_names = [row[0] for row in syn_rows]
+        syn_names.sort()
+        return syn_names
 
     @decorators.required_feature('tag.edit')
     # GroupableMixin.join_group already has @transaction.
@@ -1384,13 +1396,12 @@ class Tag(ObjectBase, GroupableMixin):
         if synname == self.name:
             raise exceptions.NoSuchSynonym(synname)
 
-        cur = self.photodb.sql.cursor()
-        cur.execute(
-            'SELECT * FROM tag_synonyms WHERE mastername == ? AND name == ?',
+        syn_exists = self.photodb.sql_select_one(
+            'SELECT 1 FROM tag_synonyms WHERE mastername == ? AND name == ?',
             [self.name, synname]
         )
-        fetch = cur.fetchone()
-        if fetch is None:
+
+        if syn_exists is None:
             raise exceptions.NoSuchSynonym(synname)
 
         self.photodb._cached_frozen_children = None
