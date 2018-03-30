@@ -91,6 +91,7 @@ def get_tags_json(specific_tag_name=None):
 
 @site.route('/tags/create_tag', methods=['POST'])
 @decorators.catch_etiquette_exception
+@session_manager.give_token
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_tag_create():
     '''
@@ -104,6 +105,7 @@ def post_tag_create():
 
 @site.route('/tags/delete_synonym', methods=['POST'])
 @decorators.catch_etiquette_exception
+@session_manager.give_token
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_tag_delete_synonym():
     '''
@@ -124,6 +126,7 @@ def post_tag_delete_synonym():
 
 @site.route('/tags/delete_tag', methods=['POST'])
 @decorators.catch_etiquette_exception
+@session_manager.give_token
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_tag_delete():
     '''
