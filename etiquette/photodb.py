@@ -811,11 +811,12 @@ class PDBTagMixin:
         except (exceptions.TagTooShort, exceptions.TagTooLong):
             raise exceptions.NoSuchTag(tagname)
 
+        tag_row = None
         while True:
             # Return if it's a toplevel...
             tag_row = self.sql_select_one('SELECT * FROM tags WHERE name == ?', [tagname])
             if tag_row is not None:
-                return objects.Tag(self, tag_row)
+                break
 
             # ...or resolve the synonym and try again.
             query = 'SELECT mastername FROM tag_synonyms WHERE name == ?'
@@ -825,6 +826,13 @@ class PDBTagMixin:
                 # was not a master tag or synonym
                 raise exceptions.NoSuchTag(tagname)
             tagname = name_row[0]
+
+        tag_id = tag_row[constants.SQL_INDEX['tags']['id']]
+        tag = self._tag_cache.get(tag_id, fallback=None)
+        if tag is None:
+            tag = objects.Tag(self, tag_row)
+            self._tag_cache[tag_id] = tag
+        return tag
 
     def get_tags(self):
         '''
