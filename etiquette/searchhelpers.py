@@ -358,37 +358,36 @@ def normalize_tag_expression(expression):
 
     return expression
 
-INTERSECT_FORMAT = '''
-SELECT * FROM photos WHERE {operator} (
+EXIST_FORMAT = '''
+{operator} (
     SELECT 1 FROM photo_tag_rel WHERE photos.id == photo_tag_rel.photoid
     AND tagid IN {tagset}
 )
 '''.strip()
-def photo_tag_rel_intersections(tag_musts, tag_mays, tag_forbids):
+def photo_tag_rel_exist_clauses(tag_musts, tag_mays, tag_forbids):
     (tag_musts, tag_mays, tag_forbids) = expand_mmf(
         tag_musts,
         tag_mays,
         tag_forbids,
     )
 
-    intersections = []
+    clauses = []
     for tag_must_group in tag_musts:
-        intersections.append( ('EXISTS', tag_must_group) )
+        clauses.append( ('EXISTS', tag_must_group) )
     if tag_mays:
-        intersections.append( ('EXISTS', tag_mays) )
+        clauses.append( ('EXISTS', tag_mays) )
     if tag_forbids:
-        intersections.append( ('NOT EXISTS', tag_forbids) )
+        clauses.append( ('NOT EXISTS', tag_forbids) )
 
-    intersections = [
-        #(operator, helpers.sql_listify([tag.id for tag in tagset] + [""]))
+    clauses = [
         (operator, helpers.sql_listify(tag.id for tag in tagset))
-        for (operator, tagset) in intersections
+        for (operator, tagset) in clauses
     ]
-    intersections = [
-        INTERSECT_FORMAT.format(operator=operator, tagset=tagset)
-        for (operator, tagset) in intersections
+    clauses = [
+        EXIST_FORMAT.format(operator=operator, tagset=tagset)
+        for (operator, tagset) in clauses
     ]
-    return intersections
+    return clauses
 
 def normalize_tagset(photodb, tags, warning_bag=None):
     if not tags:

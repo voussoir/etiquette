@@ -530,7 +530,7 @@ class PDBPhotoMixin:
             }
             yield parameters
 
-        photo_tag_rel_intersections = searchhelpers.photo_tag_rel_intersections(
+        photo_tag_rel_exist_clauses = searchhelpers.photo_tag_rel_exist_clauses(
             tag_musts,
             tag_mays,
             tag_forbids,
@@ -594,17 +594,10 @@ class PDBPhotoMixin:
         for (column, value) in maximums.items():
             wheres.append(column + ' <= ' + str(value))
 
-        # In order to use ORDER BY RANDOM(), we must place all of the intersect
-        # tag searches into a subquery. If we simply try to do
-        # SELECT * ... INTERSECT SELECT * ... ORDER BY RANDOM()
-        # we get an error that random is not a column. But placing all of the
-        # selects into a named subquery fixes that.
-        query = ['SELECT * FROM']
-        if photo_tag_rel_intersections:
-            intersections = '(%s) photos' % '\nINTERSECT\n'.join(photo_tag_rel_intersections)
-            query.append(intersections)
-        else:
-            query.append('photos')
+        if photo_tag_rel_exist_clauses:
+            wheres.extend(photo_tag_rel_exist_clauses)
+
+        query = ['SELECT * FROM photos']
 
         if wheres:
             wheres = 'WHERE ' + ' AND '.join(wheres)
