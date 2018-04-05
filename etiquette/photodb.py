@@ -48,7 +48,7 @@ class PDBAlbumMixin:
         filepath = pathclass.Path(filepath).absolute_path
         query = 'SELECT albumid FROM album_associated_directories WHERE directory == ?'
         bindings = [filepath]
-        album_row = self.sql_select_one(query, binding)
+        album_row = self.sql_select_one(query, bindings)
         if album_row is None:
             raise exceptions.NoSuchAlbum(filepath)
         album_id = album_row[0]
