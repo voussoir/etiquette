@@ -88,7 +88,7 @@ p
 
     {% set photos = album.get_photos() %}
     {% if photos %}
-        <h3>Photos</h3>
+        <h3>{{photos|length}} Photos</h3>
         {% if view != "list" %}
             <a href="?view=list">List view</a>
         {% else %}
