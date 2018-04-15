@@ -17,12 +17,13 @@ import werkzeug.contrib.fixers
 etiquette_flask.site.wsgi_app = werkzeug.contrib.fixers.ProxyFix(etiquette_flask.site.wsgi_app)
 
 
-if len(sys.argv) == 2:
+if len(sys.argv) >= 2:
     port = int(sys.argv[1])
 else:
     port = 5000
 
-if port == 443:
+use_https = (port == 443) or ('--https' in sys.argv)
+if use_https:
     http = gevent.pywsgi.WSGIServer(
         listener=('0.0.0.0', port),
         application=etiquette_flask.site,
@@ -36,5 +37,8 @@ else:
     )
 
 
-print('Starting server on port %d' % port)
+message = 'Starting server on port %d' % port
+if use_https:
+    message += ' (https)'
+print(message)
 http.serve_forever()
