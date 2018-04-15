@@ -692,7 +692,7 @@ class Photo(ObjectBase):
             if self.has_tag(parent, check_children=False):
                 message = f'Preferring new {tag} over {parent}'
                 self.photodb.log.debug(message)
-                self.remove_tag(parent)
+                self.remove_tag(parent, commit=False)
 
         self.photodb.log.debug('Applying %s to %s', tag, self)
 
