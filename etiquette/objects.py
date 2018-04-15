@@ -68,6 +68,7 @@ class ObjectBase:
 
 class GroupableMixin:
     group_getter = None
+    group_getter_many = None
     group_sql_index = None
     group_table = None
 
@@ -160,12 +161,12 @@ class GroupableMixin:
             [self.id]
         )
         child_ids = [row[0] for row in child_rows]
-        children = [self.group_getter(id=child_id) for child_id in child_ids]
+        children = self.group_getter_many(child_ids)
 
         if isinstance(self, Tag):
-            children.sort(key=lambda x: x.name)
+            children = sorted(children, key=lambda x: x.name)
         else:
-            children.sort(key=lambda x: x.id)
+            children = sorted(children, key=lambda x: x.id)
         return children
 
     def get_parent(self):
@@ -235,13 +236,11 @@ class Album(ObjectBase, GroupableMixin):
 
         self.name = 'Album %s' % self.id
         self.group_getter = self.photodb.get_album
+        self.group_getter_many = self.photodb.get_albums_by_id
 
         self._sum_bytes_local = None
         self._sum_bytes_recursive = None
         self._sum_photos_recursive = None
-
-    def __hash__(self):
-        return hash(self.id)
 
     def __repr__(self):
         return f'Album:{self.id}'
@@ -447,8 +446,9 @@ class Album(ObjectBase, GroupableMixin):
             'SELECT photoid FROM album_photo_rel WHERE albumid == ?',
             [self.id]
         )
-        photos = [self.photodb.get_photo(id=fetch[0]) for fetch in generator]
-        photos.sort(key=lambda x: x.basename.lower())
+        photo_ids = [row[0] for row in generator]
+        photos = self.photodb.get_photos_by_id(photo_ids)
+        photos = sorted(photos, key=lambda x: x.basename.lower())
         return photos
 
     def has_photo(self, photo):
@@ -1161,6 +1161,7 @@ class Tag(ObjectBase, GroupableMixin):
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
         self.group_getter = self.photodb.get_tag
+        self.group_getter_many = self.photodb.get_tags_by_id
         self._cached_qualified_name = None
 
     def __eq__(self, other):

@@ -66,6 +66,9 @@ class PDBAlbumMixin:
     def get_albums(self):
         yield from self.get_things(thing_type='album')
 
+    def get_albums_by_id(self, ids):
+        return self.get_things_by_id('album', ids)
+
     def get_root_albums(self):
         for album in self.get_albums():
             if album.get_parent() is None:
@@ -129,6 +132,9 @@ class PDBBookmarkMixin:
     def get_bookmarks(self):
         yield from self.get_things(thing_type='bookmark')
 
+    def get_bookmarks_by_id(self, ids):
+        return self.get_things_by_id('bookmark', ids)
+
     @decorators.required_feature('bookmark.new')
     @decorators.transaction
     def new_bookmark(self, url, title=None, *, author=None, commit=True):
@@ -178,6 +184,9 @@ class PDBPhotoMixin:
             raise exceptions.NoSuchPhoto(filepath)
         photo = objects.Photo(self, photo_row)
         return photo
+
+    def get_photos_by_id(self, ids):
+        return self.get_things_by_id('photo', ids)
 
     def get_photos_by_recent(self, count=None):
         '''
@@ -788,7 +797,7 @@ class PDBTagMixin:
 
     def get_tag(self, name=None, id=None):
         '''
-        Redirect to get_tag_by_id or get_tag_by_name after xor-checking the parameters.
+        Redirect to get_tag_by_id or get_tag_by_name.
         '''
         if not helpers.is_xor(id, name):
             raise exceptions.NotExclusive(['id', 'name'])
@@ -841,6 +850,9 @@ class PDBTagMixin:
         Yield all Tags in the database.
         '''
         yield from self.get_things(thing_type='tag')
+
+    def get_tags_by_id(self, ids):
+        return self.get_things_by_id('tag', ids)
 
     def get_root_tags(self):
         '''
@@ -1429,9 +1441,7 @@ class PhotoDB(
 
         thing_cache = self.caches[thing_type]
         try:
-            #self.log.debug('Cache hit for %s %s', thing_type, thing_id)
-            val = thing_cache[thing_id]
-            return val
+            return thing_cache[thing_id]
         except KeyError:
             pass
 
@@ -1444,18 +1454,42 @@ class PhotoDB(
         thing_cache[thing_id] = thing
         return thing
 
-    def get_things(self, thing_type, orderby=None):
+    def get_things(self, thing_type):
         thing_map = _THING_CLASSES[thing_type]
 
-        if orderby:
-            query = 'SELECT * FROM %s ORDER BY %s' % (thing_map['table'], orderby)
-        else:
-            query = 'SELECT * FROM %s' % thing_map['table']
+        query = 'SELECT * FROM %s' % thing_map['table']
 
         things = self.sql_select(query)
         for thing_row in things:
             thing = thing_map['class'](self, db_row=thing_row)
             yield thing
+
+    def get_things_by_id(self, thing_type, thing_ids):
+        thing_map = _THING_CLASSES[thing_type]
+        thing_class = thing_map['class']
+        thing_cache = self.caches[thing_type]
+
+        ids_needed = set(thing_ids)
+        things = set()
+        for thing_id in ids_needed:
+            try:
+                thing = thing_cache[thing_id]
+            except KeyError:
+                pass
+            else:
+                things.add(thing)
+                ids_needed.remove(thing.id)
+
+        yield from things
+
+        if ids_needed:
+            qmarks = '(%s)' % ','.join('?' * len(ids_needed))
+            query = 'SELECT * FROM %s WHERE id IN %s' % (thing_map['table'], qmarks)
+            bindings = list(ids_needed)
+            more_things = self.sql_select(query, bindings)
+            for thing_row in more_things:
+                thing = thing_map['class'](self, db_row=thing_row)
+                yield thing
 
     def load_config(self):
         config = copy.deepcopy(constants.DEFAULT_CONFIGURATION)
