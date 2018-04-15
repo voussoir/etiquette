@@ -1469,16 +1469,15 @@ class PhotoDB(
         thing_class = thing_map['class']
         thing_cache = self.caches[thing_type]
 
-        ids_needed = set(thing_ids)
+        ids_needed = set()
         things = set()
-        for thing_id in ids_needed:
+        for thing_id in thing_ids:
             try:
                 thing = thing_cache[thing_id]
             except KeyError:
-                pass
+                ids_needed.add(thing_id)
             else:
                 things.add(thing)
-                ids_needed.remove(thing.id)
 
         yield from things
 
