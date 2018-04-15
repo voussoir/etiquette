@@ -9,6 +9,7 @@ from voussoirkit import bytestring
 from voussoirkit import pathclass
 
 from . import caching
+from . import jinja_filters
 from . import jsonify
 from . import sessions
 
@@ -31,6 +32,7 @@ site.config.update(
 site.jinja_env.add_extension('jinja2.ext.do')
 site.jinja_env.trim_blocks = True
 site.jinja_env.lstrip_blocks = True
+site.jinja_env.filters['bytestring'] = jinja_filters.bytestring
 site.debug = True
 
 P = etiquette.photodb.PhotoDB()

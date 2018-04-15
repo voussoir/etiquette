@@ -108,13 +108,13 @@ p
             Download:
             {% if has_local_photos %}
                 <a href="/album/{{album.id}}.zip?recursive=no">
-                    These files ({{album.sum_bytes(recurse=False, string=True)}})
+                    These files ({{album.sum_bytes(recurse=False)|bytestring }})
                 </a>
             {% endif %}
             {% if has_local_photos and has_child_photos %}&mdash;{% endif %}
             {% if has_child_photos %}
                 <a href="/album/{{album.id}}.zip?recursive=yes">
-                    Include children ({{album.sum_bytes(recurse=True, string=True)}})
+                    Include children ({{album.sum_bytes(recurse=True)|bytestring }})
                 </a>
             {% endif %}
         {% endif %}
