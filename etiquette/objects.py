@@ -1126,7 +1126,7 @@ class Photo(ObjectBase):
         self.searchhidden = searchhidden
 
         if commit:
-            self.photodb.log.debug('Committing - set override filename')
+            self.photodb.log.debug('Committing - set searchhidden')
             self.photodb.commit()
 
     @decorators.required_feature('photo.edit')
