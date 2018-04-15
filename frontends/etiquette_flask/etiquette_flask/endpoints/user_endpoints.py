@@ -45,7 +45,13 @@ def get_user_id_redirect(user_id):
 @session_manager.give_token
 def get_login():
     session = session_manager.get(request)
-    return flask.render_template('login.html', session=session)
+    response = flask.render_template(
+        'login.html',
+        session=session,
+        min_username_length=common.P.config['user']['min_length'],
+        min_password_length=common.P.config['user']['min_password_length'],
+    )
+    return response
 
 @site.route('/login', methods=['POST'])
 @session_manager.give_token

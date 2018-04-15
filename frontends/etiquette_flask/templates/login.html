@@ -85,8 +85,8 @@ button
             </div>
             <div id="register_form" action="/register" method="post">
                 <span>Register</span>
-                <input type="text" id="register_input_username" name="username" placeholder="username">
-                <input type="password" id="register_input_password_1" name="password_1" placeholder="password">
+                <input type="text" id="register_input_username" name="username" placeholder="username (at least {{min_username_length}})">
+                <input type="password" id="register_input_password_1" name="password_1" placeholder="password (at least {{min_password_length}})">
                 <input type="password" id="register_input_password_2" name="password_2" placeholder="password again">
                 <button type="submit" id="register_input_button" onclick="submit_register()">Register</button>
             </div>
