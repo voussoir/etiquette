@@ -504,24 +504,23 @@ class Album(ObjectBase, GroupableMixin):
             self.photodb.log.debug('Committing - remove photo from album')
             self.photodb.commit()
 
-    def sum_bytes(self, recurse=True, string=False):
-        if self._sum_bytes_local is None:
-            #print(self, 'sumbytes cache miss local')
-            photos = (photo for photo in self.get_photos() if photo.bytes is not None)
-            self._sum_bytes_local = sum(photo.bytes for photo in photos)
-        total = self._sum_bytes_local
-
+    def sum_bytes(self, recurse=True):
+        query = '''
+        SELECT SUM(bytes) FROM photos
+        WHERE photos.id IN (
+            SELECT photoid FROM album_photo_rel WHERE
+            albumid IN {qmarks}
+        )
+        '''
         if recurse:
-            if self._sum_bytes_recursive is None:
-                #print(self, 'sumbytes cache miss recursive')
-                child_bytes = sum(child.sum_bytes(recurse=True) for child in self.get_children())
-                self._sum_bytes_recursive = self._sum_bytes_local + child_bytes
-            total = self._sum_bytes_recursive
-
-        if string:
-            return bytestring.bytestring(total)
+            albumids = [child.id for child in self.walk_children()]
         else:
-            return total
+            albumids = [self.id]
+
+        query = query.format(qmarks='(%s)' % ','.join('?' * len(albumids)))
+        bindings = albumids
+        total = self.photodb.sql_select_one(query, bindings)[0]
+        return total
 
     def sum_photos(self):
         if self._sum_photos_recursive is None:
