@@ -37,7 +37,16 @@ class PDBAlbumMixin:
         super().__init__()
         self._album_cache = cacheclass.Cache()
 
-    def get_album(self, id):
+    def get_album(self, id=None, path=None):
+        if not helpers.is_xor(id, path):
+            raise exceptions.NotExclusive(['id', 'path'])
+
+        if id is not None:
+            return self.get_album_by_id(id)
+        else:
+            return self.get_album_by_path(path)
+
+    def get_album_by_id(self, id):
         return self.get_thing_by_id('album', id)
 
     def get_album_by_path(self, filepath):
