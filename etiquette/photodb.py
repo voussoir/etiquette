@@ -1488,6 +1488,7 @@ class PhotoDB(
             more_things = self.sql_select(query, bindings)
             for thing_row in more_things:
                 thing = thing_map['class'](self, db_row=thing_row)
+                thing_cache[thing.id] = thing
                 yield thing
 
     def load_config(self):
