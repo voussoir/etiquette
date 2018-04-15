@@ -103,7 +103,7 @@ p
 
     <p>
         {% set has_local_photos = photos|length > 0 %}
-        {% set has_child_photos = album.sum_photos() > photos|length %}
+        {% set has_child_photos = album.has_any_subalbum_photo() %}
         {% if has_local_photos or has_child_photos %}
             Download:
             {% if has_local_photos %}

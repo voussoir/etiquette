@@ -451,6 +451,20 @@ class Album(ObjectBase, GroupableMixin):
         photos = sorted(photos, key=lambda x: x.basename.lower())
         return photos
 
+    def has_any_photo(self, recurse=False):
+        row = self.photodb.sql_select_one(
+            'SELECT photoid FROM album_photo_rel WHERE albumid == ? LIMIT 1',
+            [self.id]
+        )
+        if row is not None:
+            return True
+        if recurse:
+            return self.has_any_subalbum_photo()
+        return False
+
+    def has_any_subalbum_photo(self):
+        return any(child.has_any_photo(recurse=True) for child in self.get_children())
+
     def has_photo(self, photo):
         if not isinstance(photo, Photo):
             raise TypeError('`photo` must be of type %s' % Photo)
