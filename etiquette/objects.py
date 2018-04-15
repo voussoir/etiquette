@@ -49,11 +49,15 @@ class ObjectBase:
 
     @staticmethod
     def normalize_author_id(author_id):
-        if author_id is None or author_id == '':
+        if author_id is None:
             return None
 
         if not isinstance(author_id, str):
             raise TypeError('author_id must be string, not %s' % type(author_id))
+
+        author_id = author_id.strip()
+        if author_id == '':
+            return None
 
         return author_id
 
@@ -1476,6 +1480,7 @@ class User(ObjectBase):
         self.username = db_row['username']
         self.created = db_row['created']
         self.password_hash = db_row['password']
+        self._display_name = self.normalize_display_name(db_row['display_name'])
 
     def __repr__(self):
         rep = f'User:{self.id}:{self.username}'
@@ -1485,6 +1490,50 @@ class User(ObjectBase):
         rep = f'User:{self.username}'
         return rep
 
+    @staticmethod
+    def normalize_display_name(display_name, max_length=None):
+        if display_name is None:
+            return None
+
+        if not isinstance(display_name, str):
+            raise TypeError('Display Name must be string, not %s' % type(display_name))
+
+        display_name = display_name.strip()
+
+        if display_name == '':
+            return None
+
+        if max_length is not None and len(display_name) > max_length:
+            raise exceptions.DisplayNameTooLong(display_name=display_name, max_length=max_length)
+
+        return display_name
+
+    @property
+    def display_name(self):
+        if self._display_name is None:
+            return self.username
+        else:
+            return self._display_name
+
+    @decorators.required_feature('user.edit')
+    @decorators.transaction
+    def set_display_name(self, display_name, *, commit=True):
+        display_name = self.normalize_display_name(
+            display_name,
+            max_length=self.photodb.config['user']['max_display_name_length'],
+        )
+
+        data = {
+            'id': self.id,
+            'display_name': display_name,
+        }
+        self.photodb.sql_update(table='users', pairs=data, where_key='id')
+
+        self._display_name = display_name
+
+        if commit:
+            self.photodb.log.debug('Committing - set display name')
+            self.photodb.commit()
 
 class WarningBag:
     def __init__(self):

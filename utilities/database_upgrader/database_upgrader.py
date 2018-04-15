@@ -238,6 +238,25 @@ def upgrade_11_to_12(photodb):
     '''
     photodb.sql.cursor().execute(query)
 
+def upgrade_12_to_13(photodb):
+    '''
+    Added display_name column to the User table.
+    '''
+    cur = photodb.sql.cursor()
+    cur.execute('PRAGMA foreign_keys = OFF')
+    cur.execute('ALTER TABLE users RENAME TO users_old')
+    cur.execute('''
+    CREATE TABLE users(
+        id TEXT PRIMARY KEY NOT NULL,
+        username TEXT NOT NULL COLLATE NOCASE,
+        password BLOB NOT NULL,
+        display_name TEXT,
+        created INT
+    )''')
+    cur.execute('INSERT INTO users SELECT id, username, password, NULL, created FROM users_old')
+    cur.execute('DROP TABLE users_old')
+    cur.execute('PRAGMA foreign_keys = ON')
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

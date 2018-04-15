@@ -42,7 +42,7 @@ FILENAME_BADCHARS = '\\/:*?<>|"'
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
-DATABASE_VERSION = 12
+DATABASE_VERSION = 13
 DB_INIT = f'''
 PRAGMA cache_size = 10000;
 PRAGMA count_changes = OFF;
@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS users(
     id TEXT PRIMARY KEY NOT NULL,
     username TEXT NOT NULL COLLATE NOCASE,
     password BLOB NOT NULL,
+    display_name TEXT,
     created INT
 );
 CREATE INDEX IF NOT EXISTS index_users_id on users(id);
@@ -291,6 +292,7 @@ DEFAULT_CONFIGURATION = {
             'new': True,
         },
         'user': {
+            'edit': True,
             'login': True,
             'new': True,
         },
@@ -305,8 +307,9 @@ DEFAULT_CONFIGURATION = {
     'user': {
         'min_length': 2,
         'min_password_length': 6,
+        'max_display_name_length': 24,
         'max_length': 24,
-        'valid_chars': string.ascii_letters + string.digits + '~!@#$%^*()[]{}:;,.<>/\\-_+=',
+        'valid_chars': string.ascii_letters + string.digits + '_-',
     },
 
     'digest_exclude_files': [

@@ -2,7 +2,7 @@
 <html>
 <head>
     {% import "header.html" as header %}
-    <title>User {{user.username}}</title>
+    <title>User {{user.display_name}}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
@@ -20,9 +20,9 @@
 <body>
     {{header.make_header(session=session)}}
     <div id="content_body">
-        <h2>{{user.username}}</h2>
+        <h2>{{user.display_name}}</h2>
         <p>ID: {{user.id}}</p>
-        <p><a href="/search?author={{user.username}}">Photos by {{user.username}}</a></p>
+        <p><a href="/search?author={{user.username}}">Photos by {{user.display_name}}</a></p>
     </div>
 </body>
 

@@ -4,7 +4,7 @@
     <a class="header_element" href="/search">Search</a>
     <a class="header_element" href="/tags">Tags</a>
     {% if session.user %}
-    <a class="header_element" href="/user/{{session.user.username}}">{{session.user.username}}</a>
+    <a class="header_element" href="/user/{{session.user.username}}">{{session.user.display_name}}</a>
     <a class="header_element" href="/logout" style="flex:0">Logout</a>
     {% else %}
     <a class="header_element" href="/login">Log in</a>

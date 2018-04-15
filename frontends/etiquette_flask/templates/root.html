@@ -44,7 +44,7 @@ body, .nice_link
     <a class="nice_link" href="/albums">Browse albums</a>
     <a class="nice_link" href="/bookmarks">Bookmarks</a>
     {% if session.user %}
-    <a class="nice_link" href="/user/{{session.user.username}}">{{session.user.username}}</a>
+    <a class="nice_link" href="/user/{{session.user.username}}">{{session.user.display_name}}</a>
     {% else %}
     <a class="nice_link" href="/login">Log in</a>
     {% endif %}

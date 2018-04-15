@@ -147,6 +147,9 @@ class UsernameTooLong(InvalidUsername):
 class UsernameTooShort(InvalidUsername):
     error_message = 'Username "{username}" is shorter than minimum of {min_length}.'
 
+class DisplayNameTooLong(EtiquetteException):
+    error_message = 'Display name "{display_name}" is longer than maximum of {max_length}.'
+
 class WrongLogin(EtiquetteException):
     error_message = 'Wrong username-password combination.'
 
