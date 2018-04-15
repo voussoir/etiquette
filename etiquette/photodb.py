@@ -933,16 +933,16 @@ class PDBUserMixin:
             raise exceptions.PasswordTooShort(min_length=self.config['user']['min_password_length'])
 
     def _assert_valid_username(self, username):
-        if len(username) < self.config['user']['min_length']:
+        if len(username) < self.config['user']['min_username_length']:
             raise exceptions.UsernameTooShort(
                 username=username,
-                min_length=self.config['user']['min_length']
+                min_length=self.config['user']['min_username_length']
             )
 
-        if len(username) > self.config['user']['max_length']:
+        if len(username) > self.config['user']['max_username_length']:
             raise exceptions.UsernameTooLong(
                 username=username,
-                max_length=self.config['user']['max_length']
+                max_length=self.config['user']['max_username_length']
             )
 
         badchars = [c for c in username if c not in self.config['user']['valid_chars']]

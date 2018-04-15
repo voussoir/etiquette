@@ -257,6 +257,14 @@ def upgrade_12_to_13(photodb):
     cur.execute('DROP TABLE users_old')
     cur.execute('PRAGMA foreign_keys = ON')
 
+def upgrade_13_to_14(photodb):
+    '''
+    Rename user.min_length to min_username_length.
+    '''
+    photodb.config['user']['min_username_length'] = photodb.config['user'].pop('min_length')
+    photodb.config['user']['max_username_length'] = photodb.config['user'].pop('max_length')
+    photodb.save_config()
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

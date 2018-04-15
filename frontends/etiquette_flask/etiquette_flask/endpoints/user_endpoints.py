@@ -48,7 +48,7 @@ def get_login():
     response = flask.render_template(
         'login.html',
         session=session,
-        min_username_length=common.P.config['user']['min_length'],
+        min_username_length=common.P.config['user']['min_username_length'],
         min_password_length=common.P.config['user']['min_password_length'],
     )
     return response

@@ -42,7 +42,7 @@ FILENAME_BADCHARS = '\\/:*?<>|"'
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
-DATABASE_VERSION = 13
+DATABASE_VERSION = 14
 DB_INIT = f'''
 PRAGMA cache_size = 10000;
 PRAGMA count_changes = OFF;
@@ -305,10 +305,10 @@ DEFAULT_CONFIGURATION = {
     },
 
     'user': {
-        'min_length': 2,
+        'min_username_length': 2,
         'min_password_length': 6,
         'max_display_name_length': 24,
-        'max_length': 24,
+        'max_username_length': 24,
         'valid_chars': string.ascii_letters + string.digits + '_-',
     },
 
