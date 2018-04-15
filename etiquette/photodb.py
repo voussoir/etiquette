@@ -1362,7 +1362,7 @@ class PhotoDB(
         if self.ephemeral:
             return 'PhotoDB(ephemeral=True)'
         else:
-            return 'PhotoDB(data_directory={datadir})'.format(datadir=repr(self.data_directory))
+            return f'PhotoDB(data_directory={self.data_directory})'
 
     def _uncache(self):
         self._cached_frozen_children = None

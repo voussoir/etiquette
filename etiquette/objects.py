@@ -244,7 +244,7 @@ class Album(ObjectBase, GroupableMixin):
         return hash(self.id)
 
     def __repr__(self):
-        return 'Album:{id}'.format(id=self.id)
+        return f'Album:{self.id}'
 
     @staticmethod
     def normalize_description(description):
@@ -540,7 +540,7 @@ class Bookmark(ObjectBase):
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
     def __repr__(self):
-        return 'Bookmark:{id}'.format(id=self.id)
+        return f'Bookmark:{self.id}'
 
     @staticmethod
     def normalize_title(title):
@@ -665,7 +665,7 @@ class Photo(ObjectBase):
         self.__init__(self.photodb, row)
 
     def __repr__(self):
-        return 'Photo:{id}'.format(id=self.id)
+        return f'Photo:{self.id}'
 
     def _uncache(self):
         self.photodb.caches['photo'].remove(self.id)
@@ -683,14 +683,14 @@ class Photo(ObjectBase):
         # keep our current one.
         existing = self.has_tag(tag, check_children=True)
         if existing:
-            message = 'Preferring existing {exi:s} over {tag:s}'.format(exi=existing, tag=tag)
+            message = f'Preferring existing {existing} over {tag}'
             self.photodb.log.debug(message)
             return existing
 
         # If the new tag is more specific, remove our current one for it.
         for parent in tag.walk_parents():
             if self.has_tag(parent, check_children=False):
-                message = 'Preferring new {tag:s} over {par:s}'.format(tag=tag, par=parent)
+                message = f'Preferring new {tag} over {parent}'
                 self.photodb.log.debug(message)
                 self.remove_tag(parent)
 
@@ -1170,11 +1170,11 @@ class Tag(ObjectBase, GroupableMixin):
         return hash(self.name)
 
     def __repr__(self):
-        rep = 'Tag:{id}:{name}'.format(name=self.name, id=self.id)
+        rep = f'Tag:{self.id}:{self.name}'
         return rep
 
     def __str__(self):
-        rep = 'Tag:{name}'.format(name=self.name)
+        rep = f'Tag:{self.name}'
         return rep
 
     @staticmethod
@@ -1464,11 +1464,11 @@ class User(ObjectBase):
         self.password_hash = db_row['password']
 
     def __repr__(self):
-        rep = 'User:{id}:{username}'.format(id=self.id, username=self.username)
+        rep = f'User:{self.id}:{self.username}'
         return rep
 
     def __str__(self):
-        rep = 'User:{username}'.format(username=self.username)
+        rep = f'User:{self.username}'
         return rep
 
 

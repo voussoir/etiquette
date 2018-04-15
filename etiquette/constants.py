@@ -43,11 +43,11 @@ FILENAME_BADCHARS = '\\/:*?<>|"'
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
 DATABASE_VERSION = 12
-DB_INIT = '''
+DB_INIT = f'''
 PRAGMA cache_size = 10000;
 PRAGMA count_changes = OFF;
 PRAGMA foreign_keys = ON;
-PRAGMA user_version = {user_version};
+PRAGMA user_version = {DATABASE_VERSION};
 
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users(
@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS tag_synonyms(
 );
 CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
 ----------------------------------------------------------------------------------------------------
-'''.format(user_version=DATABASE_VERSION)
+'''
 
 def _extract_columns(create_table_statement):
     column_names = create_table_statement.split('(')[1].rsplit(')', 1)[0]
