@@ -7,9 +7,19 @@ I am currently running a demonstration copy of Etiquette at http://etiquette.vou
 
 Etiquette is a tag-based file organization system with a web front-end.
 
-Documentation is still a work in progress. In general,
+#### Setting up
 
-- You must make the `etiquette` package importable by placing it in one of your lib paths because I have not made a setup.py yet. The easiest way to find your lib path is `python -c "import os; print(os)"`. Rather than actually moving the folder I just use filesystem junctions.
+I have not made a setup.py yet. So you must make the `etiquette` package importable in one of two ways:
+
+- By editing your `PYTHONPATH` environment variable. Note that the path refers to the Etiquette repository location and not the `etiquette` package folder:
+
+    Windows: `set PYTHONPATH="%PYTHONPATH%;D:\Git\Etiquette"` Note the semicolon to delimit paths. To make permanent, use the Environment Variable editor or the `setx` command. The editor is better.  
+
+    Linux: `PYTHONPATH="$PYTHONPATH:/home/Owner/Git/Etiquette"` Note the colon to delimit paths. To make permanent, add the export to your bashrc.
+
+- By placing it in one of your lib paths, or using filesystem junctions to make it appear in a lib path. Note that this time, the path does refer to the package itself.
+
+    The easiest way to find your lib path is `python -c "import os; print(os)"`.
 
     Windows: `mklink /J fakepath realpath`  
     for example `mklink /J "C:\Python36\Lib\etiquette" "D:\Git\Etiquette\etiquette"`
@@ -17,11 +27,26 @@ Documentation is still a work in progress. In general,
     Linux: `ln --symbolic realpath fakepath`  
     for example `ln --symbolic "/home/Owner/Git/Etiquette/etiquette" "/usr/local/lib/python3.6/etiquette"`
 
-    I'm sure you'll figure it out.
+I'm sure you'll figure it out.
+
+#### Running locally
 
 - Run `python etiquette_flask_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
 - Run `python -i etiquette_repl_launch.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 - Note: Do not `cd` into the frontends folder. Stay wherever you want the photodb to be created, and start the frontend by specifying full file path of the launch file.
+
+        D:\somewhere>python D:\Git\Etiquette\frontends\etiquette_flask\etiquette_flask_launch.py 5001
+        /home/Owner>python /home/Owner/Git/Etiquette/frontends/etiquette_flask/etiquette_flask_launch.py 5001
+
+#### Running with Gunicorn
+
+1. Use the PYTHONPATH technique to make `etiquette` and `etiquette_flask` both importable. Symlinking into the lib is not as convenient here because the server relies on the static files and jinja templates relative to the code's location.
+
+        PYTHONPATH="$PYTHONPATH:/home/Owner/Git/Etiquette:/home/Owner/Git/Etiquette/frontends/etiquette_flask
+
+2. To run non-daemonized, on a specific port, with logging to the terminal, use:
+
+        gunicorn etiquette_flask_entrypoint:site --bind "0.0.0.0:PORT" --access-logfile "-"
 
 ### Project stability
 
