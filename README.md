@@ -13,7 +13,7 @@ I have not made a setup.py yet. So you must make the `etiquette` package importa
 
 - By editing your `PYTHONPATH` environment variable. Note that the path refers to the Etiquette repository location and not the `etiquette` package folder:
 
-    Windows: `set PYTHONPATH="%PYTHONPATH%;D:\Git\Etiquette"` Note the semicolon to delimit paths. To make permanent, use the Environment Variable editor or the `setx` command. The editor is better.  
+    Windows: `set "PYTHONPATH=%PYTHONPATH%;D:\Git\Etiquette"` Note the semicolon to delimit paths. To make permanent, use the Environment Variable editor or the `setx` command. The editor is better.  
 
     Linux: `PYTHONPATH="$PYTHONPATH:/home/Owner/Git/Etiquette"` Note the colon to delimit paths. To make permanent, add the export to your bashrc.
 
