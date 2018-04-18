@@ -1,3 +1,5 @@
+var INPUT_TYPES = new Set(["INPUT", "TEXTAREA"]);
+
 function create_message_bubble(message_area, message_positivity, message_text, lifespan)
 {
     if (lifespan === undefined)

@@ -167,6 +167,10 @@ function set_keybinds()
 {
     window.addEventListener("keydown", function(event)
     {
+        if (INPUT_TYPES.has(event.target.tagName))
+        {
+            return;
+        }
         if (event.key == "a" && event.ctrlKey)
         {
             select_all_photos();
