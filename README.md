@@ -80,7 +80,6 @@ Here is a brief overview of the project to help you learn your way around:
 - Some way for the database to re-identify a file that was moved / renamed (lost & found). Maybe file hash of the first few mb is good enough.
 - Debate whether the `UserMixin.login` method should accept usernames or I should standardize the usage of IDs only internally.
 - Ability to access user photos by user's ID, not just username.
-- Should album size be cached on disk?
 - Replace columns like area, ratio, bitrate by using expression indices or views (`width * height` etc).
 - Add a `Photo.merge` to combine duplicate entries.
 - Generate thumbnails for vector files without falling victim to bombs.
