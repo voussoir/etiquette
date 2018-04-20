@@ -8,8 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
     <script src="/static/js/common.js"></script>
-    {% set filename = photo.id + photo.dot_extension %}
-    {% set file_link = "/file/" + filename %}
 
 <style>
 #content_body
@@ -192,13 +190,13 @@
             <li>Dimensions: {{photo.width}}x{{photo.height}} px</li>
             <li>Aspect ratio: {{photo.ratio}}</li>
         {% endif %}
-        <li>Size: {{photo.bytestring}}</li>
+        <li>Size: {{photo.bytes|bytestring}}</li>
         {% if photo.duration %}
             <li>Duration: {{photo.duration_string}}</li>
             <li>Overall Bitrate: {{photo.bitrate|int}} kbps</li>
         {% endif %}
-        <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=true&original_filename=true">Download as original filename</a></li>
-        <li><a href="/file/{{photo.id}}{{photo.dot_extension}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
+        <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as original filename</a></li>
+        <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
         </ul>
 
         <!-- CONTAINING ALBUMS -->
@@ -228,17 +226,17 @@
         <div id="photo_img_holder" onclick="toggle_hoverzoom(event)">
             <img
             id="photo_img"
-            src="{{file_link}}"
+            src="{{photo|file_link}}"
             alt="{{photo.basename}}"
             onload="this.style.opacity=0.99"
             >
         </div>
         {% elif photo.simple_mimetype == "video" %}
-        <video src="{{file_link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
+        <video src="{{photo|file_link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
         {% elif photo.simple_mimetype == "audio" %}
-        <audio src="{{file_link}}" controls></audio>
+        <audio src="{{photo|file_link}}" controls></audio>
         {% else %}
-        <a href="{{file_link}}">View {{filename}}</a>
+        <a href="{{photo|file_link}}">View {{photo.basename}}</a>
         {% endif %}
     </div>
 </div>
@@ -316,6 +314,7 @@ function refresh_metadata(photoid)
     post(url, data, callback);
 }
 
+var ZOOM_BG_URL = "url('{{photo|file_link(short=True)}}')";
 function enable_hoverzoom(event)
 {
     //console.log("enable zoom");
@@ -331,7 +330,7 @@ function enable_hoverzoom(event)
     photo_img.style.opacity = "0";
     photo_img.style.display = "none";
     photo_img_holder.style.cursor = "zoom-out";
-    photo_img_holder.style.backgroundImage = "url('{{file_link}}')";
+    photo_img_holder.style.backgroundImage = ZOOM_BG_URL;
     photo_img_holder.onmousemove = move_hoverzoom;
     move_hoverzoom(event)
     //setTimeout(function(){img_holder.onclick = toggle_hoverzoom;}, 100);
