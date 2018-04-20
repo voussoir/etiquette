@@ -1207,6 +1207,26 @@ class Tag(ObjectBase, GroupableMixin):
 
         return description
 
+    @staticmethod
+    def normalize_name(name, valid_chars=None, min_length=None, max_length=None):
+        original_name = name
+        if valid_chars is None:
+            valid_chars = constants.DEFAULT_CONFIG['tag']['valid_chars']
+
+        name = name.lower()
+        name = name.replace('-', '_')
+        name = name.replace(' ', '_')
+        name = (c for c in name if c in valid_chars)
+        name = ''.join(name)
+
+        if min_length is not None and len(name) < min_length:
+            raise exceptions.TagTooShort(original_name)
+
+        if max_length is not None and len(name) > max_length:
+            raise exceptions.TagTooLong(name)
+
+        return name
+
     def _uncache(self):
         self.photodb.caches['tag'].remove(self.id)
         self._cached_qualified_name = None

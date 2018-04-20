@@ -892,27 +892,13 @@ class PDBTagMixin:
         return tag
 
     def normalize_tagname(self, tagname):
-        '''
-        Tag names can only consist of characters defined in the config.
-        The given tagname is lowercased, gets its spaces and hyphens
-        replaced by underscores, and is stripped of any not-whitelisted
-        characters.
-        '''
-        original_tagname = tagname
-        tagname = tagname.lower()
-        tagname = tagname.replace('-', '_')
-        tagname = tagname.replace(' ', '_')
-        tagname = (c for c in tagname if c in self.config['tag']['valid_chars'])
-        tagname = ''.join(tagname)
-
-        if len(tagname) < self.config['tag']['min_length']:
-            raise exceptions.TagTooShort(original_tagname)
-
-        elif len(tagname) > self.config['tag']['max_length']:
-            raise exceptions.TagTooLong(tagname)
-
-        else:
-            return tagname
+        tagname = objects.Tag.normalize_name(
+            tagname,
+            valid_chars=self.config['tag']['valid_chars'],
+            min_length=self.config['tag']['min_length'],
+            max_length=self.config['tag']['max_length'],
+        )
+        return tagname
 
 
 class PDBUserMixin:
