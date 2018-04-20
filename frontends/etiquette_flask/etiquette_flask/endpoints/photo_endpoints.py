@@ -31,7 +31,8 @@ def get_photo_json(photo_id):
     return photo
 
 @site.route('/file/<photo_id>')
-def get_file(photo_id):
+@site.route('/file/<photo_id>/<basename>')
+def get_file(photo_id, basename=None):
     photo_id = photo_id.split('.')[0]
     photo = common.P.get_photo(photo_id)
 
