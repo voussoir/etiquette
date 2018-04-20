@@ -1093,10 +1093,9 @@ class PDBUtilMixin:
             return exclude_filenames
 
         def _normalize_new_photo_kwargs(new_photo_kwargs):
-            if 'commit' in new_photo_kwargs:
-                new_photo_kwargs.pop('commit')
-            if 'filepath' in new_photo_kwargs:
-                new_photo_kwargs.pop('filepath')
+            new_photo_kwargs = new_photo_kwargs.copy()
+            new_photo_kwargs.pop('commit', None)
+            new_photo_kwargs.pop('filepath', None)
             return new_photo_kwargs
 
         def _normalize_new_photo_ratelimit(new_photo_ratelimit):
