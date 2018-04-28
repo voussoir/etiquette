@@ -4,7 +4,7 @@
     {% import "photo_card.html" as photo_card %}
     {% import "header.html" as header %}
     {% import "clipboard_tray.html" as clipboard_tray %}
-    <title>Album {{album.display_name}}</title>
+    <title>{{album.display_name}} | Albums</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
@@ -179,14 +179,7 @@ function on_save(editor, edit_element_map, display_element_map)
 
         editor.hide_spinner();
         editor.save();
-        if (title_display.innerText == title_display.dataset.editorEmptyText)
-        {
-            document.title = "Album " + title_display.dataset.editorEmptyText;
-        }
-        else
-        {
-            document.title = "Album " + title_display.innerText;
-        }
+        document.title = title_display.innerText + " | Albums";
         if (description_display.innerText == "")
         {
             description_display.classList.add("hidden");

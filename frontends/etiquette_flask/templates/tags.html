@@ -6,7 +6,7 @@
     {% if specific_tag is none %}
         <title>Tags</title>
     {% else %}
-        <title>Tag {{specific_tag.name}}</title>
+        <title>{{specific_tag.name}} | Tags</title>
     {% endif %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -252,7 +252,7 @@ function on_save(editor, edit_element_map, display_element_map)
         {
             var new_name = response["data"]["name"];
             var new_description = response["data"]["description"];
-            document.title = "Tag " + new_name;
+            document.title = new_name + " | Tags";
             window.history.replaceState(null, null, "/tag/" + new_name);
             name_editor.value = new_name;
             description_editor.value = new_description;
