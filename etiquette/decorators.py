@@ -28,17 +28,22 @@ def required_feature(features):
             config = photodb.config['enable_feature']
 
             # Using the received string like "photo.new", try to navigate the
-            # config and wind up at a True.
+            # config and wind up at a True or False. All other values invalid.
             # Allow KeyErrors to raise themselves.
             for feature in features:
                 cfg = config
                 pieces = feature.split('.')
                 for piece in pieces:
                     cfg = cfg[piece]
-                if cfg is False:
+
+                if cfg is True:
+                    pass
+
+                elif cfg is False:
                     raise exceptions.FeatureDisabled(method.__qualname__)
-                if cfg is not True:
-                    raise ValueError('Bad required_feature "%s" led to %s' % (feature, cfg))
+
+                else:
+                    raise ValueError(f'Bad required_feature: "{feature}" led to {cfg}')
 
             return method(self, *args, **kwargs)
         return wrapped_required_feature
