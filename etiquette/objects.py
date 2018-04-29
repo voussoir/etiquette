@@ -1155,11 +1155,6 @@ class Photo(ObjectBase):
 
         self.__reinit__()
 
-    def sorted_tags(self):
-        tags = self.get_tags()
-        tags.sort(key=lambda x: x.qualified_name())
-        return tags
-
 
 class Tag(ObjectBase, GroupableMixin):
     '''

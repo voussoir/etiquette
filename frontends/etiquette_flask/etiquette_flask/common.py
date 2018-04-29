@@ -34,6 +34,7 @@ site.jinja_env.trim_blocks = True
 site.jinja_env.lstrip_blocks = True
 site.jinja_env.filters['bytestring'] = jinja_filters.bytestring
 site.jinja_env.filters['file_link'] = jinja_filters.file_link
+site.jinja_env.filters['sort_by_qualname'] = jinja_filters.sort_by_qualname
 site.debug = True
 
 P = etiquette.photodb.PhotoDB()

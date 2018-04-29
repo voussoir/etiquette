@@ -163,7 +163,7 @@
                 <input id="add_tag_textbox" type="text" autofocus>
                 <button id="add_tag_button" class="green_button" onclick="submit_tag(receive_callback);">add</button>
             </li>
-            {% set tags = photo.sorted_tags() %}
+            {% set tags = photo.get_tags()|sort_by_qualname %}
             {% for tag in tags %}
             <li>
                 {{tag_object.tag_object(tag, qualified_name=True, max_len=30, with_alt_description=True, with_alt_qualified_name=True)}}<!--
