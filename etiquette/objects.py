@@ -873,11 +873,12 @@ class Photo(ObjectBase):
         '''
         Return the albums of which this photo is a member.
         '''
-        album_rows = self.photodb.sql_select(
+        album_ids = self.photodb.sql_select(
             'SELECT albumid FROM album_photo_rel WHERE photoid == ?',
             [self.id]
         )
-        albums = [self.photodb.get_album(id=row[0]) for row in album_rows]
+        album_ids = [row[0] for row in album_ids]
+        albums = list(self.photodb.get_albums_by_id(album_ids))
         return albums
 
     def get_tags(self):
