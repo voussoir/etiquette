@@ -151,6 +151,33 @@ def fit_into_bounds(image_width, image_height, frame_width, frame_height):
 
     return (new_width, new_height)
 
+def generate_image_thumbnail(filepath, width, height):
+    image = PIL.Image.open(filepath)
+    (width, height) = image.size
+    (new_width, new_height) = fit_into_bounds(
+        image_width=width,
+        image_height=height,
+        frame_width=width,
+        frame_height=height,
+    )
+    if new_width < width:
+        image = image.resize((new_width, new_height))
+
+    if image.mode == 'RGBA':
+        background = checkerboard_image(
+            color_1=(256, 256, 256),
+            color_2=(128, 128, 128),
+            image_size=image.size,
+            checker_size=8,
+        )
+        # Thanks Yuji Tomita
+        # http://stackoverflow.com/a/9459208
+        background.paste(image, mask=image.split()[3])
+        image = background
+
+    image = image.convert('RGB')
+    return image
+
 def get_mimetype(filepath):
     '''
     Extension to mimetypes.guess_type which uses my

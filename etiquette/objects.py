@@ -790,33 +790,14 @@ class Photo(ObjectBase):
         if self.simple_mimetype == 'image':
             self.photodb.log.debug('Thumbnailing %s', self.real_path.absolute_path)
             try:
-                image = PIL.Image.open(self.real_path.absolute_path)
-            except (OSError, ValueError):
-                pass
-            else:
-                (width, height) = image.size
-                (new_width, new_height) = helpers.fit_into_bounds(
-                    image_width=width,
-                    image_height=height,
-                    frame_width=self.photodb.config['thumbnail_width'],
-                    frame_height=self.photodb.config['thumbnail_height'],
+                image = helpers.generate_image_thumbnail(
+                    self.real_path.absolute_path,
+                    width=self.photodb.config['thumbnail_width'],
+                    height=self.photodb.config['thumbnail_height'],
                 )
-                if new_width < width:
-                    image = image.resize((new_width, new_height))
-
-                if image.mode == 'RGBA':
-                    background = helpers.checkerboard_image(
-                        color_1=(256, 256, 256),
-                        color_2=(128, 128, 128),
-                        image_size=image.size,
-                        checker_size=8,
-                    )
-                    # Thanks Yuji Tomita
-                    # http://stackoverflow.com/a/9459208
-                    background.paste(image, mask=image.split()[3])
-                    image = background
-
-                image = image.convert('RGB')
+            except (OSError, ValueError):
+                traceback.print_exc()
+            else:
                 image.save(hopeful_filepath.absolute_path, quality=50)
                 return_filepath = hopeful_filepath
 
