@@ -802,37 +802,20 @@ class Photo(ObjectBase):
                 return_filepath = hopeful_filepath
 
         elif self.simple_mimetype == 'video' and constants.ffmpeg:
-            #print('video')
             self.photodb.log.debug('Thumbnailing %s', self.real_path.absolute_path)
-            probe = constants.ffmpeg.probe(self.real_path.absolute_path)
             try:
-                if probe.video:
-                    size = helpers.fit_into_bounds(
-                        image_width=probe.video.video_width,
-                        image_height=probe.video.video_height,
-                        frame_width=self.photodb.config['thumbnail_width'],
-                        frame_height=self.photodb.config['thumbnail_height'],
-                    )
-                    size = '%dx%d' % size
-                    duration = probe.video.duration
-                    if 'timestamp' in special:
-                        timestamp = special['timestamp']
-                    else:
-                        if duration < 3:
-                            timestamp = 0
-                        else:
-                            timestamp = 2
-                    constants.ffmpeg.thumbnail(
-                        self.real_path.absolute_path,
-                        outfile=hopeful_filepath.absolute_path,
-                        quality=2,
-                        size=size,
-                        time=timestamp,
-                    )
+                success = helpers.generate_video_thumbnail(
+                    self.real_path.absolute_path,
+                    outfile=hopeful_filepath.absolute_path,
+                    width=self.photodb.config['thumbnail_width'],
+                    height=self.photodb.config['thumbnail_height'],
+                    **special
+                )
             except Exception:
                 traceback.print_exc()
             else:
-                return_filepath = hopeful_filepath
+                if success:
+                    return_filepath = hopeful_filepath
 
         if return_filepath != self.thumbnail:
             data = {

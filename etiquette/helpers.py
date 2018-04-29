@@ -178,6 +178,36 @@ def generate_image_thumbnail(filepath, width, height):
     image = image.convert('RGB')
     return image
 
+def generate_video_thumbnail(filepath, outfile, width, height, **special):
+    probe = constants.ffmpeg.probe(filepath)
+    if not probe.video:
+        return False
+
+    size = fit_into_bounds(
+        image_width=probe.video.video_width,
+        image_height=probe.video.video_height,
+        frame_width=width,
+        frame_height=height,
+    )
+    size = '%dx%d' % size
+    duration = probe.video.duration
+
+    if 'timestamp' in special:
+        timestamp = special['timestamp']
+    elif duration < 3:
+        timestamp = 0
+    else:
+        timestamp = 2
+
+    constants.ffmpeg.thumbnail(
+        filepath,
+        outfile=outfile,
+        quality=2,
+        size=size,
+        time=timestamp,
+    )
+    return True
+
 def get_mimetype(filepath):
     '''
     Extension to mimetypes.guess_type which uses my
