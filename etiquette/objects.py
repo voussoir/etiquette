@@ -884,11 +884,12 @@ class Photo(ObjectBase):
         '''
         Return the tags assigned to this Photo.
         '''
-        generator = self.photodb.sql_select(
+        tag_ids = self.photodb.sql_select(
             'SELECT tagid FROM photo_tag_rel WHERE photoid == ?',
             [self.id]
         )
-        tags = [self.photodb.get_tag(id=fetch[0]) for fetch in generator]
+        tag_ids = [row[0] for row in tag_ids]
+        tags = list(self.photodb.get_tags_by_id(tag_ids))
         return tags
 
     def has_tag(self, tag, *, check_children=True):
