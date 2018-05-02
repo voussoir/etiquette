@@ -70,9 +70,10 @@ class PDBAlbumMixin:
         return self.get_things_by_id('album', ids)
 
     def get_root_albums(self):
-        for album in self.get_albums():
-            if album.get_parent() is None:
-                yield album
+        '''
+        Yield Albums that have no parent.
+        '''
+        yield from self.get_root_things('album')
 
     @decorators.required_feature('album.new')
     @decorators.transaction
@@ -856,11 +857,9 @@ class PDBTagMixin:
 
     def get_root_tags(self):
         '''
-        Yield all Tags that have no parent.
+        Yield Tags that have no parent.
         '''
-        for tag in self.get_tags():
-            if tag.get_parent() is None:
-                yield tag
+        yield from self.get_root_things('tag')
 
     @decorators.required_feature('tag.new')
     @decorators.transaction
@@ -1416,6 +1415,26 @@ class PhotoDB(
         if self._cached_qualname_map is None:
             self._cached_qualname_map = tag_export.qualified_names(self.get_tags())
         return self._cached_qualname_map
+
+    def get_root_things(self, thing_type):
+        thing_map = _THING_CLASSES[thing_type]
+
+        thing_class = thing_map['class']
+        table = thing_map['table']
+        group_table = thing_class.group_table
+
+        query = '''
+        SELECT * FROM {table}
+        WHERE NOT EXISTS (
+            SELECT 1 FROM {group_table}
+            WHERE memberid == {table}.id
+        )
+        '''.format(table=table, group_table=group_table)
+
+        rows = self.sql_select(query)
+        for row in rows:
+            thing = thing_class(self, row)
+            yield thing
 
     def get_thing_by_id(self, thing_type, thing_id):
         thing_map = _THING_CLASSES[thing_type]
