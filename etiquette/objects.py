@@ -330,22 +330,17 @@ class Album(ObjectBase, GroupableMixin):
 
     def _add_photo(self, photo):
         self.photodb.log.debug('Adding photo %s to %s', photo, self)
-        data = {
-            'albumid': self.id,
-            'photoid': photo.id,
-        }
+        data = {'albumid': self.id, 'photoid': photo.id}
         self.photodb.sql_insert(table='album_photo_rel', data=data)
-        self._uncache_sums()
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
     def add_photo(self, photo, *, commit=True):
-        if self.photodb != photo.photodb:
-            raise ValueError('Not the same PhotoDB')
         if self.has_photo(photo):
             return
 
         self._add_photo(photo)
+        self._uncache_sums()
 
         if commit:
             self.photodb.log.debug('Committing - add photo to album')
@@ -360,6 +355,7 @@ class Album(ObjectBase, GroupableMixin):
 
         for photo in photos:
             self._add_photo(photo)
+        self._uncache_sums()
 
         if commit:
             self.photodb.log.debug('Committing - add photos to album')
