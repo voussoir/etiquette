@@ -490,18 +490,34 @@ class Album(ObjectBase, GroupableMixin):
         result = super().leave_group(*args, **kwargs)
         return result
 
-    @decorators.required_feature('album.edit')
-    @decorators.transaction
-    def remove_photo(self, photo, *, commit=True):
-        if not self.has_photo(photo):
-            return
-
+    def _remove_photo(self, photo):
         self.photodb.log.debug('Removing photo %s from %s', photo, self)
         pairs = {'albumid': self.id, 'photoid': photo.id}
         self.photodb.sql_delete(table='album_photo_rel', pairs=pairs)
+
+    @decorators.required_feature('album.edit')
+    @decorators.transaction
+    def remove_photo(self, photo, *, commit=True):
+        self._remove_photo(photo)
         self._uncache_sums()
+
         if commit:
             self.photodb.log.debug('Committing - remove photo from album')
+            self.photodb.commit()
+
+    @decorators.required_feature('album.edit')
+    @decorators.transaction
+    def remove_photos(self, photos, *, commit=True):
+        existing_photos = set(self.get_photos())
+        photos = set(photos)
+        photos = photos.intersection(existing_photos)
+
+        for photo in photos:
+            self._remove_photo(photo)
+        self._uncache_sums()
+
+        if commit:
+            self.photodb.log.debug('Committing - remove photos from album')
             self.photodb.commit()
 
     def sum_bytes(self, recurse=True):
