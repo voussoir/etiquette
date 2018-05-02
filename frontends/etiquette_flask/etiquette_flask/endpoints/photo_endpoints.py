@@ -73,7 +73,7 @@ def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
     if isinstance(photo_ids, str):
         photo_ids = etiquette.helpers.comma_space_split(photo_ids)
 
-    photos = [common.P_photo(photo_id, response_type='json') for photo_id in photo_ids]
+    photos = list(common.P_photos(photo_ids, response_type='json'))
     tag = common.P_tag(tagname, response_type='json')
 
     for photo in photos:
@@ -139,7 +139,7 @@ def post_photo_refresh_metadata_core(photo_ids):
     if isinstance(photo_ids, str):
         photo_ids = etiquette.helpers.comma_space_split(photo_ids)
 
-    photos = [common.P_photo(photo_id, response_type='json') for photo_id in photo_ids]
+    photos = list(common.P_photos(photo_ids, response_type='json'))
 
     for photo in photos:
         common.P.caches['photo'].remove(photo.id)
@@ -171,7 +171,7 @@ def post_photo_searchhidden_core(photo_ids, searchhidden):
     if isinstance(photo_ids, str):
         photo_ids = etiquette.helpers.comma_space_split(photo_ids)
 
-    photos = [common.P_photo(photo_id, response_type='json') for photo_id in photo_ids]
+    photos = list(common.P_photos(photo_ids, response_type='json'))
 
     for photo in photos:
         photo.set_searchhidden(searchhidden, commit=False)
@@ -206,7 +206,7 @@ def post_batch_photos_photo_cards():
     photo_ids = request.form['photo_ids']
 
     photo_ids = etiquette.helpers.comma_space_split(photo_ids)
-    photos = [common.P_photo(photo_id, response_type='json') for photo_id in photo_ids]
+    photos = list(common.P_photos(photo_ids, response_type='json'))
 
     # Photo filenames are prevented from having colons, so using it as a split
     # delimiter should be safe.

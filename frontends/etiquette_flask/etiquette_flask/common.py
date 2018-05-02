@@ -86,6 +86,10 @@ def P_photo(photo_id):
     return P.get_photo(photo_id)
 
 @P_wrapper
+def P_photos(photo_ids):
+    return P.get_photos_by_id(photo_ids)
+
+@P_wrapper
 def P_tag(tagname):
     return P.get_tag(name=tagname)
 

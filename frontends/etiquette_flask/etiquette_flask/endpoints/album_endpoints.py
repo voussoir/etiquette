@@ -95,10 +95,8 @@ def post_album_add_photo(album_id):
     album = common.P_album(album_id)
 
     photo_ids = etiquette.helpers.comma_space_split(request.form['photo_id'])
-    photos = [common.P_photo(photo_id) for photo_id in photo_ids]
-    for photo in photos:
-        album.add_photo(photo, commit=False)
-    common.P.commit()
+    photos = list(common.P_photos(photo_ids))
+    album.add_photos(photos)
     return jsonify.make_json_response(response)
 
 @site.route('/album/<album_id>/remove_photo', methods=['POST'])
@@ -113,10 +111,8 @@ def post_album_remove_photo(album_id):
     album = common.P_album(album_id)
 
     photo_ids = etiquette.helpers.comma_space_split(request.form['photo_id'])
-    photos = [common.P_photo(photo_id) for photo_id in photo_ids]
-    for photo in photos:
-        album.remove_photo(photo, commit=False)
-    common.P.commit()
+    photos = list(common.P_photos(photo_ids))
+    album.remove_photos(photos)
     return jsonify.make_json_response(response)
 
 # Album tag operations #############################################################################
