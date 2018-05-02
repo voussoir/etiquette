@@ -1455,22 +1455,23 @@ class PhotoDB(
         thing_cache = self.caches[thing_type]
 
         ids_needed = set()
-        things = set()
         for thing_id in thing_ids:
             try:
                 thing = thing_cache[thing_id]
             except KeyError:
                 ids_needed.add(thing_id)
             else:
-                things.add(thing)
+                yield thing
 
-        yield from things
+        ids_needed = list(ids_needed)
+        while ids_needed:
+            # SQLite3 has a limit of 999 ? in a query, so we must batch them.
+            id_batch = ids_needed[:999]
+            ids_needed = ids_needed[999:]
 
-        if ids_needed:
-            qmarks = '(%s)' % ','.join('?' * len(ids_needed))
+            qmarks = '(%s)' % ','.join('?' * len(id_batch))
             query = 'SELECT * FROM %s WHERE id IN %s' % (thing_map['table'], qmarks)
-            bindings = list(ids_needed)
-            more_things = self.sql_select(query, bindings)
+            more_things = self.sql_select(query, id_batch)
             for thing_row in more_things:
                 thing = thing_map['class'](self, db_row=thing_row)
                 thing_cache[thing.id] = thing
