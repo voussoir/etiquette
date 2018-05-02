@@ -314,7 +314,7 @@ function refresh_metadata(photoid)
     post(url, data, callback);
 }
 
-var ZOOM_BG_URL = "url('{{photo|file_link(short=True)}}')";
+var ZOOM_BG_URL = "url('{{photo|file_link}}')";
 function enable_hoverzoom(event)
 {
     //console.log("enable zoom");
