@@ -796,6 +796,12 @@ class PDBTagMixin:
         else:
             raise exceptions.TagExists(existing_tag)
 
+    def get_root_tags(self):
+        '''
+        Yield Tags that have no parent.
+        '''
+        yield from self.get_root_things('tag')
+
     def get_tag(self, name=None, id=None):
         '''
         Redirect to get_tag_by_id or get_tag_by_name.
@@ -854,12 +860,6 @@ class PDBTagMixin:
 
     def get_tags_by_id(self, ids):
         return self.get_things_by_id('tag', ids)
-
-    def get_root_tags(self):
-        '''
-        Yield Tags that have no parent.
-        '''
-        yield from self.get_root_things('tag')
 
     @decorators.required_feature('tag.new')
     @decorators.transaction
