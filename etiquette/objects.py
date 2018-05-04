@@ -198,7 +198,7 @@ class GroupableMixin:
         if self == group:
             raise ValueError('Cant join self')
 
-        self.leave_group(commit=commit)
+        self.leave_group(commit=False)
         group.add_child(self, commit=commit)
 
     @decorators.transaction
