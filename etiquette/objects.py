@@ -1393,9 +1393,11 @@ class Tag(ObjectBase, GroupableMixin):
         if self._cached_qualified_name:
             qualname = self._cached_qualified_name
         else:
-            qualname = self.name
-            for parent in self.walk_parents():
-                qualname = parent.name + '.' + qualname
+            parent = self.get_parent()
+            if parent is None:
+                qualname = self.name
+            else:
+                qualname = parent.qualified_name() + '.' + self.name
             self._cached_qualified_name = qualname
 
         if max_len is None or len(qualname) <= max_len:
