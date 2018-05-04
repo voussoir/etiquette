@@ -198,6 +198,9 @@ class GroupableMixin:
         if self == group:
             raise ValueError('Cant join self')
 
+        if self.get_parent() == group:
+            return
+
         self.leave_group(commit=False)
         group.add_child(self, commit=commit)
 
