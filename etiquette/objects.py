@@ -1322,9 +1322,9 @@ class Tag(ObjectBase, GroupableMixin):
         self.photodb.log.debug('Deleting %s', self)
         self.photodb._cached_frozen_children = None
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
-        self.photodb.sql_delete(table='tags', pairs={'id': self.id})
         self.photodb.sql_delete(table='photo_tag_rel', pairs={'tagid': self.id})
         self.photodb.sql_delete(table='tag_synonyms', pairs={'mastername': self.name})
+        self.photodb.sql_delete(table='tags', pairs={'id': self.id})
         self._uncache()
         if commit:
             self.photodb.log.debug('Committing - delete tag')
