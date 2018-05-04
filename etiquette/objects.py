@@ -76,6 +76,23 @@ class GroupableMixin:
     group_sql_index = None
     group_table = None
 
+    def _lift_children(self):
+        '''
+        If this object is a root, all of its children become roots.
+        If this object is a child, its parent adopts all of its children.
+        '''
+        parent = self.get_parent()
+        if parent is None:
+            pairs = {
+                'parentid': self.id,
+            }
+            self.photodb.sql_delete(table=self.group_table, pairs=pairs)
+        else:
+            pairs = {
+                'parentid': (self.id, parent.id),
+            }
+            self.photodb.sql_update(table=self.group_table, pairs=pairs, where_key='parentid')
+
     @decorators.transaction
     def add_child(self, member, *, commit=True):
         '''
@@ -138,18 +155,7 @@ class GroupableMixin:
             for child in self.get_children():
                 child.delete(delete_children=delete_children, commit=False)
         else:
-            # Lift children
-            parent = self.get_parent()
-            if parent is None:
-                # Since this group was a root, children become roots by removing
-                # the row.
-                self.photodb.sql_delete(table=self.group_table, pairs={'parentid': self.id})
-            else:
-                # Since this group was a child, its parent adopts all its children.
-                data = {
-                    'parentid': (self.id, parent.id),
-                }
-                self.photodb.sql_update(table=self.group_table, pairs=data, where_key='parentid')
+            self._lift_children()
 
         # Note that this part comes after the deletion of children to prevent
         # issues of recursion.
