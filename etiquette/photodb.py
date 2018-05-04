@@ -819,7 +819,9 @@ class PDBTagMixin:
 
     def get_tag_by_name(self, tagname):
         if isinstance(tagname, objects.Tag):
-            tagname = tagname.name
+            if tagname.photodb == self:
+                return tagname
+            tagname = tagname.tagname
 
         tagname = tagname.strip('.+')
         tagname = tagname.split('.')[-1].split('+')[0]
