@@ -43,11 +43,14 @@ FILENAME_BADCHARS = '\\/:*?<>|"'
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
 DATABASE_VERSION = 14
-DB_INIT = f'''
+DB_PRAGMAS = f'''
 PRAGMA cache_size = 10000;
 PRAGMA count_changes = OFF;
 PRAGMA foreign_keys = ON;
 PRAGMA user_version = {DATABASE_VERSION};
+'''
+DB_INIT = f'''
+{DB_PRAGMAS}
 
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users(

@@ -1314,6 +1314,7 @@ class PhotoDB(
         if existing_database:
             if not skip_version_check:
                 self._check_version()
+            self._load_pragmas()
         else:
             self._first_time_setup()
 
@@ -1356,10 +1357,12 @@ class PhotoDB(
     def _first_time_setup(self):
         self.log.debug('Running first-time setup.')
         cur = self.sql.cursor()
+        cur.executescript(constants.DB_INIT)
+        self.sql.commit()
 
-        statements = constants.DB_INIT.split(';')
-        for statement in statements:
-            cur.execute(statement)
+    def _load_pragmas(self):
+        cur = self.sql.cursor()
+        cur.executescript(constants.DB_PRAGMAS)
         self.sql.commit()
 
     def __del__(self):
