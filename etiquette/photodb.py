@@ -35,7 +35,6 @@ logging.basicConfig()
 class PDBAlbumMixin:
     def __init__(self):
         super().__init__()
-        self._album_cache = cacheclass.Cache()
 
     def get_album(self, id=None, path=None):
         if not helpers.is_xor(id, path):
@@ -125,7 +124,6 @@ class PDBAlbumMixin:
 class PDBBookmarkMixin:
     def __init__(self):
         super().__init__()
-        self._bookmark_cache = cacheclass.Cache()
 
     def get_bookmark(self, id):
         return self.get_thing_by_id('bookmark', id)
@@ -163,7 +161,6 @@ class PDBBookmarkMixin:
 class PDBPhotoMixin:
     def __init__(self):
         super().__init__()
-        self._photo_cache = cacheclass.Cache()
 
     def _assert_no_such_photo(self, filepath):
         try:
@@ -786,7 +783,6 @@ class PDBSQLMixin:
 class PDBTagMixin:
     def __init__(self):
         super().__init__()
-        self._tag_cache = cacheclass.Cache()
 
     def _assert_no_such_tag(self, tagname):
         try:
@@ -848,10 +844,10 @@ class PDBTagMixin:
             tagname = name_row[0]
 
         tag_id = tag_row[constants.SQL_INDEX['tags']['id']]
-        tag = self._tag_cache.get(tag_id, fallback=None)
+        tag = self.caches['tag'].get(tag_id, fallback=None)
         if tag is None:
             tag = objects.Tag(self, tag_row)
-            self._tag_cache[tag_id] = tag
+            self.caches['tag'][tag_id] = tag
         return tag
 
     def get_tags(self):
@@ -905,7 +901,6 @@ class PDBTagMixin:
 class PDBUserMixin:
     def __init__(self):
         super().__init__()
-        self._user_cache = cacheclass.Cache()
 
     def _assert_no_such_user(self, username):
         try:
@@ -1332,17 +1327,12 @@ class PhotoDB(
         self._cached_frozen_children = None
         self._cached_qualname_map = None
 
-        self._album_cache.maxlen = self.config['cache_size']['album']
-        self._bookmark_cache.maxlen = self.config['cache_size']['bookmark']
-        self._photo_cache.maxlen = self.config['cache_size']['photo']
-        self._tag_cache.maxlen = self.config['cache_size']['tag']
-        self._user_cache.maxlen = self.config['cache_size']['user']
         self.caches = {
-            'album': self._album_cache,
-            'bookmark': self._bookmark_cache,
-            'photo': self._photo_cache,
-            'tag': self._tag_cache,
-            'user': self._user_cache,
+            'album': cacheclass.Cache(maxlen=self.config['cache_size']['album']),
+            'bookmark': cacheclass.Cache(maxlen=self.config['cache_size']['bookmark']),
+            'photo': cacheclass.Cache(maxlen=self.config['cache_size']['photo']),
+            'tag': cacheclass.Cache(maxlen=self.config['cache_size']['tag']),
+            'user': cacheclass.Cache(maxlen=self.config['cache_size']['user']),
         }
 
     def _check_version(self):
