@@ -162,7 +162,7 @@ class PDBPhotoMixin:
     def __init__(self):
         super().__init__()
 
-    def _assert_no_such_photo(self, filepath):
+    def assert_no_such_photo_by_path(self, filepath):
         try:
             existing = self.get_photo_by_path(filepath)
         except exceptions.NoSuchPhoto:
@@ -232,7 +232,7 @@ class PDBPhotoMixin:
             raise FileNotFoundError(filepath.absolute_path)
 
         if not allow_duplicates:
-            self._assert_no_such_photo(filepath=filepath)
+            self.assert_no_such_photo_by_path(filepath=filepath)
 
         self.log.debug('New Photo: %s', filepath.absolute_path)
         author_id = self.get_user_id_or_none(author)
@@ -784,9 +784,9 @@ class PDBTagMixin:
     def __init__(self):
         super().__init__()
 
-    def _assert_no_such_tag(self, tagname):
+    def assert_no_such_tag(self, name):
         try:
-            existing_tag = self.get_tag_by_name(tagname)
+            existing_tag = self.get_tag_by_name(name)
         except exceptions.NoSuchTag:
             return
         else:
@@ -861,7 +861,7 @@ class PDBTagMixin:
         Register a new tag and return the Tag object.
         '''
         tagname = self.normalize_tagname(tagname)
-        self._assert_no_such_tag(tagname=tagname)
+        self.assert_no_such_tag(name=tagname)
         description = objects.Tag.normalize_description(description)
 
         self.log.debug('New Tag: %s', tagname)
@@ -897,7 +897,7 @@ class PDBUserMixin:
     def __init__(self):
         super().__init__()
 
-    def _assert_no_such_user(self, username):
+    def assert_no_such_user(self, username):
         try:
             existing_user = self.get_user(username=username)
         except exceptions.NoSuchUser:
@@ -905,11 +905,11 @@ class PDBUserMixin:
         else:
             raise exceptions.UserExists(existing_user)
 
-    def _assert_valid_password(self, password):
+    def assert_valid_password(self, password):
         if len(password) < self.config['user']['min_password_length']:
             raise exceptions.PasswordTooShort(min_length=self.config['user']['min_password_length'])
 
-    def _assert_valid_username(self, username):
+    def assert_valid_username(self, username):
         if len(username) < self.config['user']['min_username_length']:
             raise exceptions.UsernameTooShort(
                 username=username,
@@ -1014,13 +1014,13 @@ class PDBUserMixin:
     @decorators.required_feature('user.new')
     @decorators.transaction
     def register_user(self, username, password, *, commit=True):
-        self._assert_valid_username(username)
+        self.assert_valid_username(username)
 
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
 
-        self._assert_valid_password(password)
-        self._assert_no_such_user(username=username)
+        self.assert_valid_password(password)
+        self.assert_no_such_user(username=username)
 
         self.log.debug('New User: %s', username)
 

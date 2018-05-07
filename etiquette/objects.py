@@ -1001,13 +1001,7 @@ class Photo(ObjectBase):
             raise FileNotFoundError(new_filepath.absolute_path)
 
         if not allow_duplicates:
-            try:
-                existing = self.photodb.get_photo_by_path(new_filepath)
-            except exceptions.NoSuchPhoto:
-                # Good.
-                pass
-            else:
-                raise exceptions.PhotoExists(existing)
+            self.photodb.assert_no_such_photo_by_path(filepath=new_filepath)
 
         data = {
             'id': self.id,
@@ -1228,12 +1222,7 @@ class Tag(ObjectBase, GroupableMixin):
         if synname == self.name:
             raise exceptions.CantSynonymSelf()
 
-        try:
-            existing_tag = self.photodb.get_tag(name=synname)
-        except exceptions.NoSuchTag:
-            pass
-        else:
-            raise exceptions.TagExists(existing_tag)
+        self.photodb.assert_no_such_tag(name=synname)
 
         self.log.debug('New synonym %s of %s', synname, self.name)
 
