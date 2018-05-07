@@ -106,7 +106,7 @@ class PDBAlbumMixin:
         }
         self.sql_insert(table='albums', data=data)
 
-        album = objects.Album(self, data)
+        album = self.get_cached_instance('album', data)
 
         if associated_directory is not None:
             album.add_associated_directory(associated_directory, commit=False)
@@ -151,7 +151,7 @@ class PDBBookmarkMixin:
         }
         self.sql_insert(table='bookmarks', data=data)
 
-        bookmark = objects.Bookmark(self, data)
+        bookmark = self.get_cached_instance('bookmark', data)
         if commit:
             self.log.debug('Committing - new Bookmark')
             self.commit()
@@ -180,7 +180,7 @@ class PDBPhotoMixin:
         photo_row = self.sql_select_one(query, bindings)
         if photo_row is None:
             raise exceptions.NoSuchPhoto(filepath)
-        photo = objects.Photo(self, photo_row)
+        photo = self.get_cached_instance('photo', photo_row)
         return photo
 
     def get_photos_by_id(self, ids):
@@ -196,7 +196,7 @@ class PDBPhotoMixin:
         query = 'SELECT * FROM photos ORDER BY created DESC'
         photo_rows = self.sql_select(query)
         for photo_row in photo_rows:
-            photo = objects.Photo(self, photo_row)
+            photo = self.get_cached_instance('photo', photo_row)
             yield photo
 
             if count is None:
@@ -260,7 +260,7 @@ class PDBPhotoMixin:
         }
         self.sql_insert(table='photos', data=data)
 
-        photo = objects.Photo(self, data)
+        photo = self.get_cached_instance('photo', data)
 
         if do_metadata:
             photo.reload_metadata(commit=False)
@@ -635,7 +635,7 @@ class PDBPhotoMixin:
         generator = self.sql_select(query, bindings)
         photos_received = 0
         for row in generator:
-            photo = objects.Photo(self, row)
+            photo = self.get_cached_instance('photo', row)
 
             if mimetype and photo.simple_mimetype not in mimetype:
                 continue
@@ -827,7 +827,6 @@ class PDBTagMixin:
         except (exceptions.TagTooShort, exceptions.TagTooLong):
             raise exceptions.NoSuchTag(tagname)
 
-        tag_row = None
         while True:
             # Return if it's a toplevel...
             tag_row = self.sql_select_one('SELECT * FROM tags WHERE name == ?', [tagname])
@@ -843,11 +842,7 @@ class PDBTagMixin:
                 raise exceptions.NoSuchTag(tagname)
             tagname = name_row[0]
 
-        tag_id = tag_row[constants.SQL_INDEX['tags']['id']]
-        tag = self.caches['tag'].get(tag_id, fallback=None)
-        if tag is None:
-            tag = objects.Tag(self, tag_row)
-            self.caches['tag'][tag_id] = tag
+        tag = self.get_cached_instance('tag', tag_row)
         return tag
 
     def get_tags(self):
@@ -885,7 +880,7 @@ class PDBTagMixin:
         if commit:
             self.log.debug('Committing - new_tag')
             self.commit()
-        tag = objects.Tag(self, data)
+        tag = self.get_cached_instance('tag', data)
         return tag
 
     def normalize_tagname(self, tagname):
@@ -959,7 +954,7 @@ class PDBUserMixin:
             user_row = self.sql_select_one('SELECT * FROM users WHERE id == ?', [id])
 
         if user_row is not None:
-            return objects.User(self, user_row)
+            return self.get_cached_instance('user', user_row)
         else:
             raise exceptions.NoSuchUser(username or id)
 
@@ -1008,7 +1003,7 @@ class PDBUserMixin:
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
 
-        user = objects.User(self, user_row)
+        user = self.get_cached_instance('user', user_row)
 
         success = bcrypt.checkpw(password, user.password_hash)
         if not success:
@@ -1045,7 +1040,7 @@ class PDBUserMixin:
             self.log.debug('Committing - register user')
             self.commit()
 
-        return objects.User(self, data)
+        return self.get_cached_instance('user', data)
 
 
 class PDBUtilMixin:
@@ -1406,6 +1401,26 @@ class PhotoDB(
             self._cached_frozen_children = tag_export.flat_dict(self.get_tags())
         return self._cached_frozen_children
 
+    def get_cached_instance(self, thing_type, db_row):
+        thing_map = _THING_CLASSES[thing_type]
+
+        thing_table = thing_map['table']
+        thing_class = thing_map['class']
+        thing_cache = self.caches[thing_type]
+        thing_index = constants.SQL_INDEX[thing_table]
+
+        if isinstance(db_row, dict):
+            thing_id = db_row['id']
+        else:
+            thing_id = db_row[thing_index['id']]
+
+        try:
+            thing = thing_cache[thing_id]
+        except KeyError:
+            thing = thing_class(self, db_row)
+            thing_cache[thing_id] = thing
+        return thing
+
     def get_cached_qualname_map(self):
         if self._cached_qualname_map is None:
             self._cached_qualname_map = tag_export.qualified_names(self.get_tags())
@@ -1415,20 +1430,20 @@ class PhotoDB(
         thing_map = _THING_CLASSES[thing_type]
 
         thing_class = thing_map['class']
-        table = thing_map['table']
+        thing_table = thing_map['table']
         group_table = thing_class.group_table
 
-        query = '''
-        SELECT * FROM {table}
+        query = f'''
+        SELECT * FROM {thing_table}
         WHERE NOT EXISTS (
             SELECT 1 FROM {group_table}
-            WHERE memberid == {table}.id
+            WHERE memberid == {thing_table}.id
         )
-        '''.format(table=table, group_table=group_table)
+        '''
 
         rows = self.sql_select(query)
         for row in rows:
-            thing = thing_class(self, row)
+            thing = self.get_cached_instance(thing_type, row)
             yield thing
 
     def get_thing_by_id(self, thing_type, thing_id):
@@ -1460,7 +1475,7 @@ class PhotoDB(
 
         things = self.sql_select(query)
         for thing_row in things:
-            thing = thing_map['class'](self, db_row=thing_row)
+            thing = self.get_cached_instance(thing_type, thing_row)
             yield thing
 
     def get_things_by_id(self, thing_type, thing_ids):
@@ -1487,7 +1502,11 @@ class PhotoDB(
             query = 'SELECT * FROM %s WHERE id IN %s' % (thing_map['table'], qmarks)
             more_things = self.sql_select(query, id_batch)
             for thing_row in more_things:
-                thing = thing_map['class'](self, db_row=thing_row)
+                # Normally we would call `get_cached_instance` instead of
+                # constructing here. But we already know for a fact that this
+                # object is not in the cache because it made it past the
+                # previous loop.
+                thing = thing_class(self, db_row=thing_row)
                 thing_cache[thing.id] = thing
                 yield thing
 
