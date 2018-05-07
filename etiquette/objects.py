@@ -1157,7 +1157,6 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.group_getter = self.photodb.get_tag
         self.group_getter_many = self.photodb.get_tags_by_id
-        self._cached_qualified_name = None
 
     def __eq__(self, other):
         return self.name == other or ObjectBase.__eq__(self, other)
@@ -1207,7 +1206,6 @@ class Tag(ObjectBase, GroupableMixin):
 
     def _uncache(self):
         self.photodb.caches['tag'].remove(self.id)
-        self._cached_qualified_name = None
 
     @decorators.required_feature('tag.edit')
     # GroupableMixin.add_child already has @transaction.
@@ -1379,15 +1377,11 @@ class Tag(ObjectBase, GroupableMixin):
             if len(self.name) > max_len:
                 return self.name[:max_len]
 
-        if self._cached_qualified_name:
-            qualname = self._cached_qualified_name
+        parent = self.get_parent()
+        if parent is None:
+            qualname = self.name
         else:
-            parent = self.get_parent()
-            if parent is None:
-                qualname = self.name
-            else:
-                qualname = parent.qualified_name() + '.' + self.name
-            self._cached_qualified_name = qualname
+            qualname = parent.qualified_name() + '.' + self.name
 
         if max_len is None or len(qualname) <= max_len:
             return qualname
@@ -1441,7 +1435,6 @@ class Tag(ObjectBase, GroupableMixin):
         else:
             raise exceptions.TagExists(new_name)
 
-        self._cached_qualified_name = None
         self.photodb._cached_frozen_children = None
 
         data = {
