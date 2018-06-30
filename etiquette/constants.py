@@ -42,6 +42,7 @@ FILENAME_BADCHARS = '\\/:*?<>|"'
 # Note: Setting user_version pragma in init sequence is safe because it only
 # happens after the out-of-date check occurs, so no chance of accidentally
 # overwriting it.
+
 DATABASE_VERSION = 14
 DB_PRAGMAS = f'''
 PRAGMA cache_size = 10000;
@@ -49,6 +50,7 @@ PRAGMA count_changes = OFF;
 PRAGMA foreign_keys = ON;
 PRAGMA user_version = {DATABASE_VERSION};
 '''
+
 DB_INIT = f'''
 {DB_PRAGMAS}
 
@@ -192,18 +194,18 @@ def _extract_columns(create_table_statement):
     column_names = [c for c in column_names if c.lower() != 'foreign']
     return column_names
 
+def _extract_table_name(create_table_statement):
+        # CREATE TABLE table_name(
+        table_name = create_table_statement.split('(')[0].strip()
+        table_name = table_name.split()[-1]
+        return table_name
+
 def _extract_table_statements(script):
     for statement in script.split(';'):
         if 'create table' not in statement.lower():
             continue
 
         yield statement
-
-def _extract_table_name(create_table_statement):
-        # CREATE TABLE table_name(
-        table_name = create_table_statement.split('(')[0].strip()
-        table_name = table_name.split()[-1]
-        return table_name
 
 def _reverse_index(columns):
     '''
