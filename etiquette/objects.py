@@ -399,9 +399,9 @@ class Album(ObjectBase, GroupableMixin):
     def delete(self, *, delete_children=False, commit=True):
         self.photodb.log.debug('Deleting %s', self)
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
-        self.photodb.sql_delete(table='albums', pairs={'id': self.id})
-        self.photodb.sql_delete(table='album_photo_rel', pairs={'albumid': self.id})
         self.photodb.sql_delete(table='album_associated_directories', pairs={'albumid': self.id})
+        self.photodb.sql_delete(table='album_photo_rel', pairs={'albumid': self.id})
+        self.photodb.sql_delete(table='albums', pairs={'id': self.id})
         self._uncache()
         if commit:
             self.photodb.log.debug('Committing - delete album')
