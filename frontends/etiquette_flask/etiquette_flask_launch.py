@@ -1,3 +1,9 @@
+'''
+This file is the gevent launcher for local / development use.
+
+Simply run it on the command line:
+python etiquette_flask_launch.py [port]
+'''
 import gevent.monkey; gevent.monkey.patch_all()
 
 import logging
