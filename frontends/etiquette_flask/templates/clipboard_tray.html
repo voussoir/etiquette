@@ -7,7 +7,11 @@
     >Clipboard: <span class="clipboard_count">0</span> items</button>
     <div id="clipboard_tray_body" class="hidden">
         <div id="clipboard_tray_toolbox">
-            <a target="_blank" href="/clipboard">Full clipboard</a>
+            <span id="clipboard_tray_toolbox_firstline">
+                <a target="_blank" href="/clipboard">Full clipboard</a>
+                <button id="clear_clipboard_button" class="red_button" onclick="clear_photo_clipboard()">Clear</button>
+            </span>
+            <!-- More elements can be added here by the page. -->
         </div>
         <div id="clipboard_tray_lines">
         </div>
