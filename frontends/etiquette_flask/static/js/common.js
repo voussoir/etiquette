@@ -121,3 +121,15 @@ function html_to_element(html)
     template.innerHTML = html;
     return template.content.firstChild;
 }
+
+function should_prevent_hotkey(event)
+{
+    if (event.target.tagName == "INPUT" && event.target.type == "checkbox")
+    {
+        return false;
+    }
+    else
+    {
+        return INPUT_TYPES.has(event.target.tagName);
+    }
+}

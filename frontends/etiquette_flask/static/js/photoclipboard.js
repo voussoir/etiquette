@@ -47,7 +47,6 @@ function save_photo_clipboard()
     }
 }
 
-
 // Card management /////////////////////////////////////////////////////////////////////////////////
 
 function apply_check(photo_card)
@@ -79,7 +78,7 @@ function apply_check_all()
 
 var _action_select = function(photo_div){photo_clipboard.add(photo_div.dataset.id)}
 var _action_unselect = function(photo_div){photo_clipboard.delete(photo_div.dataset.id)}
-var previous_photo_select;
+var previous_photo_select = null;
 function on_photo_select(event)
 {
     /*
@@ -163,32 +162,6 @@ function unselect_all_photos()
     save_photo_clipboard();
 }
 
-function set_keybinds()
-{
-    window.addEventListener("keydown", function(event)
-    {
-        if (INPUT_TYPES.has(event.target.tagName))
-        {
-            return;
-        }
-        if (event.key == "a" && event.ctrlKey)
-        {
-            select_all_photos();
-            event.preventDefault();
-        }
-    });
-
-    window.addEventListener("keydown", function(event)
-    {
-        if (event.key == "d" && event.ctrlKey)
-        {
-            unselect_all_photos();
-            event.preventDefault();
-        }
-    });
-}
-
-
 // Tray management /////////////////////////////////////////////////////////////////////////////////
 
 function clipboard_tray_collapse()
@@ -208,6 +181,11 @@ function clipboard_tray_collapse_toggle()
     Show or hide the clipboard.
     */
     var tray_body = document.getElementById("clipboard_tray_body");
+    if (!tray_body)
+    {
+        return;
+    }
+
     if (tray_body.classList.contains("hidden") && photo_clipboard.size > 0)
     {
         clipboard_tray_uncollapse();
@@ -272,6 +250,73 @@ function update_clipboard_tray()
             tray_lines.appendChild(clipboard_line);
         }
     }
+}
+
+// Page and event management ///////////////////////////////////////////////////////////////////////
+
+function open_full_clipboard_tab()
+{
+    url = "/clipboard";
+    window.open(url, "full_clipboard");
+}
+
+function set_keybinds()
+{
+    // HOTKEY: Photoclipboard select all
+    window.addEventListener(
+        "keydown",
+        function(event)
+        {
+            if (should_prevent_hotkey(event)) { return; }
+            if (event.key == "a" && event.ctrlKey && !event.shiftKey && !event.altKey)
+            {
+                select_all_photos();
+                event.preventDefault();
+            }
+        }
+    );
+
+    // HOTKEY: Photoclipboard deselect all
+    window.addEventListener(
+        "keydown",
+        function(event)
+        {
+            if (should_prevent_hotkey(event)) { return; }
+            if (event.key == "d" && event.ctrlKey && !event.shiftKey && !event.altKey)
+            {
+                unselect_all_photos();
+                event.preventDefault();
+            }
+        }
+    );
+
+    // HOTKEY: Photoclipboard toggle
+    window.addEventListener(
+        "keydown",
+        function(event)
+        {
+            if (should_prevent_hotkey(event)) { return; }
+            if (event.key == "c" && !event.ctrlKey && !event.shiftKey && !event.altKey)
+            {
+                clipboard_tray_collapse_toggle();
+                event.preventDefault();
+            }
+        }
+    );
+
+    // HOTKEY: Photoclipboard open full clipboard tab
+    window.addEventListener(
+        "keydown",
+        function(event)
+        {
+            if (should_prevent_hotkey(event)) { return; }
+            if (event.key == "x" && event.altKey && !event.ctrlKey && !event.shiftKey)
+            {
+                open_full_clipboard_tab();
+                event.preventDefault();
+            }
+        }
+    );
 }
 
 function update_clipboard_count()
