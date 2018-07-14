@@ -9,6 +9,8 @@ import string
 import traceback
 import warnings
 
+# FFmpeg ###########################################################################################
+
 FFMPEG_NOT_FOUND = '''
 ffmpeg or ffprobe not found.
 Add them to your PATH or use symlinks such that they appear in:
@@ -37,11 +39,7 @@ def _load_ffmpeg():
 
 ffmpeg = _load_ffmpeg()
 
-FILENAME_BADCHARS = '\\/:*?<>|"'
-
-# Note: Setting user_version pragma in init sequence is safe because it only
-# happens after the out-of-date check occurs, so no chance of accidentally
-# overwriting it.
+# Database #########################################################################################
 
 DATABASE_VERSION = 14
 DB_PRAGMAS = f'''
@@ -53,7 +51,6 @@ PRAGMA user_version = {DATABASE_VERSION};
 
 DB_INIT = f'''
 {DB_PRAGMAS}
-
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users(
     id TEXT PRIMARY KEY NOT NULL,
@@ -186,20 +183,6 @@ CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
 ----------------------------------------------------------------------------------------------------
 '''
 
-def _extract_columns(create_table_statement):
-    column_names = create_table_statement.split('(')[1].rsplit(')', 1)[0]
-    column_names = column_names.split(',')
-    column_names = [x.strip() for x in column_names]
-    column_names = [x.split(' ')[0] for x in column_names]
-    column_names = [c for c in column_names if c.lower() != 'foreign']
-    return column_names
-
-def _extract_table_name(create_table_statement):
-        # CREATE TABLE table_name(
-        table_name = create_table_statement.split('(')[0].strip()
-        table_name = table_name.split()[-1]
-        return table_name
-
 def _extract_table_statements(script):
     for statement in script.split(';'):
         if 'create table' not in statement.lower():
@@ -207,21 +190,37 @@ def _extract_table_statements(script):
 
         yield statement
 
+def _extract_table_name(create_table_statement):
+    # CREATE TABLE table_name(...)
+    table_name = create_table_statement.split('(')[0].strip()
+    table_name = table_name.split()[-1]
+    return table_name
+
+def _extract_columns_from_table(create_table_statement):
+    # CREATE TABLE table_name(column_name TYPE MODIFIERS, ...)
+    column_names = create_table_statement.split('(')[1].rsplit(')', 1)[0]
+    column_names = column_names.split(',')
+    column_names = [x.strip() for x in column_names]
+    column_names = [x.split(' ')[0] for x in column_names]
+    column_names = [c for c in column_names if c.lower() != 'foreign']
+    return column_names
+
 def _reverse_index(columns):
     '''
-    A dictionary where the key is the item and the value is the index.
-    Used to convert a stringy name into the correct number to then index into
-    an sql row.
+    Given an iterable, return a dictionary where the key is the item and the
+    value is the index. Used to convert a stringy name into the correct number
+    to then index into an sql row.
     ['test', 'toast'] -> {'test': 0, 'toast': 1}
     '''
     return {column: index for (index, column) in enumerate(columns)}
 
-SQL_COLUMNS = {
-    _extract_table_name(table): _extract_columns(table)
-    for table in _extract_table_statements(DB_INIT)
-}
-SQL_INDEX = {table: _reverse_index(columns) for (table, columns) in SQL_COLUMNS.items()}
+SQL_COLUMNS = {}
+for table_statement in _extract_table_statements(DB_INIT):
+    table_name = _extract_table_name(table_statement)
+    columns = _extract_columns_from_table(table_statement)
+    SQL_COLUMNS[table_name] = columns
 
+SQL_INDEX = {table: _reverse_index(columns) for (table, columns) in SQL_COLUMNS.items()}
 
 ALLOWED_ORDERBY_COLUMNS = [
     'extension',
@@ -236,8 +235,8 @@ ALLOWED_ORDERBY_COLUMNS = [
     'random',
 ]
 
+# Errors and warnings ##############################################################################
 
-# Errors and warnings
 WARNING_MINMAX_INVALID = 'Field "{field}": "{value}" is not a valid request. Ignored.'
 WARNING_ORDERBY_INVALID = 'Invalid orderby request "{request}". Ignored.'
 WARNING_ORDERBY_BADCOL = '"{column}" is not a sorting option. Ignored.'
@@ -245,7 +244,9 @@ WARNING_ORDERBY_BADDIRECTION = '''
 You can\'t order "{column}" by "{direction}". Defaulting to descending.
 '''
 
-# Operational info
+# Janitorial stuff #################################################################################
+
+FILENAME_BADCHARS = '\\/:*?<>|"'
 TRUTHYSTRING_TRUE = {s.lower() for s in ('1', 'true', 't', 'yes', 'y', 'on')}
 TRUTHYSTRING_NONE = {s.lower() for s in ('null', 'none')}
 
@@ -268,6 +269,8 @@ ADDITIONAL_MIMETYPES = {
     'rst': 'text/plain',
     'srt': 'text/plain',
 }
+
+# Photodb ##########################################################################################
 
 DEFAULT_DATADIR = '.\\_etiquette'
 DEFAULT_DBNAME = 'phototagger.db'
