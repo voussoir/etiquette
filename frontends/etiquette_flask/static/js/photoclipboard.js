@@ -260,65 +260,6 @@ function open_full_clipboard_tab()
     window.open(url, "full_clipboard");
 }
 
-function set_keybinds()
-{
-    // HOTKEY: Photoclipboard select all
-    window.addEventListener(
-        "keydown",
-        function(event)
-        {
-            if (should_prevent_hotkey(event)) { return; }
-            if (event.key == "a" && event.ctrlKey && !event.shiftKey && !event.altKey)
-            {
-                select_all_photos();
-                event.preventDefault();
-            }
-        }
-    );
-
-    // HOTKEY: Photoclipboard deselect all
-    window.addEventListener(
-        "keydown",
-        function(event)
-        {
-            if (should_prevent_hotkey(event)) { return; }
-            if (event.key == "d" && event.ctrlKey && !event.shiftKey && !event.altKey)
-            {
-                unselect_all_photos();
-                event.preventDefault();
-            }
-        }
-    );
-
-    // HOTKEY: Photoclipboard toggle
-    window.addEventListener(
-        "keydown",
-        function(event)
-        {
-            if (should_prevent_hotkey(event)) { return; }
-            if (event.key == "c" && !event.ctrlKey && !event.shiftKey && !event.altKey)
-            {
-                clipboard_tray_collapse_toggle();
-                event.preventDefault();
-            }
-        }
-    );
-
-    // HOTKEY: Photoclipboard open full clipboard tab
-    window.addEventListener(
-        "keydown",
-        function(event)
-        {
-            if (should_prevent_hotkey(event)) { return; }
-            if (event.key == "x" && event.altKey && !event.ctrlKey && !event.shiftKey)
-            {
-                open_full_clipboard_tab();
-                event.preventDefault();
-            }
-        }
-    );
-}
-
 function update_clipboard_count()
 {
     var elements = document.getElementsByClassName("clipboard_count");
@@ -327,7 +268,7 @@ function update_clipboard_count()
         elements[index].innerText = photo_clipboard.size;
     }
 }
-function on_storage()
+function on_storage_event()
 {
     /*
     Receive storage events from other tabs and update our state to match.
@@ -335,16 +276,21 @@ function on_storage()
     load_photo_clipboard();
     update_pagestate();
 }
+
 function update_pagestate()
 {
     update_clipboard_count();
     update_clipboard_tray();
     apply_check_all();
 }
+
 function on_pageload()
 {
-    window.addEventListener("storage", on_storage, false);
-    set_keybinds();
+    window.addEventListener("storage", on_storage_event, false);
+    register_hotkey("a", 1, 0, 0, select_all_photos, "Select all photos.");
+    register_hotkey("d", 1, 0, 0, unselect_all_photos, "Deselect all photos.");
+    register_hotkey("c", 0, 0, 0, clipboard_tray_collapse_toggle, "Toggle clipboard tray.");
+    register_hotkey("c", 0, 1, 0, open_full_clipboard_tab, "Open full clipboard page.");
     load_photo_clipboard();
     update_pagestate();
 }
