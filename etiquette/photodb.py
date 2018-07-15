@@ -1083,9 +1083,13 @@ class PDBUtilMixin:
                 new_photo_ratelimit = ratelimiter.Ratelimiter(allowance=1, period=new_photo_ratelimit)
             return new_photo_ratelimit
 
-        def create_or_fetch_photos(files):
+        def create_or_fetch_photos(filepaths, new_photo_kwargs):
+            '''
+            Given an iterable of filepaths, find the corresponding Photo object
+            if it exists, otherwise create it and then return it.
+            '''
             photos = []
-            for filepath in files:
+            for filepath in filepaths:
                 try:
                     photo = self.get_photo_by_path(filepath)
                 except exceptions.NoSuchPhoto:
@@ -1137,7 +1141,7 @@ class PDBUtilMixin:
         )
 
         for (current_directory, subdirectories, files) in walk_generator:
-            photos = create_or_fetch_photos(files)
+            photos = create_or_fetch_photos(files, new_photo_kwargs=new_photo_kwargs)
 
             if not make_albums:
                 continue
