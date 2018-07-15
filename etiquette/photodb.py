@@ -675,17 +675,6 @@ class PDBSQLMixin:
         self.on_commit_queue = []
         self.savepoints = []
 
-    def close(self):
-        # Wrapped in hasattr because if the object fails __init__, Python will
-        # still call __del__ and thus close(), even though the attributes
-        # we're trying to clean up never got set.
-        if hasattr(self, 'sql'):
-            self.sql.close()
-
-        if hasattr(self, 'ephemeral'):
-            if self.ephemeral:
-                self.ephemeral_directory.cleanup()
-
     def commit(self):
         while len(self.on_commit_queue) > 0:
             task = self.on_commit_queue.pop()
@@ -1362,6 +1351,16 @@ class PhotoDB(
     def _uncache(self):
         self._cached_frozen_children = None
         self._cached_qualname_map = None
+
+    def close(self):
+        # Wrapped in hasattr because if the object fails __init__, Python will
+        # still call __del__ and thus close(), even though the attributes
+        # we're trying to clean up never got set.
+        if hasattr(self, 'sql'):
+            self.sql.close()
+
+        if getattr(self, 'ephemeral', False):
+            self.ephemeral_directory.cleanup()
 
     def generate_id(self, table):
         '''
