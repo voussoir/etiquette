@@ -1160,7 +1160,7 @@ class PDBUtilMixin:
         else:
             return None
 
-    def easybake(self, ebstring, author=None):
+    def easybake(self, ebstring, author=None, *, commit=True):
         '''
         Easily create tags, groups, and synonyms with a string like
         "group1.group2.tag+synonym"
@@ -1170,70 +1170,43 @@ class PDBUtilMixin:
         output_notes = []
 
         def create_or_get(name):
-            #print('cog', name)
             try:
                 item = self.get_tag(name=name)
-                note = ('existing_tag', item.qualified_name())
+                note = ('existing_tag', item.name)
             except exceptions.NoSuchTag:
                 item = self.new_tag(name, author=author, commit=False)
-                note = ('new_tag', item.qualified_name())
+                note = ('new_tag', item.name)
             output_notes.append(note)
             return item
 
-        ebstring = ebstring.strip()
-        ebstring = ebstring.strip('.+=')
-        if ebstring == '':
-            raise exceptions.EasyBakeError('No tag supplied')
-
-        if '=' in ebstring and '+' in ebstring:
-            raise exceptions.EasyBakeError('Cannot rename and assign snynonym at once')
-
-        rename_parts = ebstring.split('=')
-        if len(rename_parts) == 2:
-            (ebstring, rename_to) = rename_parts
-        elif len(rename_parts) == 1:
-            ebstring = rename_parts[0]
-            rename_to = None
-        else:
-            raise exceptions.EasyBakeError('Too many equals signs')
-
-        create_parts = ebstring.split('+')
-        if len(create_parts) == 2:
-            (tag, synonym) = create_parts
-        elif len(create_parts) == 1:
-            tag = create_parts[0]
-            synonym = None
-        else:
-            raise exceptions.EasyBakeError('Too many plus signs')
-
-        if not tag:
-            raise exceptions.EasyBakeError('No tag supplied')
+        (tagname, synonym, rename_to) = helpers.split_easybake_string(ebstring)
 
         if rename_to:
-            tag = self.get_tag(name=tag)
+            tag = self.get_tag(name=tagname)
             old_name = tag.name
             tag.rename(rename_to)
-            note = ('rename', '%s=%s' % (old_name, tag.name))
+            note = ('rename', f'{old_name}={tag.name}')
             output_notes.append(note)
         else:
-            tag_parts = tag.split('.')
+            tag_parts = tagname.split('.')
             tags = [create_or_get(t) for t in tag_parts]
             for (higher, lower) in zip(tags, tags[1:]):
                 try:
                     lower.join_group(higher, commit=False)
-                    note = ('join_group', '%s.%s' % (higher.name, lower.name))
+                    note = ('join_group', f'{higher.name}.{lower.name}')
                     output_notes.append(note)
                 except exceptions.GroupExists:
                     pass
             tag = tags[-1]
 
-        self.log.debug('Committing - easybake')
-        self.commit()
-
         if synonym:
             synonym = tag.add_synonym(synonym)
-            note = ('new_synonym', '%s+%s' % (tag.name, synonym))
+            note = ('new_synonym', f'{tag.name}+{synonym}')
             output_notes.append(note)
+
+        if commit:
+            self.log.debug('Committing - easybake')
+            self.commit()
         return output_notes
 
 

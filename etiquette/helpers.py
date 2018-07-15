@@ -400,6 +400,50 @@ def seconds_to_hms(seconds):
     hms = ':'.join('%02d' % part for part in parts)
     return hms
 
+def split_easybake_string(ebstring):
+    '''
+    Given an easybake string, return (tagname, synonym, rename_to), where
+    tagname may be a full qualified name, and at least one of
+    synonym or rename_to will be None since both are not posible at once.
+
+    'languages.python' -> ('languages.python', None, None)
+    'languages.python+py' -> ('languages.python', 'py', None)
+    'languages.python=bestlang' -> ('languages.python', None, 'bestlang')
+    '''
+    ebstring = ebstring.strip()
+    ebstring = ebstring.strip('.+=')
+
+    if ebstring == '':
+        raise exceptions.EasyBakeError('No tag supplied')
+
+    if '=' in ebstring and '+' in ebstring:
+        raise exceptions.EasyBakeError('Cannot rename and assign snynonym at once')
+
+    rename_parts = ebstring.split('=')
+    if len(rename_parts) > 2:
+        raise exceptions.EasyBakeError('Too many equals signs')
+
+    if len(rename_parts) == 2:
+        (ebstring, rename_to) = rename_parts
+
+    elif len(rename_parts) == 1:
+        (ebstring, rename_to) = (rename_parts[0], None)
+
+    synonym_parts = ebstring.split('+')
+    if len(synonym_parts) > 2:
+        raise exceptions.EasyBakeError('Too many plus signs')
+
+    if len(synonym_parts) == 2:
+        (tagname, synonym) = synonym_parts
+
+    elif len(synonym_parts) == 1:
+        (tagname, synonym) = (synonym_parts[0], None)
+
+    if not tagname:
+        raise exceptions.EasyBakeError('No tag supplied')
+
+    return (tagname, synonym, rename_to)
+
 def sql_listify(items):
     '''
     Given a list of strings, return a string in the form of an SQL list.
