@@ -53,7 +53,7 @@ class ObjectBase:
             return None
 
         if not isinstance(author_id, str):
-            raise TypeError('author_id must be string, not %s' % type(author_id))
+            raise TypeError(f'Author ID must be string, not {type(author_id)}.')
 
         author_id = author_id.strip()
         if author_id == '':
@@ -167,7 +167,7 @@ class GroupableMixin:
 
     def get_children(self):
         child_rows = self.photodb.sql_select(
-            'SELECT memberid FROM %s WHERE parentid == ?' % self.group_table,
+            f'SELECT memberid FROM {self.group_table} WHERE parentid == ?',
             [self.id]
         )
         child_ids = [row[0] for row in child_rows]
@@ -313,7 +313,7 @@ class Album(ObjectBase, GroupableMixin):
         '''
         filepath = pathclass.Path(filepath)
         if not filepath.is_dir:
-            raise ValueError('%s is not a directory' % filepath)
+            raise ValueError(f'{filepath} is not a directory')
 
         try:
             existing = self.photodb.get_album_by_path(filepath)
@@ -476,7 +476,7 @@ class Album(ObjectBase, GroupableMixin):
 
     def has_photo(self, photo):
         if not isinstance(photo, Photo):
-            raise TypeError('`photo` must be of type %s' % Photo)
+            raise TypeError(f'`photo` must be of type {Photo}, not {type(photo)}.')
 
         rel_row = self.photodb.sql_select_one(
             'SELECT 1 FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
@@ -586,7 +586,7 @@ class Bookmark(ObjectBase):
             return ''
 
         if not isinstance(title, str):
-            raise TypeError('Title must be string, not %s' % type(title))
+            raise TypeError(f'Title must be string, not {type(title)}')
 
         title = title.strip()
         for whitespace in string.whitespace:
@@ -600,12 +600,12 @@ class Bookmark(ObjectBase):
             return ''
 
         if not isinstance(url, str):
-            raise TypeError('URL must be string, not %s' % type(url))
+            raise TypeError(f'URL must be string, not {type(url)}')
 
         url = url.strip()
 
         if not url:
-            raise ValueError('Invalid URL "%s"' % url)
+            raise ValueError(f'Invalid URL "{url}"')
 
         return url
 
@@ -721,15 +721,13 @@ class Photo(ObjectBase):
         # keep our current one.
         existing = self.has_tag(tag, check_children=True)
         if existing:
-            message = f'Preferring existing {existing} over {tag}'
-            self.photodb.log.debug(message)
+            self.photodb.log.debug(f'Preferring existing {existing} over {tag}')
             return existing
 
         # If the new tag is more specific, remove our current one for it.
         for parent in tag.walk_parents():
             if self.has_tag(parent, check_children=False):
-                message = f'Preferring new {tag} over {parent}'
-                self.photodb.log.debug(message)
+                self.photodb.log.debug(f'Preferring new {tag} over {parent}')
                 self.remove_tag(parent, commit=False)
 
         self.photodb.log.debug('Applying %s to %s', tag, self)
@@ -898,7 +896,7 @@ class Photo(ObjectBase):
         tag_by_id = {t.id: t for t in tag_options}
         tag_option_ids = helpers.sql_listify(tag_by_id)
         rel_row = self.photodb.sql_select_one(
-            'SELECT tagid FROM photo_tag_rel WHERE photoid == ? AND tagid IN %s' % tag_option_ids,
+            f'SELECT tagid FROM photo_tag_rel WHERE photoid == ? AND tagid IN {tag_option_ids}',
             [self.id]
         )
 
@@ -1123,7 +1121,7 @@ class Photo(ObjectBase):
             cleaned = helpers.remove_path_badchars(new_filename)
             cleaned = cleaned.strip()
             if not cleaned:
-                raise ValueError('"%s" is not valid.' % new_filename)
+                raise ValueError(f'"{new_filename}" is not valid.')
             new_filename = cleaned
 
         data = {
@@ -1166,12 +1164,10 @@ class Tag(ObjectBase, GroupableMixin):
         return hash(self.name)
 
     def __repr__(self):
-        rep = f'Tag:{self.id}:{self.name}'
-        return rep
+        return f'Tag:{self.id}:{self.name}'
 
     def __str__(self):
-        rep = f'Tag:{self.name}'
-        return rep
+        return f'Tag:{self.name}'
 
     @staticmethod
     def normalize_description(description):
@@ -1179,7 +1175,7 @@ class Tag(ObjectBase, GroupableMixin):
             return ''
 
         if not isinstance(description, str):
-            raise TypeError('Description must be string, not %s' % type(description))
+            raise TypeError(f'Description must be string, not {type(description)}')
 
         description = description.strip()
 
@@ -1290,12 +1286,12 @@ class Tag(ObjectBase, GroupableMixin):
 
         # For those photos that only had the syn, simply replace with master.
         if replace_photoids:
-            query = '''
+            query = f'''
             UPDATE photo_tag_rel
             SET tagid = ?
             WHERE tagid == ?
-            AND photoid IN %s
-            ''' % helpers.sql_listify(replace_photoids)
+            AND photoid IN {helpers.sql_listify(replace_photoids)}
+            '''
             bindings = [mastertag.id, self.id]
             self.photodb.sql_execute(query, bindings)
 
@@ -1484,12 +1480,10 @@ class User(ObjectBase):
         self._display_name = self.normalize_display_name(db_row['display_name'])
 
     def __repr__(self):
-        rep = f'User:{self.id}:{self.username}'
-        return rep
+        return f'User:{self.id}:{self.username}'
 
     def __str__(self):
-        rep = f'User:{self.username}'
-        return rep
+        return f'User:{self.username}'
 
     @staticmethod
     def normalize_display_name(display_name, max_length=None):
@@ -1497,7 +1491,7 @@ class User(ObjectBase):
             return None
 
         if not isinstance(display_name, str):
-            raise TypeError('Display Name must be string, not %s' % type(display_name))
+            raise TypeError(f'Display name must be string, not {type(display_name)}.')
 
         display_name = display_name.strip()
 
@@ -1535,6 +1529,7 @@ class User(ObjectBase):
         if commit:
             self.photodb.log.debug('Committing - set display name')
             self.photodb.commit()
+
 
 class WarningBag:
     def __init__(self):

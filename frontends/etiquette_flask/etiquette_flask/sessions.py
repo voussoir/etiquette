@@ -8,6 +8,7 @@ import etiquette
 
 from voussoirkit import cacheclass
 
+
 SESSION_MAX_AGE = 86400
 REQUEST_TYPES = (flask.Request, werkzeug.wrappers.Request, werkzeug.local.LocalProxy)
 
@@ -109,9 +110,9 @@ class Session:
 
     def __repr__(self):
         if self.user:
-            return 'Session %s for user %s' % (self.token, self.user)
+            return f'Session {self.token} for user {self.user}'
         else:
-            return 'Session %s for anonymous' % self.token
+            return f'Session {self.token} for anonymous'
 
     def expired(self):
         now = etiquette.helpers.now()

@@ -627,7 +627,7 @@ class PDBPhotoMixin:
 
         query = ' '.join(query)
 
-        query = '%s\n%s\n%s' % ('-' * 80, query, '-' * 80)
+        query = f'{"-" * 80}\n{query}\n{"-" * 80}'
 
         print(query, bindings)
         #explain = self.sql_execute('EXPLAIN QUERY PLAN ' + query, bindings)
@@ -1474,7 +1474,8 @@ class PhotoDB(
             id_batch = ids_needed[:999]
             ids_needed = ids_needed[999:]
 
-            qmarks = '(%s)' % ','.join('?' * len(id_batch))
+            qmarks = ','.join('?' * len(id_batch))
+            qmarks = '(%s)' % qmarks
             query = 'SELECT * FROM %s WHERE id IN %s' % (thing_map['table'], qmarks)
             more_things = self.sql_select(query, id_batch)
             for thing_row in more_things:

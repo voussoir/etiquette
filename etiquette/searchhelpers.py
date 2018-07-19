@@ -340,7 +340,7 @@ def normalize_positive_integer(number):
     number = int(number)
 
     if number < 0:
-        raise ValueError('%d must be >= 0.' % number)
+        raise ValueError(f'{number} must be >= 0.')
 
     return number
 
@@ -434,7 +434,7 @@ def tag_expression_tree_builder(
     except expressionmatch.NoTokens:
         return None
     except Exception as exc:
-        warning_bag.add('Bad expression "%s"' % tag_expression)
+        warning_bag.add(f'Bad expression "{tag_expression}"')
         return None
 
     for node in expression_tree.walk_leaves():

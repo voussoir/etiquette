@@ -67,6 +67,6 @@ class CacheFile:
     def get_headers(self):
         headers = {
             'ETag': self.get_etag(),
-            'Cache-Control': 'max-age=%d' % self.max_age,
+            'Cache-Control': f'max-age={self.max_age}',
         }
         return headers

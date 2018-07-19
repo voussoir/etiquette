@@ -25,9 +25,10 @@ def album_zip_directories(album, recursive=True):
     '''
     directories = {}
     if album.title:
-        root_folder = 'album %s - %s' % (album.id, remove_path_badchars(album.title))
+        title = remove_path_badchars(album.title)
+        root_folder = f'album {album.id} - {title}'
     else:
-        root_folder = 'album %s' % album.id
+        root_folder = f'album {album.id}'
 
     directories[album] = root_folder
     if recursive:
@@ -54,7 +55,7 @@ def album_zip_filenames(album, recursive=True):
             filepath = photo.real_path.absolute_path
             if filepath in arcnames:
                 continue
-            photo_name = '%s - %s' % (photo.id, photo.basename)
+            photo_name = f'{photo.id} - {photo.basename}'
             arcnames[filepath] = os.path.join(directory, photo_name)
 
     return arcnames
@@ -128,10 +129,12 @@ def dict_to_params(d):
     '''
     if not d:
         return ''
-    params = ['%s=%s' % (k, v) for (k, v) in d.items() if v]
+
+    params = [f'{key}={value}' for (key, value) in d.items() if value]
     params = '&'.join(params)
     if params:
         params = '?' + params
+
     return params
 
 def fit_into_bounds(image_width, image_height, frame_width, frame_height):
@@ -348,7 +351,7 @@ def recursive_dict_keys(d):
     keys = set(d.keys())
     for (key, value) in d.items():
         if isinstance(value, dict):
-            subkeys = {'%s\\%s' % (key, subkey) for subkey in recursive_dict_keys(value)}
+            subkeys = {f'{key}\\{subkey}' for subkey in recursive_dict_keys(value)}
             keys.update(subkeys)
     return keys
 
@@ -397,7 +400,7 @@ def seconds_to_hms(seconds):
     if minutes:
         parts.append(minutes)
     parts.append(seconds)
-    hms = ':'.join('%02d' % part for part in parts)
+    hms = ':'.join(f'{part:02d}' for part in parts)
     return hms
 
 def split_easybake_string(ebstring):
@@ -450,7 +453,8 @@ def sql_listify(items):
 
     ['hi', 'ho', 'hey'] -> '("hi", "ho", "hey")'
     '''
-    return '(%s)' % ', '.join('"%s"' % item for item in items)
+    items = ', '.join(f'"{item}"' for item in items)
+    return '(%s)' % items
 
 def truthystring(s):
     '''
@@ -466,7 +470,7 @@ def truthystring(s):
         return bool(s)
 
     if not isinstance(s, str):
-        raise TypeError('Unsupported type %s' % type(s))
+        raise TypeError(f'Unsupported type {type(s)}')
 
     s = s.lower()
     if s in constants.TRUTHYSTRING_TRUE:

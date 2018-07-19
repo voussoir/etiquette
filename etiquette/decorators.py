@@ -53,7 +53,7 @@ def not_implemented(function):
     '''
     Decorator to remember what needs doing.
     '''
-    warnings.warn('%s is not implemented' % function.__name__)
+    warnings.warn(f'{function.__name__} is not implemented')
     return function
 
 def time_me(function):
@@ -66,7 +66,7 @@ def time_me(function):
         result = function(*args, **kwargs)
         end = time.time()
         duration = end - start
-        print('%s: %0.8f' % (function.__name__, duration))
+        print(f'{function.__name__}: {duration:0.8f}')
         return result
     return timed_function
 
