@@ -5,9 +5,9 @@ import zipstream
 
 import etiquette
 
+from .. import common
 from .. import decorators
 from .. import jsonify
-from .. import common
 
 site = common.site
 session_manager = common.session_manager
