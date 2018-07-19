@@ -284,7 +284,7 @@ DEFAULT_CONFIGURATION = {
         'album': 1000,
         'bookmark': 100,
         'photo': 100000,
-        'tag': 1000,
+        'tag': 10000,
         'user': 200,
     },
 
