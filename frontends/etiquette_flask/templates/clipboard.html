@@ -311,19 +311,29 @@ function searchhidden_callback(response)
     }
     create_message_bubble(message_area, message_positivity, message_text, 8000);
 }
-function submit_set_searchhidden()
+function submit_set_searchhidden(callback)
 {
+    if (photo_clipboard.size == 0)
+        {return;}
+
     var url = "/batch/photos/set_searchhidden";
     var data = new FormData();
-    data.append("photo_ids", Array.from(photo_clipboard).join(","));
-    post(url, data, searchhidden_callback);
+    var photo_ids = Array.from(photo_clipboard).join(",");
+
+    data.append("photo_ids", photo_ids);
+    post(url, data, callback);
 }
-function submit_unset_searchhidden()
+function submit_unset_searchhidden(callback)
 {
+    if (photo_clipboard.size == 0)
+        {return;}
+
     var url = "/batch/photos/unset_searchhidden";
     var data = new FormData();
-    data.append("photo_ids", Array.from(photo_clipboard).join(","));
-    post(url, data, searchhidden_callback);
+    var photo_ids = Array.from(photo_clipboard).join(",");
+
+    data.append("photo_ids", photo_ids);
+    post(url, data, callback);
 }
 </script>
 </html>

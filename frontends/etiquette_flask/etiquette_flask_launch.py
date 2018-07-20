@@ -13,7 +13,6 @@ handler.setFormatter(logging.Formatter(log_format, style='{'))
 logging.getLogger().addHandler(handler)
 
 import gevent.pywsgi
-import gevent.wsgi
 import argparse
 import sys
 

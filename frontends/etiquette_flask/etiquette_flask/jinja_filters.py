@@ -1,7 +1,10 @@
-import etiquette
+import datetime
 import jinja2.filters
 
+import etiquette
+
 import voussoirkit.bytestring
+
 
 def bytestring(x):
     try:
@@ -15,6 +18,16 @@ def file_link(photo, short=False):
     basename = jinja2.filters.do_urlencode(photo.basename)
     return f'/file/{photo.id}/{basename}'
 
-def sort_by_qualname(tags):
-    tags = sorted(tags, key=lambda x: x.qualified_name())
+def sort_tags(tags):
+    tags = sorted(tags, key=lambda x: x.name)
     return tags
+
+def timestamp_to_8601(timestamp):
+    return datetime.datetime.utcfromtimestamp(timestamp).isoformat(' ') + ' UTC'
+
+def timestamp_to_string(timestamp, format):
+    date = datetime.datetime.utcfromtimestamp(timestamp)
+    return date.strftime(format)
+
+def timestamp_to_naturaldate(timestamp):
+    return timestamp_to_string(timestamp, '%B %d, %Y')

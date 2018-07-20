@@ -12,12 +12,8 @@ def album(a, minimal=False):
     }
     if not minimal:
         j['photos'] = [photo(p) for p in a.get_photos()]
-        parent = a.get_parent()
-        if parent is not None:
-            j['parent'] = album(parent, minimal=True)
-        else:
-            j['parent'] = None
-        j['sub_albums'] = [child.id for child in a.get_children()]
+        j['parents'] = [album(p, minimal=True) for p in a.get_parents()]
+        j['sub_albums'] = [album(c, minimal=True) for c in a.get_children()]
 
     return j
 
@@ -74,7 +70,7 @@ def tag(t, include_synonyms=False, minimal=False):
     if not minimal:
         j['author'] = user_or_none(t.get_author())
         j['description'] = t.description
-        j['qualified_name'] = t.qualified_name()
+        j['children'] = [tag(c, minimal=True) for c in t.get_children()]
 
     if include_synonyms:
         j['synonyms'] = list(t.get_synonyms())
@@ -85,6 +81,7 @@ def user(u):
         'id': u.id,
         'username': u.username,
         'created': u.created,
+        'display_name': u.display_name,
     }
     return j
 

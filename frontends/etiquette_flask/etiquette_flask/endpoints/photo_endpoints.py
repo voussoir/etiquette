@@ -312,7 +312,7 @@ def get_search_core():
     author_helper = lambda users: ', '.join(user.username for user in users) if users else None
     search_kwargs['author'] = author_helper(search_kwargs['author'])
 
-    tagname_helper = lambda tags: [tag.qualified_name() for tag in tags] if tags else None
+    tagname_helper = lambda tags: [tag.name for tag in tags] if tags else None
     search_kwargs['tag_musts'] = tagname_helper(search_kwargs['tag_musts'])
     search_kwargs['tag_mays'] = tagname_helper(search_kwargs['tag_mays'])
     search_kwargs['tag_forbids'] = tagname_helper(search_kwargs['tag_forbids'])
@@ -331,7 +331,7 @@ def get_search_core():
     for photo in photos:
         for tag in photo.get_tags():
             total_tags.add(tag)
-    total_tags = sorted(total_tags, key=lambda t: t.qualified_name())
+    total_tags = sorted(total_tags, key=lambda t: t.name)
 
     # PREV-NEXT PAGE URLS
     offset = search_kwargs['offset'] or 0
@@ -371,14 +371,14 @@ def get_search_core():
 def get_search_html():
     search_results = get_search_core()
     search_kwargs = search_results['search_kwargs']
-    qualname_map = common.P.get_cached_qualname_map()
+    all_tags = common.P.get_all_tag_names()
     session = session_manager.get(request)
     response = flask.render_template(
         'search.html',
+        all_tags=json.dumps(all_tags),
         next_page_url=search_results['next_page_url'],
         prev_page_url=search_results['prev_page_url'],
         photos=search_results['photos'],
-        qualname_map=json.dumps(qualname_map),
         search_kwargs=search_kwargs,
         session=session,
         total_tags=search_results['total_tags'],

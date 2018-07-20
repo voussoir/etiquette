@@ -100,7 +100,7 @@ body
 <body>
 {{header.make_header(session=session)}}
 <div id="left">
-    {% if specific_tag is not none %}
+    {% if specific_tag %}
         <h2>
             <span
             id="name_text"
@@ -118,23 +118,31 @@ body
         >
             {{-specific_tag.description-}}
         </pre>
+
+    <ul>
+    {% for ancestor in specific_tag.get_parents() %}
+    <li>
+        {{tag_object.tag_object(ancestor, innertext='(?)', link='info')}}
+        {{tag_object.tag_object(ancestor, innertext=ancestor.name + '.' + specific_tag.name, link=none, with_alt_description=True)}}
+    </li>
+    {% endfor %}
+    </ul>
     {% endif %}
     <ul>
-        {% for tag in tags %}
-        {% set qualified_name = tag.qualified_name() %}
+        {% for (qualified_name, tag) in tags %}
         <li>
             {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
-            {{tag_object.tag_object(tag, link='search', qualified_name=True, with_alt_qualified_name=False)}}<!--
-            --><button class="remove_tag_button red_button" onclick="delete_tag('{{tag.name}}', receive_callback);"></button>
+            {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)}}<!--
+            --><button class="remove_tag_button red_button" onclick="delete_tag('{{qualified_name}}', receive_callback);"></button>
         </li>
         {% if include_synonyms %}
-            {% for synonym in tag.get_synonyms() %}
-            <li>
-                {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
-                {{tag_object.tag_object(tag, innertext=qualified_name + '+' + synonym, link='search')}}<!--
-                --><button class="remove_tag_button red_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
-            </li>
-            {% endfor %}
+        {% for synonym in tag.get_synonyms() %}
+        <li>
+            {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
+            {{tag_object.tag_object(tag, link='search', innertext=qualified_name + '+' + synonym)}}<!--
+            --><button class="remove_tag_button red_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
+        </li>
+        {% endfor %}
         {% endif %}
         {% endfor %}
     </ul>
@@ -223,6 +231,9 @@ function receive_callback(response)
 
             else if (action == "delete_synonym")
             {message_text = "Deleted synonym " + response["synonym"];}
+
+            else if (action == "unlink_tag")
+            {message_text = "Unlinked tags " + tagname;}
 
         }
         create_message_bubble(message_area, message_positivity, message_text, 8000);

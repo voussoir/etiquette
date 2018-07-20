@@ -17,6 +17,18 @@ session_manager = common.session_manager
 def get_tags_specific_redirect(specific_tag):
     return flask.redirect(request.url.replace('/tags/', '/tag/'))
 
+@site.route('/tagid/<tag_id>')
+@site.route('/tagid/<tag_id>.json')
+def get_tag_id_redirect(tag_id):
+    if request.url.endswith('.json'):
+        tag = common.P_tag_id(tag_id, response_type='json')
+    else:
+        tag = common.P_tag_id(tag_id, response_type='html')
+    url_from = '/tagid/' + tag_id
+    url_to = '/tag/' + tag.name
+    url = request.url.replace(url_from, url_to)
+    return flask.redirect(url)
+
 # Tag metadata operations ##########################################################################
 
 @site.route('/tag/<specific_tag>/edit', methods=['POST'])
@@ -36,15 +48,6 @@ def post_tag_edit(specific_tag):
 
 # Tag listings #####################################################################################
 
-def get_tags_core(specific_tag=None):
-    if specific_tag is None:
-        tags = common.P.get_tags()
-    else:
-        tags = specific_tag.walk_children()
-    tags = list(tags)
-    tags.sort(key=lambda x: x.qualified_name())
-    return tags
-
 @site.route('/tag/<specific_tag_name>')
 @site.route('/tags')
 @session_manager.give_token
@@ -57,10 +60,17 @@ def get_tags_html(specific_tag_name=None):
             new_url = request.url.replace('/tag/' + specific_tag_name, '/tag/' + specific_tag.name)
             response = flask.redirect(new_url)
             return response
-    tags = get_tags_core(specific_tag)
+
     session = session_manager.get(request)
     include_synonyms = request.args.get('synonyms')
     include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
+
+    if specific_tag is None:
+        tags = common.P.get_root_tags()
+    else:
+        tags = [specific_tag]
+    tags = etiquette.tag_export.easybake(tags, include_synonyms=False, with_objects=True)
+
     response = flask.render_template(
         'tags.html',
         include_synonyms=include_synonyms,
@@ -81,9 +91,14 @@ def get_tags_json(specific_tag_name=None):
         if specific_tag.name != specific_tag_name:
             new_url = request.url.replace('/tag/' + specific_tag_name, '/tag/' + specific_tag.name)
             return flask.redirect(new_url)
-    tags = get_tags_core(specific_tag=specific_tag)
+
     include_synonyms = request.args.get('synonyms')
     include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
+    if specific_tag is None:
+        tags = list(common.P.get_tags())
+    else:
+        tags = list(specific_tag.walk_children())
+
     tags = [etiquette.jsonify.tag(tag, include_synonyms=include_synonyms) for tag in tags]
     return jsonify.make_json_response(tags)
 
@@ -133,9 +148,15 @@ def post_tag_delete():
     Delete a tag.
     '''
     tagname = request.form['tagname']
-    tagname = tagname.split('.')[-1].split('+')[0]
-    tag = common.P.get_tag(name=tagname)
-
-    tag.delete()
-    response = {'action': 'delete_tag', 'tagname': tag.name}
+    tagname = tagname.split('+')[0]
+    if '.' in tagname:
+        (parentname, tagname) = tagname.rsplit('.', 1)
+        parent = common.P.get_tag(name=parentname)
+        tag = common.P.get_tag(name=tagname)
+        parent.remove_child(tag)
+        response = {'action': 'unlink_tag', 'tagname': f'{parent.name}.{tag.name}'}
+    else:
+        tag = common.P.get_tag(name=tagname)
+        tag.delete()
+        response = {'action': 'delete_tag', 'tagname': tag.name}
     return jsonify.make_json_response(response)

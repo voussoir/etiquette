@@ -34,7 +34,9 @@ site.jinja_env.trim_blocks = True
 site.jinja_env.lstrip_blocks = True
 site.jinja_env.filters['bytestring'] = jinja_filters.bytestring
 site.jinja_env.filters['file_link'] = jinja_filters.file_link
-site.jinja_env.filters['sort_by_qualname'] = jinja_filters.sort_by_qualname
+site.jinja_env.filters['sort_tags'] = jinja_filters.sort_tags
+site.jinja_env.filters['timestamp_to_naturaldate'] = jinja_filters.timestamp_to_naturaldate
+site.jinja_env.filters['timestamp_to_8601'] = jinja_filters.timestamp_to_8601
 site.debug = True
 
 P = etiquette.photodb.PhotoDB()
@@ -92,6 +94,10 @@ def P_photos(photo_ids):
 @P_wrapper
 def P_tag(tagname):
     return P.get_tag(name=tagname)
+
+@P_wrapper
+def P_tag_id(tag_id):
+    return P.get_tag(id=tag_id)
 
 @P_wrapper
 def P_user(username):

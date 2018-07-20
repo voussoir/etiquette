@@ -8,6 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
     <script src="/static/js/common.js"></script>
+    <script src="/static/js/hotkeys.js"></script>
+    <script src="/static/js/photoclipboard.js"></script>
 
 <style>
 #content_body
@@ -163,10 +165,10 @@
                 <input id="add_tag_textbox" type="text" autofocus>
                 <button id="add_tag_button" class="green_button" onclick="submit_tag(receive_callback);">add</button>
             </li>
-            {% set tags = photo.get_tags()|sort_by_qualname %}
+            {% set tags = photo.get_tags()|sort_tags %}
             {% for tag in tags %}
             <li>
-                {{tag_object.tag_object(tag, qualified_name=True, max_len=30, with_alt_description=True, with_alt_qualified_name=True)}}<!--
+                {{tag_object.tag_object(tag, with_alt_description=True)}}<!--
                 --><button
                 class="remove_tag_button red_button"
                 onclick="remove_photo_tag('{{photo.id}}', '{{tag.name}}', receive_callback);">
@@ -181,23 +183,27 @@
             <button id="refresh_metadata_button" class="green_button" onclick="refresh_metadata('{{photo.id}}');">refresh</button>
         </h4>
         <ul id="metadata">
-        <li>Filename: {{photo.basename}}</li>
-        {% set author = photo.get_author() %}
-        {% if author is not none %}
-            <li>Author: <a href="/user/{{author.username}}">{{author.display_name}}</a></li>
-        {% endif %}
-        {% if photo.width %}
-            <li>Dimensions: {{photo.width}}x{{photo.height}} px</li>
-            <li>Aspect ratio: {{photo.ratio}}</li>
-        {% endif %}
-        <li>Size: {{photo.bytes|bytestring}}</li>
-        {% if photo.duration %}
-            <li>Duration: {{photo.duration_string}}</li>
-            <li>Overall Bitrate: {{photo.bitrate|int}} kbps</li>
-        {% endif %}
-        <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as original filename</a></li>
-        <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
+            <li>Filename: {{photo.basename}}</li>
+            {% set author = photo.get_author() %}
+            {% if author is not none %}
+                <li>Author: <a href="/user/{{author.username}}">{{author.display_name}}</a></li>
+            {% endif %}
+            {% if photo.width %}
+                <li title="{{photo.area}} px">Dimensions: {{photo.width}}x{{photo.height}} px</li>
+                <li>Aspect ratio: {{photo.ratio}}</li>
+            {% endif %}
+            <li>Size: {{photo.bytes|bytestring}}</li>
+            {% if photo.duration %}
+                <li>Duration: {{photo.duration_string}}</li>
+                <li>Overall Bitrate: {{photo.bitrate|int}} kbps</li>
+            {% endif %}
+            <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as original filename</a></li>
+            <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
         </ul>
+
+        <div>
+            <label class="photo_card" data-id="{{photo.id}}"><input type="checkbox" class="photo_card_selector_checkbox" onclick="on_photo_select(event)"/>Clipboard</label>
+        </div>
 
         <!-- CONTAINING ALBUMS -->
         {% set albums = photo.get_containing_albums() %}
@@ -210,7 +216,11 @@
         </ul>
         {% endif %}
 
-        <a href="/search?created=-{{photo.created}}">&larr;Before</a><span> | </span><a href="/search?created={{photo.created}}-&orderby=created-asc">After&rarr;</a>
+        <div>
+            <a href="/search?created=-{{photo.created}}">&larr;Before</a>
+            <span> | </span>
+            <a href="/search?created={{photo.created}}-&orderby=created-asc">After&rarr;</a>
+        </div>
     </div>
     <div id="message_area_bg">
         <div id="message_area">

@@ -445,6 +445,7 @@ def split_easybake_string(ebstring):
     if not tagname:
         raise exceptions.EasyBakeError('No tag supplied')
 
+    tagname = tagname.strip('.')
     return (tagname, synonym, rename_to)
 
 def sql_listify(items):

@@ -292,17 +292,23 @@ class PDBPhotoMixin:
             if photo.real_path.exists:
                 continue
             photo.delete(commit=False)
+
         if commit:
             self.log.debug('Committing - purge deleted photos')
             self.commit()
 
     @decorators.transaction
     def purge_empty_albums(self, *, commit=True):
-        albums = self.get_albums()
-        for album in albums:
+        to_check = list(self.get_albums())
+
+        while to_check:
+            album = to_check.pop()
             if album.get_children() or album.get_photos():
                 continue
+            # This may have been the last child of an otherwise empty parent.
+            to_check.extend(album.get_parents())
             album.delete(commit=False)
+
         if commit:
             self.log.debug('Committing - purge empty albums')
             self.commit()
@@ -464,25 +470,21 @@ class PDBPhotoMixin:
         if extension is not None and extension_not is not None:
             extension = extension.difference(extension_not)
 
-        mmf_expression_noconflict = searchhelpers.check_mmf_expression_exclusive(
+        tags_fixed = searchhelpers.normalize_mmf_vs_expression_conflict(
             tag_musts,
             tag_mays,
             tag_forbids,
             tag_expression,
-            warning_bag
+            warning_bag,
         )
-        if not mmf_expression_noconflict:
-            tag_musts = None
-            tag_mays = None
-            tag_forbids = None
-            tag_expression = None
+        (tag_musts, tag_mays, tag_forbids, tag_expression) = tags_fixed
+
 
         if tag_expression:
             frozen_children = self.get_cached_frozen_children()
             tag_expression_tree = searchhelpers.tag_expression_tree_builder(
                 tag_expression=tag_expression,
                 photodb=self,
-                frozen_children=frozen_children,
                 warning_bag=warning_bag,
             )
             if tag_expression_tree is None:
@@ -490,7 +492,6 @@ class PDBPhotoMixin:
                 tag_expression = None
             else:
                 giveback_tag_expression = str(tag_expression_tree)
-                print(giveback_tag_expression)
                 tag_match_function = searchhelpers.tag_expression_matcher_builder(frozen_children)
         else:
             giveback_tag_expression = None
@@ -565,16 +566,16 @@ class PDBPhotoMixin:
             if '*' in extension:
                 wheres.append('extension != ""')
             else:
-                binders = ', '.join('?' * len(extension))
-                wheres.append('extension IN (%s)' % binders)
+                qmarks = ', '.join('?' * len(extension))
+                wheres.append('extension IN (%s)' % qmarks)
                 bindings.extend(extension)
 
         if extension_not:
             if '*' in extension_not:
                 wheres.append('extension == ""')
             else:
-                binders = ', '.join('?' * len(extension_not))
-                wheres.append('extension NOT IN (%s)' % binders)
+                qmarks = ', '.join('?' * len(extension_not))
+                wheres.append('extension NOT IN (%s)' % qmarks)
                 bindings.extend(extension_not)
 
         if mimetype:
@@ -781,6 +782,16 @@ class PDBTagMixin:
         else:
             raise exceptions.TagExists(existing_tag)
 
+    def get_all_tag_names(self):
+        '''
+        Return a list containing the names of all tags as strings.
+        Useful for when you don't want the overhead of actual Tag objects.
+        '''
+        query = 'SELECT name FROM tags'
+        rows = self.sql_select(query)
+        names = [row[0] for row in rows]
+        return names
+
     def get_root_tags(self):
         '''
         Yield Tags that have no parent.
@@ -807,9 +818,6 @@ class PDBTagMixin:
             if tagname.photodb == self:
                 return tagname
             tagname = tagname.tagname
-
-        tagname = tagname.strip('.+')
-        tagname = tagname.split('.')[-1].split('+')[0]
 
         try:
             tagname = self.normalize_tagname(tagname)
@@ -851,6 +859,7 @@ class PDBTagMixin:
         '''
         tagname = self.normalize_tagname(tagname)
         self.assert_no_such_tag(name=tagname)
+
         description = objects.Tag.normalize_description(description)
 
         self.log.debug('New Tag: %s', tagname)
@@ -1002,7 +1011,7 @@ class PDBUserMixin:
 
     @decorators.required_feature('user.new')
     @decorators.transaction
-    def register_user(self, username, password, *, commit=True):
+    def register_user(self, username, password, *, display_name=None, commit=True):
         self.assert_valid_username(username)
 
         if not isinstance(password, bytes):
@@ -1010,6 +1019,11 @@ class PDBUserMixin:
 
         self.assert_valid_password(password)
         self.assert_no_such_user(username=username)
+
+        display_name = objects.User.normalize_display_name(
+            display_name,
+            max_length=self.config['user']['max_display_name_length'],
+        )
 
         self.log.debug('New User: %s', username)
 
@@ -1022,6 +1036,7 @@ class PDBUserMixin:
             'username': username,
             'password': hashed_password,
             'created': created,
+            'display_name': display_name,
         }
         self.sql_insert(table='users', data=data)
 
@@ -1079,8 +1094,14 @@ class PDBUtilMixin:
             return new_photo_kwargs
 
         def _normalize_new_photo_ratelimit(new_photo_ratelimit):
-            if isinstance(new_photo_ratelimit, (int, float)):
+            if isinstance(new_photo_ratelimit, ratelimiter.Ratelimiter):
+                pass
+            elif new_photo_ratelimit is None:
+                pass
+            elif isinstance(new_photo_ratelimit, (int, float)):
                 new_photo_ratelimit = ratelimiter.Ratelimiter(allowance=1, period=new_photo_ratelimit)
+            else:
+                raise TypeError(new_photo_ratelimit)
             return new_photo_ratelimit
 
         def create_or_fetch_photos(filepaths, new_photo_kwargs):
@@ -1117,7 +1138,11 @@ class PDBUtilMixin:
             return current_album
 
         def orphan_join_parent_album(albums_by_path, current_album, current_directory):
-            if current_album.get_parent() is None:
+            '''
+            If the current album is an orphan, let's check if there exists an
+            album for the parent directory. If so, add the current album to it.
+            '''
+            if not current_album.has_any_parent():
                 parent = albums_by_path.get(current_directory.parent.absolute_path, None)
                 if parent is not None:
                     parent.add_child(current_album, commit=False)
@@ -1192,7 +1217,7 @@ class PDBUtilMixin:
             tags = [create_or_get(t) for t in tag_parts]
             for (higher, lower) in zip(tags, tags[1:]):
                 try:
-                    lower.join_group(higher, commit=False)
+                    higher.add_child(lower, commit=False)
                     note = ('join_group', f'{higher.name}.{lower.name}')
                     output_notes.append(note)
                 except exceptions.GroupExists:
@@ -1286,7 +1311,6 @@ class PhotoDB(
         # OTHER
 
         self._cached_frozen_children = None
-        self._cached_qualname_map = None
 
         self.caches = {
             'album': cacheclass.Cache(maxlen=self.config['cache_size']['album']),
@@ -1297,6 +1321,10 @@ class PhotoDB(
         }
 
     def _check_version(self):
+        '''
+        Compare database's user_version against constants.DATABASE_VERSION,
+        raising exceptions.DatabaseOutOfDate if not correct.
+        '''
         existing_version = self.sql_execute('PRAGMA user_version').fetchone()[0]
         if existing_version != constants.DATABASE_VERSION:
             exc = exceptions.DatabaseOutOfDate(
@@ -1327,7 +1355,6 @@ class PhotoDB(
 
     def _uncache(self):
         self._cached_frozen_children = None
-        self._cached_qualname_map = None
 
     def close(self):
         # Wrapped in hasattr because if the object fails __init__, Python will
@@ -1397,12 +1424,10 @@ class PhotoDB(
             thing_cache[thing_id] = thing
         return thing
 
-    def get_cached_qualname_map(self):
-        if self._cached_qualname_map is None:
-            self._cached_qualname_map = tag_export.qualified_names(self.get_tags())
-        return self._cached_qualname_map
-
     def get_root_things(self, thing_type):
+        '''
+        For Groupable types, yield things which have no parent.
+        '''
         thing_map = _THING_CLASSES[thing_type]
 
         thing_class = thing_map['class']
@@ -1445,6 +1470,9 @@ class PhotoDB(
         return thing
 
     def get_things(self, thing_type):
+        '''
+        Yield things, unfiltered, in whatever order they appear in the database.
+        '''
         thing_map = _THING_CLASSES[thing_type]
 
         query = 'SELECT * FROM %s' % thing_map['table']

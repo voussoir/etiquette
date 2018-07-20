@@ -3,7 +3,7 @@ This file provides a variety of functions for exporting a PDB's tags into other
 formats. Strings, dicts, etc.
 '''
 
-def easybake(tags):
+def easybake(tags, include_synonyms=True, with_objects=False):
     '''
     A string where every line is the qualified name of a tag or its synonyms.
 
@@ -13,12 +13,33 @@ def easybake(tags):
     people.family.mother+mom
     '''
     lines = []
-    tags = list(tags)
     for tag in tags:
-        qualname = tag.qualified_name()
-        lines.append(qualname)
-        lines.extend(qualname + '+' + syn for syn in tag.get_synonyms())
-    return '\n'.join(lines)
+        if with_objects:
+            my_line = (tag.name, tag)
+        else:
+            my_line = tag.name
+        lines.append(my_line)
+
+        if include_synonyms:
+            syn_lines = tag.get_synonyms()
+            syn_lines = [f'{tag.name}+{syn}' for syn in syn_lines]
+            if with_objects:
+                syn_lines = [(line, tag) for line in syn_lines]
+            lines.extend(syn_lines)
+
+        child_lines = easybake(
+            tag.get_children(),
+            include_synonyms=include_synonyms,
+            with_objects=with_objects,
+        )
+        if with_objects:
+            child_lines = [(f'{tag.name}.{line[0]}', line[1]) for line in child_lines]
+        else:
+            child_lines = [f'{tag.name}.{line}' for line in child_lines]
+        lines.extend(child_lines)
+
+    lines.sort()
+    return lines
 
 def flat_dict(tags):
     '''
@@ -65,26 +86,6 @@ def nested_dict(tags):
 
     return result
 
-def qualified_names(tags):
-    '''
-    A dictionary where keys are string names, values are qualified names.
-    Synonyms included.
-
-    {
-        'people': 'people',
-        'family': 'people.family',
-        'mother': 'people.family.mother',
-        'mom': 'people.family.mother',
-    }
-    '''
-    results = {}
-    for tag in tags:
-        qualname = tag.qualified_name()
-        results[tag.name] = qualname
-        for synonym in tag.get_synonyms():
-            results[synonym] = qualname
-    return results
-
 def stdout(tags, depth=0):
     for tag in tags:
         children = tag.get_children()
@@ -99,5 +100,5 @@ def stdout(tags, depth=0):
 
         stdout(children, depth=depth+1)
 
-        if tag.get_parent() is None:
+        if not tag.has_any_parent():
             print()

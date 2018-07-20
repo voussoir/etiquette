@@ -23,14 +23,6 @@ class ObjectBase:
         super().__init__()
         self.photodb = photodb
 
-    @property
-    def log(self):
-        return self.photodb.log
-
-    @property
-    def sql(self):
-        return self.photodb.sql
-
     def __eq__(self, other):
         return (
             isinstance(other, type(self)) and
@@ -78,47 +70,27 @@ class GroupableMixin:
 
     def _lift_children(self):
         '''
-        If this object is a root, all of its children become roots.
-        If this object is a child, its parent adopts all of its children.
+        If this object has parents, the parents adopt all of its children.
+        Otherwise the parental relationship is simply deleted.
         '''
-        parent = self.get_parent()
-        if parent is None:
-            pairs = {
-                'parentid': self.id,
-            }
-            self.photodb.sql_delete(table=self.group_table, pairs=pairs)
-        else:
-            pairs = {
-                'parentid': (self.id, parent.id),
-            }
-            self.photodb.sql_update(table=self.group_table, pairs=pairs, where_key='parentid')
+        children = self.get_children()
+        if not children:
+            return
+
+        self.photodb.sql_delete(table=self.group_table, pairs={'parentid': self.id})
+
+        parents = self.get_parents()
+        for parent in parents:
+            parent.add_children(children)
 
     @decorators.transaction
     def add_child(self, member, *, commit=True):
-        '''
-        Add a child object to this group.
-        Child must be of the same type as the calling object.
+        self.assert_same_type(member)
 
-        If that object is already a member of another group, an
-        exceptions.GroupExists is raised.
-        '''
-        if not isinstance(member, type(self)):
-            raise TypeError('Member must be of type %s' % type(self))
+        if self.has_child(member):
+            return
 
-        self.photodb.log.debug('Adding child %s to %s' % (member, self))
-
-        # Groupables are only allowed to have 1 parent.
-        # Unlike photos which can exist in multiple albums.
-        parent_row = self.photodb.sql_select_one(
-            'SELECT parentid FROM %s WHERE memberid == ?' % self.group_table,
-            [member.id]
-        )
-        if parent_row is not None:
-            parent_id = parent_row[0]
-            if parent_id == self.id:
-                return
-            that_group = self.group_getter(id=parent_id)
-            raise exceptions.GroupExists(member=member, group=that_group)
+        self.photodb.log.debug(f'Adding child {member} to {self}.')
 
         for my_ancestor in self.walk_parents():
             if my_ancestor == member:
@@ -137,6 +109,21 @@ class GroupableMixin:
             self.photodb.commit()
 
     @decorators.transaction
+    def add_children(self, members, *, commit=True):
+        for member in members:
+            self.add_child(member, commit=False)
+
+        if commit:
+            self.photodb.log.debug('Committing - add multiple to group')
+            self.photodb.commit()
+
+    def assert_same_type(self, other):
+        if not isinstance(other, type(self)):
+            raise TypeError(f'Object must be of type {type(self)}, not {type(other)}.')
+        if self.photodb != other.photodb:
+            raise TypeError(f'Objects must belong to the same PhotoDB.')
+
+    @decorators.transaction
     def delete(self, *, delete_children=False, commit=True):
         '''
         Delete this object's relationships to other groupables.
@@ -153,7 +140,7 @@ class GroupableMixin:
         self.photodb._cached_frozen_children = None
         if delete_children:
             for child in self.get_children():
-                child.delete(delete_children=delete_children, commit=False)
+                child.delete(delete_children=True, commit=False)
         else:
             self._lift_children()
 
@@ -179,46 +166,45 @@ class GroupableMixin:
             children = sorted(children, key=lambda x: x.id)
         return children
 
-    def get_parent(self):
-        '''
-        Return the group of which this is a member, or None.
-        Returned object will be of the same type as calling object.
-        '''
-        parent_row = self.photodb.sql_select_one(
-            'SELECT parentid FROM %s WHERE memberid == ?' % self.group_table,
-            [self.id]
-        )
-        if parent_row is None:
-            return None
+    def get_parents(self):
+        query = f'SELECT parentid FROM {self.group_table} WHERE memberid == ?'
+        parent_rows = self.photodb.sql_select(query, [self.id])
+        parent_ids = [row[0] for row in parent_rows]
+        parents = list(self.group_getter_many(parent_ids))
+        return parents
 
-        return self.group_getter(id=parent_row[0])
+    def has_any_child(self):
+        query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? LIMIT 1'
+        row = self.photodb.sql_select_one(query, [self.id])
+        return row is not None
+
+    def has_any_parent(self):
+        query = f'SELECT 1 FROM {self.group_table} WHERE memberid == ? LIMIT 1'
+        row = self.photodb.sql_select_one(query, [self.id])
+        return row is not None
+
+    def has_child(self, member):
+        self.assert_same_type(member)
+        query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? AND memberid == ?'
+        row = self.photodb.sql_select_one(query, [self.id, member.id])
+        return row is not None
 
     @decorators.transaction
-    def join_group(self, group, *, commit=True):
-        '''
-        Leave the current group, then call `group.add_child(self)`.
-        '''
-        if not isinstance(group, type(self)):
-            raise TypeError('Group must also be %s' % type(self))
-
-        if self == group:
-            raise ValueError('Cant join self')
-
-        if self.get_parent() == group:
+    def remove_child(self, member, *, commit=True):
+        if not self.has_child(member):
             return
 
-        self.leave_group(commit=False)
-        group.add_child(self, commit=commit)
+        self.photodb.log.debug(f'Removing child {member} from {self}.')
 
-    @decorators.transaction
-    def leave_group(self, *, commit=True):
-        '''
-        Leave the current group and become independent.
-        '''
+        pairs = {
+            'parentid': self.id,
+            'memberid': member.id,
+        }
+        self.photodb.sql_delete(table=self.group_table, pairs=pairs)
         self.photodb._cached_frozen_children = None
-        self.photodb.sql_delete(table=self.group_table, pairs={'memberid': self.id})
+
         if commit:
-            self.photodb.log.debug('Committing - leave group')
+            self.photodb.log.debug('Committing - remove from group')
             self.photodb.commit()
 
     def walk_children(self):
@@ -227,10 +213,19 @@ class GroupableMixin:
             yield from child.walk_children()
 
     def walk_parents(self):
-        parent = self.get_parent()
-        while parent is not None:
+        '''
+        Yield all ancestors in no particular order.
+        '''
+        parents = self.get_parents()
+        seen = set(parents)
+        todo = list(parents)
+        while len(todo) > 0:
+            parent = todo.pop(-1)
             yield parent
-            parent = parent.get_parent()
+            seen.add(parent)
+            more_parents = set(parent.get_parents())
+            more_parents = more_parents.difference(seen)
+            todo.extend(more_parents)
 
 
 class Album(ObjectBase, GroupableMixin):
@@ -247,7 +242,6 @@ class Album(ObjectBase, GroupableMixin):
         self.description = self.normalize_description(db_row['description'])
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
-        self.name = 'Album %s' % self.id
         self.group_getter = self.photodb.get_album
         self.group_getter_many = self.photodb.get_albums_by_id
 
@@ -264,7 +258,7 @@ class Album(ObjectBase, GroupableMixin):
             return ''
 
         if not isinstance(description, str):
-            raise TypeError('Description must be string, not %s' % type(description))
+            raise TypeError(f'Description must be string, not {type(description)}')
 
         description = description.strip()
 
@@ -276,7 +270,7 @@ class Album(ObjectBase, GroupableMixin):
             return ''
 
         if not isinstance(title, str):
-            raise TypeError('Title must be string, not %s' % type(title))
+            raise TypeError(f'Title must be string, not {type(title)}')
 
         title = title.strip()
         for whitespace in string.whitespace:
@@ -285,23 +279,18 @@ class Album(ObjectBase, GroupableMixin):
         return title
 
     def _uncache(self):
-        self._uncache_sums()
         self.photodb.caches['album'].remove(self.id)
-
-    def _uncache_sums(self):
-        self._sum_photos_recursive = None
-        self._sum_bytes_local = None
-        self._sum_bytes_recursive = None
-        parent = self.get_parent()
-        if parent is not None:
-            parent._uncache_sums()
 
     @decorators.required_feature('album.edit')
     # GroupableMixin.add_child already has @transaction.
     def add_child(self, *args, **kwargs):
         result = super().add_child(*args, **kwargs)
-        self._uncache_sums()
         return result
+
+    @decorators.required_feature('album.edit')
+    # GroupableMixin.add_children already has @transaction.
+    def add_children(self, *args, **kwargs):
+        return super().add_children(*args, **kwargs)
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
@@ -349,7 +338,6 @@ class Album(ObjectBase, GroupableMixin):
             return
 
         self._add_photo(photo)
-        self._uncache_sums()
 
         if commit:
             self.photodb.log.debug('Committing - add photo to album')
@@ -364,7 +352,6 @@ class Album(ObjectBase, GroupableMixin):
 
         for photo in photos:
             self._add_photo(photo)
-        self._uncache_sums()
 
         if commit:
             self.photodb.log.debug('Committing - add photos to album')
@@ -484,21 +471,6 @@ class Album(ObjectBase, GroupableMixin):
         )
         return rel_row is not None
 
-    @decorators.required_feature('album.edit')
-    # GroupableMixin.join_group already has @transaction.
-    def join_group(self, *args, **kwargs):
-        result = super().join_group(*args, **kwargs)
-        return result
-
-    @decorators.required_feature('album.edit')
-    # GroupableMixin.leave_group already has @transaction.
-    def leave_group(self, *args, **kwargs):
-        parent = self.get_parent()
-        if parent is not None:
-            parent._uncache_sums()
-        result = super().leave_group(*args, **kwargs)
-        return result
-
     def _remove_photo(self, photo):
         self.photodb.log.debug('Removing photo %s from %s', photo, self)
         pairs = {'albumid': self.id, 'photoid': photo.id}
@@ -508,7 +480,6 @@ class Album(ObjectBase, GroupableMixin):
     @decorators.transaction
     def remove_photo(self, photo, *, commit=True):
         self._remove_photo(photo)
-        self._uncache_sums()
 
         if commit:
             self.photodb.log.debug('Committing - remove photo from album')
@@ -523,7 +494,6 @@ class Album(ObjectBase, GroupableMixin):
 
         for photo in photos:
             self._remove_photo(photo)
-        self._uncache_sums()
 
         if commit:
             self.photodb.log.debug('Committing - remove photos from album')
@@ -534,7 +504,7 @@ class Album(ObjectBase, GroupableMixin):
         SELECT SUM(bytes) FROM photos
         WHERE photos.id IN (
             SELECT photoid FROM album_photo_rel WHERE
-            albumid IN {qmarks}
+            albumid IN {albumids}
         )
         '''
         if recurse:
@@ -542,20 +512,26 @@ class Album(ObjectBase, GroupableMixin):
         else:
             albumids = [self.id]
 
-        query = query.format(qmarks='(%s)' % ','.join('?' * len(albumids)))
-        bindings = albumids
-        total = self.photodb.sql_select_one(query, bindings)[0]
+        albumids = helpers.sql_listify(albumids)
+        query = query.format(albumids=albumids)
+        total = self.photodb.sql_select_one(query)[0]
         return total
 
-    def sum_photos(self):
-        if self._sum_photos_recursive is None:
-            #print(self, 'sumphotos cache miss')
-            total = 0
-            total += sum(1 for x in self.get_photos())
-            total += sum(child.sum_photos() for child in self.get_children())
-            self._sum_photos_recursive = total
+    def sum_photos(self, recurse=True):
+        query = '''
+        SELECT COUNT(photoid)
+        FROM album_photo_rel
+        WHERE albumid IN {albumids}
+        '''
+        if recurse:
+            albumids = [child.id for child in self.walk_children()]
+        else:
+            albumids = [self.id]
 
-        return self._sum_photos_recursive
+        albumids = helpers.sql_listify(albumids)
+        query = query.format(albumids=albumids)
+        total = self.photodb.sql_select_one(query)[0]
+        return total
 
     def walk_photos(self):
         yield from self.get_photos()
@@ -609,10 +585,14 @@ class Bookmark(ObjectBase):
 
         return url
 
+    def _uncache(self):
+        self.photodb.caches['bookmark'].remove(self.id)
+
     @decorators.required_feature('bookmark.edit')
     @decorators.transaction
     def delete(self, *, commit=True):
         self.photodb.sql_delete(table='bookmarks', pairs={'id': self.id})
+        self._uncache()
         if commit:
             self.photodb.commit()
 
@@ -684,11 +664,6 @@ class Photo(ObjectBase):
 
         self.searchhidden = db_row['searchhidden']
 
-        if self.duration and self.bytes is not None:
-            self.bitrate = (self.bytes / 128) / self.duration
-        else:
-            self.bitrate = None
-
         self.mimetype = helpers.get_mimetype(self.real_path.basename)
         if self.mimetype is None:
             self.simple_mimetype = None
@@ -749,12 +724,19 @@ class Photo(ObjectBase):
         return tag
 
     @property
+    def bitrate(self):
+        if self.duration and self.bytes is not None:
+            return (self.bytes / 128) / self.duration
+        else:
+            return None
+
+    @property
     def bytestring(self):
         if self.bytes is not None:
             return bytestring.bytestring(self.bytes)
         return '??? b'
 
-    @decorators.required_feature('photo.add_remove_tag')
+    # Photo.add_tag already has required_feature add_remove_tag
     # Photo.add_tag already has @transaction.
     def copy_tags(self, other_photo, *, commit=True):
         '''
@@ -773,9 +755,9 @@ class Photo(ObjectBase):
         Delete the Photo and its relation to any tags and albums.
         '''
         self.photodb.log.debug('Deleting %s', self)
-        self.photodb.sql_delete(table='photos', pairs={'id': self.id})
         self.photodb.sql_delete(table='photo_tag_rel', pairs={'photoid': self.id})
         self.photodb.sql_delete(table='album_photo_rel', pairs={'photoid': self.id})
+        self.photodb.sql_delete(table='photos', pairs={'id': self.id})
 
         if delete_file:
             path = self.real_path.absolute_path
@@ -1149,6 +1131,9 @@ class Tag(ObjectBase, GroupableMixin):
         if isinstance(db_row, (list, tuple)):
             db_row = dict(zip(constants.SQL_COLUMNS['tags'], db_row))
         self.id = db_row['id']
+
+        # Do not pass the name through the normalizer. It may be grandfathered
+        # from previous character / length rules.
         self.name = db_row['name']
         self.description = self.normalize_description(db_row['description'])
         self.author_id = self.normalize_author_id(db_row['author_id'])
@@ -1156,12 +1141,6 @@ class Tag(ObjectBase, GroupableMixin):
         self.group_getter = self.photodb.get_tag
         self.group_getter_many = self.photodb.get_tags_by_id
         self._cached_synonyms = None
-
-    def __eq__(self, other):
-        return self.name == other or ObjectBase.__eq__(self, other)
-
-    def __hash__(self):
-        return hash(self.name)
 
     def __repr__(self):
         return f'Tag:{self.id}:{self.name}'
@@ -1185,13 +1164,14 @@ class Tag(ObjectBase, GroupableMixin):
     def normalize_name(name, valid_chars=None, min_length=None, max_length=None):
         original_name = name
         if valid_chars is None:
-            valid_chars = constants.DEFAULT_CONFIG['tag']['valid_chars']
+            valid_chars = constants.DEFAULT_CONFIGURATION['tag']['valid_chars']
 
-        name = name.lower()
+        name = name.lower().strip()
+        name = name.strip('.+')
+        name = name.split('+')[0].split('.')[-1]
         name = name.replace('-', '_')
         name = name.replace(' ', '_')
-        name = (c for c in name if c in valid_chars)
-        name = ''.join(name)
+        name = ''.join(c for c in name if c in valid_chars)
 
         if min_length is not None and len(name) < min_length:
             raise exceptions.TagTooShort(original_name)
@@ -1210,6 +1190,11 @@ class Tag(ObjectBase, GroupableMixin):
         return super().add_child(*args, **kwargs)
 
     @decorators.required_feature('tag.edit')
+    # GroupableMixin.add_children already has @transaction.
+    def add_children(self, *args, **kwargs):
+        return super().add_children(*args, **kwargs)
+
+    @decorators.required_feature('tag.edit')
     @decorators.transaction
     def add_synonym(self, synname, *, commit=True):
         synname = self.photodb.normalize_tagname(synname)
@@ -1219,7 +1204,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.photodb.assert_no_such_tag(name=synname)
 
-        self.log.debug('New synonym %s of %s', synname, self.name)
+        self.photodb.log.debug('New synonym %s of %s', synname, self.name)
 
         self.photodb._cached_frozen_children = None
 
@@ -1355,47 +1340,9 @@ class Tag(ObjectBase, GroupableMixin):
         return synonyms
 
     @decorators.required_feature('tag.edit')
-    # GroupableMixin.join_group already has @transaction.
-    def join_group(self, *args, **kwargs):
-        return super().join_group(*args, **kwargs)
-
-    @decorators.required_feature('tag.edit')
     # GroupableMixin.leave_group already has @transaction.
     def leave_group(self, *args, **kwargs):
         return super().leave_group(*args, **kwargs)
-
-    def qualified_name(self, *, max_len=None):
-        '''
-        Return the 'group1.group2.tag' string for this tag.
-
-        If `max_len` is not None, bring the length of the qualname down
-        by first stripping off ancestors, then slicing the end off of the
-        name if necessary.
-
-        ('people.family.mother', max_len=25) -> 'people.family.mother'
-        ('people.family.mother', max_len=15) -> 'family.mother'
-        ('people.family.mother', max_len=10) -> 'mother'
-        ('people.family.mother', max_len=4)  -> 'moth'
-        '''
-        if max_len is not None:
-            if len(self.name) == max_len:
-                return self.name
-            if len(self.name) > max_len:
-                return self.name[:max_len]
-
-        parent = self.get_parent()
-        if parent is None:
-            qualname = self.name
-        else:
-            qualname = parent.qualified_name() + '.' + self.name
-
-        if max_len is None or len(qualname) <= max_len:
-            return qualname
-
-        while len(qualname) > max_len:
-            qualname = qualname.split('.', 1)[1]
-
-        return qualname
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
@@ -1477,6 +1424,7 @@ class User(ObjectBase):
         self.username = db_row['username']
         self.created = db_row['created']
         self.password_hash = db_row['password']
+        # Do not enforce maxlen here, they may be grandfathered in.
         self._display_name = self.normalize_display_name(db_row['display_name'])
 
     def __repr__(self):

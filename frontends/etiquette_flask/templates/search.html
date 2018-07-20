@@ -291,9 +291,6 @@ form
                     tag,
                     extra_classes="tags_on_this_page",
                     link='void',
-                    max_len=30,
-                    qualified_name=True,
-                    with_alt_qualified_name=True,
                     with_alt_description=True,
                 )-}}</li>
             {% endfor %}
@@ -487,14 +484,6 @@ function submit_search()
             // Don't clutter url with default values.
             continue;
         }
-        if (boxname == "has_tags" && has_tag_params && value == "no")
-        {
-            /*
-            The user wants untagged only, but has tags in the search boxes?
-            Override to "tagged or untagged" and let the tag searcher handle it.
-            */
-            value = "";
-        }
         if (value == "")
         {
             continue;
@@ -536,7 +525,7 @@ function tags_on_this_page_hook()
     */
     var tagname = this.innerHTML.split(/\./);
     tagname = tagname[tagname.length-1];
-    var qualname = QUALNAME_MAP[tagname];
+    var qualname = ALL_TAGS[tagname];
     add_searchtag(
         input_musts,
         qualname,
@@ -563,18 +552,17 @@ function tag_input_hook(box, inputted_list, li_class)
     value = value.split("+")[0];
     value = value.replace(new RegExp(" ", 'g'), "_");
     value = value.replace(new RegExp("-", 'g'), "_");
-    if (!(value in QUALNAME_MAP))
+    if (ALL_TAGS.indexOf(value) == -1)
     {
         return;
     }
-    value = QUALNAME_MAP[value];
     console.log(inputted_list);
     add_searchtag(box, value, inputted_list, li_class)
     box.value = "";
 }
 
 
-QUALNAME_MAP = {{qualname_map|safe}};
+ALL_TAGS = {{all_tags|safe}};
 var input_musts = document.getElementById("search_builder_musts_input");
 var input_mays = document.getElementById("search_builder_mays_input");
 var input_forbids = document.getElementById("search_builder_forbids_input");

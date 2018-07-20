@@ -12,23 +12,6 @@ from . import objects
 from voussoirkit import expressionmatch
 
 
-def check_mmf_expression_exclusive(
-        tag_musts,
-        tag_mays,
-        tag_forbids,
-        tag_expression,
-        warning_bag=None
-    ):
-    if (tag_musts or tag_mays or tag_forbids) and tag_expression:
-        exc = exceptions.NotExclusive(['tag_musts+mays+forbids', 'tag_expression'])
-        if warning_bag:
-            warning_bag.add(exc.error_message)
-        else:
-            raise exc
-
-        return False
-    return True
-
 def expand_mmf(tag_musts, tag_mays, tag_forbids):
     def _set(x):
         if x is None:
@@ -245,6 +228,33 @@ def normalize_mimetype(mimetype, warning_bag=None):
     '''
     return normalize_extension(mimetype, warning_bag)
 
+def normalize_mmf_vs_expression_conflict(
+        tag_musts,
+        tag_mays,
+        tag_forbids,
+        tag_expression,
+        warning_bag=None,
+    ):
+    '''
+    The user cannot provide both mmf sets and tag expression at the same time.
+    If both are provided, nullify everything.
+    '''
+    if (tag_musts or tag_mays or tag_forbids) and tag_expression:
+        exc = exceptions.NotExclusive(['tag_musts+mays+forbids', 'tag_expression'])
+        if warning_bag:
+            warning_bag.add(exc.error_message)
+        else:
+            raise exc
+        conflict = True
+    conflict = False
+
+    if conflict:
+        tag_musts = None
+        tag_mays = None
+        tag_forbids = None
+        tag_expression = None
+    return (tag_musts, tag_mays, tag_forbids, tag_expression)
+
 def normalize_offset(offset, warning_bag=None):
     '''
     Either:
@@ -424,7 +434,6 @@ def normalize_tagset(photodb, tags, warning_bag=None):
 def tag_expression_tree_builder(
         tag_expression,
         photodb,
-        frozen_children,
         warning_bag=None
     ):
     if not tag_expression:
@@ -439,9 +448,9 @@ def tag_expression_tree_builder(
 
     for node in expression_tree.walk_leaves():
         try:
-            node.token = photodb.normalize_tagname(node.token)
-        except (exceptions.TagTooShort, exceptions.TagTooLong) as exc:
-            if warning_bag is not None:
+            node.token = photodb.get_tag(name=node.token).name
+        except (exceptions.NoSuchTag) as exc:
+            if warning_bag:
                 warning_bag.add(exc.error_message)
                 node.token = None
             else:
@@ -449,14 +458,6 @@ def tag_expression_tree_builder(
 
         if node.token is None:
             continue
-
-        if node.token not in frozen_children:
-            exc = exceptions.NoSuchTag(node.token)
-            if warning_bag is not None:
-                warning_bag.add(exc.error_message)
-                node.token = None
-            else:
-                raise exc
 
     expression_tree.prune()
     if expression_tree.token is None:

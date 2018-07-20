@@ -63,9 +63,11 @@ p
 
     <ul>
         {% set viewparam = "?view=list" if view == "list" else "" %}
-        {% set parent = album.get_parent() %}
-        {% if parent %}
+        {% set parents = album.get_parents() %}
+        {% if parents %}
+        {% for parent in parents %}
         <li><a href="/album/{{parent.id}}{{viewparam}}">{{parent.display_name}}</a></li>
+        {% endfor %}
         {% else %}
         <li><a href="/albums">Albums</a></li>
         {% endif %}
@@ -155,13 +157,13 @@ function unpaste_photo_clipboard()
 }
 var paste_photo_clipboard_button = document.createElement("button");
 paste_photo_clipboard_button.classList.add("green_button");
-paste_photo_clipboard_button.innerText = "Add to album";
+paste_photo_clipboard_button.innerText = "Add to this album";
 paste_photo_clipboard_button.onclick = paste_photo_clipboard;
 document.getElementById("clipboard_tray_toolbox").appendChild(paste_photo_clipboard_button);
 
 var unpaste_photo_clipboard_button = document.createElement("button");
 unpaste_photo_clipboard_button.classList.add("red_button");
-unpaste_photo_clipboard_button.innerText = "Remove from album";
+unpaste_photo_clipboard_button.innerText = "Remove from this album";
 unpaste_photo_clipboard_button.onclick = unpaste_photo_clipboard;
 document.getElementById("clipboard_tray_toolbox").appendChild(unpaste_photo_clipboard_button);
 

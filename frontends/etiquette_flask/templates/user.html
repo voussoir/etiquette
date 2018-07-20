@@ -22,6 +22,7 @@
     <div id="content_body">
         <h2>{{user.display_name}}</h2>
         <p>ID: {{user.id}}</p>
+        <p title="{{user.created|int|timestamp_to_8601}}">User since {{user.created|timestamp_to_naturaldate}}.</p>
         <p><a href="/search?author={{user.username}}">Photos by {{user.display_name}}</a></p>
     </div>
 </body>

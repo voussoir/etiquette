@@ -90,6 +90,7 @@ Here is a brief overview of the project to help you learn your way around:
 - Fix album size cache when photo reload metadata and generally improve that validation.
 - Better bookmark url validation.
 - Create a textbox which gives autocomplete tag names.
+- In the same vein, use a dedicated endpoint with etag caching for providing the full list of tag names, so the client can check up on it and store the results in localstorage, and use for the autocomplete system.
 - Consider if the "did you commit too early" warning should actually be an exception.
 - Extension currently does not believe in the override filename. On one hand this is kind of good because if they override the name to have no extension, we can still provide a downloadable file with the correct extension by remembering it. But on the other hand it does break the illusion of override_filename.
 - When batch fetching objects, consider whether or not a NoSuch should be raised. Perhaps a warningbag should be used.
