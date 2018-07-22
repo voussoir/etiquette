@@ -296,22 +296,27 @@ def random_hex(length=12):
     token = token[:length]
     return token
 
-def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=2 ** 20):
+def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=bytestring.MIBIBYTE):
     '''
     Yield chunks of bytes from the file between the endpoints.
     '''
     filepath = pathclass.Path(filepath)
     if range_max is None:
         range_max = filepath.size
-    range_span = range_max - range_min
+    range_span = (range_max + 1) - range_min
 
     f = open(filepath.absolute_path, 'rb')
-    f.seek(range_min)
     sent_amount = 0
     with f:
+        f.seek(range_min)
         while sent_amount < range_span:
             chunk = f.read(chunk_size)
             if len(chunk) == 0:
+                break
+
+            needed = range_span - sent_amount
+            if len(chunk) >= needed:
+                yield chunk[:needed]
                 break
 
             yield chunk
