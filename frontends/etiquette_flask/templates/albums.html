@@ -27,10 +27,10 @@
         <li><a href="/album/{{album.id}}">{{album.display_name}}</a></li>
         {% endfor %}
         <li>
-            <button id="create_child_prompt_button" class="green_button" onclick="open_creator_prompt(event);">Create album</button>
+            <button id="create_child_prompt_button" class="green_button" onclick="albums.open_creator_prompt(event);">Create album</button>
             <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
-            <button id="create_child_submit_button" class="green_button hidden" onclick="submit_create_child(event);">Create</button>
-            <button id="create_child_cancel_button" class="red_button hidden" onclick="cancel_create_child(event);">Cancel</button>
+            <button id="create_child_submit_button" class="green_button hidden" onclick="albums.submit_create_child(event);">Create</button>
+            <button id="create_child_cancel_button" class="red_button hidden" onclick="albums.cancel_create_child(event);">Cancel</button>
         </li>
     </ul>
 </div>
