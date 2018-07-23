@@ -298,15 +298,20 @@ class PDBPhotoMixin:
             self.commit()
 
     @decorators.transaction
-    def purge_empty_albums(self, *, commit=True):
-        to_check = list(self.get_albums())
+    def purge_empty_albums(self, albums=None, *, commit=True):
+        if albums is None:
+            to_check = set(self.get_albums())
+        else:
+            to_check = set()
+            for album in albums:
+                to_check.update(album.walk_children())
 
         while to_check:
             album = to_check.pop()
             if album.get_children() or album.get_photos():
                 continue
             # This may have been the last child of an otherwise empty parent.
-            to_check.extend(album.get_parents())
+            to_check.update(album.get_parents())
             album.delete(commit=False)
 
         if commit:
