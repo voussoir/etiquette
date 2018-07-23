@@ -18,7 +18,7 @@
 
 {% if view == "list" %}
 <div class="photo_card photo_card_list" data-id="{{photo.id}}">
-    <input type="checkbox" class="photo_card_selector_checkbox" onclick="on_photo_select(event)"/>
+    <input type="checkbox" class="photo_card_selector_checkbox" onclick="photo_clipboard.on_photo_select(event)"/>
     <span class="photo_card_filename"><a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a></span>
     <a class="photo_card_metadata" target="_blank" href="{{photo|file_link}}">{{photo.bytestring}}</a>
 </div>
@@ -72,7 +72,7 @@
     <a target="_blank" href="{{photo|file_link}}">{{photo.bytestring}}</a>
     </span>
 
-    <input type="checkbox" class="photo_card_selector_checkbox" onclick="on_photo_select(event)"/>
+    <input type="checkbox" class="photo_card_selector_checkbox" onclick="photo_clipboard.on_photo_select(event)"/>
 </div>
 {% endif %}
 {% endmacro %}

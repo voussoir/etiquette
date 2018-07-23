@@ -85,7 +85,7 @@ body
 {{header.make_header(session=session)}}
 <div id="left">
     <span>The clipboard contains <span class="clipboard_count">0</span> items.</span>
-    <button id="clear_clipboard_button" class="red_button" onclick="clear_photo_clipboard()">Clear it.</button>
+    <button id="clear_clipboard_button" class="red_button" onclick="photo_clipboard.clear_clipboard()">Clear it.</button>
     <div id="photo_card_holder">
     </div>
 </div>
@@ -135,7 +135,7 @@ common.bind_box_to_button(remove_box, remove_button);
 function recalculate_needed()
 {
     needed = new Set();
-    photo_clipboard.forEach(function(photo_id)
+    photo_clipboard.clipboard.forEach(function(photo_id)
     {
         if (!(photo_id in divs))
         {
@@ -149,7 +149,7 @@ function refresh_divs()
     for (var photo_id in divs)
     {
         var photo_div = divs[photo_id];
-        var should_keep = photo_clipboard.has(photo_id);
+        var should_keep = photo_clipboard.clipboard.has(photo_id);
         var on_page = holder.contains(photo_div);
         if (on_page && !should_keep)
         {
@@ -187,7 +187,7 @@ function request_more_divs()
             needed.delete(photo_id)
             holder.appendChild(photo_div);
         }
-        apply_check_all();
+        photo_clipboard.apply_check_all();
     }
     common.post(url, data, callback);
 }
@@ -199,8 +199,8 @@ function myhook()
     refresh_divs();
 }
 
-on_clipboard_load_hooks.push(myhook);
-on_clipboard_save_hooks.push(myhook);
+photo_clipboard.on_load_hooks.push(myhook);
+photo_clipboard.on_save_hooks.push(myhook);
 
 
 function submit_add_tag(callback)
@@ -225,10 +225,10 @@ function submit_remove_tag(callback)
 }
 function submit_add_remove_tag(action, tagname, callback)
 {
-    if (photo_clipboard.size == 0)
+    if (photo_clipboard.clipboard.size == 0)
         {return;}
     var url = "/batch/photos/" + action + "_tag";
-    var photo_ids = Array.from(photo_clipboard).join(",");
+    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
     var data = new FormData();
     data.append("photo_ids", photo_ids);
     data.append("tagname", tagname);
@@ -266,11 +266,11 @@ function submit_refresh_metadata(callback)
     if (refresh_in_progress)
         {return;}
 
-    if (photo_clipboard.size == 0)
+    if (photo_clipboard.clipboard.size == 0)
         {return;}
 
     var url = "/batch/photos/refresh_metadata";
-    var photo_ids = Array.from(photo_clipboard).join(",");
+    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
     var data = new FormData();
     data.append("photo_ids", photo_ids);
     refresh_in_progress = true;
@@ -313,24 +313,24 @@ function searchhidden_callback(response)
 }
 function submit_set_searchhidden(callback)
 {
-    if (photo_clipboard.size == 0)
+    if (photo_clipboard.clipboard.size == 0)
         {return;}
 
     var url = "/batch/photos/set_searchhidden";
     var data = new FormData();
-    var photo_ids = Array.from(photo_clipboard).join(",");
+    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
 
     data.append("photo_ids", photo_ids);
     common.post(url, data, callback);
 }
 function submit_unset_searchhidden(callback)
 {
-    if (photo_clipboard.size == 0)
+    if (photo_clipboard.clipboard.size == 0)
         {return;}
 
     var url = "/batch/photos/unset_searchhidden";
     var data = new FormData();
-    var photo_ids = Array.from(photo_clipboard).join(",");
+    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
 
     data.append("photo_ids", photo_ids);
     common.post(url, data, callback);
