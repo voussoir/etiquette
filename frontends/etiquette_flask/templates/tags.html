@@ -123,7 +123,7 @@ body
     {% for ancestor in specific_tag.get_parents() %}
     <li>
         {{tag_object.tag_object(ancestor, innertext='(?)', link='info')}}
-        {{tag_object.tag_object(ancestor, innertext=ancestor.name + '.' + specific_tag.name, link=none, with_alt_description=True)}}
+        {{tag_object.tag_object(ancestor, innertext=ancestor.name, link=none, with_alt_description=True)}}
     </li>
     {% endfor %}
     </ul>
