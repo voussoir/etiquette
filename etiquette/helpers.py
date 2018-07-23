@@ -156,14 +156,14 @@ def fit_into_bounds(image_width, image_height, frame_width, frame_height):
 
 def generate_image_thumbnail(filepath, width, height):
     image = PIL.Image.open(filepath)
-    (width, height) = image.size
+    (image_width, image_height) = image.size
     (new_width, new_height) = fit_into_bounds(
-        image_width=width,
-        image_height=height,
+        image_width=image_width,
+        image_height=image_height,
         frame_width=width,
         frame_height=height,
     )
-    if new_width < width:
+    if new_width < image_width or new_height < image_height:
         image = image.resize((new_width, new_height))
 
     if image.mode == 'RGBA':
