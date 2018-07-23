@@ -371,11 +371,9 @@ def get_search_core():
 def get_search_html():
     search_results = get_search_core()
     search_kwargs = search_results['search_kwargs']
-    all_tags = common.P.get_all_tag_names()
     session = session_manager.get(request)
     response = flask.render_template(
         'search.html',
-        all_tags=json.dumps(all_tags),
         next_page_url=search_results['next_page_url'],
         prev_page_url=search_results['prev_page_url'],
         photos=search_results['photos'],

@@ -14,6 +14,7 @@
     <script src="/static/js/common.js"></script>
     <script src="/static/js/hotkeys.js"></script>
     <script src="/static/js/photoclipboard.js"></script>
+    <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
 form
@@ -171,7 +172,7 @@ form
                         </li>
                     {% endfor %}
                 {% endif %}
-                <li><input id="search_builder_{{tagtype}}_input" type="text"></li>
+                <li><input id="search_builder_{{tagtype}}_input" type="text" list="tag_autocomplete_datalist"></li>
             </ul>
         </div>
         {% endfor %}
@@ -525,10 +526,9 @@ function tags_on_this_page_hook()
     */
     var tagname = this.innerHTML.split(/\./);
     tagname = tagname[tagname.length-1];
-    var qualname = ALL_TAGS[tagname];
     add_searchtag(
         input_musts,
-        qualname,
+        tagname,
         inputted_musts,
         "search_builder_musts_inputted"
     );
@@ -546,13 +546,9 @@ function tag_input_hook(box, inputted_list, li_class)
     if (!box.value)
     {return;}
 
-    var value = box.value.toLocaleLowerCase();
-    value = value.split(".");
-    value = value[value.length-1];
-    value = value.split("+")[0];
-    value = value.replace(new RegExp(" ", 'g'), "_");
-    value = value.replace(new RegExp("-", 'g'), "_");
-    if (ALL_TAGS.indexOf(value) == -1)
+    var value = box.value;
+    value = tag_autocomplete.resolve(value);
+    if (value === null)
     {
         return;
     }
@@ -561,8 +557,7 @@ function tag_input_hook(box, inputted_list, li_class)
     box.value = "";
 }
 
-
-ALL_TAGS = {{all_tags|safe}};
+tag_autocomplete.init_datalist();
 var input_musts = document.getElementById("search_builder_musts_input");
 var input_mays = document.getElementById("search_builder_mays_input");
 var input_forbids = document.getElementById("search_builder_forbids_input");

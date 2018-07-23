@@ -1,7 +1,9 @@
 import flask; from flask import request
+import json
 
 import etiquette
 
+from .. import caching
 from .. import common
 from .. import decorators
 from .. import jsonify
@@ -47,6 +49,14 @@ def post_tag_edit(specific_tag):
     return response
 
 # Tag listings #####################################################################################
+
+@site.route('/all_tags.json')
+@caching.cached_endpoint(max_age=0)
+def get_all_tag_names():
+    all_tags = common.P.get_all_tag_names()
+    all_synonyms = common.P.get_all_synonyms()
+    response = {'tags': all_tags, 'synonyms': all_synonyms}
+    return json.dumps(response)
 
 @site.route('/tag/<specific_tag_name>')
 @site.route('/tags')

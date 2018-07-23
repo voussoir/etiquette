@@ -792,6 +792,15 @@ class PDBTagMixin:
         names = [row[0] for row in rows]
         return names
 
+    def get_all_synonyms(self):
+        '''
+        Return a dict mapping {synonym: mastertag} as strings.
+        '''
+        query = 'SELECT name, mastername FROM tag_synonyms'
+        rows = self.sql_select(query)
+        synonyms = {syn: tag for (syn, tag) in rows}
+        return synonyms
+
     def get_root_tags(self):
         '''
         Yield Tags that have no parent.

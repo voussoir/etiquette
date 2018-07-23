@@ -10,6 +10,7 @@
     <script src="/static/js/common.js"></script>
     <script src="/static/js/hotkeys.js"></script>
     <script src="/static/js/photoclipboard.js"></script>
+    <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
 #content_body
@@ -162,7 +163,7 @@
         <h4>Tags</h4>
         <ul id="this_tags">
             <li>
-                <input id="add_tag_textbox" type="text" autofocus>
+                <input id="add_tag_textbox" type="text" list="tag_autocomplete_datalist" autofocus>
                 <button id="add_tag_button" class="green_button" onclick="submit_tag(receive_callback);">add</button>
             </li>
             {% set tags = photo.get_tags()|sort_tags %}
@@ -433,6 +434,8 @@ function move_hoverzoom(event)
     //console.log(x);
     photo_img_holder.style.backgroundPosition=(-x)+"px "+(-y)+"px";
 }
+
+tag_autocomplete.init_datalist();
 
 setTimeout(
     /*

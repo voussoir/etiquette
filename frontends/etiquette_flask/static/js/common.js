@@ -121,3 +121,15 @@ function html_to_element(html)
     template.innerHTML = html;
     return template.content.firstChild;
 }
+
+function normalize_tagname(tagname)
+{
+    tagname = tagname.trim();
+    tagname = tagname.toLocaleLowerCase();
+    tagname = tagname.split(".");
+    tagname = tagname[tagname.length-1];
+    tagname = tagname.split("+")[0];
+    tagname = tagname.replace(new RegExp(" ", 'g'), "_");
+    tagname = tagname.replace(new RegExp("-", 'g'), "_");
+    return tagname;
+}
