@@ -372,6 +372,13 @@ function add_searchtag(box, value, inputted_list, li_class)
         box_li = box.parentElement;
         ul = box_li.parentElement;
         ul.insertBefore(new_li, box_li);
+
+        // The datalist autocomplete box can sometimes stick around after the
+        // tag has already been submitted and the input box moves down -- now
+        // covered by the autocomplete. So we temporarily unfocus it to make
+        // that thing go away.
+        box.blur();
+        box.focus();
     }
 }
 function remove_searchtag(li_member, value, inputted_list)
