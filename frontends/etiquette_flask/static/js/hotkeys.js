@@ -1,11 +1,15 @@
-HOTKEYS = {};
+var hotkeys = {};
 
+hotkeys.HOTKEYS = {};
+
+hotkeys.hotkey_identifier =
 function hotkey_identifier(key, ctrlKey, shiftKey, altKey)
 {
     // Return the string that will represent this hotkey in the dictionary.
     return key.toLowerCase() + "." + (ctrlKey & 1) + "." + (shiftKey & 1) + "." + (altKey & 1);
 }
 
+hotkeys.hotkey_human =
 function hotkey_human(key, ctrlKey, shiftKey, altKey)
 {
     // Return the string that will be displayed to the user to represent this hotkey.
@@ -18,13 +22,15 @@ function hotkey_human(key, ctrlKey, shiftKey, altKey)
     return mods + key.toUpperCase();
 }
 
+hotkeys.register_hotkey =
 function register_hotkey(key, ctrlKey, shiftKey, altKey, action, description)
 {
-    identifier = hotkey_identifier(key, ctrlKey, shiftKey, altKey);
-    human = hotkey_human(key, ctrlKey, shiftKey, altKey);
-    HOTKEYS[identifier] = {"action": action, "human": human, "description": description}
+    identifier = hotkeys.hotkey_identifier(key, ctrlKey, shiftKey, altKey);
+    human = hotkeys.hotkey_human(key, ctrlKey, shiftKey, altKey);
+    hotkeys.HOTKEYS[identifier] = {"action": action, "human": human, "description": description}
 }
 
+hotkeys.should_prevent_hotkey =
 function should_prevent_hotkey(event)
 {
     if (event.target.tagName == "INPUT" && event.target.type == "checkbox")
@@ -37,13 +43,14 @@ function should_prevent_hotkey(event)
     }
 }
 
+hotkeys.show_all_keybinds =
 function show_all_keybinds()
 {
     // Display an Alert with a list of all the keybinds.
     var lines = [];
-    for (var identifier in HOTKEYS)
+    for (var identifier in hotkeys.HOTKEYS)
     {
-        var line = HOTKEYS[identifier]["human"] + " :  " + HOTKEYS[identifier]["description"];
+        var line = hotkeys.HOTKEYS[identifier]["human"] + " :  " + hotkeys.HOTKEYS[identifier]["description"];
         lines.push(line);
     }
     lines = lines.join("\n");
@@ -55,15 +62,15 @@ window.addEventListener(
     "keydown",
     function(event)
     {
-        if (should_prevent_hotkey(event)) { return; }
-        identifier = hotkey_identifier(event.key, event.ctrlKey, event.shiftKey, event.altKey);
+        if (hotkeys.should_prevent_hotkey(event)) { return; }
+        identifier = hotkeys.hotkey_identifier(event.key, event.ctrlKey, event.shiftKey, event.altKey);
         console.log(identifier);
-        if (identifier in HOTKEYS)
+        if (identifier in hotkeys.HOTKEYS)
         {
-            HOTKEYS[identifier]["action"]();
+            hotkeys.HOTKEYS[identifier]["action"]();
             event.preventDefault();
         }
     }
 );
 
-register_hotkey("/", 0, 0, 0, show_all_keybinds, "Show keybinds.");
+hotkeys.register_hotkey("/", 0, 0, 0, hotkeys.show_all_keybinds, "Show keybinds.");
