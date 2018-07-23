@@ -144,7 +144,7 @@ function create_editors()
         var card = cards[index];
         var title_div = card.getElementsByClassName("bookmark_title")[0];
         var url_div = card.getElementsByClassName("bookmark_url")[0];
-        editor = new Editor([title_div, url_div], on_open, on_save, on_cancel);
+        editor = new editor.Editor([title_div, url_div], on_open, on_save, on_cancel);
         editor.misc_data["bookmark_id"] = card.dataset.bookmarkId;
     }
 }
