@@ -284,8 +284,7 @@ class Album(ObjectBase, GroupableMixin):
     @decorators.required_feature('album.edit')
     # GroupableMixin.add_child already has @transaction.
     def add_child(self, *args, **kwargs):
-        result = super().add_child(*args, **kwargs)
-        return result
+        return super().add_child(*args, **kwargs)
 
     @decorators.required_feature('album.edit')
     # GroupableMixin.add_children already has @transaction.
@@ -470,6 +469,11 @@ class Album(ObjectBase, GroupableMixin):
             [self.id, photo.id]
         )
         return rel_row is not None
+
+    @decorators.required_feature('album.edit')
+    # GroupableMixin.remove_child already has @transaction.
+    def remove_child(self, *args, **kwargs):
+        return super().remove_child(*args, **kwargs)
 
     def _remove_photo(self, photo):
         self.photodb.log.debug('Removing photo %s from %s', photo, self)
@@ -1343,6 +1347,11 @@ class Tag(ObjectBase, GroupableMixin):
     # GroupableMixin.leave_group already has @transaction.
     def leave_group(self, *args, **kwargs):
         return super().leave_group(*args, **kwargs)
+
+    @decorators.required_feature('tag.edit')
+    # GroupableMixin.remove_child already has @transaction.
+    def remove_child(self, *args, **kwargs):
+        return super().remove_child(*args, **kwargs)
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
