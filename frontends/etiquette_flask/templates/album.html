@@ -145,7 +145,7 @@ function _paste_unpaste_photo_clipboard(add_or_remove)
         save_photo_clipboard();
         location.reload();
     };
-    post(url, data, callback);
+    common.post(url, data, callback);
 }
 function paste_photo_clipboard()
 {
@@ -201,7 +201,7 @@ function on_save(editor, edit_element_map, display_element_map)
     data.append("description", description_editor.value);
 
     editor.show_spinner();
-    post(url, data, callback);
+    common.post(url, data, callback);
 }
 
 function on_cancel(editor, edit_element_map, display_element_map)

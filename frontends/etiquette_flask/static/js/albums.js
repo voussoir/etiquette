@@ -9,7 +9,7 @@ function on_pageload()
     create_child_title_entry = document.getElementById("create_child_title_entry");
     create_child_submit_button = document.getElementById("create_child_submit_button");
     create_child_cancel_button = document.getElementById("create_child_cancel_button");
-    bind_box_to_button(create_child_title_entry, create_child_submit_button);
+    common.bind_box_to_button(create_child_title_entry, create_child_submit_button);
 }
 document.addEventListener("DOMContentLoaded", on_pageload);
 
@@ -55,7 +55,7 @@ function create_album_and_follow(title, parent)
             console.log(response);
         }
     }
-    post(url, data, receive_callback);
+    common.post(url, data, receive_callback);
 }
 
 function submit_create_child(event)

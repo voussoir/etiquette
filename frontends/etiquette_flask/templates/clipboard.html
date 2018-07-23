@@ -124,13 +124,13 @@ var holder = document.getElementById("photo_card_holder");
 
 var add_box = document.getElementById("add_tag_textbox");
 var add_button = document.getElementById("add_tag_button");
-add_box.addEventListener("keyup", entry_with_history_hook);
-bind_box_to_button(add_box, add_button);
+add_box.addEventListener("keyup", common.entry_with_history_hook);
+common.bind_box_to_button(add_box, add_button);
 
 var remove_box = document.getElementById("remove_tag_textbox");
 var remove_button = document.getElementById("remove_tag_button");
-remove_box.addEventListener("keyup", entry_with_history_hook);
-bind_box_to_button(remove_box, remove_button);
+remove_box.addEventListener("keyup", common.entry_with_history_hook);
+common.bind_box_to_button(remove_box, remove_button);
 
 function recalculate_needed()
 {
@@ -182,14 +182,14 @@ function request_more_divs()
         var holder = document.getElementById("photo_card_holder");
         for (photo_id in response)
         {
-            photo_div = html_to_element(response[photo_id]);
+            photo_div = common.html_to_element(response[photo_id]);
             divs[photo_id] = photo_div;
             needed.delete(photo_id)
             holder.appendChild(photo_div);
         }
         apply_check_all();
     }
-    post(url, data, callback);
+    common.post(url, data, callback);
 }
 
 function myhook()
@@ -232,7 +232,7 @@ function submit_add_remove_tag(action, tagname, callback)
     var data = new FormData();
     data.append("photo_ids", photo_ids);
     data.append("tagname", tagname);
-    post(url, data, callback);
+    common.post(url, data, callback);
 }
 function add_remove_callback(response)
 {
@@ -257,7 +257,7 @@ function add_remove_callback(response)
         else if (action == "remove")
         {message_text = "Removed tag " + tagname;}
     }
-    create_message_bubble(message_area, message_positivity, message_text, 8000);
+    common.create_message_bubble(message_area, message_positivity, message_text, 8000);
 }
 
 var refresh_in_progress = false;
@@ -274,7 +274,7 @@ function submit_refresh_metadata(callback)
     var data = new FormData();
     data.append("photo_ids", photo_ids);
     refresh_in_progress = true;
-    post(url, data, callback);
+    common.post(url, data, callback);
 }
 function refresh_metadata_callback(response)
 {
@@ -285,7 +285,7 @@ function refresh_metadata_callback(response)
         var message_area = document.getElementById("message_area");
         var message_positivity = "message_negative";
         var message_text = response["error_message"];
-        create_message_bubble(message_area, message_positivity, message_text, 8000);
+        common.create_message_bubble(message_area, message_positivity, message_text, 8000);
     }
     else
     {
@@ -309,7 +309,7 @@ function searchhidden_callback(response)
         message_positivity = "message_positive";
         message_text = "Success."
     }
-    create_message_bubble(message_area, message_positivity, message_text, 8000);
+    common.create_message_bubble(message_area, message_positivity, message_text, 8000);
 }
 function submit_set_searchhidden(callback)
 {
@@ -321,7 +321,7 @@ function submit_set_searchhidden(callback)
     var photo_ids = Array.from(photo_clipboard).join(",");
 
     data.append("photo_ids", photo_ids);
-    post(url, data, callback);
+    common.post(url, data, callback);
 }
 function submit_unset_searchhidden(callback)
 {
@@ -333,7 +333,7 @@ function submit_unset_searchhidden(callback)
     var photo_ids = Array.from(photo_clipboard).join(",");
 
     data.append("photo_ids", photo_ids);
-    post(url, data, callback);
+    common.post(url, data, callback);
 }
 </script>
 </html>

@@ -100,7 +100,7 @@ function create_bookmark(url, title)
         data.append("title", title);
     }
     var callback = function(){location.reload();};
-    post(api_url, data, callback);
+    common.post(api_url, data, callback);
 }
 
 
@@ -131,7 +131,7 @@ function on_save(editor, edit_element_map)
     var data = new FormData();
     data.append("title", title_editor.value);
     data.append("url", url_editor.value);
-    post(url, data, callback);
+    common.post(url, data, callback);
 }
 
 on_cancel = undefined;

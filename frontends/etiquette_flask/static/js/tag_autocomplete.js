@@ -15,7 +15,7 @@ function init_datalist()
         document.body.appendChild(datalist);
     }
 
-    delete_all_children(datalist);
+    common.delete_all_children(datalist);
     for (var index = 0; index < tag_autocomplete.tagset["tags"].length; index += 1)
     {
         var option = document.createElement("option");
@@ -33,7 +33,7 @@ function init_datalist()
 tag_autocomplete.resolve =
 function resolve(tagname)
 {
-    tagname = normalize_tagname(tagname);
+    tagname = common.normalize_tagname(tagname);
     if (tag_autocomplete.tagset["tags"].indexOf(tagname) != -1)
     {
         return tagname;
@@ -69,7 +69,7 @@ function update_tagset()
 {
     console.log("Updating known tagset.");
     var url = "/all_tags.json";
-    get(url, tag_autocomplete.update_tagset_callback);
+    common.get(url, tag_autocomplete.update_tagset_callback);
 }
 
 function on_pageload()

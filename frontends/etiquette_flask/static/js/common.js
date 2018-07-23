@@ -1,5 +1,8 @@
-var INPUT_TYPES = new Set(["INPUT", "TEXTAREA"]);
+var common = {};
 
+common.INPUT_TYPES = new Set(["INPUT", "TEXTAREA"]);
+
+common.create_message_bubble =
 function create_message_bubble(message_area, message_positivity, message_text, lifespan)
 {
     if (lifespan === undefined)
@@ -15,6 +18,7 @@ function create_message_bubble(message_area, message_positivity, message_text, l
     setTimeout(function(){message_area.removeChild(message);}, lifespan);
 }
 
+common._request =
 function _request(method, url, callback)
 {
     var request = new XMLHttpRequest();
@@ -39,17 +43,22 @@ function _request(method, url, callback)
     request.open(method, url, asynchronous);
     return request;
 }
+
+common.get =
 function get(url, callback)
 {
-    request = _request("GET", url, callback);
+    request = common._request("GET", url, callback);
     request.send();
 }
+
+common.post =
 function post(url, data, callback)
 {
-    request = _request("POST", url, callback);
+    request = common._request("POST", url, callback);
     request.send(data);
 }
 
+common.delete_all_children =
 function delete_all_children(element)
 {
     while (element.firstChild)
@@ -58,6 +67,7 @@ function delete_all_children(element)
     }
 }
 
+common.bind_box_to_button =
 function bind_box_to_button(box, button, ctrl_enter)
 {
     // Thanks Yaroslav Yakovlev
@@ -77,6 +87,7 @@ function bind_box_to_button(box, button, ctrl_enter)
     box.addEventListener("keyup", bound_box_hook);
 }
 
+common.entry_with_history_hook =
 function entry_with_history_hook(event)
 {
     //console.log(event);
@@ -115,6 +126,7 @@ function entry_with_history_hook(event)
     }
 }
 
+common.html_to_element =
 function html_to_element(html)
 {
     var template = document.createElement("template");
@@ -122,6 +134,7 @@ function html_to_element(html)
     return template.content.firstChild;
 }
 
+common.normalize_tagname =
 function normalize_tagname(tagname)
 {
     tagname = tagname.trim();

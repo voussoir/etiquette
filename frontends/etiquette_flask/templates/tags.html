@@ -162,8 +162,8 @@ body
 var box = document.getElementById('add_tag_textbox');
 var button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
-box.addEventListener("keyup", entry_with_history_hook);
-bind_box_to_button(box, button, false);
+box.addEventListener("keyup", common.entry_with_history_hook);
+common.bind_box_to_button(box, button, false);
 
 function submit_tag(callback)
 {
@@ -176,7 +176,7 @@ function edit_tags(action, tagname, callback)
     var url = "/tags/" + action;
     data = new FormData();
     data.append("tagname", tagname);
-    return post(url, data, callback);
+    return common.post(url, data, callback);
 }
 function delete_tag_synonym(tagname, callback)
 {
@@ -236,7 +236,7 @@ function receive_callback(response)
             {message_text = "Unlinked tags " + tagname;}
 
         }
-        create_message_bubble(message_area, message_positivity, message_text, 8000);
+        common.create_message_bubble(message_area, message_positivity, message_text, 8000);
     }
 }
 
@@ -279,7 +279,7 @@ function on_save(editor, edit_element_map, display_element_map)
     var data = new FormData();
     data.append("name", name_editor.value);
     data.append("description", description_editor.value);
-    post(url, data, callback);
+    common.post(url, data, callback);
 }
 
 function on_cancel(editor, edit_element_map, display_element_map)

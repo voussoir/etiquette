@@ -33,7 +33,7 @@ function should_prevent_hotkey(event)
     }
     else
     {
-        return INPUT_TYPES.has(event.target.tagName);
+        return common.INPUT_TYPES.has(event.target.tagName);
     }
 }
 

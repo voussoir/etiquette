@@ -226,7 +226,7 @@ function update_clipboard_tray()
     var tray_lines = document.getElementById("clipboard_tray_lines");
     if (!clipboard_tray.classList.contains("hidden"))
     {
-        delete_all_children(tray_lines);
+        common.delete_all_children(tray_lines);
         var photo_ids = Array.from(photo_clipboard);
         photo_ids.sort();
         for (var i = 0; i < photo_ids.length; i += 1)

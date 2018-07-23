@@ -225,11 +225,11 @@ function Editor(elements, on_open, on_save, on_cancel)
         var edit_element = this.edit_elements[index];
         if (edit_element.tagName == "TEXTAREA")
         {
-            bind_box_to_button(edit_element, this.save_button, true);
+            common.bind_box_to_button(edit_element, this.save_button, true);
         }
         else
         {
-            bind_box_to_button(edit_element, this.save_button, false);
+            common.bind_box_to_button(edit_element, this.save_button, false);
         }
     }
 }
