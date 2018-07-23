@@ -12,6 +12,7 @@
     <script src="/static/js/common.js"></script>
     <script src="/static/js/hotkeys.js"></script>
     <script src="/static/js/photoclipboard.js"></script>
+    <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
 body
@@ -91,12 +92,12 @@ body
 </div>
 <div id="right">
     <div id="add_tag_area">
-        <input type="text" id="add_tag_textbox">
+        <input type="text" id="add_tag_textbox" list="tag_autocomplete_datalist">
         <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_add_tag(add_remove_callback);">Add tag</button>
     </div>
 
     <div id="remove_tag_area">
-        <input type="text" id="remove_tag_textbox">
+        <input type="text" id="remove_tag_textbox" list="tag_autocomplete_datalist">
         <button class="red_button" id="remove_tag_button" onclick="submit_remove_tag(add_remove_callback);">Remove tag</button>
     </div>
 
@@ -199,6 +200,7 @@ function myhook()
     refresh_divs();
 }
 
+tag_autocomplete.init_datalist();
 photo_clipboard.on_load_hooks.push(myhook);
 photo_clipboard.on_save_hooks.push(myhook);
 
