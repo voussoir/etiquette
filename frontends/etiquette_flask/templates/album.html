@@ -140,7 +140,7 @@ var ALBUM_ID = "{{album.id}}";
 
 function _paste_unpaste_photo_clipboard(add_or_remove)
 {
-    var photo_ids = Array.from(photo_clipboard).join(",");
+    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
     var url = "/album/{{album.id}}/" + add_or_remove;
     var data = new FormData();
     data.append("photo_id", photo_ids);
@@ -150,7 +150,6 @@ function _paste_unpaste_photo_clipboard(add_or_remove)
         {
             return;
         }
-        save_photo_clipboard();
         location.reload();
     };
     common.post(url, data, callback);
