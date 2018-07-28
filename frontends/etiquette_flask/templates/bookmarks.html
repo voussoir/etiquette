@@ -48,23 +48,27 @@
         <div id="bookmarks">
             {% for bookmark in bookmarks %}
             <div class="bookmark_card" data-bookmark-id="{{bookmark.id}}">
-                <a href="{{bookmark.url}}"
+                <a
+                href="{{bookmark.url}}"
                 class="bookmark_title"
                 data-editor-id="title"
                 data-editor-placeholder="title (optional)"
-                data-editor-empty-text="{{bookmark.id}}">
-                {%- if bookmark.title -%}
-                    {{bookmark.title}}
-                {%- else -%}
-                    {{bookmark.id}}
-                {%- endif -%}
+                data-editor-empty-text="{{bookmark.id}}"
+                >
+                    {%- if bookmark.title -%}
+                        {{bookmark.title}}
+                    {%- else -%}
+                        {{bookmark.id}}
+                    {%- endif -%}
                 </a>
 
-                <a href="{{bookmark.url}}"
+                <a
+                href="{{bookmark.url}}"
                 class="bookmark_url"
                 data-editor-id="url"
-                data-editor-placeholder="url">
-                {{-bookmark.url-}}
+                data-editor-placeholder="url"
+                >
+                    {{-bookmark.url-}}
                 </a>
             </div>
             {% endfor %}
@@ -104,13 +108,13 @@ function create_bookmark(url, title)
 }
 
 
-function on_open(editor, edit_element_map)
+function on_open(ed, edit_element_map)
 {
-    editor.open();
+    ed.open();
     edit_element_map["title"].focus();
 }
 
-function on_save(editor, edit_element_map)
+function on_save(ed, edit_element_map)
 {
     var title_editor = edit_element_map["title"];
     var url_editor = edit_element_map["url"];
@@ -120,14 +124,14 @@ function on_save(editor, edit_element_map)
         return;
     }
 
-    editor.show_spinner();
+    ed.show_spinner();
     function callback()
     {
-        editor.hide_spinner();
-        editor.save();
+        ed.hide_spinner();
+        ed.save();
     }
 
-    var url = "/bookmark/" + editor.misc_data["bookmark_id"] + "/edit";
+    var url = "/bookmark/" + ed.misc_data["bookmark_id"] + "/edit";
     var data = new FormData();
     data.append("title", title_editor.value);
     data.append("url", url_editor.value);
@@ -144,8 +148,8 @@ function create_editors()
         var card = cards[index];
         var title_div = card.getElementsByClassName("bookmark_title")[0];
         var url_div = card.getElementsByClassName("bookmark_url")[0];
-        editor = new editor.Editor([title_div, url_div], on_open, on_save, on_cancel);
-        editor.misc_data["bookmark_id"] = card.dataset.bookmarkId;
+        ed = new editor.Editor([title_div, url_div], on_open, on_save, on_cancel);
+        ed.misc_data["bookmark_id"] = card.dataset.bookmarkId;
     }
 }
 create_editors();

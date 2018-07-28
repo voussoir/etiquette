@@ -50,8 +50,16 @@ p
 {{header.make_header(session=session)}}
 <div id="content_body">
     <h2>
-        <span data-editor-id="title" data-editor-empty-text="{{album.id}}" data-editor-placeholder="title" id="title_text">{{album.display_name}}</span>
+        <span
+        id="title_text"
+        data-editor-id="title"
+        data-editor-empty-text="{{album.id}}"
+        data-editor-placeholder="title"
+        >
+            {{-album.display_name-}}
+        </span>
     </h2>
+
     <pre
     id="description_text"
     data-editor-id="description"
@@ -167,21 +175,21 @@ unpaste_photo_clipboard_button.innerText = "Remove from this album";
 unpaste_photo_clipboard_button.onclick = unpaste_photo_clipboard;
 document.getElementById("clipboard_tray_toolbox").appendChild(unpaste_photo_clipboard_button);
 
-function on_open(editor, edit_element_map, display_element_map)
+function on_open(ed, edit_element_map, display_element_map)
 {
-    editor.open();
+    ed.open();
     edit_element_map["title"].focus();
 }
 
-function on_save(editor, edit_element_map, display_element_map)
+function on_save(ed, edit_element_map, display_element_map)
 {
     function callback()
     {
         var title_display = display_element_map["title"];
         var description_display = display_element_map["description"];
 
-        editor.hide_spinner();
-        editor.save();
+        ed.hide_spinner();
+        ed.save();
         document.title = title_display.innerText + " | Albums";
         if (description_display.innerText == "")
         {
@@ -200,13 +208,13 @@ function on_save(editor, edit_element_map, display_element_map)
     data.append("title", title_editor.value);
     data.append("description", description_editor.value);
 
-    editor.show_spinner();
+    ed.show_spinner();
     common.post(url, data, callback);
 }
 
-function on_cancel(editor, edit_element_map, display_element_map)
+function on_cancel(ed, edit_element_map, display_element_map)
 {
-    editor.cancel();
+    ed.cancel();
     if (display_element_map["description"].innerText == "")
     {
         display_element_map["description"].classList.add("hidden");
@@ -215,6 +223,6 @@ function on_cancel(editor, edit_element_map, display_element_map)
 
 var title_text = document.getElementById("title_text");
 var description_text = document.getElementById("description_text");
-var editor = new editor.Editor([title_text, description_text], on_open, on_save, on_cancel);
+var ed = new editor.Editor([title_text, description_text], on_open, on_save, on_cancel);
 </script>
 </html>

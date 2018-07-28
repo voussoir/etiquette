@@ -241,24 +241,24 @@ function receive_callback(response)
 }
 
 {% if specific_tag is not none %}
-function on_open(editor, edit_element_map)
+function on_open(ed, edit_element_map)
 {
-    editor.open();
+    ed.open();
     edit_element_map["name"].focus();
 }
 
-function on_save(editor, edit_element_map, display_element_map)
+function on_save(ed, edit_element_map, display_element_map)
 {
     var name_display = display_element_map["name"];
     var name_editor = edit_element_map["name"];
     var description_display = display_element_map["description"];
     var description_editor = edit_element_map["description"];
 
-    editor.show_spinner();
+    ed.show_spinner();
     function callback(response)
     {
         console.log(response);
-        editor.hide_spinner();
+        ed.hide_spinner();
         if (response["meta"]["status"] == 200)
         {
             var new_name = response["data"]["name"];
@@ -267,7 +267,7 @@ function on_save(editor, edit_element_map, display_element_map)
             window.history.replaceState(null, null, "/tag/" + new_name);
             name_editor.value = new_name;
             description_editor.value = new_description;
-            editor.save();
+            ed.save();
             if (new_description === "")
             {
                 description_display.classList.add("hidden");
@@ -282,9 +282,9 @@ function on_save(editor, edit_element_map, display_element_map)
     common.post(url, data, callback);
 }
 
-function on_cancel(editor, edit_element_map, display_element_map)
+function on_cancel(ed, edit_element_map, display_element_map)
 {
-    editor.cancel();
+    ed.cancel();
     if (display_element_map["description"].innerText == "")
     {
         display_element_map["description"].classList.add("hidden");
@@ -293,7 +293,7 @@ function on_cancel(editor, edit_element_map, display_element_map)
 
 var name_text = document.getElementById("name_text");
 var description_text = document.getElementById("description_text");
-var editor = new editor.Editor([name_text, description_text], on_open, on_save, on_cancel);
+var ed = new editor.Editor([name_text, description_text], on_open, on_save, on_cancel);
 {% endif %}
 </script>
 </html>
