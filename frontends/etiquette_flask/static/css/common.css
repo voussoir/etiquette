@@ -72,18 +72,14 @@ body
     background-color: #ffea57;
 }
 
-.green_button,
-.red_button,
-.yellow_button
+button
 {
     border-top: 2px solid var(--color_3d_highlight);
     border-left: 2px solid var(--color_3d_highlight);
     border-right: 2px solid var(--color_3d_shadow);
     border-bottom: 2px solid var(--color_3d_shadow);
 }
-.green_button:active,
-.red_button:active,
-.yellow_button:active
+button:active
 {
     border-top: 2px solid var(--color_3d_shadow);
     border-left: 2px solid var(--color_3d_shadow);
