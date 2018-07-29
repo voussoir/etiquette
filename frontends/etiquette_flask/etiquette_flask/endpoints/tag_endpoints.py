@@ -31,8 +31,6 @@ def get_tag_id_redirect(tag_id):
     url = request.url.replace(url_from, url_to)
     return flask.redirect(url)
 
-# Tag metadata operations ##########################################################################
-
 @site.route('/tag/<specific_tag>/edit', methods=['POST'])
 @decorators.catch_etiquette_exception
 def post_tag_edit(specific_tag):
@@ -119,9 +117,6 @@ def get_tags_json(specific_tag_name=None):
 @session_manager.give_token
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_tag_create():
-    '''
-    Create a tag.
-    '''
     easybake_string = request.form['tagname']
     user = session_manager.get(request).user
     notes = common.P.easybake(easybake_string, author=user)
@@ -133,9 +128,6 @@ def post_tag_create():
 @session_manager.give_token
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_tag_delete_synonym():
-    '''
-    Delete a synonym.
-    '''
     synonym = request.form['tagname']
     synonym = synonym.split('+')[-1].split('.')[-1]
 
@@ -154,9 +146,6 @@ def post_tag_delete_synonym():
 @session_manager.give_token
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_tag_delete():
-    '''
-    Delete a tag.
-    '''
     tagname = request.form['tagname']
     tagname = tagname.split('+')[0]
     if '.' in tagname:

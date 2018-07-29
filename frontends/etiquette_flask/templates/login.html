@@ -81,14 +81,14 @@ button
                 <span>Log in</span>
                 <input type="text" id="login_input_username" name="username" placeholder="username" autofocus>
                 <input type="password" id="login_input_password" name="password" placeholder="password">
-                <button type="submit" id="login_submit_button" onclick="submit_login()">Log in</button>
+                <button type="submit" id="login_submit_button" onclick="login_form()">Log in</button>
             </div>
             <div id="register_form" action="/register" method="post">
                 <span>Register</span>
                 <input type="text" id="register_input_username" name="username" placeholder="username (at least {{min_username_length}})">
                 <input type="password" id="register_input_password_1" name="password_1" placeholder="password (at least {{min_password_length}})">
                 <input type="password" id="register_input_password_2" name="password_2" placeholder="password again">
-                <button type="submit" id="register_input_button" onclick="submit_register()">Register</button>
+                <button type="submit" id="register_input_button" onclick="register_form()">Register</button>
             </div>
         </div>
         <div id="message_area">
@@ -114,44 +114,55 @@ common.bind_box_to_button(register_input_password_2, register_input_button);
 
 var message_area = document.getElementById("message_area");
 
-function submit_login()
+function login(username, password, callback)
+{
+    var url = "/login";
+    data = new FormData();
+    data.append("username", username);
+    data.append("password", password);
+    return common.post(url, data, callback);
+}
+function login_form()
 {
     var username = document.getElementById("login_input_username").value;
     var password = document.getElementById("login_input_password").value;
     if (username == "" || password == "")
     {
-        common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.", 8000);
+        common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.");
         return;
     }
-    var url = "/login";
+    return login(username, password, receive_callback)
+}
+
+function register(username, password_1, password_2, callback)
+{
+    var url = "/register";
     data = new FormData();
     data.append("username", username);
-    data.append("password", password);
-    return common.post(url, data, receive_callback);
+    data.append("password_1", password_1);
+    data.append("password_2", password_2);
+    return common.post(url, data, callback);
 }
-function submit_register()
+function register_form()
 {
     var username = document.getElementById("register_input_username").value;
     var password_1 = document.getElementById("register_input_password_1").value;
     var password_2 = document.getElementById("register_input_password_2").value;
     if (username == "" || password_1 == "" || password_2 == "")
     {
-        common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.", 8000);
+        common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.");
         return;
     }
-    var url = "/register";
-    data = new FormData();
-    data.append("username", username);
-    data.append("password_1", password_1);
-    data.append("password_2", password_2);
-    return common.post(url, data, receive_callback);
+    return register(username, password_1, password_2, receive_callback);
 }
+
 function receive_callback(response)
 {
     response = response["data"];
     if ("error_type" in response)
     {
-        common.create_message_bubble(message_area, "message_negative", response["error_message"], 8000);
+        common.create_message_bubble(message_area, "message_negative", response["error_message"]);
+        return;
     }
     else
     {

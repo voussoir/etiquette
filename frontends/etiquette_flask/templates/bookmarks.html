@@ -86,7 +86,7 @@
             <div class="new_bookmark_card">
                 <input id="new_bookmark_title" type="text" placeholder="title (optional)">
                 <input id="new_bookmark_url" type="text" placeholder="url">
-                <button id="new_bookmark_button" class="green_button" onclick="submit_bookmark_form()">Create</button>
+                <button id="new_bookmark_button" class="green_button" onclick="create_bookmark_form()">Create</button>
             </div>
         </div>
     </div>
@@ -94,7 +94,19 @@
 
 
 <script type="text/javascript">
-function submit_bookmark_form()
+function create_bookmark(url, title)
+{
+    var api_url = "/bookmarks/create_bookmark";
+    var data = new FormData();
+    data.append("url", url);
+    if (title)
+    {
+        data.append("title", title);
+    }
+    common.post(api_url, data, common.refresh);
+}
+
+function create_bookmark_form()
 {
     var url = document.getElementById("new_bookmark_url").value.trim();
     var title = document.getElementById("new_bookmark_title").value.trim();
@@ -105,26 +117,11 @@ function submit_bookmark_form()
     return create_bookmark(url, title);
 }
 
-function create_bookmark(url, title)
-{
-    var api_url = "/bookmarks/create_bookmark";
-    var data = new FormData();
-    data.append("url", url);
-    if (title)
-    {
-        data.append("title", title);
-    }
-    var callback = function(){location.reload();};
-    common.post(api_url, data, callback);
-}
-
 function delete_bookmark(bookmark_id)
 {
     var url = `/bookmark/${bookmark_id}/delete`
-    var callback = function(){location.reload();};
-    common.post(url, null, callback);
+    common.post(url, null, common.refresh);
 }
-
 
 function on_open(ed, edit_element_map)
 {

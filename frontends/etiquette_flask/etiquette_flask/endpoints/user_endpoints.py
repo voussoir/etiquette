@@ -123,4 +123,3 @@ def post_register():
     session = sessions.Session(request, user)
     session_manager.add(session)
     return jsonify.make_json_response({})
-

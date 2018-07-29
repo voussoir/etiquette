@@ -2,22 +2,6 @@ var common = {};
 
 common.INPUT_TYPES = new Set(["INPUT", "TEXTAREA"]);
 
-common.create_message_bubble =
-function create_message_bubble(message_area, message_positivity, message_text, lifespan)
-{
-    if (lifespan === undefined)
-    {
-        lifespan = 8000;
-    }
-    var message = document.createElement("div");
-    message.className = "message_bubble " + message_positivity;
-    var span = document.createElement("span");
-    span.innerHTML = message_text;
-    message.appendChild(span);
-    message_area.appendChild(message);
-    setTimeout(function(){message_area.removeChild(message);}, lifespan);
-}
-
 common._request =
 function _request(method, url, callback)
 {
@@ -58,15 +42,6 @@ function post(url, data, callback)
     request.send(data);
 }
 
-common.delete_all_children =
-function delete_all_children(element)
-{
-    while (element.firstChild)
-    {
-        element.removeChild(element.firstChild);
-    }
-}
-
 common.bind_box_to_button =
 function bind_box_to_button(box, button, ctrl_enter)
 {
@@ -85,6 +60,31 @@ function bind_box_to_button(box, button, ctrl_enter)
         button.click();
     }
     box.addEventListener("keyup", bound_box_hook);
+}
+
+common.create_message_bubble =
+function create_message_bubble(message_area, message_positivity, message_text, lifespan)
+{
+    if (lifespan === undefined)
+    {
+        lifespan = 8000;
+    }
+    var message = document.createElement("div");
+    message.className = "message_bubble " + message_positivity;
+    var span = document.createElement("span");
+    span.innerHTML = message_text;
+    message.appendChild(span);
+    message_area.appendChild(message);
+    setTimeout(function(){message_area.removeChild(message);}, lifespan);
+}
+
+common.delete_all_children =
+function delete_all_children(element)
+{
+    while (element.firstChild)
+    {
+        element.removeChild(element.firstChild);
+    }
 }
 
 common.entry_with_history_hook =
@@ -132,19 +132,6 @@ function html_to_element(html)
     var template = document.createElement("template");
     template.innerHTML = html;
     return template.content.firstChild;
-}
-
-common.normalize_tagname =
-function normalize_tagname(tagname)
-{
-    tagname = tagname.trim();
-    tagname = tagname.toLocaleLowerCase();
-    tagname = tagname.split(".");
-    tagname = tagname[tagname.length-1];
-    tagname = tagname.split("+")[0];
-    tagname = tagname.replace(new RegExp(" ", 'g'), "_");
-    tagname = tagname.replace(new RegExp("-", 'g'), "_");
-    return tagname;
 }
 
 common.init_button_with_confirm =
@@ -229,6 +216,25 @@ function init_button_with_confirm()
         }
         delete button.dataset.onclick;
     }
+}
+
+common.normalize_tagname =
+function normalize_tagname(tagname)
+{
+    tagname = tagname.trim();
+    tagname = tagname.toLocaleLowerCase();
+    tagname = tagname.split(".");
+    tagname = tagname[tagname.length-1];
+    tagname = tagname.split("+")[0];
+    tagname = tagname.replace(new RegExp(" ", 'g'), "_");
+    tagname = tagname.replace(new RegExp("-", 'g'), "_");
+    return tagname;
+}
+
+common.refresh =
+function refresh()
+{
+    window.location.reload();
 }
 
 common.on_pageload =

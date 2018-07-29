@@ -80,8 +80,8 @@ def P_album(album_id):
     return P.get_album(album_id)
 
 @P_wrapper
-def P_bookmark(bookmarkid):
-    return P.get_bookmark(bookmarkid)
+def P_bookmark(bookmark_id):
+    return P.get_bookmark(bookmark_id)
 
 @P_wrapper
 def P_photo(photo_id):

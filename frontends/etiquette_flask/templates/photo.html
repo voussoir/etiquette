@@ -164,7 +164,7 @@
         <ul id="this_tags">
             <li>
                 <input id="add_tag_textbox" type="text" list="tag_autocomplete_datalist" autofocus>
-                <button id="add_tag_button" class="green_button" onclick="submit_tag(receive_callback);">add</button>
+                <button id="add_tag_button" class="green_button" onclick="add_photo_tag_form('{{photo.id}}');">add</button>
             </li>
             {% set tags = photo.get_tags()|sort_tags %}
             {% for tag in tags %}
@@ -172,7 +172,7 @@
                 {{tag_object.tag_object(tag, with_alt_description=True)}}<!--
                 --><button
                 class="remove_tag_button red_button"
-                onclick="remove_photo_tag('{{photo.id}}', '{{tag.name}}', receive_callback);">
+                onclick="remove_photo_tag_form('{{photo.id}}', '{{tag.name}}');">
                 </button>
             </li>
             {% endfor %}
@@ -256,37 +256,49 @@
 
 
 <script type="text/javascript">
-var content_body = document.getElementById('content_body');
 var add_tag_box = document.getElementById('add_tag_textbox');
 var add_tag_button = document.getElementById('add_tag_button');
-var message_area = document.getElementById('message_area');
 add_tag_box.addEventListener("keyup", common.entry_with_history_hook);
 common.bind_box_to_button(add_tag_box, add_tag_button, false);
 
-photo_img_holder = document.getElementById("photo_img_holder");
-photo_img = document.getElementById("photo_img");
+var message_area = document.getElementById('message_area');
 
-function add_photo_tag(photoid, tagname, callback)
+function add_photo_tag(photo_id, tagname, callback)
 {
-    if (tagname === ""){return}
-    var url = "/photo/" + photoid + "/add_tag";
+    var url = `/photo/${photoid}/add_tag`;
     var data = new FormData();
     data.append("tagname", tagname);
     return common.post(url, data, callback);
 }
+function add_photo_tag_form(photo_id)
+{
+    var tagname = document.getElementById("add_tag_textbox").value;
+    if (tagname == "")
+    {
+        return;
+    }
+    var ret = add_photo_tag('{{photo.id}}', tagname, receive_callback);
+    add_tag_box.value = "";
+    return ret;
+}
+
 function remove_photo_tag(photoid, tagname, callback)
 {
-    if (tagname === ""){return}
     var url = "/photo/" + photoid + "/remove_tag";
     var data = new FormData();
     data.append("tagname", tagname);
     return common.post(url, data, callback);
 }
-function submit_tag(callback)
+function remove_photo_tag_form(photo_id, tagname)
 {
-    add_photo_tag('{{photo.id}}', add_tag_box.value, callback);
-    add_tag_box.value = "";
+    var tagname = document.getElementById("add_tag_textbox").value;
+    if (tagname == "")
+    {
+        return;
+    }
+    return remove_photo_tag(photo_id, tagname, receive_callback);
 }
+
 function receive_callback(response)
 {
     var message_text;
@@ -317,20 +329,19 @@ function receive_callback(response)
     common.create_message_bubble(message_area, message_positivity, message_text, 8000);
 }
 
-function refresh_metadata(photoid)
+function refresh_metadata(photo_id)
 {
-    var url= "/photo/" + photoid + "/refresh_metadata";
+    var url= `/photo/${photo_id}/refresh_metadata`;
     var data = new FormData();
-    var callback = function(){location.reload();};
-    common.post(url, data, callback);
+    common.post(url, data, common.refresh);
 }
 
 var ZOOM_BG_URL = "url('{{photo|file_link}}')";
 function enable_hoverzoom(event)
 {
     //console.log("enable zoom");
-    photo_img_holder = document.getElementById("photo_img_holder");
-    photo_img = document.getElementById("photo_img");
+    var photo_img_holder = document.getElementById("photo_img_holder");
+    var photo_img = document.getElementById("photo_img");
     if (
         photo_img.naturalWidth < photo_img_holder.offsetWidth &&
         photo_img.naturalHeight < photo_img_holder.offsetHeight
@@ -344,21 +355,23 @@ function enable_hoverzoom(event)
     photo_img_holder.style.backgroundImage = ZOOM_BG_URL;
     photo_img_holder.onmousemove = move_hoverzoom;
     move_hoverzoom(event)
-    //setTimeout(function(){img_holder.onclick = toggle_hoverzoom;}, 100);
     return true;
 }
 function disable_hoverzoom()
 {
     //console.log("disable zoom");
+    var photo_img_holder = document.getElementById("photo_img_holder");
+    var photo_img = document.getElementById("photo_img");
+
     photo_img.style.opacity = "100";
     photo_img_holder.style.cursor = "";
     photo_img.style.display = "";
     photo_img_holder.style.backgroundImage = "none";
     photo_img_holder.onmousemove = null;
-    //photo_img_holder.onclick = null;
 }
 function toggle_hoverzoom(event)
 {
+    var photo_img = document.getElementById("photo_img");
     if (photo_img.style.opacity === "0")
     {
         disable_hoverzoom();
@@ -367,6 +380,7 @@ function toggle_hoverzoom(event)
     {
         enable_hoverzoom(event);
     }
+    var content_body = document.getElementById('content_body');
     if (getComputedStyle(content_body).flexDirection != "column-reverse")
     {
         add_tag_box.focus();
@@ -375,6 +389,8 @@ function toggle_hoverzoom(event)
 
 function move_hoverzoom(event)
 {
+    var photo_img_holder = document.getElementById("photo_img_holder");
+    var photo_img = document.getElementById("photo_img");
     var x;
     var y;
 
@@ -394,7 +410,6 @@ function move_hoverzoom(event)
         mouse_x -= photo_img_holder.offsetLeft;
         mouse_y -= photo_img_holder.offsetTop;
     }
-    //console.log(mouse_x);
 
     /*
     Adding 5% to perceived position gives us a bit of padding around the image,

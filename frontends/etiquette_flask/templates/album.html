@@ -150,7 +150,7 @@ function _paste_unpaste_photo_clipboard(add_or_remove)
         {
             return;
         }
-        location.reload();
+        common.refresh();
     };
     common.post(url, data, callback);
 }
@@ -162,6 +162,7 @@ function unpaste_photo_clipboard()
 {
     _paste_unpaste_photo_clipboard("remove_photo");
 }
+
 var paste_photo_clipboard_button = document.createElement("button");
 paste_photo_clipboard_button.classList.add("green_button");
 paste_photo_clipboard_button.innerText = "Add to this album";
