@@ -293,32 +293,22 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def add_associated_directory(self, filepath, *, commit=True):
+    def add_associated_directory(self, path, *, commit=True):
         '''
         Add a directory from which this album will pull files during rescans.
         These relationships are not unique and multiple albums
         can associate with the same directory if desired.
         '''
-        filepath = pathclass.Path(filepath)
-        if not filepath.is_dir:
-            raise ValueError(f'{filepath} is not a directory')
+        path = pathclass.Path(path)
 
-        try:
-            existing = self.photodb.get_album_by_path(filepath)
-        except exceptions.NoSuchAlbum:
-            existing = None
+        if not path.is_dir:
+            raise ValueError(f'{path} is not a directory.')
 
-        if existing is None:
-            pass
-        elif existing == self:
+        if self.has_associated_directory(path):
             return
-        else:
-            raise exceptions.AlbumExists(filepath)
 
-        data = {
-            'albumid': self.id,
-            'directory': filepath.absolute_path,
-        }
+        self.photodb.log.debug('Adding directory %s to %s.', path, self)
+        data = {'albumid': self.id, 'directory': path.absolute_path}
         self.photodb.sql_insert(table='album_associated_directories', data=data)
 
         if commit:
@@ -448,7 +438,7 @@ class Album(ObjectBase, GroupableMixin):
 
     def has_any_photo(self, recurse=False):
         row = self.photodb.sql_select_one(
-            'SELECT photoid FROM album_photo_rel WHERE albumid == ? LIMIT 1',
+            'SELECT 1 FROM album_photo_rel WHERE albumid == ? LIMIT 1',
             [self.id]
         )
         if row is not None:
@@ -458,17 +448,26 @@ class Album(ObjectBase, GroupableMixin):
         return False
 
     def has_any_subalbum_photo(self):
+        '''
+        Return True if any descendent album has any photo, ignoring whether
+        this particular album itself has photos.
+        '''
         return any(child.has_any_photo(recurse=True) for child in self.get_children())
 
-    def has_photo(self, photo):
-        if not isinstance(photo, Photo):
-            raise TypeError(f'`photo` must be of type {Photo}, not {type(photo)}.')
+    def has_associated_directory(self, path):
+        path = pathclass.Path(path)
+        row = self.photodb.sql_select_one(
+            'SELECT 1 FROM album_associated_directories WHERE albumid == ? AND directory == ?',
+            [self.id, path.absolute_path]
+        )
+        return row is not None
 
-        rel_row = self.photodb.sql_select_one(
+    def has_photo(self, photo):
+        row = self.photodb.sql_select_one(
             'SELECT 1 FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
             [self.id, photo.id]
         )
-        return rel_row is not None
+        return row is not None
 
     @decorators.required_feature('album.edit')
     # GroupableMixin.remove_child already has @transaction.
