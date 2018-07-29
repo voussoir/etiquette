@@ -146,3 +146,94 @@ function normalize_tagname(tagname)
     tagname = tagname.replace(new RegExp("-", 'g'), "_");
     return tagname;
 }
+
+common.init_button_with_confirm =
+function init_button_with_confirm()
+{
+    /*
+    To create a button that requires confirmation, simply assign it the class
+    "button_with_confirm" and give it a data-onclick that would normally
+    be the onclick. The rest is taken care of automatically.
+
+    Optional:
+        data-prompt, otherwise "Are you sure?".
+        data-prompt-class
+
+        data-confirm, otherwise inherits the original button's text.
+        data-confirm-class
+
+        data-cancel, otherwise "Cancel".
+        data-cancel-class
+    */
+    var buttons = document.getElementsByClassName("button_with_confirm");
+    for (var index = 0; index < buttons.length; index += 1)
+    {
+        var button = buttons[index];
+        var holder = document.createElement("span");
+        holder.classList.add("confirm_holder");
+        button.parentElement.insertBefore(holder, button);
+        button.parentElement.removeChild(button);
+
+        var holder_stage1 = document.createElement("span");
+        holder_stage1.classList.add("confirm_holder_stage1");
+        holder_stage1.appendChild(button);
+        holder.appendChild(holder_stage1);
+
+        var holder_stage2 = document.createElement("span");
+        holder_stage2.classList.add("confirm_holder_stage2");
+        holder_stage2.classList.add("hidden");
+        holder.appendChild(holder_stage2);
+
+        var span_prompt = document.createElement("span");
+        span_prompt.innerText = (button.dataset.prompt || "Are you sure?") + " ";
+        span_prompt.className = button.dataset.promptClass || "";
+        holder_stage2.appendChild(span_prompt)
+        delete button.dataset.prompt;
+        delete button.dataset.promptClass;
+
+        var button_confirm = document.createElement("button");
+        button_confirm.innerText = button.dataset.confirm || button.innerText;
+        button_confirm.className = button.dataset.confirmClass || "";
+        holder_stage2.appendChild(button_confirm);
+        delete button.dataset.confirm;
+        delete button.dataset.confirmClass;
+
+        var button_cancel = document.createElement("button");
+        button_cancel.innerText = button.dataset.cancel || "Cancel";
+        button_cancel.className = button.dataset.cancelClass || "";
+        holder_stage2.appendChild(button_cancel);
+        delete button.dataset.cancel;
+        delete button.dataset.cancelClass;
+
+        // If this is stupid, let me know.
+        var confirm_onclick = button.dataset.onclick + `
+            ;
+            var holder = event.target.parentElement.parentElement;
+            holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
+            holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
+        `
+        button_confirm.setAttribute("onclick", confirm_onclick);
+        button.removeAttribute("onclick");
+        button.onclick = function(event)
+        {
+            var holder = event.target.parentElement.parentElement;
+            holder.getElementsByClassName("confirm_holder_stage1")[0].classList.add("hidden");
+            holder.getElementsByClassName("confirm_holder_stage2")[0].classList.remove("hidden");
+        }
+
+        button_cancel.onclick = function(event)
+        {
+            var holder = event.target.parentElement.parentElement;
+            holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
+            holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
+        }
+        delete button.dataset.onclick;
+    }
+}
+
+common.on_pageload =
+function on_pageload()
+{
+    common.init_button_with_confirm();
+}
+document.addEventListener("DOMContentLoaded", common.on_pageload);
