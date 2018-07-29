@@ -70,8 +70,19 @@
                 >
                     {{-bookmark.url-}}
                 </a>
+
+                <button
+                class="red_button button_with_confirm"
+                data-onclick="delete_bookmark('{{bookmark.id}}')"
+                data-prompt="Delete Bookmark?"
+                data-confirm-class="red_button"
+                data-cancel-class="gray_button"
+                >
+                    Delete
+                </button>
             </div>
             {% endfor %}
+
             <div class="new_bookmark_card">
                 <input id="new_bookmark_title" type="text" placeholder="title (optional)">
                 <input id="new_bookmark_url" type="text" placeholder="url">
@@ -105,6 +116,13 @@ function create_bookmark(url, title)
     }
     var callback = function(){location.reload();};
     common.post(api_url, data, callback);
+}
+
+function delete_bookmark(bookmark_id)
+{
+    var url = `/bookmark/${bookmark_id}/delete`
+    var callback = function(){location.reload();};
+    common.post(url, null, callback);
 }
 
 

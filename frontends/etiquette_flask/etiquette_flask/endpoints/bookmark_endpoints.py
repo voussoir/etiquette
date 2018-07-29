@@ -63,3 +63,10 @@ def post_bookmarks_create():
     response = etiquette.jsonify.bookmark(bookmark)
     response = jsonify.make_json_response(response)
     return response
+
+@site.route('/bookmark/<bookmark_id>/delete', methods=['POST'])
+@decorators.catch_etiquette_exception
+def post_bookmark_delete(bookmark_id):
+    bookmark = common.P_bookmark(bookmark_id, response_type='json')
+    bookmark.delete()
+    return jsonify.make_json_response({})
