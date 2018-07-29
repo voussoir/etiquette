@@ -720,9 +720,12 @@ class PDBSQLMixin:
             if item == restore_to:
                 break
 
-    def savepoint(self):
+    def savepoint(self, message=None):
         savepoint_id = helpers.random_hex(length=16)
-        self.log.debug('Savepoint %s.', savepoint_id)
+        if message:
+            self.log.debug('Savepoint %s for %s.', savepoint_id, message)
+        else:
+            self.log.debug('Savepoint %s.', savepoint_id)
         query = 'SAVEPOINT "%s"' % savepoint_id
         self.sql.execute(query)
         self.savepoints.append(savepoint_id)
