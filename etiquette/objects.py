@@ -90,7 +90,7 @@ class GroupableMixin:
         if self.has_child(member):
             return
 
-        self.photodb.log.debug(f'Adding child {member} to {self}.')
+        self.photodb.log.debug('Adding child %s to %s.', member, self)
 
         for my_ancestor in self.walk_parents():
             if my_ancestor == member:
@@ -194,7 +194,7 @@ class GroupableMixin:
         if not self.has_child(member):
             return
 
-        self.photodb.log.debug(f'Removing child {member} from {self}.')
+        self.photodb.log.debug('Removing child %s from %s.', member, self)
 
         pairs = {
             'parentid': self.id,
@@ -700,13 +700,13 @@ class Photo(ObjectBase):
         # keep our current one.
         existing = self.has_tag(tag, check_children=True)
         if existing:
-            self.photodb.log.debug(f'Preferring existing {existing} over {tag}')
+            self.photodb.log.debug('Preferring existing %s over %s', existing, tag)
             return existing
 
         # If the new tag is more specific, remove our current one for it.
         for parent in tag.walk_parents():
             if self.has_tag(parent, check_children=False):
-                self.photodb.log.debug(f'Preferring new {tag} over {parent}')
+                self.photodb.log.debug('Preferring new %s over %s', tag, parent)
                 self.remove_tag(parent, commit=False)
 
         self.photodb.log.debug('Applying %s to %s', tag, self)
