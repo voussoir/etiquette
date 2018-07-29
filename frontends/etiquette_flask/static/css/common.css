@@ -59,6 +59,10 @@ body
     flex-direction: row;
 }
 
+.gray_button
+{
+    background-color: #cccccc;
+}
 .green_button
 {
     background-color: #6df16f;

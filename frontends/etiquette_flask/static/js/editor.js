@@ -212,7 +212,7 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.cancel_button.innerText = "Cancel";
     this.cancel_button.classList.add("editor_button");
     this.cancel_button.classList.add("editor_cancel_button");
-    this.cancel_button.classList.add("red_button");
+    this.cancel_button.classList.add("gray_button");
     this.cancel_button.classList.add("hidden");
     this.cancel_button.onclick = this.binder(on_cancel, this.cancel);
     toolbox.appendChild(this.cancel_button);
