@@ -132,7 +132,7 @@ function on_open(ed, edit_element_map)
     edit_element_map["title"].focus();
 }
 
-function on_save(ed, edit_element_map)
+function on_save(ed, edit_element_map, display_element_map)
 {
     var title_editor = edit_element_map["title"];
     var url_editor = edit_element_map["url"];
@@ -143,10 +143,12 @@ function on_save(ed, edit_element_map)
     }
 
     ed.show_spinner();
-    function callback()
+    function callback(response)
     {
         ed.hide_spinner();
         ed.save();
+        display_element_map["title"].href = response["data"]["url"];
+        display_element_map["url"].href = response["data"]["url"];
     }
 
     var url = "/bookmark/" + ed.misc_data["bookmark_id"] + "/edit";
