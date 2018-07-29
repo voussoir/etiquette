@@ -97,10 +97,11 @@ button:active
     /*position: absolute;*/
     top: 3px;
     vertical-align: middle;
+    font-size: 7pt;
 
-    width:  18px;
-    height: 14px;
-    padding: 0;
+    min-width:  18px;
+    min-height: 14px;
+    /*padding: 0;*/
 
 }
 /*
@@ -111,6 +112,7 @@ is hovered over.
 {
     display: none;
 }
+.tag_object:hover + * .remove_tag_button,
 .tag_object:hover + .remove_tag_button,
 .remove_tag_button:hover,
 .remove_tag_button_perm:hover

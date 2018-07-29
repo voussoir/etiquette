@@ -1224,7 +1224,7 @@ class PDBUtilMixin:
             tag = self.get_tag(name=tagname)
             old_name = tag.name
             tag.rename(rename_to)
-            note = ('rename', f'{old_name}={tag.name}')
+            note = ('rename_tag', f'{old_name}={tag.name}')
             output_notes.append(note)
         else:
             tag_parts = tagname.split('.')

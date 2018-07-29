@@ -130,20 +130,56 @@ body
     {% endif %}
     <ul>
         {% for (qualified_name, tag) in tags %}
-        <li>
-            {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
-            {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)}}<!--
-            --><button class="remove_tag_button red_button" onclick="delete_tag('{{qualified_name}}', receive_callback);"></button>
-        </li>
-        {% if include_synonyms %}
-        {% for synonym in tag.get_synonyms() %}
-        <li>
-            {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
-            {{tag_object.tag_object(tag, link='search', innertext=qualified_name + '+' + synonym)}}<!--
-            --><button class="remove_tag_button red_button" onclick="delete_tag_synonym('{{synonym}}', receive_callback);"></button>
-        </li>
-        {% endfor %}
-        {% endif %}
+            {% if "." in qualified_name %}
+            <li>
+                {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
+                {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
+                <button
+                class="remove_tag_button red_button button_with_confirm"
+                data-onclick="delete_tag('{{qualified_name}}', receive_callback);"
+                data-prompt="Unlink Tags?"
+                data-confirm="Unlink"
+                data-confirm-class="remove_tag_button_perm red_button"
+                data-cancel-class="remove_tag_button_perm gray_button"
+                >
+                unlink
+                </button>
+            </li>
+            {% else %}
+            <li>
+                {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
+                {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
+                <button
+                class="remove_tag_button red_button button_with_confirm"
+                data-onclick="delete_tag('{{qualified_name}}', receive_callback);"
+                data-prompt="Delete Tag?"
+                data-confirm="Delete"
+                data-confirm-class="remove_tag_button_perm red_button"
+                data-cancel-class="remove_tag_button_perm gray_button"
+                >
+                delete
+                </button>
+            </li>
+            {% endif %}
+
+            {% if include_synonyms %}
+            {% for synonym in tag.get_synonyms() %}
+            <li>
+                {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
+                {{tag_object.tag_object(tag, link='search', innertext=qualified_name + '+' + synonym)-}}
+                <button
+                class="remove_tag_button red_button button_with_confirm"
+                data-onclick="delete_tag_synonym('{{synonym}}', receive_callback);"
+                data-prompt="Remove Synonym?"
+                data-confirm="Remove"
+                data-confirm-class="remove_tag_button_perm red_button"
+                data-cancel-class="remove_tag_button_perm gray_button"
+                >
+                remove
+                </button>
+            </li>
+            {% endfor %}
+            {% endif %}
         {% endfor %}
     </ul>
 </div>
@@ -202,6 +238,8 @@ function receive_callback(response)
     {
         var response = responses[index];
         var tagname = response["tagname"];
+        var message_positivity;
+        var message_text;
         if ("error_type" in response)
         {
             message_positivity = "message_negative";
@@ -212,28 +250,28 @@ function receive_callback(response)
             var action = response["action"];
             message_positivity = "message_positive";
             if (action == "new_tag")
-            {message_text = "Created tag " + tagname;}
+            {message_text = `Created tag ${tagname}`;}
 
             else if (action == "new_synonym")
-            {message_text = "New synonym " + tagname;}
+            {message_text = `New synonym ${tagname}`;}
 
             else if (action == "existing_tag")
-            {message_text = "Existing tag " + tagname;}
+            {message_text = `Existing tag ${tagname}`;}
 
             else if (action == "join_group")
-            {message_text = "Grouped " + tagname;}
+            {message_text = `Grouped ${tagname}`;}
 
-            else if (action == "rename")
-            {message_text = "Renamed " + tagname;}
+            else if (action == "rename_tag")
+            {message_text = `Renamed ${tagname}`;}
 
             else if (action == "delete_tag")
-            {message_text = "Deleted tag " + tagname;}
+            {message_text = `Deleted tag ${tagname}`;}
 
             else if (action == "delete_synonym")
-            {message_text = "Deleted synonym " + response["synonym"];}
+            {message_text = `Deleted synonym ${response["synonym"]}`;}
 
             else if (action == "unlink_tag")
-            {message_text = "Unlinked tags " + tagname;}
+            {message_text = `Unlinked tags ${tagname}`;}
 
         }
         common.create_message_bubble(message_area, message_positivity, message_text, 8000);
