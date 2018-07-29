@@ -408,6 +408,10 @@ def seconds_to_hms(seconds):
     hms = ':'.join(f'{part:02d}' for part in parts)
     return hms
 
+def slice_before(li, item):
+    index = li.index(item)
+    return li[:index]
+
 def split_easybake_string(ebstring):
     '''
     Given an easybake string, return (tagname, synonym, rename_to), where
