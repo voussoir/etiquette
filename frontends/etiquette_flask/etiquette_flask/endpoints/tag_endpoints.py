@@ -140,7 +140,7 @@ def post_tag_delete_synonym():
     synonym = synonym.split('+')[-1].split('.')[-1]
 
     try:
-        master_tag = common.P_tag(synonym, response_type='json')
+        master_tag = common.P.get_tag(name=synonym)
     except etiquette.exceptions.NoSuchTag as exc:
         raise etiquette.exceptions.NoSuchSynonym(*exc.given_args, **exc.given_kwargs)
     else:
