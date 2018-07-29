@@ -732,13 +732,10 @@ class PDBSQLMixin:
         self.on_commit_queue.append(savepoint_id)
         return savepoint_id
 
-    def sql_delete(self, table, pairs, *, commit=False):
+    def sql_delete(self, table, pairs):
         (qmarks, bindings) = sqlhelpers.delete_filler(pairs)
         query = 'DELETE FROM %s %s' % (table, qmarks)
         self.sql_execute(query, bindings)
-
-        if commit:
-            self.commit()
 
     def sql_execute(self, query, bindings=[]):
         if bindings is None:
@@ -747,15 +744,12 @@ class PDBSQLMixin:
         cur.execute(query, bindings)
         return cur
 
-    def sql_insert(self, table, data, *, commit=False):
+    def sql_insert(self, table, data):
         column_names = constants.SQL_COLUMNS[table]
         (qmarks, bindings) = sqlhelpers.insert_filler(column_names, data)
 
         query = 'INSERT INTO %s VALUES(%s)' % (table, qmarks)
         self.sql_execute(query, bindings)
-
-        if commit:
-            self.commit()
 
     def sql_select(self, query, bindings=None):
         cur = self.sql_execute(query, bindings)
@@ -769,13 +763,10 @@ class PDBSQLMixin:
         cur = self.sql_execute(query, bindings)
         return cur.fetchone()
 
-    def sql_update(self, table, pairs, where_key, *, commit=False):
+    def sql_update(self, table, pairs, where_key):
         (qmarks, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
         query = 'UPDATE %s %s' % (table, qmarks)
         self.sql_execute(query, bindings)
-
-        if commit:
-            self.commit()
 
 
 class PDBTagMixin:
