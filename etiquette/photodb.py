@@ -1313,7 +1313,7 @@ class PhotoDB(
 
         # CONFIG
         self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
-        self.config = self.load_config()
+        self.load_config()
         self.log.setLevel(self.config['log_level'])
 
         # OTHER
@@ -1541,8 +1541,6 @@ class PhotoDB(
 
         if needs_dump:
             self.save_config()
-
-        return config
 
     def save_config(self):
         with open(self.config_filepath.absolute_path, 'w', encoding='utf-8') as handle:
