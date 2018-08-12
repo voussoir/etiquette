@@ -1528,7 +1528,7 @@ class PhotoDB(
         user_config_exists = self.config_filepath.is_file
         needs_dump = False
         if user_config_exists:
-            with open(self.config_filepath.absolute_path, 'r') as handle:
+            with open(self.config_filepath.absolute_path, 'r', encoding='utf-8') as handle:
                 user_config = json.load(handle)
             my_keys = helpers.recursive_dict_keys(config)
             stored_keys = helpers.recursive_dict_keys(user_config)
@@ -1545,7 +1545,7 @@ class PhotoDB(
         return config
 
     def save_config(self):
-        with open(self.config_filepath.absolute_path, 'w') as handle:
+        with open(self.config_filepath.absolute_path, 'w', encoding='utf-8') as handle:
             handle.write(json.dumps(self.config, indent=4, sort_keys=True))
 
 
