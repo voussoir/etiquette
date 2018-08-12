@@ -1530,9 +1530,14 @@ class PhotoDB(
         if user_config_exists:
             with open(self.config_filepath.absolute_path, 'r', encoding='utf-8') as handle:
                 user_config = json.load(handle)
-            my_keys = helpers.recursive_dict_keys(config)
+
+            # If the default config has been updated and contains new keys,
+            # then they will not yet exist in the user's config, and we should
+            # save the file after giving it those default values.
+            default_keys = helpers.recursive_dict_keys(config)
             stored_keys = helpers.recursive_dict_keys(user_config)
-            needs_dump = not my_keys.issubset(stored_keys)
+            needs_dump = default_keys > stored_keys
+
             helpers.recursive_dict_update(target=config, supply=user_config)
         else:
             needs_dump = True

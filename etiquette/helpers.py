@@ -325,7 +325,17 @@ def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=bytestring.
 def recursive_dict_update(target, supply):
     '''
     Update target using supply, but when the value is a dictionary update the
-    insides instead of replacing the dictionary itself.
+    insides instead of replacing the dictionary itself. This prevents keys that
+    exist in the target but don't exist in the supply from being erased.
+    Note that we are modifying target in place.
+
+    eg:
+    target = {'hi': 'ho', 'neighbor': {'name': 'Wilson'}}
+    supply = {'neighbor': {'behind': 'fence'}}
+
+    result: {'hi': 'ho', 'neighbor': {'name': 'Wilson', 'behind': 'fence'}}
+    whereas a regular dict.update would have produced:
+    {'hi': 'ho', 'neighbor': {'behind': 'fence'}}
     '''
     for (key, value) in supply.items():
         if isinstance(value, dict):
@@ -333,7 +343,7 @@ def recursive_dict_update(target, supply):
             if existing is None:
                 target[key] = value
             else:
-                recursive_dict_update(existing, value)
+                recursive_dict_update(target=existing, supply=value)
         else:
             target[key] = value
 
@@ -343,11 +353,7 @@ def recursive_dict_keys(d):
     all other dictionaries that appear as values within. The subkeys will use \\
     to indicate their lineage.
 
-    {
-        'hi': {
-            'ho': 'neighbor'
-        }
-    }
+    {'hi': {'ho': 'neighbor'}}
 
     returns
 
