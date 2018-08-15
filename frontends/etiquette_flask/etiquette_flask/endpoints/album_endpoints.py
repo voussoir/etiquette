@@ -45,40 +45,20 @@ def get_album_zip(album_id):
     recursive = request.args.get('recursive', True)
     recursive = etiquette.helpers.truthystring(recursive)
 
-    arcnames = etiquette.helpers.album_zip_filenames(album, recursive=recursive)
-
-    streamed_zip = zipstream.ZipFile()
-    for (real_filepath, arcname) in arcnames.items():
-        streamed_zip.write(real_filepath, arcname=arcname)
-
-    # Add the album metadata as an {id}.txt file within each directory.
-    directories = etiquette.helpers.album_zip_directories(album, recursive=recursive)
-    for (inner_album, directory) in directories.items():
-        text = []
-        if inner_album.title:
-            text.append('Title: ' + inner_album.title)
-        if inner_album.description:
-            text.append('Description: ' + inner_album.description)
-        if not text:
-            continue
-        text = '\r\n\r\n'.join(text)
-        streamed_zip.writestr(
-            arcname=os.path.join(directory, 'album %s.txt' % inner_album.id),
-            data=text.encode('utf-8'),
-        )
+    streamed_zip = etiquette.helpers.zip_album(album, recursive=recursive)
 
     if album.title:
-        download_as = 'album %s - %s.zip' % (album.id, album.title)
+        download_as = f'album {album.id} - {album.title}.zip'
     else:
-        download_as = 'album %s.zip' % album.id
+        download_as = f'album {album.id}.zip'
 
     download_as = etiquette.helpers.remove_path_badchars(download_as)
     download_as = urllib.parse.quote(download_as)
     outgoing_headers = {
         'Content-Type': 'application/octet-stream',
-        'Content-Disposition': 'attachment; filename*=UTF-8\'\'%s' % download_as,
-
+        'Content-Disposition': f'attachment; filename*=UTF-8\'\'{download_as}',
     }
+
     return flask.Response(streamed_zip, headers=outgoing_headers)
 
 # Album photo operations ###########################################################################

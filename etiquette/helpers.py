@@ -10,6 +10,7 @@ import mimetypes
 import os
 import PIL.Image
 import unicodedata
+import zipstream
 
 from . import constants
 from . import exceptions
@@ -17,11 +18,13 @@ from . import exceptions
 from voussoirkit import bytestring
 from voussoirkit import pathclass
 
-def album_zip_directories(album, recursive=True):
+def album_as_directory_map(album, recursive=True):
     '''
     Given an album, produce a dictionary mapping Album objects to directory
     names as they will appear inside the zip archive.
     Sub-albums become subfolders.
+
+    If an album is a child of multiple albums, only one instance is used.
     '''
     directories = {}
     if album.title:
@@ -33,30 +36,28 @@ def album_zip_directories(album, recursive=True):
     directories[album] = root_folder
     if recursive:
         for child_album in album.get_children():
-            child_directories = album_zip_directories(child_album, recursive=True)
+            child_directories = album_as_directory_map(child_album, recursive=True)
             for (child_album, child_directory) in child_directories.items():
                 child_directory = os.path.join(root_folder, child_directory)
                 directories[child_album] = child_directory
+
     return directories
 
-def album_zip_filenames(album, recursive=True):
+def album_photos_as_filename_map(album, recursive=True):
     '''
-    Given an album, produce a dictionary mapping local filepaths to the
+    Given an album, produce a dictionary mapping Photo objects to the
     filenames that will appear inside the zip archive.
     This includes creating subfolders for sub albums.
 
-    If a photo appears in multiple albums, only the first is used.
+    If a photo appears in multiple albums, only one instance is used.
     '''
     arcnames = {}
-    directories = album_zip_directories(album, recursive=recursive)
+    directories = album_as_directory_map(album, recursive=recursive)
     for (album, directory) in directories.items():
         photos = album.get_photos()
         for photo in photos:
-            filepath = photo.real_path.absolute_path
-            if filepath in arcnames:
-                continue
             photo_name = f'{photo.id} - {photo.basename}'
-            arcnames[filepath] = os.path.join(directory, photo_name)
+            arcnames[photo] = os.path.join(directory, photo_name)
 
     return arcnames
 
@@ -495,6 +496,57 @@ def truthystring(s):
         return None
     return False
 
+def zip_album(album, recursive=True):
+    '''
+    Given an album, return a zipstream zipfile that contains the album's
+    photos (recursive = include childen's photos) organized into folders
+    for each album. Each album folder also gets a text file containing
+    the album's name and description if applicable.
+
+    If an album is a child of multiple albums, only one instance is used.
+    '''
+    zipfile = zipstream.ZipFile()
+
+    # Add the photos.
+    arcnames = album_photos_as_filename_map(album, recursive=recursive)
+    for (photo, arcname) in arcnames.items():
+        zipfile.write(filename=photo.real_path.absolute_path, arcname=arcname)
+
+    # Add the album metadata as an {id}.txt file within each directory.
+    directories = album_as_directory_map(album, recursive=recursive)
+    for (inner_album, directory) in directories.items():
+        metafile_text = []
+        if inner_album.title:
+            metafile_text.append(f'Title: {inner_album.title}')
+
+        if inner_album.description:
+            metafile_text.append(f'Description: {inner_album.description}')
+
+        if not metafile_text:
+            continue
+
+        metafile_text = '\r\n\r\n'.join(metafile_text)
+        metafile_text = metafile_text.encode('utf-8')
+        metafile_name = f'album {inner_album.id}.txt'
+        metafile_name = os.path.join(directory, metafile_name)
+        zipfile.writestr(
+            arcname=metafile_name,
+            data=metafile_text,
+        )
+
+    return zipfile
+
+def zip_photos(photos):
+    '''
+    Given some photos, return a zipstream zipfile that contains the files.
+    '''
+    zipfile = zipstream.ZipFile()
+
+    for photo in photos:
+        arcname = os.path.join('photos', f'{photo.id} - {photo.basename}')
+        zipfile.write(filename=photo.real_path.absolute_path, arcname=arcname)
+
+    return zipfile
 
 _numerical_characters = set('0123456789.')
 def _unitconvert(value):
