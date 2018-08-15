@@ -43,12 +43,13 @@ body
     grid-area: right;
 
     display: grid;
-    grid-template-rows: 75px 75px 75px 75px auto;
+    grid-template-rows: 75px 75px 75px 75px 75px auto;
     grid-template-areas:
         "add_tag_area"
         "remove_tag_area"
         "refresh_metadata_area"
         "searchhidden_area"
+        "download_zip_area"
         "message_area";
 
     background-color: rgba(0, 0, 0, 0.1);
@@ -71,6 +72,11 @@ body
 #searchhidden_area
 {
     grid-area: searchhidden_area;
+    margin: auto;
+}
+#download_zip_area
+{
+    grid-area: download_zip_area;
     margin: auto;
 }
 #message_area
@@ -110,6 +116,10 @@ body
         <button class="yellow_button" id="set_searchhidden_button" onclick="submit_set_searchhidden(searchhidden_callback)">Searchhide</button>
         <button class="yellow_button" id="unset_searchhidden_button" onclick="submit_unset_searchhidden(searchhidden_callback)">Unhide</button>
         </span>
+    </div>
+
+    <div id="download_zip_area">
+        <button class="yellow_button" id="download_zip_button" onclick="submit_download_zip(download_zip_callback)">Download .zip</button>
     </div>
 
     <div id="message_area">
@@ -260,6 +270,25 @@ function add_remove_callback(response)
         {message_text = "Removed tag " + tagname;}
     }
     common.create_message_bubble(message_area, message_positivity, message_text, 8000);
+}
+
+function submit_download_zip(callback)
+{
+    if (photo_clipboard.clipboard.size == 0)
+        {return;}
+
+    var url = "/batch/photos/download_zip";
+    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
+    var data = new FormData();
+    data.append("photo_ids", photo_ids);
+    common.post(url, data, callback);
+}
+
+function download_zip_callback(response)
+{
+    var zip_token = response["data"]["zip_token"];
+    var url = `/batch/photos/download_zip/${zip_token}.zip`;
+    window.location.href = url;
 }
 
 var refresh_in_progress = false;

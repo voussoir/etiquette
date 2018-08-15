@@ -232,6 +232,18 @@ def hash_file(filepath, hasher):
 def hash_file_md5(filepath):
     return hash_file(filepath, hasher=hashlib.md5())
 
+def hash_photoset(photos):
+    '''
+    Given some photos, return a fingerprint string for that particular set.
+    '''
+    hasher = hashlib.md5()
+
+    photo_ids = sorted(set(p.id for p in photos))
+    for photo_id in photo_ids:
+        hasher.update(photo_id.encode('utf-8'))
+
+    return hasher.hexdigest()
+
 def hyphen_range(s):
     '''
     Given a string like '1-3', return numbers (1, 3) representing lower

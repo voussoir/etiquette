@@ -5,12 +5,15 @@ import urllib.parse
 
 import etiquette
 
+from voussoirkit import cacheclass
+
 from .. import common
 from .. import decorators
 from .. import jsonify
 
 site = common.site
 session_manager = common.session_manager
+photo_download_zip_tokens = cacheclass.Cache(maxlen=100)
 
 
 # Individual photos ################################################################################
@@ -224,6 +227,59 @@ def post_batch_photos_photo_cards():
     divs = [div.split(':', 1) for div in divs]
     divs = {photo_id.strip(): photo_card.strip() for (photo_id, photo_card) in divs}
     response = jsonify.make_json_response(divs)
+    return response
+
+# Zipping ##########################################################################################
+
+@site.route('/batch/photos/download_zip/<zip_token>', methods=['GET'])
+def get_batch_photos_download_zip(zip_token):
+    '''
+    After the user has generated their zip token, they can retrieve
+    that zip file.
+    '''
+    zip_token = zip_token.split('.')[0]
+    try:
+        photo_ids = photo_download_zip_tokens[zip_token]
+    except KeyError:
+        flask.abort(404)
+
+    # Let's re-validate those IDs just in case anything has changed.
+    photos = list(common.P_photos(photo_ids, response_type='json'))
+    if not photos:
+        flask.abort(400)
+
+    streamed_zip = etiquette.helpers.zip_photos(photos)
+    download_as = zip_token + '.zip'
+    download_as = urllib.parse.quote(download_as)
+
+    outgoing_headers = {
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': f'attachment; filename*=UTF-8\'\'{download_as}',
+    }
+    return flask.Response(streamed_zip, headers=outgoing_headers)
+
+@site.route('/batch/photos/download_zip', methods=['POST'])
+@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
+def post_batch_photos_download_zip():
+    '''
+    Initiating file downloads via POST requests is a bit clunky and unreliable,
+    so the way this works is we generate a token representing the photoset
+    that they want, and then they can retrieve the zip itself via GET.
+    '''
+    photo_ids = request.form['photo_ids']
+    photo_ids = etiquette.helpers.comma_space_split(photo_ids)
+
+    photos = list(common.P_photos(photo_ids, response_type='json'))
+    if not photos:
+        flask.abort(400)
+
+    photo_ids = [p.id for p in photos]
+
+    zip_token = etiquette.helpers.hash_photoset(photos)
+    photo_download_zip_tokens[zip_token] = photo_ids
+
+    response = {'zip_token': zip_token}
+    response = jsonify.make_json_response(response)
     return response
 
 # Search ###########################################################################################
