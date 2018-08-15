@@ -99,27 +99,27 @@ body
 <div id="right">
     <div id="add_tag_area">
         <input type="text" id="add_tag_textbox" list="tag_autocomplete_datalist">
-        <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_add_tag(add_remove_callback);">Add tag</button>
+        <button class="add_tag_button green_button" id="add_tag_button" onclick="add_tag_form();">Add tag</button>
     </div>
 
     <div id="remove_tag_area">
         <input type="text" id="remove_tag_textbox" list="tag_autocomplete_datalist">
-        <button class="red_button" id="remove_tag_button" onclick="submit_remove_tag(add_remove_callback);">Remove tag</button>
+        <button class="red_button" id="remove_tag_button" onclick="remove_tag_form();">Remove tag</button>
     </div>
 
     <div id="refresh_metadata_area">
-        <button class="green_button" id="refresh_metadata_button" onclick="submit_refresh_metadata(refresh_metadata_callback);">Refresh metadata</button>
+        <button class="green_button" id="refresh_metadata_button" onclick="refresh_metadata_form();">Refresh metadata</button>
     </div>
 
     <div id="searchhidden_area">
         <span>
-        <button class="yellow_button" id="set_searchhidden_button" onclick="submit_set_searchhidden(searchhidden_callback)">Searchhide</button>
-        <button class="yellow_button" id="unset_searchhidden_button" onclick="submit_unset_searchhidden(searchhidden_callback)">Unhide</button>
+        <button class="yellow_button" id="set_searchhidden_button" onclick="set_searchhidden_form()">Searchhide</button>
+        <button class="yellow_button" id="unset_searchhidden_button" onclick="unset_searchhidden_form()">Unhide</button>
         </span>
     </div>
 
     <div id="download_zip_area">
-        <button class="yellow_button" id="download_zip_button" onclick="submit_download_zip(download_zip_callback)">Download .zip</button>
+        <button class="yellow_button" id="download_zip_button" onclick="download_zip_form()">Download .zip</button>
     </div>
 
     <div id="message_area">
@@ -203,7 +203,7 @@ function request_more_divs()
     common.post(url, data, callback);
 }
 
-function myhook()
+function my_clipboard_load_save_hook()
 {
     recalculate_needed();
     request_more_divs();
@@ -211,31 +211,12 @@ function myhook()
 }
 
 tag_autocomplete.init_datalist();
-photo_clipboard.on_load_hooks.push(myhook);
-photo_clipboard.on_save_hooks.push(myhook);
+photo_clipboard.on_load_hooks.push(my_clipboard_load_save_hook);
+photo_clipboard.on_save_hooks.push(my_clipboard_load_save_hook);
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
-function submit_add_tag(callback)
-{
-    var box = document.getElementById("add_tag_textbox");
-    var tagname = box.value.trim();
-    if (! tagname)
-        {return}
-
-    box.value = "";
-    return submit_add_remove_tag("add", tagname, callback);
-}
-function submit_remove_tag(callback)
-{
-    var box = document.getElementById("remove_tag_textbox");
-    var tagname = box.value.trim();
-    if (! tagname)
-        {return}
-
-    box.value = "";
-    return submit_add_remove_tag("remove", tagname, callback);
-}
-function submit_add_remove_tag(action, tagname, callback)
+function add_remove_tag(action, tagname)
 {
     if (photo_clipboard.clipboard.size == 0)
         {return;}
@@ -244,9 +225,9 @@ function submit_add_remove_tag(action, tagname, callback)
     var data = new FormData();
     data.append("photo_ids", photo_ids);
     data.append("tagname", tagname);
-    common.post(url, data, callback);
+    common.post(url, data, add_remove_tag_callback);
 }
-function add_remove_callback(response)
+function add_remove_tag_callback(response)
 {
     response = response["data"];
     var tagname = response["tagname"];
@@ -271,17 +252,25 @@ function add_remove_callback(response)
     }
     common.create_message_bubble(message_area, message_positivity, message_text, 8000);
 }
-
-function submit_download_zip(callback)
+function add_tag_form()
 {
-    if (photo_clipboard.clipboard.size == 0)
-        {return;}
+    var box = document.getElementById("add_tag_textbox");
+    var tagname = box.value.trim();
+    if (! tagname)
+        {return}
 
-    var url = "/batch/photos/download_zip";
-    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
-    var data = new FormData();
-    data.append("photo_ids", photo_ids);
-    common.post(url, data, callback);
+    box.value = "";
+    return add_remove_tag("add", tagname);
+}
+function remove_tag_form()
+{
+    var box = document.getElementById("remove_tag_textbox");
+    var tagname = box.value.trim();
+    if (! tagname)
+        {return}
+
+    box.value = "";
+    return add_remove_tag("remove", tagname);
 }
 
 function download_zip_callback(response)
@@ -290,23 +279,19 @@ function download_zip_callback(response)
     var url = `/batch/photos/download_zip/${zip_token}.zip`;
     window.location.href = url;
 }
-
-var refresh_in_progress = false;
-function submit_refresh_metadata(callback)
+function download_zip_form()
 {
-    if (refresh_in_progress)
-        {return;}
-
     if (photo_clipboard.clipboard.size == 0)
         {return;}
 
-    var url = "/batch/photos/refresh_metadata";
+    var url = "/batch/photos/download_zip";
     var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
     var data = new FormData();
     data.append("photo_ids", photo_ids);
-    refresh_in_progress = true;
-    common.post(url, data, callback);
+    common.post(url, data, download_zip_callback);
 }
+
+var refresh_in_progress = false;
 function refresh_metadata_callback(response)
 {
     response = response["data"];
@@ -323,8 +308,23 @@ function refresh_metadata_callback(response)
         common.refresh();
     }
 }
+function refresh_metadata_form()
+{
+    if (refresh_in_progress)
+        {return;}
 
-function searchhidden_callback(response)
+    if (photo_clipboard.clipboard.size == 0)
+        {return;}
+
+    var url = "/batch/photos/refresh_metadata";
+    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
+    var data = new FormData();
+    data.append("photo_ids", photo_ids);
+    refresh_in_progress = true;
+    common.post(url, data, refresh_metadata_callback);
+}
+
+function set_unset_searchhidden_callback(response)
 {
     response = response["data"];
     var message_area = document.getElementById("message_area");
@@ -342,7 +342,7 @@ function searchhidden_callback(response)
     }
     common.create_message_bubble(message_area, message_positivity, message_text, 8000);
 }
-function submit_set_searchhidden(callback)
+function set_searchhidden_form()
 {
     if (photo_clipboard.clipboard.size == 0)
         {return;}
@@ -352,9 +352,9 @@ function submit_set_searchhidden(callback)
     var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
 
     data.append("photo_ids", photo_ids);
-    common.post(url, data, callback);
+    common.post(url, data, set_unset_searchhidden_callback);
 }
-function submit_unset_searchhidden(callback)
+function unset_searchhidden_form()
 {
     if (photo_clipboard.clipboard.size == 0)
         {return;}
@@ -364,7 +364,7 @@ function submit_unset_searchhidden(callback)
     var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
 
     data.append("photo_ids", photo_ids);
-    common.post(url, data, callback);
+    common.post(url, data, set_unset_searchhidden_callback);
 }
 </script>
 </html>
