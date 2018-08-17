@@ -182,6 +182,7 @@ function init_button_with_confirm()
         button_confirm.innerText = button.dataset.confirm || button.innerText;
         button_confirm.className = button.dataset.confirmClass || "";
         holder_stage2.appendChild(button_confirm);
+        holder_stage2.appendChild(document.createTextNode(" "));
         delete button.dataset.confirm;
         delete button.dataset.confirmClass;
 

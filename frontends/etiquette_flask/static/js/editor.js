@@ -207,6 +207,7 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.save_button.classList.add("hidden");
     this.save_button.onclick = this.binder(on_save, this.save);
     toolbox.appendChild(this.save_button);
+    toolbox.appendChild(document.createTextNode(" "));
 
     this.cancel_button = document.createElement("button");
     this.cancel_button.innerText = "Cancel";
