@@ -43,10 +43,10 @@ function should_prevent_hotkey(event)
     }
 }
 
-hotkeys.show_all_keybinds =
-function show_all_keybinds()
+hotkeys.show_all_hotkeys =
+function show_all_hotkeys()
 {
-    // Display an Alert with a list of all the keybinds.
+    // Display an Alert with a list of all the hotkeys.
     var lines = [];
     for (var identifier in hotkeys.HOTKEYS)
     {
@@ -56,7 +56,6 @@ function show_all_keybinds()
     lines = lines.join("\n");
     alert(lines);
 }
-
 
 window.addEventListener(
     "keydown",
@@ -73,4 +72,4 @@ window.addEventListener(
     }
 );
 
-hotkeys.register_hotkey("/", 0, 0, 0, hotkeys.show_all_keybinds, "Show keybinds.");
+hotkeys.register_hotkey("/", 0, 0, 0, hotkeys.show_all_hotkeys, "Show hotkeys.");
