@@ -265,7 +265,7 @@ var message_area = document.getElementById('message_area');
 
 function add_photo_tag(photo_id, tagname, callback)
 {
-    var url = `/photo/${photoid}/add_tag`;
+    var url = `/photo/${photo_id}/add_tag`;
     var data = new FormData();
     data.append("tagname", tagname);
     return common.post(url, data, callback);
@@ -282,9 +282,9 @@ function add_photo_tag_form(photo_id)
     return ret;
 }
 
-function remove_photo_tag(photoid, tagname, callback)
+function remove_photo_tag(photo_id, tagname, callback)
 {
-    var url = "/photo/" + photoid + "/remove_tag";
+    var url = `/photo/${photo_id}/remove_tag`;
     var data = new FormData();
     data.append("tagname", tagname);
     return common.post(url, data, callback);
