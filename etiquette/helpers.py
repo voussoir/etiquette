@@ -156,6 +156,8 @@ def fit_into_bounds(image_width, image_height, frame_width, frame_height):
     return (new_width, new_height)
 
 def generate_image_thumbnail(filepath, width, height):
+    if not os.path.isfile(filepath):
+        raise FileNotFoundError(filepath)
     image = PIL.Image.open(filepath)
     (image_width, image_height) = image.size
     (new_width, new_height) = fit_into_bounds(
@@ -183,6 +185,8 @@ def generate_image_thumbnail(filepath, width, height):
     return image
 
 def generate_video_thumbnail(filepath, outfile, width, height, **special):
+    if not os.path.isfile(filepath):
+        raise FileNotFoundError(filepath)
     probe = constants.ffmpeg.probe(filepath)
     if not probe.video:
         return False
