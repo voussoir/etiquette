@@ -83,11 +83,11 @@ def post_login():
     session_manager.add(session)
     return jsonify.make_json_response({})
 
-@site.route('/logout', methods=['GET', 'POST'])
+@site.route('/logout', methods=['POST'])
 @session_manager.give_token
 def logout():
     session_manager.remove(request)
-    response = flask.Response('redirect', status=302, headers={'Location': common.back_url()})
+    response = jsonify.make_json_response({})
     return response
 
 # User registration ################################################################################

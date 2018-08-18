@@ -37,6 +37,11 @@ pre
 
     margin-bottom: 4px;
 }
+#header button
+{
+    border: 0;
+    cursor: pointer;
+}
 .header_element
 {
     display: flex;
@@ -49,6 +54,7 @@ pre
 {
     background-color: #ffffd4;
 }
+
 .editor_input
 {
     width: 100%;
