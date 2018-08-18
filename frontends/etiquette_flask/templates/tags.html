@@ -33,6 +33,10 @@ body
     word-break: break-word;
     grid-area: left;
 }
+#tag_metadata
+{
+    max-width: 800px;
+}
 #right
 {
     position: fixed;
@@ -101,6 +105,7 @@ body
 {{header.make_header(session=session)}}
 <div id="left">
     {% if specific_tag %}
+        <div id="tag_metadata">
         <h2>
             <span
             id="name_text"
@@ -118,15 +123,19 @@ body
         >
             {{-specific_tag.description-}}
         </pre>
+        </div>
 
-    <ul>
-    {% for ancestor in specific_tag.get_parents() %}
-    <li>
-        {{tag_object.tag_object(ancestor, innertext='(?)', link='info')}}
-        {{tag_object.tag_object(ancestor, innertext=ancestor.name, link=none, with_alt_description=True)}}
-    </li>
-    {% endfor %}
-    </ul>
+        {% set parents = specific_tag.get_parents() %}
+        {% if parents %}
+        <ul>
+        {% for ancestor in specific_tag.get_parents() %}
+        <li>
+            {{tag_object.tag_object(ancestor, innertext='(?)', link='info')}}
+            {{tag_object.tag_object(ancestor, innertext=ancestor.name, link=none, with_alt_description=True)}}
+        </li>
+        {% endfor %}
+        {% endif %}
+        </ul>
     {% endif %}
     <ul>
         {% for (qualified_name, tag) in tags %}

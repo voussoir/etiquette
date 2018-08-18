@@ -23,6 +23,12 @@ body
 
     background-color: var(--color_site_theme);
 }
+
+pre
+{
+    white-space: pre-line;
+}
+
 #header
 {
     display: grid;

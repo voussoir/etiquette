@@ -2,7 +2,7 @@
 <html>
 <head>
     {% import "header.html" as header %}
-    <title>User {{user.display_name}}</title>
+    <title>{{user.display_name}}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
@@ -22,7 +22,7 @@
     <div id="content_body">
         <h2>{{user.display_name}}</h2>
         <p>ID: {{user.id}}</p>
-        <p title="{{user.created|int|timestamp_to_8601}}">User since {{user.created|timestamp_to_naturaldate}}.</p>
+        <p>User since <span title="{{user.created|int|timestamp_to_8601}}">{{user.created|timestamp_to_naturaldate}}.</span></p>
         <p><a href="/search?author={{user.username}}">Photos by {{user.display_name}}</a></p>
     </div>
 </body>
