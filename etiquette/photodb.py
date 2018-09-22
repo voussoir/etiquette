@@ -216,6 +216,7 @@ class PDBPhotoMixin:
             commit=True,
             do_metadata=True,
             do_thumbnail=True,
+            searchhidden=False,
             tags=None,
         ):
         '''
@@ -248,7 +249,7 @@ class PDBPhotoMixin:
             'created': created,
             'tagged_at': None,
             'author_id': author_id,
-            'searchhidden': False,
+            'searchhidden': searchhidden,
             # These will be filled in during the metadata stage.
             'bytes': None,
             'width': None,
