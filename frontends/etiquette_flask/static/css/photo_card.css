@@ -1,6 +1,6 @@
 .photo_card
 {
-    background-color: #ffffd4;
+    background-color: var(--color_site_secondary);
 }
 .photo_card_list
 {

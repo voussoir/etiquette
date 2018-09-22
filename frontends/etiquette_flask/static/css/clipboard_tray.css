@@ -12,7 +12,7 @@
     min-width: 150px;
     padding: 2px;
 
-    background-color: #ffffd4;
+    background-color: var(--color_site_secondary);
 }
 #clipboard_tray_expandbutton
 {
