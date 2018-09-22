@@ -291,11 +291,6 @@ function remove_photo_tag(photo_id, tagname, callback)
 }
 function remove_photo_tag_form(photo_id, tagname)
 {
-    var tagname = document.getElementById("add_tag_textbox").value;
-    if (tagname == "")
-    {
-        return;
-    }
     return remove_photo_tag(photo_id, tagname, receive_callback);
 }
 
