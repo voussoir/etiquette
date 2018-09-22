@@ -14,6 +14,8 @@ Organization:
 {
     --color_site_theme: #00d8f4;
     --color_site_secondary: #ffffd4;
+    --color_site_transparency: rgba(0, 0, 0, 0.1);
+    --color_site_dropshadow: rgba(0, 0, 0, 0.25);
     --color_3d_shadow: rgba(0, 0, 0, 0.5);
     --color_3d_highlight: rgba(255, 255, 255, 0.5);
 }
@@ -49,7 +51,7 @@ pre
     flex: 1;
     justify-content: center;
 
-    background-color: rgba(0, 0, 0, 0.1);   
+    background-color: var(--color_site_transparency);
 }
 .header_element:hover
 {
@@ -153,7 +155,7 @@ is hovered over.
 
     overflow-y: auto;
 
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--color_site_transparency);
 }
 .message_bubble
 {

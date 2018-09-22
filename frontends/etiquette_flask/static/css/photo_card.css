@@ -16,7 +16,7 @@
 }
 .photo_card_list:hover
 {
-    box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.25);
+    box-shadow: 2px 2px 5px 0px var(--color_site_dropshadow);
 }
 .photo_card_list .photo_card_selector_checkbox
 {
@@ -40,7 +40,7 @@
     margin: 8px;
 
     border-radius: 8px;
-    box-shadow: 2px 2px 5px 0px rgba(0,0,0,0.25);
+    box-shadow: 2px 2px 5px 0px var(--color_site_dropshadow);
 }
 .photo_card_grid .photo_card_selector_checkbox
 {
