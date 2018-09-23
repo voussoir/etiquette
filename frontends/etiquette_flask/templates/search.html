@@ -25,14 +25,22 @@ form
 
     width: 100%;
 }
+#content_body
+{
+    grid-template:
+        "error_message_area error_message_area"
+        "left right"
+        / 300px 1fr;
+}
 #error_message_area
 {
+    grid-area: error_message_area;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
 }
-.search_warning
+.error_message
 {
     align-self: center;
 
@@ -44,12 +52,10 @@ form
 }
 #left
 {
+    grid-area: left;
     flex: 1;
 
     padding: 8px;
-    max-width: 300px;
-    min-width: 300px;
-    width: 300px;
 
     background-color: var(--color_site_transparency);
 
@@ -57,18 +63,20 @@ form
 }
 #right
 {
+    grid-area: right;
     flex: 1;
 
     padding: 8px;
     /* Keep the prev-next buttons from scraping the floor */
     padding-bottom: 30px;
-
-    width: auto;
 }
 @media screen and (max-width: 800px) {
     #content_body
     {
-        flex-direction: column-reverse;
+        grid-template:
+            "error_message_area"
+            "right"
+            "left";
     }
     #left
     {
@@ -151,12 +159,12 @@ form
 
 <body>
 {{header.make_header(session=session)}}
-<div id="error_message_area">
-    {% for warning in warnings %}
-        <span class="search_warning">{{warning}}</span>
-    {% endfor %}
-</div>
 <div id="content_body">
+    <div id="error_message_area">
+        {% for warning in warnings %}
+            <span class="error_message">{{warning}}</span>
+        {% endfor %}
+    </div>
     <div id="left">
         {% for tagtype in ["musts", "mays", "forbids"] %}
         <div id="search_builder_{{tagtype}}" {% if search_kwargs["tag_expression"]%}style="display:none"{%endif%}>

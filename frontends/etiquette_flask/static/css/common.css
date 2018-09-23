@@ -1,7 +1,8 @@
 /*
 Organization:
 {
-    display and flexing
+    own grid area name
+    display, flexing, gridding
     positioning and alignment
     bounding box (width, margin, overflow, ...)
     borders and shadows
@@ -19,26 +20,32 @@ Organization:
     --color_3d_shadow: rgba(0, 0, 0, 0.5);
     --color_3d_highlight: rgba(255, 255, 255, 0.5);
 }
+
 body
 {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template:
+        "header" auto
+        "content_body" 1fr
+        /1fr;
 
     background-color: var(--color_site_theme);
 }
-
-pre
-{
-    white-space: pre-line;
-}
-
 #header
 {
+    grid-area: header;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr auto;
     grid-template-rows: auto;
 
     margin-bottom: 4px;
+
+    background-color: var(--color_site_transparency);
+}
+#content_body
+{
+    grid-area: content_body;
+    display: grid;
 }
 #header button
 {
@@ -50,12 +57,15 @@ pre
     display: flex;
     flex: 1;
     justify-content: center;
-
-    background-color: var(--color_site_transparency);
 }
 .header_element:hover
 {
     background-color: var(--color_site_secondary);
+}
+
+pre
+{
+    white-space: pre-line;
 }
 
 .editor_input
@@ -63,15 +73,10 @@ pre
     width: 100%;
     max-width: 800px;
 }
+
 .hidden
 {
     display: none !important;
-}
-#content_body
-{
-    display: flex;
-    flex: 0 0 auto;
-    flex-direction: row;
 }
 
 .gray_button

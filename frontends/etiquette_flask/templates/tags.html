@@ -15,18 +15,16 @@
     <script src="/static/js/editor.js"></script>
 
 <style>
-body
-{
-    display: grid;
-    grid-template-rows: auto 1fr;
-    grid-template-columns: 1fr 300px;
-    grid-template-areas:
-        "header header"
-        "left right";
-}
 #header
 {
     grid-area: header;
+}
+#content_body
+{
+    display: grid;
+    grid-template:
+        "left right"
+        /1fr 300px;
 }
 #left
 {
@@ -73,14 +71,11 @@ body
 }
 @media screen and (max-width: 800px)
 {
-    body
+    #content_body
     {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr 150px;
-        grid-template-areas:
-            "header"
-            "left"
-            "right";
+        grid-template:
+            "left" 1fr
+            "right" 150px;
     }
     #right
     {
@@ -103,101 +98,105 @@ body
 
 <body>
 {{header.make_header(session=session)}}
-<div id="left">
-    {% if specific_tag %}
-        <div id="tag_metadata">
-        <h2>
-            <span
-            id="name_text"
-            data-editor-id="name"
-            data-editor-placeholder="name"
+<div id="content_body">
+    <div id="left">
+        {% if specific_tag %}
+            <div id="tag_metadata">
+            <h2>
+                <span
+                id="name_text"
+                data-editor-id="name"
+                data-editor-placeholder="name"
+                >
+                    {{-specific_tag.name-}}
+                </span>
+            </h2>
+            <pre
+            id="description_text"
+            data-editor-id="description"
+            data-editor-placeholder="description"
+            {% if specific_tag.description == "" %}class="hidden"{% endif -%}
             >
-                {{-specific_tag.name-}}
-            </span>
-        </h2>
-        <pre
-        id="description_text"
-        data-editor-id="description"
-        data-editor-placeholder="description"
-        {% if specific_tag.description == "" %}class="hidden"{% endif -%}
-        >
-            {{-specific_tag.description-}}
-        </pre>
-        </div>
+                {{-specific_tag.description-}}
+            </pre>
+            </div>
 
-        {% set parents = specific_tag.get_parents() %}
-        {% if parents %}
-        <ul>
-        {% for ancestor in specific_tag.get_parents() %}
-        <li>
-            {{tag_object.tag_object(ancestor, innertext='(?)', link='info')}}
-            {{tag_object.tag_object(ancestor, innertext=ancestor.name, link=none, with_alt_description=True)}}
-        </li>
-        {% endfor %}
-        {% endif %}
-        </ul>
-    {% endif %}
-    <ul>
-        {% for (qualified_name, tag) in tags %}
-            {% if "." in qualified_name %}
+            {% set parents = specific_tag.get_parents() %}
+            {% if parents %}
+            <ul>
+            {% for ancestor in specific_tag.get_parents() %}
             <li>
-                {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
-                {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
-                <button
-                class="remove_tag_button red_button button_with_confirm"
-                data-onclick="delete_tag('{{qualified_name}}', receive_callback);"
-                data-prompt="Unlink Tags?"
-                data-confirm="Unlink"
-                data-confirm-class="remove_tag_button_perm red_button"
-                data-cancel-class="remove_tag_button_perm gray_button"
-                >
-                unlink
-                </button>
-            </li>
-            {% else %}
-            <li>
-                {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
-                {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
-                <button
-                class="remove_tag_button red_button button_with_confirm"
-                data-onclick="delete_tag('{{qualified_name}}', receive_callback);"
-                data-prompt="Delete Tag?"
-                data-confirm="Delete"
-                data-confirm-class="remove_tag_button_perm red_button"
-                data-cancel-class="remove_tag_button_perm gray_button"
-                >
-                delete
-                </button>
-            </li>
-            {% endif %}
-
-            {% if include_synonyms %}
-            {% for synonym in tag.get_synonyms() %}
-            <li>
-                {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
-                {{tag_object.tag_object(tag, link='search', innertext=qualified_name + '+' + synonym)-}}
-                <button
-                class="remove_tag_button red_button button_with_confirm"
-                data-onclick="delete_tag_synonym('{{synonym}}', receive_callback);"
-                data-prompt="Remove Synonym?"
-                data-confirm="Remove"
-                data-confirm-class="remove_tag_button_perm red_button"
-                data-cancel-class="remove_tag_button_perm gray_button"
-                >
-                remove
-                </button>
+                {{tag_object.tag_object(ancestor, innertext='(?)', link='info')}}
+                {{tag_object.tag_object(ancestor, innertext=ancestor.name, link=none, with_alt_description=True)}}
             </li>
             {% endfor %}
             {% endif %}
-        {% endfor %}
-    </ul>
-</div>
-<div id="right">
-    <div id="editor_area">
-        <input type="text" id="add_tag_textbox" autofocus>
-        <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
+            </ul>
+        {% else %}
+            <h2>Tags</h2>
+        {% endif %}
+        <ul>
+            {% for (qualified_name, tag) in tags %}
+                {% if "." in qualified_name %}
+                <li>
+                    {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
+                    {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
+                    <button
+                    class="remove_tag_button red_button button_with_confirm"
+                    data-onclick="delete_tag('{{qualified_name}}', receive_callback);"
+                    data-prompt="Unlink Tags?"
+                    data-confirm="Unlink"
+                    data-confirm-class="remove_tag_button_perm red_button"
+                    data-cancel-class="remove_tag_button_perm gray_button"
+                    >
+                    unlink
+                    </button>
+                </li>
+                {% else %}
+                <li>
+                    {{tag_object.tag_object(tag, innertext='(?)', link='info')}}
+                    {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
+                    <button
+                    class="remove_tag_button red_button button_with_confirm"
+                    data-onclick="delete_tag('{{qualified_name}}', receive_callback);"
+                    data-prompt="Delete Tag?"
+                    data-confirm="Delete"
+                    data-confirm-class="remove_tag_button_perm red_button"
+                    data-cancel-class="remove_tag_button_perm gray_button"
+                    >
+                    delete
+                    </button>
+                </li>
+                {% endif %}
+
+                {% if include_synonyms %}
+                {% for synonym in tag.get_synonyms() %}
+                <li>
+                    {{tag_object.tag_object(tag, innertext='(+)', link=none)}}
+                    {{tag_object.tag_object(tag, link='search', innertext=qualified_name + '+' + synonym)-}}
+                    <button
+                    class="remove_tag_button red_button button_with_confirm"
+                    data-onclick="delete_tag_synonym('{{synonym}}', receive_callback);"
+                    data-prompt="Remove Synonym?"
+                    data-confirm="Remove"
+                    data-confirm-class="remove_tag_button_perm red_button"
+                    data-cancel-class="remove_tag_button_perm gray_button"
+                    >
+                    remove
+                    </button>
+                </li>
+                {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </ul>
     </div>
-    <div id="message_area">
+    <div id="right">
+        <div id="editor_area">
+            <input type="text" id="add_tag_textbox" autofocus>
+            <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
+        </div>
+        <div id="message_area">
+        </div>
     </div>
 </div>
 </body>
