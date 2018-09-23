@@ -10,7 +10,7 @@
     <script src="/static/js/editor.js"></script>
 
 <style>
-#bookmarks
+#bookmark_list
 {
     display: flex;
     flex: 0 0 auto;
@@ -45,7 +45,8 @@
 <body>
     {{header.make_header(session=session)}}
     <div id="content_body">
-        <div id="bookmarks">
+        <div id="bookmark_list">
+            <h2>Bookmarks</h2>
             {% for bookmark in bookmarks %}
             <div class="bookmark_card" data-bookmark-id="{{bookmark.id}}">
                 <a

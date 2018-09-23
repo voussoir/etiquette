@@ -12,9 +12,8 @@ function _request(method, url, callback)
         {
             if (callback != null)
             {
-                var text = request.responseText;
                 var response = {
-                    "data": JSON.parse(text),
+                    "data": JSON.parse(request.responseText),
                     "meta": {}
                 };
                 response["meta"]["request_url"] = url;
@@ -179,7 +178,7 @@ function init_button_with_confirm()
         delete button.dataset.promptClass;
 
         var button_confirm = document.createElement("button");
-        button_confirm.innerText = button.dataset.confirm || button.innerText;
+        button_confirm.innerText = (button.dataset.confirm || button.innerText).trim();
         button_confirm.className = button.dataset.confirmClass || "";
         holder_stage2.appendChild(button_confirm);
         holder_stage2.appendChild(document.createTextNode(" "));

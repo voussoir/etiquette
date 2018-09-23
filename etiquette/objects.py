@@ -1214,7 +1214,7 @@ class Tag(ObjectBase, GroupableMixin):
         synname = self.photodb.normalize_tagname(synname)
 
         if synname == self.name:
-            raise exceptions.CantSynonymSelf()
+            raise exceptions.CantSynonymSelf(self)
 
         self.photodb.assert_no_such_tag(name=synname)
 

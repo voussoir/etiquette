@@ -113,7 +113,7 @@ class CantGroupSelf(EtiquetteException):
     error_message = 'Cannot group {} into itself.'
 
 class CantSynonymSelf(EtiquetteException):
-    error_message = 'Cannot apply synonym to self.'
+    error_message = 'Cannot make {} a synonym of itself.'
 
 class EasyBakeError(EtiquetteException):
     error_message = '{}'

@@ -10,7 +10,7 @@ from . import jsonify
 def catch_etiquette_exception(function):
     '''
     If an EtiquetteException is raised, automatically catch it and convert it
-    into a response so that the user isn't receiving error 500.
+    into a json response so that the user isn't receiving error 500.
     '''
     @functools.wraps(function)
     def wrapped(*args, **kwargs):
