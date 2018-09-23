@@ -87,6 +87,9 @@ class GroupableMixin:
     def add_child(self, member, *, commit=True):
         self.assert_same_type(member)
 
+        if member == self:
+            raise exceptions.CantGroupSelf(self)
+
         if self.has_child(member):
             return
 

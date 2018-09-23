@@ -109,6 +109,9 @@ class UserExists(Exists):
 
 
 # TAG ERRORS
+class CantGroupSelf(EtiquetteException):
+    error_message = 'Cannot group {} into itself.'
+
 class CantSynonymSelf(EtiquetteException):
     error_message = 'Cannot apply synonym to self.'
 
