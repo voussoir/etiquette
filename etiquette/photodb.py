@@ -1081,8 +1081,7 @@ class PDBUtilMixin:
         '''
         def _normalize_directory(directory):
             directory = pathclass.Path(directory)
-            if not directory.is_dir:
-                raise ValueError('Not a directory: %s' % directory)
+            directory.assert_is_directory()
             directory.correct_case()
             return directory
 
