@@ -12,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
     <script src="/static/js/common.js"></script>
+    <script src="/static/js/api.js"></script>
     <script src="/static/js/editor.js"></script>
 
 <style>
@@ -143,13 +144,13 @@
                     {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="delete_tag('{{qualified_name}}', receive_callback);"
+                    data-onclick="remove_child_form('{{qualified_name.split('.')[-2]}}', '{{tag.name}}');"
                     data-prompt="Unlink Tags?"
                     data-confirm="Unlink"
                     data-confirm-class="remove_tag_button_perm red_button"
                     data-cancel-class="remove_tag_button_perm gray_button"
                     >
-                    unlink
+                    Unlink
                     </button>
                 </li>
                 {% else %}
@@ -158,13 +159,13 @@
                     {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="delete_tag('{{qualified_name}}', receive_callback);"
+                    data-onclick="delete_tag_form('{{qualified_name}}');"
                     data-prompt="Delete Tag?"
                     data-confirm="Delete"
                     data-confirm-class="remove_tag_button_perm red_button"
                     data-cancel-class="remove_tag_button_perm gray_button"
                     >
-                    delete
+                    Delete
                     </button>
                 </li>
                 {% endif %}
@@ -176,13 +177,13 @@
                     {{tag_object.tag_object(tag, link='search', innertext=qualified_name + '+' + synonym)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="delete_tag_synonym('{{synonym}}', receive_callback);"
+                    data-onclick="remove_synonym_form('{{tag.name}}', '{{synonym}}');"
                     data-prompt="Remove Synonym?"
                     data-confirm="Remove"
                     data-confirm-class="remove_tag_button_perm red_button"
                     data-cancel-class="remove_tag_button_perm gray_button"
                     >
-                    remove
+                    Remove
                     </button>
                 </li>
                 {% endfor %}
@@ -193,7 +194,7 @@
     <div id="right">
         <div id="editor_area">
             <input type="text" id="add_tag_textbox" autofocus>
-            <button class="add_tag_button green_button" id="add_tag_button" onclick="submit_tag(receive_callback);">add</button>
+            <button class="add_tag_button green_button" id="add_tag_button" onclick="easybake_form();">add</button>
         </div>
         <div id="message_area">
         </div>
@@ -209,30 +210,27 @@ var message_area = document.getElementById('message_area');
 box.addEventListener("keyup", common.entry_with_history_hook);
 common.bind_box_to_button(box, button, false);
 
-function submit_tag(callback)
+function delete_tag_form(tag_name)
 {
-    create_tag(box.value, callback);
+    api.tags.delete(tag_name, receive_callback);
+}
+
+function easybake_form()
+{
+    var box = document.getElementById('add_tag_textbox');
+    var easybake_string = box.value;
+    api.tags.easybake(easybake_string, receive_callback);
     box.value = "";
 }
-function edit_tags(action, tagname, callback)
+
+function remove_child_form(tag_name, child_name)
 {
-    if (tagname === ""){return}
-    var url = "/tags/" + action;
-    data = new FormData();
-    data.append("tagname", tagname);
-    return common.post(url, data, callback);
+    api.tags.remove_child(tag_name, child_name, receive_callback);
 }
-function delete_tag_synonym(tagname, callback)
+
+function remove_synonym_form(tag_name, syn_name)
 {
-    return edit_tags("delete_synonym", tagname, callback);
-}
-function delete_tag(tagname, callback)
-{
-    return edit_tags("delete_tag", tagname, callback);
-}
-function create_tag(tagname, callback)
-{
-    return edit_tags("create_tag", tagname, callback);
+    api.tags.remove_synonym(tag_name, syn_name, receive_callback);
 }
 
 function receive_callback(response)
@@ -278,7 +276,7 @@ function receive_callback(response)
             else if (action == "delete_synonym")
             {message_text = `Deleted synonym ${response["synonym"]}`;}
 
-            else if (action == "unlink_tag")
+            else if (action == "remove_child")
             {message_text = `Unlinked tags ${tagname}`;}
 
         }
@@ -295,12 +293,6 @@ function on_open(ed, edit_element_map)
 
 function on_save(ed, edit_element_map, display_element_map)
 {
-    var name_display = display_element_map["name"];
-    var name_editor = edit_element_map["name"];
-    var description_display = display_element_map["description"];
-    var description_editor = edit_element_map["description"];
-
-    ed.show_spinner();
     function callback(response)
     {
         console.log(response);
@@ -321,11 +313,17 @@ function on_save(ed, edit_element_map, display_element_map)
         }
     }
 
-    var url = "/tag/" + name_display.innerText + "/edit";
-    var data = new FormData();
-    data.append("name", name_editor.value);
-    data.append("description", description_editor.value);
-    common.post(url, data, callback);
+    var name_display = display_element_map["name"];
+    var name_editor = edit_element_map["name"];
+    var description_display = display_element_map["description"];
+    var description_editor = edit_element_map["description"];
+
+    var tag_name = name_display.innerText;
+    var name = name_editor.value;
+    var description = description_editor.value;
+
+    ed.show_spinner();
+    api.tags.edit(tag_name, name, description, callback)
 }
 
 function on_cancel(ed, edit_element_map, display_element_map)

@@ -177,5 +177,69 @@ function remove_tag(photo_id, tagname, callback)
 /**************************************************************************************************/
 api.tags = {};
 
+api.tags.add_child =
+function add_child(tag_name, child_name, callback)
+{
+    var url = `/tag/${tag_name}/add_child`;
+    var data = new FormData();
+    data.append("child_name", child_name);
+    common.post(url, data, callback);
+}
+
+api.tags.create =
+function create(name, description, callback)
+{
+    var url = `/tags/create_tag`;
+    var data = new FormData();
+    data.append("name", name);
+    data.append("description", description);
+    common.post(url, data, callback);
+}
+
+api.tags.delete =
+function _delete(tag_name, callback)
+{
+    var url = `/tag/${tag_name}/delete`;
+    common.post(url, null, callback);
+}
+
+api.tags.easybake =
+function easybake(easybake_string, callback)
+{
+    var url = "/tags/easybake";
+    var data = new FormData();
+    data.append("easybake_string", easybake_string);
+    common.post(url, data, callback);
+}
+
+api.tags.edit =
+function edit(tag_name, name, description, callback)
+{
+    var url = `/tag/${tag_name}/edit`;
+    var data = new FormData();
+    data.append("name", name);
+    data.append("description", description);
+    common.post(url, data, callback);
+}
+
+api.tags.remove_child =
+function remove_child(tag_name, child_name, callback)
+{
+    var url = `/tag/${tag_name}/remove_child`;
+    var data = new FormData();
+    data.append("child_name", child_name);
+    common.post(url, data, callback);
+}
+
+api.tags.remove_synonym =
+function remove_synonym(tag_name, syn_name, callback)
+{
+    var url = `/tag/${tag_name}/remove_synonym`;
+    var data = new FormData();
+    data.append("syn_name", syn_name);
+    common.post(url, data, callback);
+}
+
+
 /**************************************************************************************************/
 api.users = {};

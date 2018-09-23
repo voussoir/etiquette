@@ -46,6 +46,28 @@ def post_tag_edit(specific_tag):
     response = jsonify.make_json_response(response)
     return response
 
+@site.route('/tag/<tagname>/add_child', methods=['POST'])
+@decorators.catch_etiquette_exception
+@session_manager.give_token
+@decorators.required_fields(['child_name'], forbid_whitespace=True)
+def post_tag_add_child(tagname):
+    parent = common.P_tag(tagname)
+    child = common.P_tag(request.form['child_name'])
+    parent.add_child(child)
+    response = {'action': 'add_child', 'tagname': f'{parent.name}.{child.name}'}
+    return jsonify.make_json_response(response)
+
+@site.route('/tag/<tagname>/remove_child', methods=['POST'])
+@decorators.catch_etiquette_exception
+@session_manager.give_token
+@decorators.required_fields(['child_name'], forbid_whitespace=True)
+def post_tag_remove_child(tagname):
+    parent = common.P_tag(tagname)
+    child = common.P_tag(request.form['child_name'])
+    parent.remove_child(child)
+    response = {'action': 'remove_child', 'tagname': f'{parent.name}.{child.name}'}
+    return jsonify.make_json_response(response)
+
 # Tag listings #####################################################################################
 
 @site.route('/all_tags.json')
@@ -115,47 +137,44 @@ def get_tags_json(specific_tag_name=None):
 @site.route('/tags/create_tag', methods=['POST'])
 @decorators.catch_etiquette_exception
 @session_manager.give_token
-@decorators.required_fields(['tagname'], forbid_whitespace=True)
+@decorators.required_fields(['name'], forbid_whitespace=True)
 def post_tag_create():
-    easybake_string = request.form['tagname']
-    user = session_manager.get(request).user
-    notes = common.P.easybake(easybake_string, author=user)
+    name = request.form['name']
+    description = request.form.get('description', None)
+
+    tag = P.new_tag(name, description, author=session_manager.get(request).user)
+    response = etiquette.jsonify.tag(tag)
+    return jsonify.make_json_response(response)
+
+@site.route('/tags/easybake', methods=['POST'])
+@decorators.catch_etiquette_exception
+@session_manager.give_token
+@decorators.required_fields(['easybake_string'], forbid_whitespace=True)
+def post_tag_easybake():
+    easybake_string = request.form['easybake_string']
+
+    notes = common.P.easybake(easybake_string, author=session_manager.get(request).user)
     notes = [{'action': action, 'tagname': tagname} for (action, tagname) in notes]
     return jsonify.make_json_response(notes)
 
-@site.route('/tags/delete_synonym', methods=['POST'])
+@site.route('/tag/<tagname>/delete', methods=['POST'])
 @decorators.catch_etiquette_exception
 @session_manager.give_token
-@decorators.required_fields(['tagname'], forbid_whitespace=True)
-def post_tag_delete_synonym():
-    synonym = request.form['tagname']
-    synonym = synonym.split('+')[-1].split('.')[-1]
-
-    try:
-        master_tag = common.P.get_tag(name=synonym)
-    except etiquette.exceptions.NoSuchTag as exc:
-        raise etiquette.exceptions.NoSuchSynonym(*exc.given_args, **exc.given_kwargs)
-    else:
-        master_tag.remove_synonym(synonym)
-
-    response = {'action':'delete_synonym', 'synonym': synonym}
+def post_tag_delete(tagname):
+    tag = common.P_tag(tagname)
+    tag.delete()
+    response = {'action': 'delete_tag', 'tagname': tag.name}
     return jsonify.make_json_response(response)
 
-@site.route('/tags/delete_tag', methods=['POST'])
+@site.route('/tag/<tagname>/remove_synonym', methods=['POST'])
 @decorators.catch_etiquette_exception
 @session_manager.give_token
-@decorators.required_fields(['tagname'], forbid_whitespace=True)
-def post_tag_delete():
-    tagname = request.form['tagname']
-    tagname = tagname.split('+')[0]
-    if '.' in tagname:
-        (parentname, tagname) = tagname.rsplit('.', 1)
-        parent = common.P.get_tag(name=parentname)
-        tag = common.P.get_tag(name=tagname)
-        parent.remove_child(tag)
-        response = {'action': 'unlink_tag', 'tagname': f'{parent.name}.{tag.name}'}
-    else:
-        tag = common.P.get_tag(name=tagname)
-        tag.delete()
-        response = {'action': 'delete_tag', 'tagname': tag.name}
+@decorators.required_fields(['syn_name'], forbid_whitespace=True)
+def post_tag_remove_synonym(tagname):
+    syn_name = request.form['syn_name']
+
+    master_tag = common.P_tag(tagname)
+    master_tag.remove_synonym(syn_name)
+
+    response = {'action':'delete_synonym', 'synonym': syn_name}
     return jsonify.make_json_response(response)
