@@ -906,6 +906,14 @@ class Photo(ObjectBase):
         hopeful_filepath = folder.with_child(basename + '.jpg')
         return hopeful_filepath
 
+    # Photo.rename_file already has @required_feature
+    # Photo.rename_file already has @transaction
+    def move_file(self, directory, commit=True):
+        directory = pathclass.Path(directory)
+        directory.assert_is_directory()
+        new_path = directory.with_child(self.real_path.basename).absolute_path
+        self.rename_file(new_path, move=True, commit=commit)
+
     #@decorators.time_me
     @decorators.required_feature('photo.reload_metadata')
     @decorators.transaction
