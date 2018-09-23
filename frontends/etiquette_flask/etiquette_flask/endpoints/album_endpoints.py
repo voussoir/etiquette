@@ -58,6 +58,26 @@ def get_album_zip(album_id):
 
     return flask.Response(streamed_zip, headers=outgoing_headers)
 
+@site.route('/album/<album_id>/add_child', methods=['POST'])
+@decorators.catch_etiquette_exception
+@decorators.required_fields(['child_id'], forbid_whitespace=True)
+def post_album_add_child(album_id):
+    album = common.P_album(album_id)
+    child = common.P_album(request.form['child_id'])
+    album.add_child(child)
+    response = etiquette.jsonify.album(child)
+    return jsonify.make_json_response(response)
+
+@site.route('/album/<album_id>/remove_child', methods=['POST'])
+@decorators.catch_etiquette_exception
+@decorators.required_fields(['child_id'], forbid_whitespace=True)
+def post_album_remove_child(album_id):
+    album = common.P_album(album_id)
+    child = common.P_album(request.form['child_id'])
+    album.remove_child(child)
+    response = etiquette.jsonify.album(child)
+    return jsonify.make_json_response(response)
+
 # Album photo operations ###########################################################################
 
 @site.route('/album/<album_id>/add_photo', methods=['POST'])
@@ -174,3 +194,11 @@ def post_albums_create():
 
     response = etiquette.jsonify.album(album, minimal=False)
     return jsonify.make_json_response(response)
+
+@site.route('/album/<album_id>/delete', methods=['POST'])
+@session_manager.give_token
+@decorators.catch_etiquette_exception
+def post_album_delete(album_id):
+    album = common.P_album(album_id, response_type='json')
+    album.delete()
+    return jsonify.make_json_response({})
