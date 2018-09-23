@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
     <script src="/static/js/common.js"></script>
+    <script src="/static/js/api.js"></script>
     <script src="/static/js/editor.js"></script>
 
 <style>
@@ -74,7 +75,7 @@
 
                 <button
                 class="red_button button_with_confirm"
-                data-onclick="delete_bookmark('{{bookmark.id}}')"
+                data-onclick="api.bookmarks.delete('{{bookmark.id}}', common.refresh)"
                 data-prompt="Delete Bookmark?"
                 data-confirm-class="red_button"
                 data-cancel-class="gray_button"
@@ -95,18 +96,6 @@
 
 
 <script type="text/javascript">
-function create_bookmark(url, title)
-{
-    var api_url = "/bookmarks/create_bookmark";
-    var data = new FormData();
-    data.append("url", url);
-    if (title)
-    {
-        data.append("title", title);
-    }
-    common.post(api_url, data, common.refresh);
-}
-
 function create_bookmark_form()
 {
     var url = document.getElementById("new_bookmark_url").value.trim();
@@ -115,13 +104,7 @@ function create_bookmark_form()
     {
         return;
     }
-    return create_bookmark(url, title);
-}
-
-function delete_bookmark(bookmark_id)
-{
-    var url = `/bookmark/${bookmark_id}/delete`
-    common.post(url, null, common.refresh);
+    return api.bookmarks.create(url, title, common.refresh);
 }
 
 function on_open(ed, edit_element_map)
@@ -132,15 +115,6 @@ function on_open(ed, edit_element_map)
 
 function on_save(ed, edit_element_map, display_element_map)
 {
-    var title_editor = edit_element_map["title"];
-    var url_editor = edit_element_map["url"];
-    url_editor.value = url_editor.value.trim();
-    if (!url_editor.value)
-    {
-        return;
-    }
-
-    ed.show_spinner();
     function callback(response)
     {
         ed.hide_spinner();
@@ -148,12 +122,19 @@ function on_save(ed, edit_element_map, display_element_map)
         display_element_map["title"].href = response["data"]["url"];
         display_element_map["url"].href = response["data"]["url"];
     }
+    edit_element_map["title"];
+    edit_element_map["url"].value = edit_element_map["url"].value.trim();
+    if (!edit_element_map["url"].value)
+    {
+        return;
+    }
 
-    var url = "/bookmark/" + ed.misc_data["bookmark_id"] + "/edit";
-    var data = new FormData();
-    data.append("title", title_editor.value);
-    data.append("url", url_editor.value);
-    common.post(url, data, callback);
+    var bookmark_id = ed.misc_data["bookmark_id"];
+    var title = edit_element_map["title"].value;
+    var url = edit_element_map["url"].value;
+
+    ed.show_spinner();
+    api.bookmarks.edit(bookmark_id, title, url, callback);
 }
 
 on_cancel = undefined;
@@ -170,6 +151,11 @@ function create_editors()
         ed.misc_data["bookmark_id"] = card.dataset.bookmarkId;
     }
 }
-create_editors();
+
+function on_pageload()
+{
+    create_editors();
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
 </html>

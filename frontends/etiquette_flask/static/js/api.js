@@ -115,6 +115,37 @@ function callback_go_to_albums(response)
 /**************************************************************************************************/
 api.bookmarks = {};
 
+api.bookmarks.create =
+function create(b_url, title, callback)
+{
+    var url = "/bookmarks/create_bookmark";
+    var data = new FormData();
+    data.append("url", b_url.trim());
+    title = title.trim();
+    if (title)
+    {
+        data.append("title", title);
+    }
+    common.post(url, data, callback);
+}
+
+api.bookmarks.delete =
+function _delete(bookmark_id, callback)
+{
+    var url = `/bookmark/${bookmark_id}/delete`;
+    common.post(url, null, callback);
+}
+
+api.bookmarks.edit =
+function edit(bookmark_id, title, url, callback)
+{
+    var url = `/bookmark/${bookmark_id}/edit`;
+    var data = new FormData();
+    data.append("title", title.trim());
+    data.append("url", url.trim());
+    common.post(url, data, callback);
+}
+
 /**************************************************************************************************/
 api.photos = {};
 
