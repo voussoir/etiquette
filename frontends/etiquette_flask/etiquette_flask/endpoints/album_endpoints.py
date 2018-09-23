@@ -33,9 +33,6 @@ def get_album_html(album_id):
 def get_album_json(album_id):
     album = common.P_album(album_id)
     album = etiquette.jsonify.album(album)
-    album['sub_albums'] = [common.P_album(x) for x in album['sub_albums']]
-    album['sub_albums'].sort(key=lambda x: (x.title or x.id).lower())
-    album['sub_albums'] = [etiquette.jsonify.album(x, minimal=True) for x in album['sub_albums']]
     return jsonify.make_json_response(album)
 
 @site.route('/album/<album_id>.zip')
