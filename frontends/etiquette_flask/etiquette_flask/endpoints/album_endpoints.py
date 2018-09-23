@@ -166,7 +166,7 @@ def get_albums_core():
 def get_albums_html():
     albums = get_albums_core()
     session = session_manager.get(request)
-    return flask.render_template('albums.html', albums=albums, session=session)
+    return flask.render_template('album.html', albums=albums, session=session)
 
 @site.route('/albums.json')
 @session_manager.give_token
@@ -178,18 +178,19 @@ def get_albums_json():
 # Album create and delete ##########################################################################
 
 @site.route('/albums/create_album', methods=['POST'])
+@session_manager.give_token
 @decorators.catch_etiquette_exception
 def post_albums_create():
     title = request.form.get('title', None)
     description = request.form.get('description', None)
-    parent = request.form.get('parent', None)
-    if parent is not None:
-        parent = common.P_album(parent)
+    parent_id = request.form.get('parent_id', None)
+    if parent_id is not None:
+        parent = common.P_album(parent_id)
 
     user = session_manager.get(request).user
 
     album = common.P.new_album(title=title, description=description, author=user)
-    if parent is not None:
+    if parent_id is not None:
         parent.add_child(album)
 
     response = etiquette.jsonify.album(album, minimal=False)

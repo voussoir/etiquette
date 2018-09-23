@@ -1,5 +1,53 @@
 <!DOCTYPE html5>
 <html>
+
+{% if album is not defined %} {## Album listing ###################################################}
+
+<head>
+    {% import "header.html" as header %}
+    <title>Albums</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/api.js"></script>
+
+<style>
+#album_list
+{
+    flex-direction: column;
+}
+</style>
+</head>
+
+
+<body>
+{{header.make_header(session=session)}}
+<div id="content_body">
+    <div id="album_list">
+        <h2>Albums</h2>
+        <ul>
+            {% for album in albums %}
+            <li><a href="/album/{{album.id}}">{{album.display_name}}</a></li>
+            {% endfor %}
+            <li>
+                <button id="create_child_prompt_button" class="green_button" onclick="open_create_child(event);">Create album</button>
+                <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
+                <button id="create_child_submit_button" class="green_button hidden" onclick="create_child_form(event);">Create</button>
+                <button id="create_child_cancel_button" class="gray_button hidden" onclick="cancel_create_child(event);">Cancel</button>
+            </li>
+        </ul>
+    </div>
+</div>
+</body>
+
+
+<script id="album_listing_script" type="text/javascript">
+ALBUM_ID = undefined;
+</script>
+
+{% else %} {## Individual album ###################################################################}
+
 <head>
     {% import "photo_card.html" as photo_card %}
     {% import "header.html" as header %}
@@ -11,7 +59,7 @@
     <link rel="stylesheet" href="/static/css/clipboard_tray.css">
     <link rel="stylesheet" href="/static/css/photo_card.css">
     <script src="/static/js/common.js"></script>
-    <script src="/static/js/albums.js"></script>
+    <script src="/static/js/api.js"></script>
     <script src="/static/js/editor.js"></script>
     <script src="/static/js/hotkeys.js"></script>
     <script src="/static/js/photoclipboard.js"></script>
@@ -20,11 +68,6 @@
 p
 {
     word-break: break-word;
-}
-#content_body
-{
-    /* overriding common.css here */
-    display: block;
 }
 #album_metadata
 {
@@ -36,6 +79,21 @@ p
     padding: 8px;
     background-color: var(--color_site_transparency);
 }
+
+ul
+{
+    line-height: 1.5;
+}
+
+.remove_child_button
+{
+    display: none;
+}
+.remove_child_button:hover,
+li:hover .remove_child_button
+{
+    display: initial;
+}
 </style>
 </head>
 
@@ -44,27 +102,36 @@ p
 {{header.make_header(session=session)}}
 <div id="content_body">
     <div id="album_metadata">
-    <h2>
-        <span
+        <h2><span
         id="title_text"
         data-editor-id="title"
         data-editor-empty-text="{{album.id}}"
         data-editor-placeholder="title"
         >
             {{-album.display_name-}}
-        </span>
-    </h2>
+        </span></h2>
 
-    <pre
-    id="description_text"
-    data-editor-id="description"
-    data-editor-placeholder="description"
-    {% if not album.description %}class="hidden"{% endif %}
-    >
-        {{-album.description-}}
-    </pre>
+        <pre
+        id="description_text"
+        data-editor-id="description"
+        data-editor-placeholder="description"
+        {% if not album.description %}class="hidden"{% endif %}
+        >
+            {{-album.description-}}
+        </pre>
+
+        <button
+        class="red_button button_with_confirm"
+        data-onclick="api.albums.delete(ALBUM_ID, api.albums.callback_go_to_albums)"
+        data-prompt="Delete Album?"
+        data-confirm-class="red_button"
+        data-cancel-class="gray_button"
+        >
+            Delete
+        </button>
     </div>
 
+    <!-- Parent & Child tree -->
     <ul>
         {% set viewparam = "?view=list" if view == "list" else "" %}
         {% set parents = album.get_parents() %}
@@ -81,18 +148,38 @@ p
             <ul>
                 {% set sub_albums = album.get_children() %}
                 {% for sub_album in sub_albums|sort(attribute='title') %}
-                <li><a href="/album/{{sub_album.id}}{{viewparam}}">{{sub_album.display_name}}</a></li>
+                <li>
+                    <a href="/album/{{sub_album.id}}{{viewparam}}">{{sub_album.display_name}}</a>
+
+                    <button
+                    class="remove_child_button button_with_confirm red_button"
+                    data-onclick="api.albums.remove_child(ALBUM_ID, '{{sub_album.id}}', common.refresh)"
+                    data-prompt="Remove child?"
+                    data-holder-class="remove_child_button"
+                    data-confirm-class="red_button"
+                    data-cancel-class="gray_button"
+                    >
+                        Unlink
+                    </button>
+                </li>
                 {% endfor %}
                 <li>
-                    <button id="create_child_prompt_button" class="green_button" onclick="albums.open_creator_prompt(event);">Create child</button>
+                    <button id="create_child_prompt_button" class="green_button" onclick="open_create_child(event);">Create child</button>
                     <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
-                    <button id="create_child_submit_button" class="green_button hidden" onclick="albums.submit_create_child(event);">Create</button>
-                    <button id="create_child_cancel_button" class="gray_button hidden" onclick="albums.cancel_create_child(event);">Cancel</button>
+                    <button id="create_child_submit_button" class="green_button hidden" onclick="create_child_form(event);">Create</button>
+                    <button id="create_child_cancel_button" class="gray_button hidden" onclick="cancel_create_child(event);">Cancel</button>
+                </li>
+                <li>
+                    <button id="add_child_prompt_button" class="green_button" onclick="open_add_child(event);">Add child</button>
+                    <input type="text" id="add_child_id_entry" class="hidden" placeholder="Album ID">
+                    <button id="add_child_submit_button" class="green_button hidden" onclick="add_child_form(event);">Add</button>
+                    <button id="add_child_cancel_button" class="gray_button hidden" onclick="cancel_add_child(event);">Cancel</button>
                 </li>
             </ul>
         </ul>
     </ul>
 
+    <!-- Photo list -->
     {% set photos = album.get_photos() %}
     {% if photos %}
         <h3>{{photos|length}} Photos</h3>
@@ -108,68 +195,73 @@ p
         </ul>
     {% endif %}
 
+    <!-- Download links -->
     {% set has_local_photos = photos|length > 0 %}
     {% set has_child_photos = album.has_any_subalbum_photo() %}
     {% if has_local_photos or has_child_photos %}
         <p>
-            Download:
+            <span>Download:</span>
             {% if has_local_photos %}
-                <a href="/album/{{album.id}}.zip?recursive=no">
-                    These files ({{album.sum_bytes(recurse=False)|bytestring }})
-                </a>
-            {% if has_child_photos %}&mdash;{% endif %}
+                <a href="/album/{{album.id}}.zip?recursive=no">These files ({{album.sum_bytes(recurse=False)|bytestring }})</a>
+                {% if has_child_photos %}<span>&mdash;</span>{% endif %}
             {% endif %}
             {% if has_child_photos %}
-                <a href="/album/{{album.id}}.zip?recursive=yes">
-                    Include children ({{album.sum_bytes(recurse=True)|bytestring }})
-                </a>
+                <a href="/album/{{album.id}}.zip?recursive=yes">Include children ({{album.sum_bytes(recurse=True)|bytestring }})</a>
             {% endif %}
         </p>
     {% endif %}
+
+    <!-- Clipboard -->
     {{clipboard_tray.clipboard_tray()}}
+    <div class="my_clipboard_tray_toolbox">
+        <button class="green_button" onclick="paste_photo_clipboard">Add to this album</button>
+        <button class="red_button" onclick="unpaste_photo_clipboard">Remove from this album</button>
+    </div>
 </div>
 </body>
 
 
-<script type="text/javascript">
+<script id="album_individual_script" type="text/javascript">
 var ALBUM_ID = "{{album.id}}";
 
-function _paste_unpaste_photo_clipboard(add_or_remove)
+function open_add_child(event)
 {
-    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
-    var url = "/album/{{album.id}}/" + add_or_remove;
-    var data = new FormData();
-    data.append("photo_id", photo_ids);
-    var callback = function(response)
-    {
-        if (response["meta"]["status"] !== 200)
-        {
-            return;
-        }
-        common.refresh();
-    };
-    common.post(url, data, callback);
+    document.getElementById("add_child_prompt_button").classList.add("hidden");
+    document.getElementById("add_child_id_entry").classList.remove("hidden");
+    document.getElementById("add_child_id_entry").focus();
+    document.getElementById("add_child_submit_button").classList.remove("hidden");
+    document.getElementById("add_child_cancel_button").classList.remove("hidden");
 }
+
+function cancel_add_child(event)
+{
+    document.getElementById("add_child_prompt_button").classList.remove("hidden");
+    document.getElementById("add_child_id_entry").value = "";
+    document.getElementById("add_child_id_entry").classList.add("hidden");
+    document.getElementById("add_child_submit_button").classList.add("hidden");
+    document.getElementById("add_child_cancel_button").classList.add("hidden");
+}
+
+function add_child_form(event)
+{
+    var child_id = document.getElementById("add_child_id_entry").value;
+    if (! child_id)
+    {
+        return;
+    }
+    api.albums.add_child(ALBUM_ID, child_id, common.refresh);
+}
+
 function paste_photo_clipboard()
 {
-    _paste_unpaste_photo_clipboard("add_photo");
+    var photo_ids = Array.from(photo_clipboard.clipboard);
+    api.albums.add_photos(ALBUM_ID, photo_ids, common.refresh);
 }
 function unpaste_photo_clipboard()
 {
-    _paste_unpaste_photo_clipboard("remove_photo");
+    var photo_ids = Array.from(photo_clipboard.clipboard);
+    api.albums.remove_photos(ALBUM_ID, photo_ids, common.refresh);
 }
-
-var paste_photo_clipboard_button = document.createElement("button");
-paste_photo_clipboard_button.classList.add("green_button");
-paste_photo_clipboard_button.innerText = "Add to this album";
-paste_photo_clipboard_button.onclick = paste_photo_clipboard;
-document.getElementById("clipboard_tray_toolbox").appendChild(paste_photo_clipboard_button);
-
-var unpaste_photo_clipboard_button = document.createElement("button");
-unpaste_photo_clipboard_button.classList.add("red_button");
-unpaste_photo_clipboard_button.innerText = "Remove from this album";
-unpaste_photo_clipboard_button.onclick = unpaste_photo_clipboard;
-document.getElementById("clipboard_tray_toolbox").appendChild(unpaste_photo_clipboard_button);
 
 function on_open(ed, edit_element_map, display_element_map)
 {
@@ -193,19 +285,12 @@ function on_save(ed, edit_element_map, display_element_map)
         }
     }
 
-    var title_editor = edit_element_map["title"];
-    title_editor.value = title_editor.value.trim();
-    var description_editor = edit_element_map["description"];
-
-    var url = "/album/{{album.id}}/edit";
-    var title = edit_element_map["title"].value.trim();
+    edit_element_map["title"].value = edit_element_map["title"].value.trim();
+    var title = edit_element_map["title"].value;
     var description = edit_element_map["description"].value;
-    var data = new FormData();
-    data.append("title", title_editor.value);
-    data.append("description", description_editor.value);
 
     ed.show_spinner();
-    common.post(url, data, callback);
+    api.albums.edit(ALBUM_ID, title, description, callback);
 }
 
 function on_cancel(ed, edit_element_map, display_element_map)
@@ -220,5 +305,57 @@ function on_cancel(ed, edit_element_map, display_element_map)
 var title_text = document.getElementById("title_text");
 var description_text = document.getElementById("description_text");
 var ed = new editor.Editor([title_text, description_text], on_open, on_save, on_cancel);
+
+function on_pageload()
+{
+    common.bind_box_to_button(
+        document.getElementById("add_child_id_entry"),
+        document.getElementById("add_child_submit_button")
+    );
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
+</script>
+
+{% endif %} {## Shared ############################################################################}
+
+<script id="album_shared_script" type="text/javascript">
+
+function open_create_child(event)
+{
+    document.getElementById("create_child_prompt_button").classList.add("hidden");
+    document.getElementById("create_child_title_entry").classList.remove("hidden");
+    document.getElementById("create_child_title_entry").focus();
+    document.getElementById("create_child_submit_button").classList.remove("hidden");
+    document.getElementById("create_child_cancel_button").classList.remove("hidden");
+}
+
+function cancel_create_child(event)
+{
+    document.getElementById("create_child_prompt_button").classList.remove("hidden");
+    document.getElementById("create_child_title_entry").value = "";
+    document.getElementById("create_child_title_entry").classList.add("hidden");
+    document.getElementById("create_child_submit_button").classList.add("hidden");
+    document.getElementById("create_child_cancel_button").classList.add("hidden");
+}
+
+function create_child_form(event)
+{
+    var title = document.getElementById("create_child_title_entry").value;
+    if (! title)
+    {
+        title = undefined;
+    }
+    var parent_id = ALBUM_ID;
+    api.albums.create(title, parent_id, api.albums.callback_follow);
+}
+
+function on_pageload()
+{
+    common.bind_box_to_button(
+        document.getElementById("create_child_title_entry"),
+        document.getElementById("create_child_submit_button")
+    );
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
 </html>
