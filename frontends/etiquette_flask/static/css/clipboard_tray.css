@@ -35,3 +35,7 @@
     justify-content: space-between;
     align-items: center;
 }
+.my_clipboard_tray_toolbox
+{
+    display: none;
+}

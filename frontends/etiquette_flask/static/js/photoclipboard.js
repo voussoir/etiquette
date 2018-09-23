@@ -218,6 +218,26 @@ function clipboard_tray_collapse_toggle()
     }
 }
 
+photo_clipboard.ingest_toolbox_items =
+function ingest_toolbox_items()
+{
+    /*
+    The page may provide divs with the class "my_clipboard_tray_toolbox", and
+    we will migrate all the elements into the real clipboard tray toolbox.
+    */
+    var toolbox = document.getElementById("clipboard_tray_toolbox");
+    var moreboxes = document.getElementsByClassName("my_clipboard_tray_toolbox");
+    for (var i = 0; i < moreboxes.length; i += 1)
+    {
+        var box = moreboxes[i];
+        while (box.firstElementChild)
+        {
+            toolbox.appendChild(box.removeChild(box.firstElementChild));
+        }
+        box.parentElement.removeChild(box);
+    }
+}
+
 photo_clipboard.on_tray_delete_button =
 function on_tray_delete_button(event)
 {
@@ -321,6 +341,7 @@ function on_pageload()
     hotkeys.register_hotkey("d", 1, 0, 0, photo_clipboard.unselect_all_photos, "Deselect all photos.");
     hotkeys.register_hotkey("c", 0, 0, 0, photo_clipboard.clipboard_tray_collapse_toggle, "Toggle clipboard tray.");
     hotkeys.register_hotkey("c", 0, 1, 0, photo_clipboard.open_full_clipboard_tab, "Open full clipboard page.");
+    photo_clipboard.ingest_toolbox_items();
     photo_clipboard.load_clipboard();
     photo_clipboard.update_pagestate();
 }
