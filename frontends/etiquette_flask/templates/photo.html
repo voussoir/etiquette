@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
     <script src="/static/js/common.js"></script>
+    <script src="/static/js/api.js"></script>
     <script src="/static/js/hotkeys.js"></script>
     <script src="/static/js/photo_clipboard.js"></script>
     <script src="/static/js/tag_autocomplete.js"></script>
@@ -187,7 +188,7 @@ body
         <!-- METADATA & DOWNLOAD -->
         <h4>
             File info
-            <button id="refresh_metadata_button" class="green_button" onclick="refresh_metadata('{{photo.id}}');">refresh</button>
+            <button id="refresh_metadata_button" class="green_button" onclick="refresh_metadata_form('{{photo.id}}');">refresh</button>
         </h4>
         <ul id="metadata">
             <li>Filename: {{photo.basename}}</li>
@@ -269,13 +270,6 @@ common.bind_box_to_button(add_tag_box, add_tag_button, false);
 
 var message_area = document.getElementById('message_area');
 
-function add_photo_tag(photo_id, tagname, callback)
-{
-    var url = `/photo/${photo_id}/add_tag`;
-    var data = new FormData();
-    data.append("tagname", tagname);
-    return common.post(url, data, callback);
-}
 function add_photo_tag_form(photo_id)
 {
     var tagname = document.getElementById("add_tag_textbox").value;
@@ -283,21 +277,13 @@ function add_photo_tag_form(photo_id)
     {
         return;
     }
-    var ret = add_photo_tag('{{photo.id}}', tagname, receive_callback);
+    api.photos.add_tag('{{photo.id}}', tagname, receive_callback);
     add_tag_box.value = "";
-    return ret;
 }
 
-function remove_photo_tag(photo_id, tagname, callback)
-{
-    var url = `/photo/${photo_id}/remove_tag`;
-    var data = new FormData();
-    data.append("tagname", tagname);
-    return common.post(url, data, callback);
-}
 function remove_photo_tag_form(photo_id, tagname)
 {
-    return remove_photo_tag(photo_id, tagname, receive_callback);
+    api.photos.remove_tag(photo_id, tagname, receive_callback);
 }
 
 function receive_callback(response)
@@ -330,11 +316,9 @@ function receive_callback(response)
     common.create_message_bubble(message_area, message_positivity, message_text, 8000);
 }
 
-function refresh_metadata(photo_id)
+function refresh_metadata_form(photo_id)
 {
-    var url= `/photo/${photo_id}/refresh_metadata`;
-    var data = new FormData();
-    common.post(url, data, common.refresh);
+    api.photos.refresh_metadata(photo_id, common.refresh);
 }
 
 var ZOOM_BG_URL = "url('{{photo|file_link}}')";

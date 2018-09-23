@@ -149,6 +149,31 @@ function edit(bookmark_id, title, url, callback)
 /**************************************************************************************************/
 api.photos = {};
 
+api.photos.add_tag =
+function add_tag(photo_id, tagname, callback)
+{
+    var url = `/photo/${photo_id}/add_tag`;
+    var data = new FormData();
+    data.append("tagname", tagname);
+    common.post(url, data, callback);
+}
+
+api.photos.refresh_metadata =
+function refresh_metadata(photo_id, callback)
+{
+    var url = `/photo/${photo_id}/refresh_metadata`;
+    common.post(url, null, callback);
+}
+
+api.photos.remove_tag =
+function remove_tag(photo_id, tagname, callback)
+{
+    var url = `/photo/${photo_id}/remove_tag`;
+    var data = new FormData();
+    data.append("tagname", tagname);
+    common.post(url, data, callback);
+}
+
 /**************************************************************************************************/
 api.tags = {};
 
