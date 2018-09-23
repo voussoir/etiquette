@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
     <script src="/static/js/common.js"></script>
+    <script src="/static/js/api.js"></script>
 
 <style>
 input
@@ -114,14 +115,6 @@ common.bind_box_to_button(register_input_password_2, register_input_button);
 
 var message_area = document.getElementById("message_area");
 
-function login(username, password, callback)
-{
-    var url = "/login";
-    data = new FormData();
-    data.append("username", username);
-    data.append("password", password);
-    return common.post(url, data, callback);
-}
 function login_form()
 {
     var username = document.getElementById("login_input_username").value;
@@ -131,18 +124,9 @@ function login_form()
         common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.");
         return;
     }
-    return login(username, password, receive_callback)
+    api.users.login(username, password, receive_callback)
 }
 
-function register(username, password_1, password_2, callback)
-{
-    var url = "/register";
-    data = new FormData();
-    data.append("username", username);
-    data.append("password_1", password_1);
-    data.append("password_2", password_2);
-    return common.post(url, data, callback);
-}
 function register_form()
 {
     var username = document.getElementById("register_input_username").value;
@@ -153,7 +137,7 @@ function register_form()
         common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.");
         return;
     }
-    return register(username, password_1, password_2, receive_callback);
+    api.users.register(username, password_1, password_2, receive_callback);
 }
 
 function receive_callback(response)

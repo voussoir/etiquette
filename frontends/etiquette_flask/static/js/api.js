@@ -243,3 +243,31 @@ function remove_synonym(tag_name, syn_name, callback)
 
 /**************************************************************************************************/
 api.users = {};
+
+api.users.login =
+function login(username, password, callback)
+{
+    var url = "/login";
+    data = new FormData();
+    data.append("username", username);
+    data.append("password", password);
+    common.post(url, data, callback);
+}
+
+api.users.logout =
+function logout(callback)
+{
+    var url = "/logout";
+    common.post(url, null, callback);
+}
+
+api.users.register =
+function register(username, password_1, password_2, callback)
+{
+    var url = "/register";
+    data = new FormData();
+    data.append("username", username);
+    data.append("password_1", password_1);
+    data.append("password_2", password_2);
+    common.post(url, data, callback);
+}
