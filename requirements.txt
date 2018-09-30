@@ -1,7 +1,18 @@
+# For salting & hashing user passwords.
 bcrypt
+
+# For running the etiquette webserver.
 flask
 gevent
+
+# For probing and thumbnailing image files.
 pillow
-voussoirkit>=0.0.25
-zipstream
+
+# For probing and thumbnailing video files.
 git+https://github.com/senko/python-video-converter.git
+
+# For serving downloadable zip files as a generator.
+zipstream
+
+# My own variety toolkit.
+voussoirkit>=0.0.25
