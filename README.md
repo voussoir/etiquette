@@ -7,19 +7,15 @@ I am currently running a demonstration copy of Etiquette at http://etiquette.vou
 
 Etiquette is a tag-based file organization system with a web front-end.
 
-#### Setting up
+### Setting up
 
-I have not made a setup.py yet. So you must make the `etiquette` package importable in one of two ways:
+I have not made a setup.py yet. So I use a filesystem junction / symlink to make etiquette appear in my python lib folder.
 
-- By editing your `PYTHONPATH` environment variable. Note that the path refers to the Etiquette repository location and not the `etiquette` package folder:
+<details><summary><strong>Setting up via symlink</strong></summary>
 
-    Windows: `set "PYTHONPATH=%PYTHONPATH%;D:\Git\Etiquette"` Note the semicolon to delimit paths. To make permanent, use the Environment Variable editor or the `setx` command. The editor is better.  
-
-    Linux: `PYTHONPATH="$PYTHONPATH:/home/Owner/Git/Etiquette"` Note the colon to delimit paths. To make permanent, add the export to your bashrc.
-
-- By placing it in one of your lib paths, or using filesystem junctions to make it appear in a lib path. Note that this time, the path does refer to the package itself.
-
-    The easiest way to find your lib path is `python -c "import os; print(os)"`.
+- The repository you're looking at right now is `D:\Git\Etiquette`. The toplevel `etiquette` folder is the main package. We want this package to be a child of our existing lib directory.
+- The easiest way to find your lib path is `python -c "import os; print(os)"`.
+- Make the symlink:
 
     Windows: `mklink /J fakepath realpath`  
     for example `mklink /J "C:\Python36\Lib\etiquette" "D:\Git\Etiquette\etiquette"`
@@ -27,18 +23,42 @@ I have not made a setup.py yet. So you must make the `etiquette` package importa
     Linux: `ln --symbolic realpath fakepath`  
     for example `ln --symbolic "/home/Owner/Git/Etiquette/etiquette" "/usr/local/lib/python3.6/etiquette"`
 
-I'm sure you'll figure it out.
+</details>
 
-#### Running locally
+---
+
+<details><summary><strong>Setting up via pythonpath</strong></summary>
+
+- The repository you're looking at right now is `D:\Git\Etiquette`. The toplevel `etiquette` folder is the main package. We want the repository to be treated as an alternative lib directory, because the package is a child of it.
+
+    Windows: `set "PYTHONPATH=%PYTHONPATH%;D:\Git\Etiquette"`  
+    Note the semicolon to delimit paths.  
+    This only applies to the current cmd session. To make it permanent, use Windows's Environment Variable editor or the `setx` command. The editor is easier to use.
+
+    Linux: `PYTHONPATH="$PYTHONPATH:/home/Owner/Git/Etiquette"`  
+    Note the colon to delimit paths.  
+    To make it permanent, add the export to your bashrc.
+
+</details>
+
+---
+
+<details><summary><strong>Running locally</strong></summary>
 
 - Run `python etiquette_flask_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
 - Run `python -i etiquette_repl_launch.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 - Note: Do not `cd` into the frontends folder. Stay wherever you want the photodb to be created, and start the frontend by specifying full file path of the launch file.
 
-        D:\somewhere>python D:\Git\Etiquette\frontends\etiquette_flask\etiquette_flask_launch.py 5001
-        /home/Owner>python /home/Owner/Git/Etiquette/frontends/etiquette_flask/etiquette_flask_launch.py 5001
+        Windows:
+        D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_flask\etiquette_flask_launch.py 5001
 
-#### Running with Gunicorn
+        Linux:
+        /somewhere $ python /home/Owner/Git/Etiquette/frontends/etiquette_flask/etiquette_flask_launch.py 5001
+</details>
+
+---
+
+<details><summary><strong>Running with Gunicorn</strong></summary>
 
 1. Use the PYTHONPATH technique to make `etiquette` and `etiquette_flask` both importable. Symlinking into the lib is not as convenient here because the server relies on the static files and jinja templates relative to the code's location.
 
@@ -47,6 +67,8 @@ I'm sure you'll figure it out.
 2. To run non-daemonized, on a specific port, with logging to the terminal, use:
 
         gunicorn etiquette_flask_entrypoint:site --bind "0.0.0.0:PORT" --access-logfile "-"
+
+</details>
 
 ### Project stability
 
