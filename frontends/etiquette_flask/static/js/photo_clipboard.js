@@ -144,22 +144,6 @@ function on_photo_select(event)
     photo_clipboard.save_clipboard();
 }
 
-photo_clipboard.select_photo =
-function select_photo(photo_div)
-{
-    photo_div.getElementsByClassName("photo_card_selector_checkbox")[0].checked = true;
-    photo_clipboard._action_select(photo_div);
-    photo_clipboard.save_clipboard();
-}
-
-photo_clipboard.unselect_photo =
-function unselect_photo(photo_div)
-{
-    photo_div.getElementsByClassName("photo_card_selector_checkbox")[0].checked = false;
-    photo_clipboard._action_unselect(photo_div)
-    photo_clipboard.save_clipboard();
-}
-
 photo_clipboard.select_all_photos =
 function select_all_photos()
 {
