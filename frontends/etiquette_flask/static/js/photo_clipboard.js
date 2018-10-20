@@ -62,13 +62,16 @@ function apply_check(photo_card)
     whether the clipboard contains this card's ID.
     */
     var checkbox = photo_card.getElementsByClassName("photo_card_selector_checkbox")[0];
-    if (photo_clipboard.clipboard.has(photo_card.dataset.id))
+    checkbox.checked = photo_clipboard.clipboard.has(photo_card.dataset.id);
+    if (checkbox.checked)
     {
-        checkbox.checked = true;
+        photo_card.classList.remove("photo_card_unselected");
+        photo_card.classList.add("photo_card_selected");
     }
     else
     {
-        checkbox.checked = false;
+        photo_card.classList.remove("photo_card_selected");
+        photo_card.classList.add("photo_card_unselected");
     }
 }
 
