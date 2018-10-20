@@ -275,7 +275,7 @@ def post_batch_photos_download_zip():
 
     photo_ids = [p.id for p in photos]
 
-    zip_token = etiquette.helpers.hash_photoset(photos)
+    zip_token = 'etiquette_' + etiquette.helpers.hash_photoset(photos)
     photo_download_zip_tokens[zip_token] = photo_ids
 
     response = {'zip_token': zip_token}
