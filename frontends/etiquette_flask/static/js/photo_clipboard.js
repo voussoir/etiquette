@@ -127,13 +127,11 @@ function on_photo_select(event)
         {
             slice = [current_photo_div];
         }
-        else if (previous_index < current_index)
-        {
-            slice = photo_divs.slice(previous_index, current_index + 1);
-        }
         else
         {
-            slice = photo_divs.slice(current_index, previous_index + 1);
+            var left = Math.min(previous_index, current_index);
+            var right = Math.max(previous_index, current_index);
+            slice = photo_divs.slice(left, right + 1);
         }
 
         slice.forEach(action);
