@@ -27,15 +27,14 @@
     position: relative;
     display: inline-grid;
     vertical-align: top;
-    grid-template-columns: auto auto;
-    grid-template-rows: auto 1fr auto;
-    grid-template-areas:
-        "thumbnail thumbnail"
-        "filename filename"
-        "tags metadata";
+    grid-template:
+        "thumbnail thumbnail" auto
+        "filename  filename" 1fr
+        "tags      metadata" auto
+        /auto      auto;
     min-width: 150px;
     max-width: 300px;
-    height: 200px;
+    height: 210px;
     padding: 8px;
     margin: 8px;
 
@@ -75,7 +74,6 @@
     justify-self: start;
     grid-area: filename;
 
-    z-index: 1;
     overflow: hidden;
 
     min-width: 100%;
@@ -98,6 +96,7 @@
 {
     overflow: visible;
     max-height: none;
+    z-index: 1;
 }
 .photo_card_tags
 {

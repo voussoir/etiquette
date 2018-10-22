@@ -16,14 +16,12 @@
     <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
-body
+#content_body
 {
     display: grid;
-    grid-template-rows: auto 1fr;
-    grid-template-columns: 1fr 300px;
-    grid-template-areas:
-        "header header"
-        "left right";
+    grid-template:
+        "left right" 1fr
+        /1fr  300px;
 }
 #header
 {
@@ -39,51 +37,92 @@ body
     position: fixed;
     right: 8px;
     bottom: 8px;
-    top: 30px;
+    top: 34px;
     width: 300px;
     grid-area: right;
 
     display: grid;
-    grid-template-rows: 75px 75px 75px 75px 75px auto;
-    grid-template-areas:
+
+    grid-template:
         "add_tag_area"
         "remove_tag_area"
         "refresh_metadata_area"
         "searchhidden_area"
         "download_zip_area"
-        "message_area";
+        "message_area" 1fr;
 
     background-color: var(--color_site_transparency);
+}
+#right > *
+{
+    display: flex;
+    padding: 8px;
+}
+#right button
+{
+    flex: 1;
 }
 #add_tag_area
 {
     grid-area: add_tag_area;
-    margin: auto;
 }
 #remove_tag_area
 {
     grid-area: remove_tag_area;
-    margin: auto;
+}
+#add_tag_area input,
+#remove_tag_area input
+{
+    flex: 1;
+}
+#add_tag_area button,
+#remove_tag_area button
+{
+    flex: initial;
 }
 #refresh_metadata_area
 {
     grid-area: refresh_metadata_area;
-    margin: auto;
 }
 #searchhidden_area
 {
     grid-area: searchhidden_area;
-    margin: auto;
 }
 #download_zip_area
 {
     grid-area: download_zip_area;
-    margin: auto;
 }
 #message_area
 {
     grid-area: message_area;
     margin: 8px;
+}
+@media screen and (max-width: 800px)
+{
+    #content_body
+    {
+        grid-template:
+            "left" 1fr
+            "right" 200px;
+    }
+    #right
+    {
+        top: unset;
+        width: unset;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        height: 200px;
+
+        grid-template:
+            "add_tag_area          message_area"
+            "remove_tag_area       message_area"
+            "refresh_metadata_area message_area"
+            "searchhidden_area     message_area"
+            "download_zip_area     message_area"
+            "extra                 message_area" 1fr
+            /1fr                   minmax(50px, 200px);
+    }
 }
 </style>
 </head>
@@ -91,6 +130,7 @@ body
 
 <body>
 {{header.make_header(session=session)}}
+<div id="content_body">
 <div id="left">
     <span>The clipboard contains <span class="clipboard_count">0</span> items.</span>
     <button id="clear_clipboard_button" class="red_button" onclick="photo_clipboard.clear_clipboard()">Clear it.</button>
@@ -113,10 +153,8 @@ body
     </div>
 
     <div id="searchhidden_area">
-        <span>
         <button class="yellow_button" id="set_searchhidden_button" onclick="set_searchhidden_form()">Searchhide</button>
         <button class="yellow_button" id="unset_searchhidden_button" onclick="unset_searchhidden_form()">Unhide</button>
-        </span>
     </div>
 
     <div id="download_zip_area">
@@ -125,6 +163,7 @@ body
 
     <div id="message_area">
     </div>
+</div>
 </div>
 </body>
 

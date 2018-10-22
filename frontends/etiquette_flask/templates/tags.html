@@ -22,7 +22,6 @@
 }
 #content_body
 {
-    display: grid;
     grid-template:
         "left right"
         /1fr 300px;
@@ -41,15 +40,14 @@
     position: fixed;
     right: 8px;
     bottom: 8px;
-    top: 30px;
+    top: 34px;
     width: 300px;
     grid-area: right;
 
     display: grid;
-    grid-template-rows: 1fr 1fr;
-    grid-template-areas:
-        "editor_area"
-        "message_area";
+    grid-template:
+        "editor_area" 1fr
+        "message_area" 1fr;
 
     background-color: var(--color_site_transparency);
 }
@@ -87,10 +85,9 @@
         bottom: 8px;
         height: 150px;
 
-        grid-template-areas:
-            "editor_area message_area";
-        grid-template-rows: 1fr;
-        grid-template-columns: 1fr 1fr;
+        grid-template:
+            "editor_area message_area" 1fr
+            /1fr         minmax(50px, 200px);
     }
 }
 </style>
@@ -194,7 +191,7 @@
     <div id="right">
         <div id="editor_area">
             <input type="text" id="add_tag_textbox" autofocus>
-            <button class="add_tag_button green_button" id="add_tag_button" onclick="easybake_form();">add</button>
+            <button class="add_tag_button green_button" id="add_tag_button" onclick="easybake_form();">bake</button>
         </div>
         <div id="message_area">
         </div>

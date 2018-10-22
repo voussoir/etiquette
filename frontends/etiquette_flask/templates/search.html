@@ -29,8 +29,8 @@ form
 #content_body
 {
     grid-template:
-        "error_message_area error_message_area"
-        "left right"
+        "error_message_area error_message_area" auto
+        "left right" 1fr
         / 300px 1fr;
 }
 #error_message_area
@@ -138,19 +138,19 @@ form
 {% macro create_orderby_li(selected_column, selected_sorter) %}
 <li class="search_builder_orderby_li">
     <select>
-        <option value="created"   {%if selected_column=="created"%}selected{%endif%}  >Creation date</option>
-        <option value="area"      {%if selected_column=="area"%}selected{%endif%}     >Area</option>
-        <option value="width"     {%if selected_column=="width"%}selected{%endif%}    >Width</option>
-        <option value="height"    {%if selected_column=="height"%}selected{%endif%}   >Height</option>
-        <option value="ratio"     {%if selected_column=="ratio"%}selected{%endif%}    >Aspect Ratio</option>
-        <option value="bytes"     {%if selected_column=="bytes"%}selected{%endif%}    >File size</option>
-        <option value="duration"  {%if selected_column=="duration"%}selected{%endif%} >Duration</option>
-        <option value="tagged_at" {%if selected_column=="tagged_at"%}selected{%endif%}>Recently tagged</option>
-        <option value="random"    {%if selected_column=="random"%}selected{%endif%}   >Random</option>
+        <option value="created"   {{"selected" if selected_column=="created" else ""}}     >Creation date</option>
+        <option value="area"      {{"selected" if selected_column=="area" else ""}}           >Area</option>
+        <option value="width"     {{"selected" if selected_column=="width" else ""}}         >Width</option>
+        <option value="height"    {{"selected" if selected_column=="height" else ""}}       >Height</option>
+        <option value="ratio"     {{"selected" if selected_column=="ratio" else ""}}         >Aspect Ratio</option>
+        <option value="bytes"     {{"selected" if selected_column=="bytes" else ""}}         >File size</option>
+        <option value="duration"  {{"selected" if selected_column=="duration" else ""}}   >Duration</option>
+        <option value="tagged_at" {{"selected" if selected_column=="tagged_at" else ""}} >Recently tagged</option>
+        <option value="random"    {{"selected" if selected_column=="random" else ""}}       >Random</option>
     </select>
     <select>
-        <option value="desc" {%if selected_sorter=="desc"%}selected{%endif%} >Descending</option>
-        <option value="asc"  {%if selected_sorter=="asc"%}selected{%endif%} >Ascending</option>
+        <option value="desc" {{"selected" if selected_sorter=="desc" else ""}} >Descending</option>
+        <option value="asc"  {{"selected" if selected_sorter=="asc" else ""}}  >Ascending</option>
     </select>
     <button class="remove_tag_button_perm red_button" onclick="orderby_remove_hook(this);"></button>
 </li>
@@ -212,84 +212,81 @@ form
 
             <span>Min-max values</span>
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['area']%}{{search_kwargs['area']}}{%endif%}"
+            {%if search_kwargs['area']%} value="{{search_kwargs['area']}}" {%endif%}
             name="area" placeholder="Area: 1m-2m">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['width']%}{{search_kwargs['width']}}{%endif%}"
+            {%if search_kwargs['width']%} value="{{search_kwargs['width']}}" {%endif%}
             name="width" placeholder="Width: 1k-2k">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['height']%}{{search_kwargs['height']}}{%endif%}"
+            {%if search_kwargs['height']%} value="{{search_kwargs['height']}}" {%endif%}
             name="height" placeholder="Height: 1k-2k">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['ratio']%}{{search_kwargs['ratio']}}{%endif%}"
+            {%if search_kwargs['ratio']%} value="{{search_kwargs['ratio']}}" {%endif%}
             name="ratio" placeholder="Aspect Ratio: 1.7-2">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['bytes']%}{{search_kwargs['bytes']}}{%endif%}"
+            {%if search_kwargs['bytes']%} value="{{search_kwargs['bytes']}}" {%endif%}
             name="bytes" placeholder="File Size: 1mb-2mb">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['duration']%}{{search_kwargs['duration']}}{%endif%}"
+            {%if search_kwargs['duration']%} value="{{search_kwargs['duration']}}" {%endif%}
             name="duration" placeholder="Duration: 10:00-20:00">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['created']%}{{search_kwargs['created']}}{%endif%}"
+            {%if search_kwargs['created']%} value="{{search_kwargs['created']}}" {%endif%}
             name="created" placeholder="Created: 1483228800-1514764800">
 
             <br>
 
             <span>Other filters</span>
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['filename']%}{{search_kwargs['filename']}}{%endif%}"
+            {%if search_kwargs['filename']%} value="{{search_kwargs['filename']}}" {%endif%}
             name="filename" placeholder="Filename">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['mimetype']%}{{search_kwargs['mimetype']}}{%endif%}"
+            {%if search_kwargs['mimetype']%} value="{{search_kwargs['mimetype']}}" {%endif%}
             name="mimetype" placeholder="Mimetype(s)">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['extension']%}{{search_kwargs['extension']}}{%endif%}"
+            {%if search_kwargs['extension']%} value="{{search_kwargs['extension']}}" {%endif%}
             name="extension" placeholder="Extension(s)">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['extension_not']%}{{search_kwargs['extension_not']}}{%endif%}"
+            {%if search_kwargs['extension_not']%} value="{{search_kwargs['extension_not']}}" {%endif%}
             name="extension_not" placeholder="Forbid extension(s)">
 
             <input type="text" class="basic_param"
-            value="{%if search_kwargs['author']%}{{search_kwargs['author']}}{%endif%}"
+            {%if search_kwargs['author']%} value="{{search_kwargs['author']}}" {%endif%}
             name="author" placeholder="Author">
             
             <select name="limit" class="basic_param">
-                {% set limit_options = [20, 50, 100] %}
+                {% set limit_options = [20, 50, 100, 250] %}
                 {% if search_kwargs['limit'] not in limit_options %}
                     {% do limit_options.append(search_kwargs['limit']) %}
                     {% do limit_options.sort() %}
                 {% endif %}
                 {% for limit_option in limit_options %}
-                    <option{{-' '-}}
-                    value="{{limit_option}}"{{-''-}}
-                    {{-" selected" if search_kwargs['limit'] == limit_option else ""-}}
-                    >
-                    {{- limit_option }} items{{-''-}}
-                    </option>
+                <option value="{{limit_option}}" {{"selected" if search_kwargs['limit'] == limit_option else ""}}>
+                {{- limit_option }} items{{''-}}
+                </option>
                 {% endfor %}
             </select>
             <select name="has_tags" class="basic_param">
-                <option value=""   {%if search_kwargs['has_tags'] == None %}selected{%endif%}>Tagged and untagged</option>
-                <option value="yes"{%if search_kwargs['has_tags'] == True %}selected{%endif%}>Tagged only</option>
-                <option value="no" {%if search_kwargs['has_tags'] == False %}selected{%endif%}>Untagged only</option>
+                <option value=""    {{"selected" if search_kwargs['has_tags']==None else ""}}>Tagged and untagged</option>
+                <option value="yes" {{"selected" if search_kwargs['has_tags']==True else ""}}>Tagged only</option>
+                <option value="no"  {{"selected" if search_kwargs['has_tags']==False else ""}}>Untagged only</option>
             </select>
             <select name="has_thumbnail" class="basic_param">
-                <option value=""   {%if search_kwargs['has_thumbnail'] == None %}selected{%endif%}>Thumbnail doesn't matter</option>
-                <option value="yes"{%if search_kwargs['has_thumbnail'] == True %}selected{%endif%}>Has thumbnail</option>
-                <option value="no" {%if search_kwargs['has_thumbnail'] == False %}selected{%endif%}>No thumbnail</option>
+                <option value=""    {{"selected" if search_kwargs['has_thumbnail']==None else ""}}>Thumbnail doesn't matter</option>
+                <option value="yes" {{"selected" if search_kwargs['has_thumbnail']==True else ""}}>Has thumbnail</option>
+                <option value="no"  {{"selected" if search_kwargs['has_thumbnail']==False else ""}}>No thumbnail</option>
             </select>
             <select name="view" class="basic_param">
-                <option value="grid" {%if search_kwargs['view'] == "grid" %}selected{%endif%}>Grid</option>
-                <option value="list" {%if search_kwargs['view'] == "list" %}selected{%endif%}>List</option>
+                <option value="grid"  {{"selected" if search_kwargs['view']=="grid" else ""}}>Grid</option>
+                <option value="list"  {{"selected" if search_kwargs['view']=="list" else ""}}>List</option>
             </select>
             <button type="submit" id="search_go_button" class="green_button" value="">Search</button>
         </form>
@@ -297,12 +294,12 @@ form
         <span>Tags on this page (click to join query):</span>
         <ul>
             {% for tag in total_tags %}
-                <li>{{-tag_object.tag_object(
-                    tag,
-                    extra_classes="tags_on_this_page",
-                    link='void',
-                    with_alt_description=True,
-                )-}}</li>
+            <li>{{tag_object.tag_object(
+                tag,
+                extra_classes="tags_on_this_page",
+                link='void',
+                with_alt_description=True,
+            )}}</li>
             {% endfor %}
         </ul>
         {% endif %}

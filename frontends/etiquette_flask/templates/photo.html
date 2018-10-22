@@ -30,46 +30,40 @@ body
 {
     display: flex;
     flex-direction: column;
-}
-#right
-{
-    display: flex;
-    flex: 1;
-}
-#editor_holder
-{
-    display: flex;
-    flex-direction: column;
 
+    min-height: min-content;
     max-width: 300px;
     /*padding: 8px;*/
 
+    background-color: var(--color_site_transparency);
+}
+#right
+{
+    flex: 1;
+    display: flex;
 }
 #editor_area
 {
-    flex: 3;
     padding: 8px;
-
-    background-color: var(--color_site_transparency);
 
     word-wrap: break-word;
 }
-#message_area_bg
+#refresh_metadata_button
 {
-    display: flex;
-    flex: 0 1 100%;
-
-    height: 100%;
-    min-height: 30px;
-    padding: 8px;
-
-    background-color: var(--color_site_transparency);
+    font-size: 11px;
+}
+#before_after_links
+{
+    width: max-content;
+    margin: auto;
 }
 #message_area
 {
-    flex: auto;
+    display: flex;
 
+    min-height: 30px;
     max-height: none;
+    margin: 8px;
 }
 .photo_viewer
 {
@@ -112,10 +106,6 @@ body
     width: 100%;
     overflow: hidden;
 }
-#refresh_metadata_button
-{
-    font-size: 11px;
-}
 @media screen and (max-width: 800px)
 {
     #content_body
@@ -141,13 +131,9 @@ body
     #right
     {
         flex: none;
-        height: calc(100% - 20px);
-    }
-    #editor_holder
-    {
-        display: flex;
         flex-direction: row;
         max-width: none;
+        height: calc(100% - 20px);
     }
     #message_area
     {
@@ -164,7 +150,6 @@ body
 {{header.make_header(session=session)}}
 <div id="content_body">
 <div id="left">
-    <div id="editor_holder">
     <div id="editor_area">
         <!-- TAG INFO -->
         <h4>Tags</h4>
@@ -224,17 +209,13 @@ body
         </ul>
         {% endif %}
 
-        <div>
+        <div id="before_after_links">
             <a href="/search?created=-{{photo.created}}">&larr;Before</a>
             <span> | </span>
             <a href="/search?created={{photo.created}}-&orderby=created-asc">After&rarr;</a>
         </div>
     </div>
-    <div id="message_area_bg">
-        <div id="message_area">
-        </div>
-    </div>
-    </div>
+    <div id="message_area"></div>
 </div>
 
 <div id="right">

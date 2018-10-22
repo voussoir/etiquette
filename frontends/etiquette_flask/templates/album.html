@@ -94,6 +94,13 @@ li:hover .remove_child_button
 {
     display: initial;
 }
+
+#photo_list
+{
+    padding-left: 40px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
 </style>
 </head>
 
@@ -188,11 +195,11 @@ li:hover .remove_child_button
         {% else %}
             <a href="?view=grid">Grid view</a>
         {% endif %}
-        <ul>
+        <div id="photo_list">
         {% for photo in photos %}
             {{photo_card.create_photo_card(photo, view=view)}}
         {% endfor %}
-        </ul>
+        </div>
     {% endif %}
 
     <!-- Download links -->
