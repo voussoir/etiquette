@@ -826,7 +826,7 @@ class Photo(ObjectBase):
 
         if return_filepath != self.thumbnail:
             if return_filepath is not None:
-                return_filepath = return_filepath.relative_to(self.photodb.thumbnail_directory)
+                return_filepath = return_filepath.absolute_path
             data = {
                 'id': self.id,
                 'thumbnail': return_filepath,
