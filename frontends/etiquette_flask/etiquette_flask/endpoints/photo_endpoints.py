@@ -9,6 +9,7 @@ from voussoirkit import cacheclass
 
 from .. import common
 from .. import decorators
+from .. import helpers
 from .. import jsonify
 
 site = common.site
@@ -396,7 +397,7 @@ def get_search_core():
     if len(photos) == limit:
         next_params = original_params.copy()
         next_params['offset'] = offset + limit
-        next_params = etiquette.helpers.dict_to_params(next_params)
+        next_params = helpers.dict_to_params(next_params)
         next_page_url = '/search' + next_params
     else:
         next_page_url = None
@@ -404,7 +405,7 @@ def get_search_core():
     if offset > 0:
         prev_params = original_params.copy()
         prev_params['offset'] = max(0, offset - limit)
-        prev_params = etiquette.helpers.dict_to_params(prev_params)
+        prev_params = helpers.dict_to_params(prev_params)
         prev_page_url = '/search' + prev_params
     else:
         prev_page_url = None

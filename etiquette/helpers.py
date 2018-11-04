@@ -122,22 +122,6 @@ def comma_space_split(s):
     s = [x for x in s if x]
     return s
 
-def dict_to_params(d):
-    '''
-    Given a dictionary of URL parameters, return a URL parameter string.
-
-    {'a':1, 'b':2} -> '?a=1&b=2'
-    '''
-    if not d:
-        return ''
-
-    params = [f'{key}={value}' for (key, value) in d.items() if value]
-    params = '&'.join(params)
-    if params:
-        params = '?' + params
-
-    return params
-
 def fit_into_bounds(image_width, image_height, frame_width, frame_height):
     '''
     Given the w+h of the image and the w+h of the frame,
