@@ -116,6 +116,13 @@ Here is a brief overview of the project to help you learn your way around:
 - When batch fetching objects, consider whether or not a NoSuch should be raised. Perhaps a warningbag should be used.
 - Find a way to batch the fetching of photo tags in a way that isn't super ugly (e.g. on an album page, the photos themselves are batched, but then the `photo.get_tags()` on each one is not. In order to batch this we would have to have a separate function that fetches a whole bunch of tags and assigns them to the photo object).
 - Consider using executemany for some of the batch operations.
+- Check for embedded cover art when thumbnailing audio files.
+- A "card" representation of albums, like photos.
+- Similarly, rename all "tag_object" to tag card and unify that experience a bit.
+- Batch movement of Albums... but without winding up with a second clipboard system?
+- Drag-and-drop of cards on album pages for easier moving.
+- Overall, more dynamism with cards and tag objects and updating page without requiring refresh.
+- Absolute consistency of CSS classes for divs that hold photo cards.
 
 ### To do list: User permissions
 Here are some thoughts about the kinds of features that need to exist within the permission system. I don't know how I'll actually manage it just yet. Possibly a `permissions` table in the database with `user_id | permission` where `permission` is some reliably-formatted string.
