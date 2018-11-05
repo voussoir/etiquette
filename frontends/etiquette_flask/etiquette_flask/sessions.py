@@ -4,9 +4,9 @@ import math
 import os
 import werkzeug.wrappers
 
-import etiquette
-
 from voussoirkit import cacheclass
+
+import etiquette
 
 
 SESSION_MAX_AGE = 86400

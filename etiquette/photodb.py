@@ -9,6 +9,13 @@ import string
 import tempfile
 import time
 
+from voussoirkit import cacheclass
+from voussoirkit import expressionmatch
+from voussoirkit import pathclass
+from voussoirkit import ratelimiter
+from voussoirkit import spinal
+from voussoirkit import sqlhelpers
+
 from . import constants
 from . import decorators
 from . import exceptions
@@ -16,13 +23,6 @@ from . import helpers
 from . import objects
 from . import searchhelpers
 from . import tag_export
-
-from voussoirkit import cacheclass
-from voussoirkit import expressionmatch
-from voussoirkit import pathclass
-from voussoirkit import ratelimiter
-from voussoirkit import spinal
-from voussoirkit import sqlhelpers
 
 
 logging.basicConfig()

@@ -1,7 +1,6 @@
 '''
 This file provides data and objects that do not change throughout the runtime.
 '''
-
 import converter
 import logging
 import shutil

@@ -3,9 +3,9 @@ import json
 import traceback
 import urllib.parse
 
-import etiquette
-
 from voussoirkit import cacheclass
+
+import etiquette
 
 from .. import common
 from .. import decorators

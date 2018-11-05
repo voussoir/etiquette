@@ -2,20 +2,19 @@
 This file provides the data objects that should not be instantiated directly,
 but are returned by the PDB accesses.
 '''
-
 import os
 import PIL.Image
 import string
 import traceback
 
+from voussoirkit import bytestring
+from voussoirkit import pathclass
+from voussoirkit import spinal
+
 from . import constants
 from . import decorators
 from . import exceptions
 from . import helpers
-
-from voussoirkit import bytestring
-from voussoirkit import pathclass
-from voussoirkit import spinal
 
 
 class ObjectBase:

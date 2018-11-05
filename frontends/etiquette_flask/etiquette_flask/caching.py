@@ -3,10 +3,10 @@ import functools
 import hashlib
 import time
 
-import etiquette
-
 from voussoirkit import cacheclass
 from voussoirkit import pathclass
+
+import etiquette
 
 
 def cached_endpoint(max_age):

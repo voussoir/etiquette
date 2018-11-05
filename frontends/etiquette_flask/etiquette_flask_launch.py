@@ -12,8 +12,8 @@ log_format = '{levelname}:etiquette.{module}.{funcName}: {message}'
 handler.setFormatter(logging.Formatter(log_format, style='{'))
 logging.getLogger().addHandler(handler)
 
-import gevent.pywsgi
 import argparse
+import gevent.pywsgi
 import sys
 
 import etiquette_flask_entrypoint

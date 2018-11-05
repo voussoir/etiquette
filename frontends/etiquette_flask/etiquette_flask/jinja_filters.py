@@ -1,9 +1,9 @@
 import datetime
 import jinja2.filters
 
-import etiquette
-
 import voussoirkit.bytestring
+
+import etiquette
 
 
 def bytestring(x):

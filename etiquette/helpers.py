@@ -2,7 +2,6 @@
 This file provides functions which are used in various places throughout the
 codebase but don't deserve to be methods of any class.
 '''
-
 import datetime
 import hashlib
 import math
@@ -12,11 +11,11 @@ import PIL.Image
 import unicodedata
 import zipstream
 
-from . import constants
-from . import exceptions
-
 from voussoirkit import bytestring
 from voussoirkit import pathclass
+
+from . import constants
+from . import exceptions
 
 def album_as_directory_map(album, recursive=True):
     '''
@@ -499,11 +498,12 @@ def truthystring(s):
 def zip_album(album, recursive=True):
     '''
     Given an album, return a zipstream zipfile that contains the album's
-    photos (recursive = include childen's photos) organized into folders
+    photos (recursive = include children's photos) organized into folders
     for each album. Each album folder also gets a text file containing
     the album's name and description if applicable.
 
     If an album is a child of multiple albums, only one instance is used.
+    If a photo appears in multiple albums, only one instance is used.
     '''
     zipfile = zipstream.ZipFile()
 

@@ -3,10 +3,10 @@ import os
 import mimetypes
 import traceback
 
-import etiquette
-
 from voussoirkit import bytestring
 from voussoirkit import pathclass
+
+import etiquette
 
 from . import caching
 from . import jinja_filters
