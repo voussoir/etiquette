@@ -15,11 +15,15 @@ Organization:
 {
     --color_site_theme: #00d8f4;
     --color_site_secondary: #ffffd4;
-    --color_site_transparency: rgba(0, 0, 0, 0.1);
-    --color_site_dropshadow: rgba(0, 0, 0, 0.25);
+
     --color_text_normal: black;
     --color_text_link: blue;
+
+    --color_site_textfields: white;
     --color_text_placeholder: gray;
+
+    --color_site_transparency: rgba(0, 0, 0, 0.1);
+    --color_site_dropshadow: rgba(0, 0, 0, 0.25);
     --color_3d_shadow: rgba(0, 0, 0, 0.5);
     --color_3d_highlight: rgba(255, 255, 255, 0.5);
 }
@@ -38,7 +42,21 @@ body
 * { color: var(--color_text_normal); }
 a { color: var(--color_text_link); }
 
-input::placeholder
+input, select, textarea
+{
+    margin-top: 2px;
+    margin-bottom: 2px;
+
+    padding: 1px;
+    padding-left: 2px;
+
+    border: none;
+    border-radius: 2px;
+
+    background-color: var(--color_site_textfields);
+}
+
+input::placeholder, textarea::placeholder
 {
     color: var(--color_text_placeholder);
     opacity: 1;
@@ -191,8 +209,8 @@ is hovered over.
 .tag_object
 {
     border-radius: 2px;
-    padding-left: 1px;
-    padding-right: 1px;
+    padding-left: 2px;
+    padding-right: 2px;
 
     background-color: #fff;
 

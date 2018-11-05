@@ -138,8 +138,7 @@ li:hover .remove_child_button
         </button>
     </div>
 
-    <!-- Parent & Child tree -->
-    <ul>
+    <ul id="hierarchy_parents">
         {% set viewparam = "?view=list" if view == "list" else "" %}
         {% set parents = album.get_parents() %}
         {% if parents %}
@@ -150,9 +149,9 @@ li:hover .remove_child_button
         <li><a href="/albums">Albums</a></li>
         {% endif %}
 
-        <ul>
+        <ul id="hierarchy_self">
             <li>{{album.display_name}}</li>
-            <ul>
+            <ul id="heirarchy_children">
                 {% set sub_albums = album.get_children() %}
                 {% for sub_album in sub_albums|sort(attribute='title') %}
                 <li>
@@ -186,7 +185,6 @@ li:hover .remove_child_button
         </ul>
     </ul>
 
-    <!-- Photo list -->
     {% set photos = album.get_photos() %}
     {% if photos %}
         <h3>{{photos|length}} Photos</h3>
@@ -202,23 +200,21 @@ li:hover .remove_child_button
         </div>
     {% endif %}
 
-    <!-- Download links -->
     {% set has_local_photos = photos|length > 0 %}
     {% set has_child_photos = album.has_any_subalbum_photo() %}
     {% if has_local_photos or has_child_photos %}
-        <p>
+        <p id="download_links">
             <span>Download:</span>
             {% if has_local_photos %}
-                <a href="/album/{{album.id}}.zip?recursive=no">These files ({{album.sum_bytes(recurse=False)|bytestring }})</a>
+                <a id="download_link_single" href="/album/{{album.id}}.zip?recursive=no">These files ({{album.sum_bytes(recurse=False)|bytestring }})</a>
                 {% if has_child_photos %}<span>&mdash;</span>{% endif %}
             {% endif %}
             {% if has_child_photos %}
-                <a href="/album/{{album.id}}.zip?recursive=yes">Include children ({{album.sum_bytes(recurse=True)|bytestring }})</a>
+                <a id="download_link_recursive" href="/album/{{album.id}}.zip?recursive=yes">Include children ({{album.sum_bytes(recurse=True)|bytestring }})</a>
             {% endif %}
         </p>
     {% endif %}
 
-    <!-- Clipboard -->
     {{clipboard_tray.clipboard_tray()}}
     <div class="my_clipboard_tray_toolbox">
         <button class="green_button" onclick="paste_photo_clipboard()">Add to this album</button>
