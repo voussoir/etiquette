@@ -29,7 +29,9 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
 
 <details><summary><strong>Setting up via pythonpath</strong></summary>
 
-- The repository you're looking at right now is `D:\Git\Etiquette`. The toplevel `etiquette` folder is the main package. We want the repository to be treated as an alternative lib directory, because the package is a child of it.
+- The repository you're looking at right now is `D:\Git\Etiquette`. The toplevel `etiquette` folder is the main package.
+
+    The pythonpath points to directories that *contain* the packages you need to import, not to the packages themselves. Therefore we point to the repository.
 
     Windows: `set "PYTHONPATH=%PYTHONPATH%;D:\Git\Etiquette"`  
     Note the semicolon to delimit paths.  
@@ -54,13 +56,16 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
 
         Linux:
         /somewhere $ python /home/Owner/Git/Etiquette/frontends/etiquette_flask/etiquette_flask_launch.py 5001
+
 </details>
 
 ---
 
 <details><summary><strong>Running with Gunicorn</strong></summary>
 
-1. Use the PYTHONPATH technique to make `etiquette` and `etiquette_flask` both importable. Symlinking into the lib is not as convenient here because the server relies on the static files and jinja templates relative to the code's location.
+1. Use the PYTHONPATH technique to make `etiquette` and the flask `backend` both importable. Symlinking into the lib is not as convenient here because the server relies on the static files and jinja templates relative to the code's location.
+
+    The Pythonpath points to directories that *contain* the packages you need to import, not to the packages themselves. Therefore we point to the etiquette and frontend repositories.
 
         PYTHONPATH="$PYTHONPATH:/home/Owner/Git/Etiquette:/home/Owner/Git/Etiquette/frontends/etiquette_flask
 
@@ -87,9 +92,7 @@ Here is a brief overview of the project to help you learn your way around:
 - `frontends`  
     Ideally, the backend should be frontend-agnostic. Even though the Flask interface is my primary interest, it should not feel like it must be the only one. Therefore I place it in this folder to indicate that other frontends are possible too. Every folder here is essentially a completely separate project.
     - `etiquette_flask`  
-    This folder represents the flask server as somewhat of a black box, in the sense that you can move it around and just run the contained launch file. Subfolders contain the HTML templates, static files, and site code.
-        - `etiquette_flask`  
-        The package that contains the site's actual API code.
+    This folder represents the flask server as somewhat of a black box, in the sense that you can move it around and just run the contained launch file. Subfolders contain the HTML templates, static files, and site's backend code.
     - `etiquette_repl`  
         Preloads a few variables into the interpreter so you can quickly test functions within the Python REPL itself.
 - `utilities`  

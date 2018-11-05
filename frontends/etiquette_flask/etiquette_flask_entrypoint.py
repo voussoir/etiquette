@@ -7,8 +7,8 @@ gunicorn etiquette_flask_entrypoint:site --bind "0.0.0.0:PORT" --access-logfile 
 import sys
 import werkzeug.contrib.fixers
 
-import etiquette_flask
+import backend
 
-etiquette_flask.site.wsgi_app = werkzeug.contrib.fixers.ProxyFix(etiquette_flask.site.wsgi_app)
+backend.site.wsgi_app = werkzeug.contrib.fixers.ProxyFix(backend.site.wsgi_app)
 
-site = etiquette_flask.site
+site = backend.site
