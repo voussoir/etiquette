@@ -65,7 +65,7 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
 
 1. Use the PYTHONPATH technique to make `etiquette` and the flask `backend` both importable. Symlinking into the lib is not as convenient here because the server relies on the static files and jinja templates relative to the code's location.
 
-    The Pythonpath points to directories that *contain* the packages you need to import, not to the packages themselves. Therefore we point to the etiquette and frontend repositories.
+    The Pythonpath points to directories that *contain* the packages you need to import, not to the packages themselves. Therefore we point to the etiquette and etiquette_flask repositories.
 
         PYTHONPATH="$PYTHONPATH:/home/Owner/Git/Etiquette:/home/Owner/Git/Etiquette/frontends/etiquette_flask
 
