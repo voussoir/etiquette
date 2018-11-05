@@ -37,19 +37,9 @@
 }
 #right
 {
-    position: fixed;
-    right: 8px;
-    bottom: 8px;
-    top: 34px;
-    width: 300px;
-    grid-area: right;
-
-    display: grid;
     grid-template:
         "editor_area" 1fr
         "message_area" 1fr;
-
-    background-color: var(--color_site_transparency);
 }
 #editor_area
 {
@@ -188,7 +178,7 @@
             {% endfor %}
         </ul>
     </div>
-    <div id="right">
+    <div id="right" class="sticky_side_right">
         <div id="editor_area">
             <input type="text" id="add_tag_textbox" autofocus>
             <button class="add_tag_button green_button" id="add_tag_button" onclick="easybake_form();">bake</button>

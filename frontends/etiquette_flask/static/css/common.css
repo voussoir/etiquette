@@ -98,6 +98,19 @@ pre
     white-space: pre-line;
 }
 
+.sticky_side_right
+{
+    position: fixed;
+    right: 8px;
+    bottom: 8px;
+    top: 34px;
+    width: 300px;
+    overflow-y: auto;
+    grid-area: right;
+    display: grid;
+    background-color: var(--color_site_transparency);
+}
+
 .editor_input
 {
     width: 100%;

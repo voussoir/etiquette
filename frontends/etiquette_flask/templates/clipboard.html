@@ -34,15 +34,6 @@
 }
 #right
 {
-    position: fixed;
-    right: 8px;
-    bottom: 8px;
-    top: 34px;
-    width: 300px;
-    grid-area: right;
-
-    display: grid;
-
     grid-template:
         "add_tag_area"
         "remove_tag_area"
@@ -50,8 +41,6 @@
         "searchhidden_area"
         "download_zip_area"
         "message_area" 1fr;
-
-    background-color: var(--color_site_transparency);
 }
 #right > *
 {
@@ -137,7 +126,7 @@
     <div id="photo_card_holder">
     </div>
 </div>
-<div id="right">
+<div id="right" class="sticky_side_right">
     <div id="add_tag_area">
         <input type="text" id="add_tag_textbox" list="tag_autocomplete_datalist">
         <button class="add_tag_button green_button" id="add_tag_button" onclick="add_tag_form();">Add tag</button>
