@@ -1,42 +1,104 @@
 <!DOCTYPE html5>
 <html>
 
+{% macro shared_css() %}
+<style>
+h2, h3
+{
+    margin-top: 0;
+}
+#description_text
+{
+    font-family: initial;
+    padding: 8px;
+}
+
+.remove_child_button
+{
+    display: none;
+}
+.remove_child_button:hover,
+.album_card:hover .remove_child_button
+{
+    display: initial;
+}
+#left
+{
+    margin-left: auto;
+    margin-right: auto;
+    width: 95%;
+}
+#left > *
+{
+    background-color: var(--color_site_transparency);
+    margin-top: 30px;
+    margin-bottom: 30px;
+    padding: 8px;
+    /*border: 1px solid black;*/
+    border-radius: 5px;
+}
+@media screen and (max-width: 800px)
+{
+    #content_body
+    {
+        grid-template:
+            "left" 1fr
+            "right" 150px
+            /1fr;
+    }
+    #right
+    {
+        top: unset !important;
+        width: unset !important;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        height: 150px;
+    }
+}
+</style>
+{% endmacro %}
+
 {% if album is not defined %} {## Album listing ###################################################}
 
 <head>
     {% import "header.html" as header %}
+    {% import "album_card.html" as album_card %}
     <title>Albums</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/photo_card.css">
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
 
-<style>
-#album_list
-{
-    flex-direction: column;
-}
-</style>
+{{shared_css()}}
 </head>
 
 
 <body>
 {{header.make_header(session=session)}}
-<div id="content_body">
-    <div id="album_list">
-        <h2>Albums</h2>
-        <ul>
+<div id="content_body" class="sticky_side_right">
+    <div id="left">
+        <div id="album_list">
+            <h2>Albums</h2>
             {% for album in albums %}
-            <li><a href="/album/{{album.id}}">{{album.display_name}}</a></li>
+            {{album_card.create_album_card(album, view=view)}}
             {% endfor %}
-            <li>
-                <button id="create_child_prompt_button" class="green_button" onclick="open_create_child(event);">Create album</button>
-                <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
-                <button id="create_child_submit_button" class="green_button hidden" onclick="create_child_form(event);">Create</button>
-                <button id="create_child_cancel_button" class="gray_button hidden" onclick="cancel_create_child(event);">Cancel</button>
-            </li>
-        </ul>
+        </div>
+    </div>
+    <div id="right">
+        {% if view != "list" %}
+            <a href="?view=list">List view</a>
+        {% else %}
+            <a href="?view=grid">Grid view</a>
+        {% endif %}
+        <div>
+            <button id="create_child_prompt_button" class="green_button" onclick="open_create_child(event);">Create album</button>
+            <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
+            <button id="create_child_submit_button" class="green_button hidden" onclick="create_child_form(event);">Create</button>
+            <button id="create_child_cancel_button" class="gray_button hidden" onclick="cancel_create_child(event);">Cancel</button>
+        </div>
     </div>
 </div>
 </body>
@@ -49,8 +111,9 @@ ALBUM_ID = undefined;
 {% else %} {## Individual album ###################################################################}
 
 <head>
-    {% import "photo_card.html" as photo_card %}
     {% import "header.html" as header %}
+    {% import "album_card.html" as album_card %}
+    {% import "photo_card.html" as photo_card %}
     {% import "clipboard_tray.html" as clipboard_tray %}
     <title>{{album.display_name}} | Albums</title>
     <meta charset="UTF-8">
@@ -64,68 +127,91 @@ ALBUM_ID = undefined;
     <script src="/static/js/hotkeys.js"></script>
     <script src="/static/js/photo_clipboard.js"></script>
 
-<style>
-p
-{
-    word-break: break-word;
-}
-#album_metadata
-{
-    max-width: 800px;
-}
-#description_text
-{
-    font-family: initial;
-    padding: 8px;
-    background-color: var(--color_site_transparency);
-}
-
-ul
-{
-    line-height: 1.5;
-}
-
-.remove_child_button
-{
-    display: none;
-}
-.remove_child_button:hover,
-li:hover .remove_child_button
-{
-    display: initial;
-}
-
-#photo_list
-{
-    padding-left: 40px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-}
-</style>
+{{shared_css()}}
 </head>
 
 
 <body>
 {{header.make_header(session=session)}}
-<div id="content_body">
-    <div id="album_metadata">
-        <h2><span
-        id="title_text"
-        data-editor-id="title"
-        data-editor-empty-text="{{album.id}}"
-        data-editor-placeholder="title"
-        >
-            {{-album.display_name-}}
-        </span></h2>
+<div id="content_body" class="sticky_side_right">
+    <div id="left">
+        <div id="hierarchy_self">
+            <div id="album_metadata">
+                <h2><span
+                id="title_text"
+                data-editor-id="title"
+                data-editor-empty-text="{{album.id}}"
+                data-editor-placeholder="title"
+                >
+                    {{-album.display_name-}}
+                </span></h2>
 
-        <pre
-        id="description_text"
-        data-editor-id="description"
-        data-editor-placeholder="description"
-        {% if not album.description %}class="hidden"{% endif %}
-        >
-            {{-album.description-}}
-        </pre>
+                <pre
+                id="description_text"
+                data-editor-id="description"
+                data-editor-placeholder="description"
+                {% if not album.description %}class="hidden"{% endif %}
+                >
+                    {{-album.description-}}
+                </pre>
+            </div>
+        </div>
+
+        <div id="hierarchy_parents">
+            <h3>Parents</h3>
+            {% set parents = album.get_parents() %}
+            {% if parents %}
+            {% for parent in parents %}
+                {{album_card.create_album_card(parent, view=view)}}
+            {% endfor %}
+            {% else %}
+                {{album_card.create_root_album_card(view=view)}}
+            {% endif %}
+        </div>
+
+        {% set sub_albums = album.get_children() %}
+        {% if sub_albums %}
+        <div id="hierarchy_children">
+            <h3>Children</h3>
+            {% for sub_album in sub_albums|sort(attribute='title') %}
+                {{album_card.create_album_card(sub_album, view=view, unlink_parent=album)}}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% set photos = album.get_photos() %}
+        {% if photos %}
+        <div id="hierarchy_photos">
+                <h3>{{photos|length}} Photos</h3>
+                <div id="photo_list">
+                {% for photo in photos %}
+                    {{photo_card.create_photo_card(photo, view=view)}}
+                {% endfor %}
+                </div>
+        </div>
+        {% endif %}
+
+        {% set has_local_photos = photos|length > 0 %}
+        {% set has_child_photos = album.has_any_subalbum_photo() %}
+        {% if has_local_photos or has_child_photos %}
+        <div id="download_links">
+            <h3>Download</h3>
+            {% if has_local_photos %}
+                <p><a id="download_link_single" href="/album/{{album.id}}.zip?recursive=no">These files &ndash; {{album.sum_bytes(recurse=False)|bytestring}}</a></p>
+            {% endif %}
+            {% if has_child_photos %}
+                <p><a id="download_link_recursive" href="/album/{{album.id}}.zip?recursive=yes">Include children &ndash; {{album.sum_bytes(recurse=True)|bytestring}}</a></p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div id="right">
+        {% if view != "list" %}
+            <a href="?view=list">List view</a>
+        {% else %}
+            <a href="?view=grid">Grid view</a>
+        {% endif %}
 
         <button
         class="red_button button_with_confirm"
@@ -136,84 +222,20 @@ li:hover .remove_child_button
         >
             Delete
         </button>
-    </div>
 
-    <ul id="hierarchy_parents">
-        {% set viewparam = "?view=list" if view == "list" else "" %}
-        {% set parents = album.get_parents() %}
-        {% if parents %}
-        {% for parent in parents %}
-        <li><a href="/album/{{parent.id}}{{viewparam}}">{{parent.display_name}}</a></li>
-        {% endfor %}
-        {% else %}
-        <li><a href="/albums">Albums</a></li>
-        {% endif %}
-
-        <ul id="hierarchy_self">
-            <li>{{album.display_name}}</li>
-            <ul id="heirarchy_children">
-                {% set sub_albums = album.get_children() %}
-                {% for sub_album in sub_albums|sort(attribute='title') %}
-                <li>
-                    <a href="/album/{{sub_album.id}}{{viewparam}}">{{sub_album.display_name}}</a>
-
-                    <button
-                    class="remove_child_button button_with_confirm red_button"
-                    data-onclick="api.albums.remove_child(ALBUM_ID, '{{sub_album.id}}', common.refresh)"
-                    data-prompt="Remove child?"
-                    data-holder-class="remove_child_button"
-                    data-confirm-class="red_button"
-                    data-cancel-class="gray_button"
-                    >
-                        Unlink
-                    </button>
-                </li>
-                {% endfor %}
-                <li>
-                    <button id="create_child_prompt_button" class="green_button" onclick="open_create_child(event);">Create child</button>
-                    <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
-                    <button id="create_child_submit_button" class="green_button hidden" onclick="create_child_form(event);">Create</button>
-                    <button id="create_child_cancel_button" class="gray_button hidden" onclick="cancel_create_child(event);">Cancel</button>
-                </li>
-                <li>
-                    <button id="add_child_prompt_button" class="green_button" onclick="open_add_child(event);">Add child</button>
-                    <input type="text" id="add_child_id_entry" class="hidden" placeholder="Album ID">
-                    <button id="add_child_submit_button" class="green_button hidden" onclick="add_child_form(event);">Add</button>
-                    <button id="add_child_cancel_button" class="gray_button hidden" onclick="cancel_add_child(event);">Cancel</button>
-                </li>
-            </ul>
-        </ul>
-    </ul>
-
-    {% set photos = album.get_photos() %}
-    {% if photos %}
-        <h3>{{photos|length}} Photos</h3>
-        {% if view != "list" %}
-            <a href="?view=list">List view</a>
-        {% else %}
-            <a href="?view=grid">Grid view</a>
-        {% endif %}
-        <div id="photo_list">
-        {% for photo in photos %}
-            {{photo_card.create_photo_card(photo, view=view)}}
-        {% endfor %}
+        <div>
+            <button id="create_child_prompt_button" class="green_button" onclick="open_create_child(event);">Create child</button>
+            <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
+            <button id="create_child_submit_button" class="green_button hidden" onclick="create_child_form(event);">Create</button>
+            <button id="create_child_cancel_button" class="gray_button hidden" onclick="cancel_create_child(event);">Cancel</button>
         </div>
-    {% endif %}
-
-    {% set has_local_photos = photos|length > 0 %}
-    {% set has_child_photos = album.has_any_subalbum_photo() %}
-    {% if has_local_photos or has_child_photos %}
-        <p id="download_links">
-            <span>Download:</span>
-            {% if has_local_photos %}
-                <a id="download_link_single" href="/album/{{album.id}}.zip?recursive=no">These files ({{album.sum_bytes(recurse=False)|bytestring }})</a>
-                {% if has_child_photos %}<span>&mdash;</span>{% endif %}
-            {% endif %}
-            {% if has_child_photos %}
-                <a id="download_link_recursive" href="/album/{{album.id}}.zip?recursive=yes">Include children ({{album.sum_bytes(recurse=True)|bytestring }})</a>
-            {% endif %}
-        </p>
-    {% endif %}
+        <div>
+            <button id="add_child_prompt_button" class="green_button" onclick="open_add_child(event);">Add child</button>
+            <input type="text" id="add_child_id_entry" class="hidden" placeholder="Album ID">
+            <button id="add_child_submit_button" class="green_button hidden" onclick="add_child_form(event);">Add</button>
+            <button id="add_child_cancel_button" class="gray_button hidden" onclick="cancel_add_child(event);">Cancel</button>
+        </div>
+    </div>
 
     {{clipboard_tray.clipboard_tray()}}
     <div class="my_clipboard_tray_toolbox">

@@ -20,12 +20,6 @@
 {
     grid-area: header;
 }
-#content_body
-{
-    grid-template:
-        "left right"
-        /1fr 300px;
-}
 #left
 {
     word-break: break-word;
@@ -64,12 +58,13 @@
     {
         grid-template:
             "left" 1fr
-            "right" 150px;
+            "right" 150px
+            /1fr;
     }
     #right
     {
-        top: unset;
-        width: unset;
+        top: unset !important;
+        width: unset !important;
         left: 8px;
         right: 8px;
         bottom: 8px;
@@ -86,7 +81,7 @@
 
 <body>
 {{header.make_header(session=session)}}
-<div id="content_body">
+<div id="content_body" class="sticky_side_right">
     <div id="left">
         {% if specific_tag %}
             <div id="tag_metadata">
@@ -178,7 +173,7 @@
             {% endfor %}
         </ul>
     </div>
-    <div id="right" class="sticky_side_right">
+    <div id="right">
         <div id="editor_area">
             <input type="text" id="add_tag_textbox" autofocus>
             <button class="add_tag_button green_button" id="add_tag_button" onclick="easybake_form();">bake</button>

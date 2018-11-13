@@ -166,7 +166,13 @@ def get_albums_core():
 def get_albums_html():
     albums = get_albums_core()
     session = session_manager.get(request)
-    return flask.render_template('album.html', albums=albums, session=session)
+    response = flask.render_template(
+        'album.html',
+        albums=albums,
+        session=session,
+        view=request.args.get('view', 'grid'),
+    )
+    return response
 
 @site.route('/albums.json')
 @session_manager.give_token

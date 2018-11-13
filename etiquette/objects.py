@@ -523,6 +523,11 @@ class Album(ObjectBase, GroupableMixin):
         return total
 
     def sum_photos(self, recurse=True):
+        '''
+        If all you need is the number of photos in the album, this method is
+        preferable to len(album.get_photos()) because it performs the counting
+        in the database instead of creating the Photo objects.
+        '''
         query = '''
         SELECT COUNT(photoid)
         FROM album_photo_rel

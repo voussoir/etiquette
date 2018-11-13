@@ -13,6 +13,8 @@
     --color_site_dropshadow: rgba(0, 0, 0, 0.25);
     --color_3d_shadow: rgba(0, 0, 0, 0.5);
     --color_3d_highlight: rgba(255, 255, 255, 0.5);
+
+    --size_sticky_side: 300px;
 }
 
 html
@@ -34,8 +36,7 @@ input, select, textarea
     margin-top: 2px;
     margin-bottom: 2px;
 
-    padding: 1px;
-    padding-left: 2px;
+    padding: 2px;
 
     border: none;
     border-radius: 2px;
@@ -103,17 +104,49 @@ pre
     white-space: pre-line;
 }
 
+#left
+{
+    grid-area: left;
+}
+#right
+{
+    grid-area: right;
+}
+
+.sticky_side_left
+{
+    grid-template:
+        "left right"
+        /var(--size_sticky_side) 1fr;
+}
 .sticky_side_right
 {
-    position: fixed;
-    right: 8px;
-    bottom: 8px;
-    top: 34px;
-    width: 300px;
-    overflow-y: auto;
+    grid-template:
+        "left right"
+        /1fr var(--size_sticky_side);
+}
+
+.sticky_side_left #left,
+.sticky_side_right #right
+{
     grid-area: right;
     display: grid;
+    grid-auto-rows: min-content;
+
+    position: fixed;
+    bottom: 8px;
+    top: 34px;
+    width: var(--size_sticky_side);
+    overflow-y: auto;
     background-color: var(--color_site_transparency);
+}
+.sticky_side_left #left
+{
+    left: 8px;
+}
+.sticky_side_right #right
+{
+    right: 8px;
 }
 
 .editor_input

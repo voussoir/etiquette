@@ -1,0 +1,65 @@
+{% macro create_root_album_card(view="grid") %}
+{% set viewparam = "?view=list" if view == "list" else "" %}
+    {% if view == "list" %}
+    <div class="album_card album_card_list">
+        <div class="album_card_title">
+            <a href="/albums{{viewparam}}">Albums</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="album_card album_card_grid">
+        <a class="album_card_thumbnail" href="/albums">
+        </a>
+
+        <div class="album_card_title">
+            <a href="/albums">Albums</a>
+        </div>
+    </div>
+    {% endif %}
+{% endmacro %}
+
+{% macro create_album_card(album, view="grid", unlink_parent=none) %}
+{% set viewparam = "?view=list" if view == "list" else "" %}
+    {% if view == "list" %}
+    <div class="album_card album_card_list">
+        <div class="album_card_title">
+            <a href="/album/{{album.id}}{{viewparam}}">{{album.display_name}}</a>
+        </div>
+
+        <span class="album_card_metadata">
+            <span class="album_card_child_count">{{album.get_children()|length}}</span> children
+            {{-' '-}}|{{-' '-}}
+            <span class="album_card_photo_count">{{album.sum_photos(recurse=False)}}</span> photos
+        </span>
+    </div>
+    {% else %}
+    <div class="album_card album_card_grid" data-id="{{album.id}}">
+        <a class="album_card_thumbnail" href="/album/{{album.id}}{{viewparam}}">
+        </a>
+
+        <div class="album_card_title">
+            <a href="/album/{{album.id}}{{viewparam}}">{{album.display_name}}</a>
+        </div>
+
+        <span class="album_card_metadata">
+            <span class="album_card_child_count">{{album.get_children()|length}}</span> children
+            {{-' '-}}|{{-' '-}}
+            <span class="album_card_photo_count">{{album.sum_photos(recurse=False)}}</span> photos
+        </span>
+
+        <div class="album_card_tools">
+            {% if unlink_parent is not none %}
+            <button
+            class="remove_child_button button_with_confirm red_button"
+            data-onclick="api.albums.remove_child('{{unlink_parent.id}}', '{{album.id}}', common.refresh)"
+            data-prompt="Remove child?"
+            data-holder-class="remove_child_button"
+            data-confirm-class="red_button"
+            data-cancel-class="gray_button"
+            >Unlink
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+{% endmacro %}
