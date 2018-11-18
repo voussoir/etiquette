@@ -7,26 +7,6 @@ h2, h3
 {
     margin-top: 0;
 }
-#album_metadata h2 .editor_input
-{
-    font-size: inherit;
-    font-weight: inherit;
-}
-#description_text
-{
-    font-family: initial;
-    padding: 8px;
-}
-
-.remove_child_button
-{
-    display: none;
-}
-.remove_child_button:hover,
-.album_card:hover .remove_child_button
-{
-    display: initial;
-}
 #left
 {
     margin-left: auto;
@@ -41,10 +21,32 @@ h2, h3
     padding: 8px;
     border-radius: 5px;
 }
+#album_metadata h2 .editor_input
+{
+    font-size: inherit;
+    font-weight: inherit;
+}
+#description_text
+{
+    font-family: initial;
+    padding: 8px;
+}
+
 #right > *
 {
     margin-right: auto;
 }
+
+.remove_child_button
+{
+    display: none;
+}
+.remove_child_button:hover,
+.album_card:hover .remove_child_button
+{
+    display: initial;
+}
+
 @media screen and (max-width: 800px)
 {
     #content_body
