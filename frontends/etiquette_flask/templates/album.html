@@ -193,12 +193,12 @@ ALBUM_ID = undefined;
         {% set photos = album.get_photos() %}
         {% if photos %}
         <div id="hierarchy_photos">
-                <h3>{{photos|length}} Photos</h3>
-                <div id="photo_list">
-                {% for photo in photos %}
-                    {{photo_card.create_photo_card(photo, view=view)}}
-                {% endfor %}
-                </div>
+            <h3>{{photos|length}} Photos</h3>
+            <div id="photo_list">
+            {% for photo in photos %}
+                {{photo_card.create_photo_card(photo, view=view)}}
+            {% endfor %}
+            </div>
         </div>
         {% endif %}
 
