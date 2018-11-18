@@ -103,13 +103,14 @@ h2, h3
         {% do tags.remove((specific_tag.name, specific_tag)) %}
         <div id="hierarchy_self">
             <div id="tag_metadata">
-                <h2><span
+                <h2><a
+                    href="/search?tag_musts={{specific_tag.name}}"
                     id="name_text"
                     data-editor-id="name"
                     data-editor-placeholder="name"
                     >
                         {{-specific_tag.name-}}
-                </span></h2>
+                </a></h2>
 
                 <pre
                 id="description_text"
@@ -321,6 +322,7 @@ function on_save(ed, edit_element_map, display_element_map)
             document.title = new_name + " | Tags";
             window.history.replaceState(null, null, "/tag/" + new_name);
             name_editor.value = new_name;
+            name_display.href = "/search?tag_musts=" + new_name;
             description_editor.value = new_description;
             ed.save();
             if (new_description === "")
