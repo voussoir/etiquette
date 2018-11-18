@@ -13,7 +13,6 @@
         "title metadata"
         /1fr;
 
-    min-width: 600px;
     margin: 8px;
     padding: 4px;
 }
@@ -71,7 +70,6 @@
         "checkbox filename metadata" auto
         /auto     1fr      auto;
 
-    max-width: 800px;
     margin: 8px;
     padding: 4px;
 }
