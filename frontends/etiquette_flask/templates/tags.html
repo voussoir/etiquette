@@ -16,18 +16,41 @@
     <script src="/static/js/editor.js"></script>
 
 <style>
+h2, h3
+{
+    margin-top: 0;
+}
 #header
 {
     grid-area: header;
 }
 #left
 {
-    word-break: break-word;
-    grid-area: left;
+    margin-left: auto;
+    margin-right: auto;
+    width: 95%;
 }
-#tag_metadata
+#left > *
 {
-    max-width: 800px;
+    background-color: var(--color_site_transparency);
+    margin-top: 30px;
+    margin-bottom: 30px;
+    padding: 8px;
+    border-radius: 5px;
+}
+#tag_metadata h2 .editor_input
+{
+    font-size: inherit;
+    font-weight: inherit;
+}
+#description_text
+{
+    font-family: initial;
+    padding: 8px;
+}
+#tag_list
+{
+    word-break: break-word;
 }
 #right
 {
@@ -44,13 +67,6 @@
 {
     grid-area: message_area;
     margin: 8px;
-}
-#description_text
-{
-    margin-right: 8px;
-    padding: 8px;
-    background-color: var(--color_site_transparency);
-    font-family: initial;
 }
 @media screen and (max-width: 800px)
 {
@@ -84,41 +100,53 @@
 <div id="content_body" class="sticky_side_right">
     <div id="left">
         {% if specific_tag %}
+        {% do tags.remove((specific_tag.name, specific_tag)) %}
+        <div id="hierarchy_self">
             <div id="tag_metadata">
-            <h2>
-                <span
-                id="name_text"
-                data-editor-id="name"
-                data-editor-placeholder="name"
-                >
-                    {{-specific_tag.name-}}
-                </span>
-            </h2>
-            <pre
-            id="description_text"
-            data-editor-id="description"
-            data-editor-placeholder="description"
-            {% if specific_tag.description == "" %}class="hidden"{% endif -%}
-            >
-                {{-specific_tag.description-}}
-            </pre>
-            </div>
+                <h2><span
+                    id="name_text"
+                    data-editor-id="name"
+                    data-editor-placeholder="name"
+                    >
+                        {{-specific_tag.name-}}
+                </span></h2>
 
-            {% set parents = specific_tag.get_parents() %}
-            {% if parents %}
-            <ul>
+                <pre
+                id="description_text"
+                data-editor-id="description"
+                data-editor-placeholder="description"
+                {% if specific_tag.description == "" %}class="hidden"{% endif -%}
+                >
+                    {{-specific_tag.description-}}
+                </pre>
+            </div>
+            <button class="green_button editor_toolbox_placeholder">Edit</button>
+        </div>
+
+        {% set parents = specific_tag.get_parents() %}
+        {% if parents %}
+        <div id="hierarchy_parents">
+            <h3>Parents</h3>
+            <ul id="parent_list">
             {% for ancestor in specific_tag.get_parents() %}
             <li>
                 {{tag_object.tag_object(ancestor, innertext='(?)', link='info')}}
                 {{tag_object.tag_object(ancestor, innertext=ancestor.name, link=none, with_alt_description=True)}}
             </li>
             {% endfor %}
-            {% endif %}
             </ul>
-        {% else %}
-            <h2>Tags</h2>
+        </div>
         {% endif %}
-        <ul>
+
+        {% set tag_list_header = "<h3>Children</h3>" %}
+        {% else %}
+        {% set tag_list_header = "<h2>Tags</h2>" %}
+        {% endif %}
+
+        {% if tags or not specific_tag %}
+        <div id="hierarchy_tags">
+            {{ tag_list_header | safe }}
+            <ul id="tag_list">
             {% for (qualified_name, tag) in tags %}
                 {% if "." in qualified_name %}
                 <li>
@@ -171,7 +199,9 @@
                 {% endfor %}
                 {% endif %}
             {% endfor %}
-        </ul>
+            </ul>
+        </div>
+        {% endif %}
     </div>
     <div id="right">
         <div id="editor_area">
@@ -201,6 +231,11 @@ function easybake_form()
 {
     var box = document.getElementById('add_tag_textbox');
     var easybake_string = box.value;
+    if (easybake_string === "")
+    {
+        box.focus();
+        return;
+    }
     api.tags.easybake(easybake_string, receive_callback);
     box.value = "";
 }
