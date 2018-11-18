@@ -98,6 +98,14 @@ h2, h3
 <body>
 {{header.make_header(session=session)}}
 <div id="content_body" class="sticky_side_right">
+    <div id="right">
+        <div id="editor_area">
+            <input type="text" id="add_tag_textbox" autofocus>
+            <button class="add_tag_button green_button" id="add_tag_button" onclick="easybake_form();">bake</button>
+        </div>
+        <div id="message_area">
+        </div>
+    </div>
     <div id="left">
         {% if specific_tag %}
         {% do tags.remove((specific_tag.name, specific_tag)) %}
@@ -203,14 +211,6 @@ h2, h3
             </ul>
         </div>
         {% endif %}
-    </div>
-    <div id="right">
-        <div id="editor_area">
-            <input type="text" id="add_tag_textbox" autofocus>
-            <button class="add_tag_button green_button" id="add_tag_button" onclick="easybake_form();">bake</button>
-        </div>
-        <div id="message_area">
-        </div>
     </div>
 </div>
 </body>

@@ -144,6 +144,37 @@ ALBUM_ID = undefined;
 <body>
 {{header.make_header(session=session)}}
 <div id="content_body" class="sticky_side_right">
+    <div id="right">
+        {% if view != "list" %}
+            <a href="?view=list">List view</a>
+        {% else %}
+            <a href="?view=grid">Grid view</a>
+        {% endif %}
+
+        <button
+        class="red_button button_with_confirm"
+        data-onclick="api.albums.delete(ALBUM_ID, api.albums.callback_go_to_albums)"
+        data-prompt="Delete Album?"
+        data-confirm-class="red_button"
+        data-cancel-class="gray_button"
+        >
+            Delete
+        </button>
+
+        <div>
+            <button id="create_child_prompt_button" class="green_button" onclick="open_create_child(event);">Create child</button>
+            <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
+            <button id="create_child_submit_button" class="green_button hidden" onclick="create_child_form(event);">Create</button>
+            <button id="create_child_cancel_button" class="gray_button hidden" onclick="cancel_create_child(event);">Cancel</button>
+        </div>
+        <div>
+            <button id="add_child_prompt_button" class="green_button" onclick="open_add_child(event);">Add child</button>
+            <input type="text" id="add_child_id_entry" class="hidden" placeholder="Album ID">
+            <button id="add_child_submit_button" class="green_button hidden" onclick="add_child_form(event);">Add</button>
+            <button id="add_child_cancel_button" class="gray_button hidden" onclick="cancel_add_child(event);">Cancel</button>
+        </div>
+    </div>
+
     <div id="left">
         <div id="hierarchy_self">
             <div id="album_metadata">
@@ -215,37 +246,6 @@ ALBUM_ID = undefined;
             {% endif %}
         </div>
         {% endif %}
-    </div>
-
-    <div id="right">
-        {% if view != "list" %}
-            <a href="?view=list">List view</a>
-        {% else %}
-            <a href="?view=grid">Grid view</a>
-        {% endif %}
-
-        <button
-        class="red_button button_with_confirm"
-        data-onclick="api.albums.delete(ALBUM_ID, api.albums.callback_go_to_albums)"
-        data-prompt="Delete Album?"
-        data-confirm-class="red_button"
-        data-cancel-class="gray_button"
-        >
-            Delete
-        </button>
-
-        <div>
-            <button id="create_child_prompt_button" class="green_button" onclick="open_create_child(event);">Create child</button>
-            <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
-            <button id="create_child_submit_button" class="green_button hidden" onclick="create_child_form(event);">Create</button>
-            <button id="create_child_cancel_button" class="gray_button hidden" onclick="cancel_create_child(event);">Cancel</button>
-        </div>
-        <div>
-            <button id="add_child_prompt_button" class="green_button" onclick="open_add_child(event);">Add child</button>
-            <input type="text" id="add_child_id_entry" class="hidden" placeholder="Album ID">
-            <button id="add_child_submit_button" class="green_button hidden" onclick="add_child_form(event);">Add</button>
-            <button id="add_child_cancel_button" class="gray_button hidden" onclick="cancel_add_child(event);">Cancel</button>
-        </div>
     </div>
 
     {{clipboard_tray.clipboard_tray()}}
