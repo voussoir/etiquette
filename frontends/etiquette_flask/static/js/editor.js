@@ -186,6 +186,12 @@ function Editor(elements, on_open, on_save, on_cancel)
         return bindable.bind(this);
     }
 
+    var placeholders = document.getElementsByClassName("editor_toolbox_placeholder");
+    for (var index = 0; index < placeholders.length; index += 1)
+    {
+        placeholders[index].parentElement.removeChild(placeholders[index]);
+    }
+
     var last_element = this.edit_elements[this.edit_elements.length - 1];
     var toolbox = document.createElement("div");
     toolbox.classList.add("editor_toolbox");
