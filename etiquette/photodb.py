@@ -1262,19 +1262,22 @@ class PhotoDB(
         ):
         super().__init__()
 
+        ephemeral = bool(ephemeral)
+        if data_directory is not None and ephemeral:
+            raise exceptions.NotExclusive(['data_directory', 'ephemeral'])
+
         self.ephemeral = ephemeral
 
         # DATA DIR PREP
-        if data_directory is None:
-            if self.ephemeral:
-                # In addition to the data_dir as a pathclass object, keep the
-                # TempDir object so we can use the cleanup method later.
-                self.ephemeral_directory = tempfile.TemporaryDirectory(prefix='etiquette_ephem_')
-                data_directory = self.ephemeral_directory.name
-            else:
-                data_directory = constants.DEFAULT_DATADIR
+        if data_directory is not None:
+            pass
         elif self.ephemeral:
-            raise exceptions.NotExclusive(['data_directory', 'ephemeral'])
+            # In addition to the data_dir as a pathclass object, keep the
+            # TempDir object so we can use the cleanup method later.
+            self.ephemeral_directory = tempfile.TemporaryDirectory(prefix='etiquette_ephem_')
+            data_directory = self.ephemeral_directory.name
+        else:
+            data_directory = constants.DEFAULT_DATADIR
 
         data_directory = helpers.remove_path_badchars(data_directory, allowed=':/\\')
         self.data_directory = pathclass.Path(data_directory)
@@ -1287,16 +1290,15 @@ class PhotoDB(
 
         # DATABASE
         if self.ephemeral:
-            self.sql = sqlite3.connect(':memory:')
             existing_database = False
+            self.sql = sqlite3.connect(':memory:')
         else:
             self.database_filepath = self.data_directory.with_child(constants.DEFAULT_DBNAME)
             existing_database = self.database_filepath.exists
 
-        if not create and not self.ephemeral and not existing_database:
-            raise FileNotFoundError('"%s" does not exist and create is off.' % self.data_directory)
+            if not existing_database and not create:
+                raise FileNotFoundError(f'"{self.data_directory}" does not exist and create is off.')
 
-        if not self.ephemeral:
             os.makedirs(self.data_directory.absolute_path, exist_ok=True)
             self.sql = sqlite3.connect(self.database_filepath.absolute_path)
 
@@ -1317,7 +1319,6 @@ class PhotoDB(
         self.log.setLevel(self.config['log_level'])
 
         # OTHER
-
         self._cached_frozen_children = None
 
         self.caches = {
@@ -1338,14 +1339,13 @@ class PhotoDB(
             raise exceptions.DatabaseOutOfDate(existing=existing, new=constants.DATABASE_VERSION)
 
     def _first_time_setup(self):
-        self.log.debug('Running first-time setup.')
-        cur = self.sql.cursor()
-        cur.executescript(constants.DB_INIT)
+        self.log.debug('Running first-time database setup.')
+        self.sql.executescript(constants.DB_INIT)
         self.sql.commit()
 
     def _load_pragmas(self):
-        cur = self.sql.cursor()
-        cur.executescript(constants.DB_PRAGMAS)
+        self.log.debug('Reloading pragmas.')
+        self.sql.executescript(constants.DB_PRAGMAS)
         self.sql.commit()
 
     def __del__(self):
