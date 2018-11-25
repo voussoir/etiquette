@@ -165,7 +165,7 @@ class BadDataDirectory(EtiquetteException):
     error_message = 'Bad data directory "{}"'
 
 OUTOFDATE = '''
-Database is out of date. {current} should be {new}.
+Database is out of date. {existing} should be {new}.
 Please use utilities\\database_upgrader\\database_upgrader.py
 '''.strip()
 class DatabaseOutOfDate(EtiquetteException):
