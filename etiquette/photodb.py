@@ -1414,11 +1414,11 @@ class PhotoDB(
         thing_table = thing_map['table']
         thing_class = thing_map['class']
         thing_cache = self.caches[thing_type]
-        thing_index = constants.SQL_INDEX[thing_table]
 
         if isinstance(db_row, dict):
             thing_id = db_row['id']
         else:
+            thing_index = constants.SQL_INDEX[thing_table]
             thing_id = db_row[thing_index['id']]
 
         try:
