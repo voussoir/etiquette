@@ -8,8 +8,7 @@
     </div>
     {% else %}
     <div class="album_card album_card_grid">
-        <a class="album_card_thumbnail" href="/albums">
-        </a>
+        <a class="album_card_thumbnail" href="/albums"></a>
 
         <div class="album_card_title">
             <a href="/albums">Albums</a>
@@ -26,11 +25,11 @@
             <a href="/album/{{album.id}}{{viewparam}}">{{album.display_name}}</a>
         </div>
 
-        <span class="album_card_metadata">
+        <div class="album_card_metadata">
             <span class="album_card_child_count">{{album.get_children()|length}}</span> children
-            {{-' '-}}|{{-' '-}}
+            {{-' | '-}}
             <span class="album_card_photo_count">{{album.sum_photos(recurse=False)}}</span> photos
-        </span>
+        </div>
     </div>
     {% else %}
     <div class="album_card album_card_grid" data-id="{{album.id}}">
@@ -40,11 +39,11 @@
             <a href="/album/{{album.id}}{{viewparam}}">{{album.display_name}}</a>
         </div>
 
-        <span class="album_card_metadata">
+        <div class="album_card_metadata">
             <span class="album_card_child_count">{{album.get_children()|length}}</span> children
-            {{-' '-}}|{{-' '-}}
+            {{-' | '-}}
             <span class="album_card_photo_count">{{album.sum_photos(recurse=False)}}</span> photos
-        </span>
+        </div>
 
         <div class="album_card_tools">
             {% if unlink_parent is not none %}
