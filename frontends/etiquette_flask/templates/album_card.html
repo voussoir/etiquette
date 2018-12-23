@@ -21,7 +21,7 @@
 {% macro create_album_card(album, view="grid", unlink_parent=none) %}
 {% set viewparam = "?view=list" if view == "list" else "" %}
     {% if view == "list" %}
-    <div class="album_card album_card_list">
+    <div class="album_card album_card_list" data-id="{{album.id}}">
         <div class="album_card_title">
             <a href="/album/{{album.id}}{{viewparam}}">{{album.display_name}}</a>
         </div>
