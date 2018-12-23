@@ -1,4 +1,5 @@
 {% macro create_root_album_card(view="grid") %}
+{% set view = (view if view in ("list", "grid") else "grid") %}
 {% set viewparam = "?view=list" if view == "list" else "" %}
     {% if view == "list" %}
     <div class="album_card album_card_list">
@@ -18,33 +19,11 @@
 {% endmacro %}
 
 {% macro create_album_card(album, view="grid", unlink_parent=none) %}
+{% set view = (view if view in ("list", "grid") else "grid") %}
 {% set viewparam = "?view=list" if view == "list" else "" %}
-    {% if view == "list" %}
-    <div class="album_card album_card_list" data-id="{{album.id}}">
-        <div class="album_card_title">
-            <a href="/album/{{album.id}}{{viewparam}}">{{album.display_name}}</a>
-        </div>
-
-        <div class="album_card_metadata">
-            <span class="album_card_child_count">{{album.get_children()|length}}</span> children
-            {{-' | '-}}
-            <span class="album_card_photo_count">{{album.sum_photos(recurse=False)}}</span> photos
-        </div>
-    </div>
-    {% else %}
-    <div class="album_card album_card_grid" data-id="{{album.id}}">
+    <div class="album_card album_card_{{view}}" data-id="{{album.id}}">
+    {% if view == "grid" %}
         <a class="album_card_thumbnail" href="/album/{{album.id}}{{viewparam}}"></a>
-
-        <div class="album_card_title">
-            <a href="/album/{{album.id}}{{viewparam}}">{{album.display_name}}</a>
-        </div>
-
-        <div class="album_card_metadata">
-            <span class="album_card_child_count">{{album.get_children()|length}}</span> children
-            {{-' | '-}}
-            <span class="album_card_photo_count">{{album.sum_photos(recurse=False)}}</span> photos
-        </div>
-
         <div class="album_card_tools">
             {% if unlink_parent is not none %}
             <button
@@ -58,6 +37,15 @@
             </button>
             {% endif %}
         </div>
-    </div>
     {% endif %}
+        <div class="album_card_title">
+            <a href="/album/{{album.id}}{{viewparam}}">{{album.display_name}}</a>
+        </div>
+
+        <div class="album_card_metadata">
+            <span class="album_card_child_count">{{album.get_children()|length}}</span> children
+            {{-' | '-}}
+            <span class="album_card_photo_count">{{album.sum_photos(recurse=False)}}</span> photos
+        </div>
+    </div>
 {% endmacro %}
