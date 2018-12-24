@@ -200,13 +200,14 @@ ALBUM_ID = undefined;
         </div>
 
         <div id="hierarchy_parents">
-            <h3>Parents</h3>
             {% set parents = album.get_parents() %}
             {% if parents %}
-            {% for parent in parents %}
-                {{album_card.create_album_card(parent, view=view)}}
-            {% endfor %}
+                <h3>{{parents|length}} Parents</h3>
+                {% for parent in parents %}
+                    {{album_card.create_album_card(parent, view=view)}}
+                {% endfor %}
             {% else %}
+                <h3>1 Parent</h3>
                 {{album_card.create_root_album_card(view=view)}}
             {% endif %}
         </div>
@@ -214,7 +215,7 @@ ALBUM_ID = undefined;
         {% set sub_albums = album.get_children() %}
         {% if sub_albums %}
         <div id="hierarchy_children">
-            <h3>Children</h3>
+            <h3>{{sub_albums|length}} Children</h3>
             {% for sub_album in sub_albums|sort(attribute='title') %}
                 {{album_card.create_album_card(sub_album, view=view, unlink_parent=album)}}
             {% endfor %}
