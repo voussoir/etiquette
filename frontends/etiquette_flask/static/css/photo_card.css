@@ -137,13 +137,13 @@
 
     min-width: 100%;
     width: 0;
-    max-height: 30px;
     background-color: inherit;
     word-break: break-word;
 }
 .photo_card_grid .photo_card_filename
 {
     align-self: start;
+    max-height: 30px;
     font-size: 12.8px;
 }
 .photo_card_list .photo_card_filename
