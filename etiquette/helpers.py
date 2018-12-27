@@ -243,20 +243,23 @@ def hyphen_range(s):
     s = s.replace(' ', '')
     if not s:
         return (None, None)
+
     parts = s.split('-')
     parts = [part.strip() or None for part in parts]
+
     if len(parts) == 1:
-        low = parts[0]
-        high = None
+        (low, high) = (parts[0], None)
     elif len(parts) == 2:
         (low, high) = parts
     else:
         raise ValueError('Too many hyphens')
 
-    low = _unitconvert(low)
-    high = _unitconvert(high)
+    low = parse_unit_string(low)
+    high = parse_unit_string(high)
+
     if low is not None and high is not None and low > high:
         raise exceptions.OutOfOrder(range=s, min=low, max=high)
+
     return low, high
 
 def hms_to_seconds(hms):
@@ -289,6 +292,22 @@ def now(timestamp=True):
     if timestamp:
         return n.timestamp()
     return n
+
+def parse_unit_string(s):
+    '''
+    Try to parse the string as a float, or bytestring, or hms.
+    '''
+    if s is None:
+        return None
+
+    if ':' in s:
+        return hms_to_seconds(s)
+
+    elif all(c in '0123456789.' for c in s):
+        return float(s)
+
+    else:
+        return bytestring.parsebytes(s)
 
 def random_hex(length=12):
     randbytes = os.urandom(math.ceil(length / 2))
@@ -547,18 +566,3 @@ def zip_photos(photos):
         zipfile.write(filename=photo.real_path.absolute_path, arcname=arcname)
 
     return zipfile
-
-_numerical_characters = set('0123456789.')
-def _unitconvert(value):
-    '''
-    When parsing hyphenated ranges, this function is used to convert
-    strings like "1k" to 1024 and "1:00" to 60.
-    '''
-    if value is None:
-        return None
-    if ':' in value:
-        return hms_to_seconds(value)
-    elif all(c in _numerical_characters for c in value):
-        return float(value)
-    else:
-        return bytestring.parsebytes(value)
