@@ -1,7 +1,7 @@
 :root
 {
-    --color_site_theme: #00d8f4;
-    --color_site_secondary: #ffffd4;
+    --color_theme_primary: #00d8f4;
+    --color_theme_secondary: #ffffd4;
 
     --color_text_normal: black;
     --color_text_link: blue;
@@ -59,7 +59,7 @@ body
         "content_body" 1fr
         /1fr;
 
-    background-color: var(--color_site_theme);
+    background-color: var(--color_theme_primary);
 }
 
 #header
@@ -96,7 +96,7 @@ body
 }
 .header_element:hover
 {
-    background-color: var(--color_site_secondary);
+    background-color: var(--color_theme_secondary);
 }
 
 pre

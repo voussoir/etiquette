@@ -1,6 +1,6 @@
 .album_card
 {
-    background-color: var(--color_site_secondary);
+    background-color: var(--color_theme_secondary);
 }
 .album_card:hover
 {
@@ -61,7 +61,7 @@
 
 .photo_card
 {
-    background-color: var(--color_site_secondary);
+    background-color: var(--color_theme_secondary);
 }
 .photo_card_list
 {

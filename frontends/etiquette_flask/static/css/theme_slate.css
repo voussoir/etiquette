@@ -1,8 +1,8 @@
 :root
 {
-    --color_site_theme: #333;
-    --color_site_secondary: #3b4d5d;
-    --color_site_textfields: var(--color_site_secondary);
+    --color_theme_primary: #333;
+    --color_theme_secondary: #3b4d5d;
+    --color_site_textfields: var(--color_theme_secondary);
     --color_text_normal: #efefef;
     --color_text_link: #1edeff;
 }
