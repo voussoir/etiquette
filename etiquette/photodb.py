@@ -566,7 +566,7 @@ class PDBPhotoMixin:
 
         if author:
             author_ids = [user.id for user in author]
-            wheres.append('author_id IN %s' % helpers.sql_listify(author_ids))
+            wheres.append(f'author_id IN {sqlhelpers.listify(author_ids)}')
 
         if extension:
             if '*' in extension:

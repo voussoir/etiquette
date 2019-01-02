@@ -9,6 +9,7 @@ from . import helpers
 from . import objects
 
 from voussoirkit import expressionmatch
+from voussoirkit import sqlhelpers
 
 
 def expand_mmf(tag_musts, tag_mays, tag_forbids):
@@ -389,7 +390,7 @@ def photo_tag_rel_exist_clauses(tag_musts, tag_mays, tag_forbids):
         clauses.append( ('NOT EXISTS', tag_forbids) )
 
     clauses = [
-        (operator, helpers.sql_listify(tag.id for tag in tagset))
+        (operator, sqlhelpers.listify(tag.id for tag in tagset))
         for (operator, tagset) in clauses
     ]
     clauses = [

@@ -15,4 +15,4 @@ git+https://github.com/senko/python-video-converter.git
 zipstream
 
 # My own variety toolkit.
-voussoirkit>=0.0.25
+voussoirkit>=0.0.28

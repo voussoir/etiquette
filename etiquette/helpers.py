@@ -482,15 +482,6 @@ def split_easybake_string(ebstring):
     tagname = tagname.strip('.')
     return (tagname, synonym, rename_to)
 
-def sql_listify(items):
-    '''
-    Given a list of strings, return a string in the form of an SQL list.
-
-    ['hi', 'ho', 'hey'] -> '("hi", "ho", "hey")'
-    '''
-    items = ', '.join(f'"{item}"' for item in items)
-    return '(%s)' % items
-
 def truthystring(s):
     '''
     If s is already a boolean, int, or None, return a boolean or None.

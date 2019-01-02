@@ -10,6 +10,7 @@ import traceback
 from voussoirkit import bytestring
 from voussoirkit import pathclass
 from voussoirkit import spinal
+from voussoirkit import sqlhelpers
 
 from . import constants
 from . import decorators
@@ -517,7 +518,7 @@ class Album(ObjectBase, GroupableMixin):
         else:
             albumids = [self.id]
 
-        albumids = helpers.sql_listify(albumids)
+        albumids = sqlhelpers.listify(albumids)
         query = query.format(albumids=albumids)
         total = self.photodb.sql_select_one(query)[0]
         return total
@@ -538,7 +539,7 @@ class Album(ObjectBase, GroupableMixin):
         else:
             albumids = [self.id]
 
-        albumids = helpers.sql_listify(albumids)
+        albumids = sqlhelpers.listify(albumids)
         query = query.format(albumids=albumids)
         total = self.photodb.sql_select_one(query)[0]
         return total
@@ -886,7 +887,7 @@ class Photo(ObjectBase):
             tag_options = [tag]
 
         tag_by_id = {t.id: t for t in tag_options}
-        tag_option_ids = helpers.sql_listify(tag_by_id)
+        tag_option_ids = sqlhelpers.listify(tag_by_id)
         rel_row = self.photodb.sql_select_one(
             f'SELECT tagid FROM photo_tag_rel WHERE photoid == ? AND tagid IN {tag_option_ids}',
             [self.id]
@@ -1293,7 +1294,7 @@ class Tag(ObjectBase, GroupableMixin):
             UPDATE photo_tag_rel
             SET tagid = ?
             WHERE tagid == ?
-            AND photoid IN {helpers.sql_listify(replace_photoids)}
+            AND photoid IN {sqlhelpers.listify(replace_photoids)}
             '''
             bindings = [mastertag.id, self.id]
             self.photodb.sql_execute(query, bindings)
