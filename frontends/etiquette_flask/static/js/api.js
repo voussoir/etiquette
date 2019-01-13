@@ -137,12 +137,12 @@ function _delete(bookmark_id, callback)
 }
 
 api.bookmarks.edit =
-function edit(bookmark_id, title, url, callback)
+function edit(bookmark_id, title, b_url, callback)
 {
     var url = `/bookmark/${bookmark_id}/edit`;
     var data = new FormData();
     data.append("title", title.trim());
-    data.append("url", url.trim());
+    data.append("url", b_url.trim());
     common.post(url, data, callback);
 }
 
