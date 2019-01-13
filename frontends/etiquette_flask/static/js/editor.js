@@ -46,9 +46,16 @@ function Editor(elements, on_open, on_save, on_cancel)
             this.display_elements[index].classList.remove("hidden");
             this.edit_elements[index].classList.add("hidden");
         }
-        this.open_button.classList.remove("hidden")
+        this.hide_spinner();
+        this.hide_error();
+        this.open_button.classList.remove("hidden");
         this.save_button.classList.add("hidden");
         this.cancel_button.classList.add("hidden");
+    };
+
+    this.hide_error = function()
+    {
+        this.error_message.classList.add("hidden");
     };
 
     this.hide_spinner = function()
@@ -62,6 +69,7 @@ function Editor(elements, on_open, on_save, on_cancel)
         {
             var display_element = this.display_elements[index];
             var edit_element = this.edit_elements[index];
+
             display_element.classList.add("hidden");
             edit_element.classList.remove("hidden");
 
@@ -75,7 +83,7 @@ function Editor(elements, on_open, on_save, on_cancel)
                 edit_element.value = display_element.innerText;
             }
         }
-        this.open_button.classList.add("hidden")
+        this.open_button.classList.add("hidden");
         this.save_button.classList.remove("hidden");
         this.cancel_button.classList.remove("hidden");
     };
@@ -100,8 +108,16 @@ function Editor(elements, on_open, on_save, on_cancel)
         this.close();
     };
 
+    this.show_error = function(message)
+    {
+        this.hide_spinner();
+        this.error_message.innerText = message;
+        this.error_message.classList.remove("hidden");
+    };
+
     this.show_spinner = function()
     {
+        this.hide_error();
         this.spinner.classList.remove("hidden");
     };
 
@@ -223,6 +239,11 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.cancel_button.classList.add("hidden");
     this.cancel_button.onclick = this.binder(on_cancel, this.cancel);
     toolbox.appendChild(this.cancel_button);
+
+    this.error_message = document.createElement("span");
+    this.error_message.classList.add("editor_error");
+    this.error_message.classList.add("hidden");
+    toolbox.appendChild(this.error_message);
 
     this.spinner = document.createElement("span");
     this.spinner.innerText = "Submitting...";
