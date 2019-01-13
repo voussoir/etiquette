@@ -19,6 +19,7 @@ root_dir = pathclass.Path(__file__).parent.parent
 TEMPLATE_DIR = root_dir.with_child('templates')
 STATIC_DIR = root_dir.with_child('static')
 FAVICON_PATH = STATIC_DIR.with_child('favicon.png')
+BROWSER_CACHE_DURATION = 180
 
 site = flask.Flask(
     __name__,
@@ -26,7 +27,7 @@ site = flask.Flask(
     static_folder=STATIC_DIR.absolute_path,
 )
 site.config.update(
-    SEND_FILE_MAX_AGE_DEFAULT=180,
+    SEND_FILE_MAX_AGE_DEFAULT=BROWSER_CACHE_DURATION,
     TEMPLATES_AUTO_RELOAD=True,
 )
 site.jinja_env.add_extension('jinja2.ext.do')
@@ -45,7 +46,7 @@ session_manager = sessions.SessionManager(maxlen=10000)
 file_cache_manager = caching.FileCacheManager(
     maxlen=10000,
     max_filesize=5 * bytestring.MIBIBYTE,
-    max_age=180,
+    max_age=BROWSER_CACHE_DURATION,
 )
 
 def P_wrapper(function):
