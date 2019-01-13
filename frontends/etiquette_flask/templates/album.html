@@ -307,14 +307,21 @@ function on_open(ed, edit_element_map, display_element_map)
 
 function on_save(ed, edit_element_map, display_element_map)
 {
-    function callback()
+    function callback(response)
     {
+        if (response["meta"]["status"] != 200)
+        {
+            ed.show_error("Status: " + response["meta"]["status"]);
+            return;
+        }
+
+        ed.save();
+
         var title_display = display_element_map["title"];
         var description_display = display_element_map["description"];
 
-        ed.hide_spinner();
-        ed.save();
         document.title = title_display.innerText + " | Albums";
+
         if (description_display.innerText == "")
         {
             description_display.classList.add("hidden");
