@@ -14,38 +14,35 @@
     <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
-body
-{
-    display: flex;
-    flex-direction: column;
-}
 #content_body
 {
-    /* Override common.css */
-    display: flex;
+    --narrow:0;
     flex: 1;
-    flex-direction: row;
+    grid-template:
+        "left right" 1fr
+        / 310px 1fr;
 }
 #left
 {
+    grid-area: left;
+
     display: flex;
     flex-direction: column;
 
     min-height: min-content;
-    max-width: 300px;
-    /*padding: 8px;*/
 
     background-color: var(--color_site_transparency);
 }
 #right
 {
-    flex: 1;
-    display: flex;
+    grid-area: right;
+
+    display: grid;
+    grid-template: "viewer" 1fr / 1fr;
 }
 #editor_area
 {
     padding: 8px;
-
     word-wrap: break-word;
 }
 #refresh_metadata_button
@@ -65,63 +62,55 @@ body
     max-height: none;
     margin: 8px;
 }
-.photo_viewer
+#photo_viewer
 {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    justify-content: center;
+    grid-area: viewer;
+    display: grid;
+}
+.photo_viewer_audio,
+.photo_viewer_video,
+.photo_viewer_application,
+.photo_viewer_text
+{
+    justify-items: center;
     align-items: center;
 }
-.photo_viewer a
+#photo_viewer audio,
+#photo_viewer video
 {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-#photo_img_holder
-{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    height: 100%;
     width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+}
+.photo_viewer_image
+{
+    display: grid;
+    justify-items: center;
+    align-items: center;
 
+    max-height: 100%;
     background-repeat: no-repeat;
 }
-#photo_img_holder img
+.photo_viewer_image img
 {
     max-height: 100%;
     max-width: 100%;
 }
-.photo_viewer audio
-{
-    width: 100%;
-}
-.photo_viewer video
-{
-    max-width: 100%;
-    max-height: 100%;
-    width: 100%;
-    overflow: hidden;
-}
+
 @media screen and (max-width: 800px)
 {
     #content_body
     {
-        /*
-        When flexing, it tries to contain itself entirely in the screen,
-        forcing #left and #right to squish together.
-        */
-        flex: none;
-        flex-direction: column-reverse;
+        --narrow:1;
+        grid-template:
+            "right" 1fr
+            "left" 1fr;
     }
     #left
     {
         /*
-        Display: None will be overridden as soon as the page detects that the
-        screen is in narrow mode and turns off the tag box's autofocus
+        Display: none will be returned back to flex as soon as the page detects
+        that the screen is in narrow mode and turns off the tag box's autofocus.
         */
         display: none;
         width: initial;
@@ -130,10 +119,7 @@ body
     }
     #right
     {
-        flex: none;
-        flex-direction: row;
-        max-width: none;
-        height: calc(100% - 20px);
+        height: calc(100vh - 40px);
     }
     #message_area
     {
@@ -220,22 +206,24 @@ body
 
 <div id="right">
     <!-- THE PHOTO ITSELF -->
-    <div class="photo_viewer">
+    <div id="photo_viewer" class="photo_viewer_{{photo.simple_mimetype}}" {%if photo.simple_mimetype == "image"%}onclick="toggle_hoverzoom(event)"{%endif%}>
         {% if photo.simple_mimetype == "image" %}
-        <div id="photo_img_holder" onclick="toggle_hoverzoom(event)">
-            <img
-            id="photo_img"
-            src="{{photo|file_link}}"
-            alt="{{photo.basename}}"
-            onload="this.style.opacity=0.99"
-            >
-        </div>
+        <img src="{{photo|file_link}}" alt="{{photo.basename}}" onload="this.style.opacity=0.99">
+
         {% elif photo.simple_mimetype == "video" %}
-        <video src="{{photo|file_link}}" controls preload=none {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}></video>
+        <video
+        src="{{photo|file_link}}"
+        controls
+        preload=none
+        {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}
+        ></video>
+
         {% elif photo.simple_mimetype == "audio" %}
         <audio src="{{photo|file_link}}" controls></audio>
+
         {% else %}
         <a href="{{photo|file_link}}">View {{photo.basename}}</a>
+
         {% endif %}
     </div>
 </div>
@@ -306,38 +294,38 @@ var ZOOM_BG_URL = "url('{{photo|file_link}}')";
 function enable_hoverzoom(event)
 {
     //console.log("enable zoom");
-    var photo_img_holder = document.getElementById("photo_img_holder");
-    var photo_img = document.getElementById("photo_img");
+    var photo_viewer = document.getElementById("photo_viewer");
+    var photo_img = photo_viewer.children[0];
     if (
-        photo_img.naturalWidth < photo_img_holder.offsetWidth &&
-        photo_img.naturalHeight < photo_img_holder.offsetHeight
+        photo_img.naturalWidth < photo_viewer.offsetWidth &&
+        photo_img.naturalHeight < photo_viewer.offsetHeight
     )
     {
         return;
     }
     photo_img.style.opacity = "0";
     photo_img.style.display = "none";
-    photo_img_holder.style.cursor = "zoom-out";
-    photo_img_holder.style.backgroundImage = ZOOM_BG_URL;
-    photo_img_holder.onmousemove = move_hoverzoom;
+    photo_viewer.style.cursor = "zoom-out";
+    photo_viewer.style.backgroundImage = ZOOM_BG_URL;
+    photo_viewer.onmousemove = move_hoverzoom;
     move_hoverzoom(event)
     return true;
 }
 function disable_hoverzoom()
 {
     //console.log("disable zoom");
-    var photo_img_holder = document.getElementById("photo_img_holder");
-    var photo_img = document.getElementById("photo_img");
+    var photo_viewer = document.getElementById("photo_viewer");
+    var photo_img = photo_viewer.children[0];
 
     photo_img.style.opacity = "100";
-    photo_img_holder.style.cursor = "";
+    photo_viewer.style.cursor = "";
     photo_img.style.display = "";
-    photo_img_holder.style.backgroundImage = "none";
-    photo_img_holder.onmousemove = null;
+    photo_viewer.style.backgroundImage = "none";
+    photo_viewer.onmousemove = null;
 }
 function toggle_hoverzoom(event)
 {
-    var photo_img = document.getElementById("photo_img");
+    var photo_img = document.getElementById("photo_viewer").children[0];
     if (photo_img.style.opacity === "0")
     {
         disable_hoverzoom();
@@ -347,7 +335,7 @@ function toggle_hoverzoom(event)
         enable_hoverzoom(event);
     }
     var content_body = document.getElementById('content_body');
-    if (getComputedStyle(content_body).flexDirection != "column-reverse")
+    if (getComputedStyle(content_body).getPropertyValue("--narrow") == 0)
     {
         add_tag_box.focus();
     }
@@ -355,8 +343,8 @@ function toggle_hoverzoom(event)
 
 function move_hoverzoom(event)
 {
-    var photo_img_holder = document.getElementById("photo_img_holder");
-    var photo_img = document.getElementById("photo_img");
+    var photo_viewer = document.getElementById("photo_viewer");
+    var photo_img = photo_viewer.children[0];
     var x;
     var y;
 
@@ -371,10 +359,10 @@ function move_hoverzoom(event)
     */
     var mouse_x = event.offsetX;
     var mouse_y = event.offsetY;
-    if (event.target !== photo_img_holder)
+    if (event.target !== photo_viewer)
     {
-        mouse_x -= photo_img_holder.offsetLeft;
-        mouse_y -= photo_img_holder.offsetTop;
+        mouse_x -= photo_viewer.offsetLeft;
+        mouse_y -= photo_viewer.offsetTop;
     }
 
     /*
@@ -384,36 +372,36 @@ function move_hoverzoom(event)
     to both left and right. Otherwise 105% of 0 is still 0 which doesn't
     apply padding on the left.
     */
-    mouse_x -= (photo_img_holder.offsetWidth / 2);
+    mouse_x -= (photo_viewer.offsetWidth / 2);
     mouse_x *= 1.05;
-    mouse_x += (photo_img_holder.offsetWidth / 2);
+    mouse_x += (photo_viewer.offsetWidth / 2);
 
-    mouse_y -= (photo_img_holder.offsetHeight / 2);
+    mouse_y -= (photo_viewer.offsetHeight / 2);
     mouse_y *= 1.05;
-    mouse_y += (photo_img_holder.offsetHeight / 2);
+    mouse_y += (photo_viewer.offsetHeight / 2);
 
-    if (photo_img.naturalWidth < photo_img_holder.offsetWidth)
+    if (photo_img.naturalWidth < photo_viewer.offsetWidth)
     {
         // If the image is smaller than the frame, just center it
-        x = (photo_img.naturalWidth - photo_img_holder.offsetWidth) / 2;
+        x = (photo_img.naturalWidth - photo_viewer.offsetWidth) / 2;
     }
     else
     {
         // Take the amount of movement necessary (frame width - image width)
         // times our distance across the image as a percentage.
-        x = (photo_img.naturalWidth - photo_img_holder.offsetWidth) * (mouse_x / photo_img_holder.offsetWidth);
+        x = (photo_img.naturalWidth - photo_viewer.offsetWidth) * (mouse_x / photo_viewer.offsetWidth);
     }
 
-    if (photo_img.naturalHeight < photo_img_holder.offsetHeight)
+    if (photo_img.naturalHeight < photo_viewer.offsetHeight)
     {
-        y = (photo_img.naturalHeight - photo_img_holder.offsetHeight) / 2;
+        y = (photo_img.naturalHeight - photo_viewer.offsetHeight) / 2;
     }
     else
     {
-        y = (photo_img.naturalHeight - photo_img_holder.offsetHeight) * (mouse_y / photo_img_holder.offsetHeight);
+        y = (photo_img.naturalHeight - photo_viewer.offsetHeight) * (mouse_y / photo_viewer.offsetHeight);
     }
     //console.log(x);
-    photo_img_holder.style.backgroundPosition=(-x)+"px "+(-y)+"px";
+    photo_viewer.style.backgroundPosition=(-x)+"px "+(-y)+"px";
 }
 
 tag_autocomplete.init_datalist();
@@ -426,12 +414,12 @@ setTimeout(
     */
     function()
     {
-        var left = document.getElementById("left");
-        if (getComputedStyle(content_body).flexDirection == "column-reverse")
+        var content_body = document.getElementById("content_body");
+        if (getComputedStyle(content_body).getPropertyValue("--narrow") == 1)
         {
             add_tag_box.autofocus = false;
         }
-        left.style.display = "flex";
+        document.getElementById("left").style.display = "flex";
     },
     0
 );
