@@ -26,8 +26,11 @@
         "thumbnail metadata" auto
         /auto      1fr;
 
-    width: 325px;
-    margin: 8px;
+    max-width: 325px;
+    width: 100%;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    box-sizing: border-box;
     padding: 8px;
 }
 .album_card_thumbnail
