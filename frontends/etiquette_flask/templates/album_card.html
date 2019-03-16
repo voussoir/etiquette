@@ -43,9 +43,11 @@
         </div>
 
         <div class="album_card_metadata">
-            <span class="album_card_child_count" title="children">{{album.get_children()|length}}</span>
+            {% set child_count = album.get_children()|length %}
+            {% set photo_count = album.sum_photos(recurse=False) %}
+            <span class="album_card_child_count" title="{{child_count}} children">{{child_count}}</span>
             {{-' | '-}}
-            <span class="album_card_photo_count" title="photos">{{album.sum_photos(recurse=False)}}</span>
+            <span class="album_card_photo_count" title="{{photo_count}} photos">{{photo_count}}</span>
         </div>
     </div>
 {% endmacro %}
