@@ -440,6 +440,13 @@ class Album(ObjectBase, GroupableMixin):
         return photos
 
     def has_any_photo(self, recurse=False):
+        '''
+        Return True if this album contains at least 1 photo.
+
+        recurse:
+            If True, photos in child albums satisfy.
+            If False, only consider this album.
+        '''
         row = self.photodb.sql_select_one(
             'SELECT 1 FROM album_photo_rel WHERE albumid == ? LIMIT 1',
             [self.id]

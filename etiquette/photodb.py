@@ -281,10 +281,11 @@ class PDBPhotoMixin:
     @decorators.transaction
     def purge_deleted_files(self, photos=None, *, commit=True):
         '''
-        Remove Photo entries if their corresponding file is no longer found.
+        Delete Photos whose corresponding file on disk is missing.
 
-        photos: An iterable of Photo objects to check.
-        If not provided, everything is checked.
+        photos:
+            An iterable of Photo objects to check.
+            If not provided, all photos are checked.
         '''
         if photos is None:
             photos = self.get_photos_by_recent()
