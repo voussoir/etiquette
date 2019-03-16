@@ -133,6 +133,7 @@ pre
     display: grid;
     grid-auto-rows: min-content;
 
+    z-index: 1;
     position: fixed;
     bottom: 8px;
     top: 34px;
