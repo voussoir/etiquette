@@ -1103,9 +1103,9 @@ class PDBUtilMixin:
             return new_photo_kwargs
 
         def _normalize_new_photo_ratelimit(new_photo_ratelimit):
-            if isinstance(new_photo_ratelimit, ratelimiter.Ratelimiter):
+            if new_photo_ratelimit is None:
                 pass
-            elif new_photo_ratelimit is None:
+            elif isinstance(new_photo_ratelimit, ratelimiter.Ratelimiter):
                 pass
             elif isinstance(new_photo_ratelimit, (int, float)):
                 new_photo_ratelimit = ratelimiter.Ratelimiter(allowance=1, period=new_photo_ratelimit)
