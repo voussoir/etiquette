@@ -933,14 +933,15 @@ class Photo(ObjectBase):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
         '''
+        self.photodb.log.debug('Reloading metadata for %s', self)
+
+        # If the file has disappeared, this will just return None.
         self.bytes = self.real_path.size
         self.width = None
         self.height = None
         self.area = None
         self.ratio = None
         self.duration = None
-
-        self.photodb.log.debug('Reloading metadata for %s', self)
 
         if self.simple_mimetype == 'image':
             try:
