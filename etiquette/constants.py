@@ -184,10 +184,8 @@ CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
 
 def _extract_table_statements(script):
     for statement in script.split(';'):
-        if 'create table' not in statement.lower():
-            continue
-
-        yield statement
+        if 'create table' in statement.lower():
+            yield statement
 
 def _extract_table_name(create_table_statement):
     # CREATE TABLE table_name(...)
