@@ -116,8 +116,7 @@ class PDBAlbumMixin:
             album.add_photos(photos, commit=False)
 
         if commit:
-            self.log.debug('Committing - new Album')
-            self.commit()
+            self.commit(message='new album')
         return album
 
 
@@ -153,8 +152,7 @@ class PDBBookmarkMixin:
 
         bookmark = self.get_cached_instance('bookmark', data)
         if commit:
-            self.log.debug('Committing - new Bookmark')
-            self.commit()
+            self.commit(message='new bookmark')
         return bookmark
 
 
@@ -274,8 +272,7 @@ class PDBPhotoMixin:
             photo.add_tag(tag, commit=False)
 
         if commit:
-            self.log.debug('Committing - new_photo')
-            self.commit()
+            self.commit(message='new photo')
         return photo
 
     @decorators.transaction
@@ -296,8 +293,7 @@ class PDBPhotoMixin:
             photo.delete(commit=False)
 
         if commit:
-            self.log.debug('Committing - purge deleted photos')
-            self.commit()
+            self.commit(message='purge deleted photos')
 
     @decorators.transaction
     def purge_empty_albums(self, albums=None, *, commit=True):
@@ -317,8 +313,7 @@ class PDBPhotoMixin:
             album.delete(commit=False)
 
         if commit:
-            self.log.debug('Committing - purge empty albums')
-            self.commit()
+            self.commit(message='purge empty albums')
 
     def search(
             self,
@@ -683,7 +678,10 @@ class PDBSQLMixin:
         self.on_commit_queue = []
         self.savepoints = []
 
-    def commit(self):
+    def commit(self, message=None):
+        if message is not None:
+            self.log.debug('Committing - %s.', message)
+
         while len(self.on_commit_queue) > 0:
             task = self.on_commit_queue.pop()
             if isinstance(task, str):
@@ -886,8 +884,7 @@ class PDBTagMixin:
         self.sql_insert(table='tags', data=data)
 
         if commit:
-            self.log.debug('Committing - new_tag')
-            self.commit()
+            self.commit(message='new tag')
         tag = self.get_cached_instance('tag', data)
         return tag
 
@@ -1051,8 +1048,7 @@ class PDBUserMixin:
         self.sql_insert(table='users', data=data)
 
         if commit:
-            self.log.debug('Committing - register user')
-            self.commit()
+            self.commit(message='register user')
 
         return self.get_cached_instance('user', data)
 
@@ -1186,8 +1182,7 @@ class PDBUtilMixin:
             current_album.add_photos(photos, commit=False)
 
         if commit:
-            self.log.debug('Committing - digest_directory')
-            self.commit()
+            self.commit(message='digest directory')
 
         if make_albums:
             return main_album
@@ -1239,8 +1234,7 @@ class PDBUtilMixin:
             output_notes.append(note)
 
         if commit:
-            self.log.debug('Committing - easybake')
-            self.commit()
+            self.commit(message='easybake')
         return output_notes
 
 

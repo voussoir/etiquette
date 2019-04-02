@@ -108,8 +108,7 @@ class GroupableMixin:
         self.photodb._cached_frozen_children = None
 
         if commit:
-            self.photodb.log.debug('Committing - add to group')
-            self.photodb.commit()
+            self.photodb.commit(message='add to group')
 
     @decorators.transaction
     def add_children(self, members, *, commit=True):
@@ -117,8 +116,7 @@ class GroupableMixin:
             self.add_child(member, commit=False)
 
         if commit:
-            self.photodb.log.debug('Committing - add multiple to group')
-            self.photodb.commit()
+            self.photodb.commit(message='add multiple to group')
 
     def assert_same_type(self, other):
         if not isinstance(other, type(self)):
@@ -152,8 +150,7 @@ class GroupableMixin:
         self.photodb.sql_delete(table=self.group_table, pairs={'memberid': self.id})
         self._uncache()
         if commit:
-            self.photodb.log.debug('Committing - delete tag')
-            self.photodb.commit()
+            self.photodb.commit(message='delete tag')
 
     def get_children(self):
         child_rows = self.photodb.sql_select(
@@ -207,8 +204,7 @@ class GroupableMixin:
         self.photodb._cached_frozen_children = None
 
         if commit:
-            self.photodb.log.debug('Committing - remove from group')
-            self.photodb.commit()
+            self.photodb.commit(message='remove from group')
 
     def walk_children(self):
         yield self
@@ -315,8 +311,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.sql_insert(table='album_associated_directories', data=data)
 
         if commit:
-            self.photodb.log.debug('Committing - add associated directory')
-            self.photodb.commit()
+            self.photodb.commit(message='add associated directory')
 
     def _add_photo(self, photo):
         self.photodb.log.debug('Adding photo %s to %s', photo, self)
@@ -332,8 +327,7 @@ class Album(ObjectBase, GroupableMixin):
         self._add_photo(photo)
 
         if commit:
-            self.photodb.log.debug('Committing - add photo to album')
-            self.photodb.commit()
+            self.photodb.commit(message='add photo to album')
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
@@ -346,8 +340,7 @@ class Album(ObjectBase, GroupableMixin):
             self._add_photo(photo)
 
         if commit:
-            self.photodb.log.debug('Committing - add photos to album')
-            self.photodb.commit()
+            self.photodb.commit(message='add photos to album')
 
     # Photo.add_tag already has @required_feature
     @decorators.transaction
@@ -370,8 +363,7 @@ class Album(ObjectBase, GroupableMixin):
             photo.add_tag(tag, commit=False)
 
         if commit:
-            self.photodb.log.debug('Committing - add tag to all')
-            self.photodb.commit()
+            self.photodb.commit(message='add tag to all')
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
@@ -383,8 +375,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.sql_delete(table='albums', pairs={'id': self.id})
         self._uncache()
         if commit:
-            self.photodb.log.debug('Committing - delete album')
-            self.photodb.commit()
+            self.photodb.commit(message='delete album')
 
     @property
     def display_name(self):
@@ -416,8 +407,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.sql_update(table='albums', pairs=data, where_key='id')
 
         if commit:
-            self.photodb.log.debug('Committing - edit album')
-            self.photodb.commit()
+            self.photodb.commit(message='edit album')
 
     def get_associated_directories(self):
         directory_rows = self.photodb.sql_select(
@@ -495,8 +485,7 @@ class Album(ObjectBase, GroupableMixin):
         self._remove_photo(photo)
 
         if commit:
-            self.photodb.log.debug('Committing - remove photo from album')
-            self.photodb.commit()
+            self.photodb.commit(message='remove photo from album')
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
@@ -509,8 +498,7 @@ class Album(ObjectBase, GroupableMixin):
             self._remove_photo(photo)
 
         if commit:
-            self.photodb.log.debug('Committing - remove photos from album')
-            self.photodb.commit()
+            self.photodb.commit(message='remove photos from album')
 
     def sum_bytes(self, recurse=True):
         query = '''
@@ -637,8 +625,7 @@ class Bookmark(ObjectBase):
         self.photodb.sql_update(table='bookmarks', pairs=data, where_key='id')
 
         if commit:
-            self.photodb.log.debug('Committing - edit bookmark')
-            self.photodb.commit()
+            self.photodb.commit(message='edit bookmark')
 
 
 class Photo(ObjectBase):
@@ -737,8 +724,7 @@ class Photo(ObjectBase):
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 
         if commit:
-            self.photodb.log.debug('Committing - add photo tag')
-            self.photodb.commit()
+            self.photodb.commit(message='add photo tag')
         return tag
 
     @property
@@ -763,8 +749,7 @@ class Photo(ObjectBase):
         for tag in other_photo.get_tags():
             self.add_tag(tag, commit=False)
         if commit:
-            self.photodb.log.debug('Committing - copy tags')
-            self.photodb.commit()
+            self.photodb.commit(message='copy tags')
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
@@ -786,8 +771,7 @@ class Photo(ObjectBase):
                 self.photodb.on_commit_queue.append(queue_action)
         self._uncache()
         if commit:
-            self.photodb.log.debug('Committing - delete photo')
-            self.photodb.commit()
+            self.photodb.commit(message='delete photo')
 
     @property
     def duration_string(self):
@@ -848,8 +832,7 @@ class Photo(ObjectBase):
 
         self._uncache()
         if commit:
-            self.photodb.log.debug('Committing - generate thumbnail')
-            self.photodb.commit()
+            self.photodb.commit(message='generate thumbnail')
 
         self.__reinit__()
         return self.thumbnail
@@ -987,8 +970,7 @@ class Photo(ObjectBase):
 
         self._uncache()
         if commit:
-            self.photodb.log.debug('Committing - reload metadata')
-            self.photodb.commit()
+            self.photodb.commit(message='reload metadata')
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
@@ -1018,8 +1000,7 @@ class Photo(ObjectBase):
 
         self._uncache()
         if commit:
-            self.photodb.log.debug('Committing - relocate photo')
-            self.photodb.commit()
+            self.photodb.commit(message='relocate photo')
 
     @decorators.required_feature('photo.add_remove_tag')
     @decorators.transaction
@@ -1040,8 +1021,7 @@ class Photo(ObjectBase):
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 
         if commit:
-            self.photodb.log.debug('Committing - remove photo tag')
-            self.photodb.commit()
+            self.photodb.commit(message='remove photo tag')
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
@@ -1100,8 +1080,7 @@ class Photo(ObjectBase):
         self._uncache()
         if commit:
             action(*args)
-            self.photodb.log.debug('Committing - rename file')
-            self.photodb.commit()
+            self.photodb.commit(message='rename file')
         else:
             queue_action = {'action': action, 'args': args}
             self.photodb.on_commit_queue.append(queue_action)
@@ -1120,8 +1099,7 @@ class Photo(ObjectBase):
         self.searchhidden = searchhidden
 
         if commit:
-            self.photodb.log.debug('Committing - set searchhidden')
-            self.photodb.commit()
+            self.photodb.commit(message='set searchhidden')
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
@@ -1140,8 +1118,7 @@ class Photo(ObjectBase):
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 
         if commit:
-            self.photodb.log.debug('Committing - set override filename')
-            self.photodb.commit()
+            self.photodb.commit(message='set override filename')
 
         self.__reinit__()
 
@@ -1245,8 +1222,7 @@ class Tag(ObjectBase, GroupableMixin):
             self._cached_synonyms.add(synname)
 
         if commit:
-            self.photodb.log.debug('Committing - add synonym')
-            self.photodb.commit()
+            self.photodb.commit(message='add synonym')
 
         return synname
 
@@ -1315,8 +1291,7 @@ class Tag(ObjectBase, GroupableMixin):
         # Enjoy your new life as a monk.
         mastertag.add_synonym(self.name, commit=False)
         if commit:
-            self.photodb.log.debug('Committing - convert to synonym')
-            self.photodb.commit()
+            self.photodb.commit(message='convert to synonym')
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
@@ -1329,8 +1304,7 @@ class Tag(ObjectBase, GroupableMixin):
         self.photodb.sql_delete(table='tags', pairs={'id': self.id})
         self._uncache()
         if commit:
-            self.photodb.log.debug('Committing - delete tag')
-            self.photodb.commit()
+            self.photodb.commit(message='delete tag')
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
@@ -1351,8 +1325,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         self._uncache()
         if commit:
-            self.photodb.log.debug('Committing - edit tag')
-            self.photodb.commit()
+            self.photodb.commit(message='edit tag')
 
     def get_synonyms(self):
         if self._cached_synonyms is not None:
@@ -1402,8 +1375,7 @@ class Tag(ObjectBase, GroupableMixin):
             self._cached_synonyms.remove(synname)
 
         if commit:
-            self.photodb.log.debug('Committing - remove synonym')
-            self.photodb.commit()
+            self.photodb.commit(message='remove synonym')
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
@@ -1440,8 +1412,7 @@ class Tag(ObjectBase, GroupableMixin):
         self.name = new_name
         self._uncache()
         if commit:
-            self.photodb.log.debug('Committing - rename tag')
-            self.photodb.commit()
+            self.photodb.commit(message='rename tag')
 
 
 class User(ObjectBase):
@@ -1507,8 +1478,7 @@ class User(ObjectBase):
         self._display_name = display_name
 
         if commit:
-            self.photodb.log.debug('Committing - set display name')
-            self.photodb.commit()
+            self.photodb.commit(message='set display name')
 
 
 class WarningBag:
