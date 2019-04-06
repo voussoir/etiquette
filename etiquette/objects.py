@@ -1144,7 +1144,6 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.group_getter = self.photodb.get_tag
         self.group_getter_many = self.photodb.get_tags_by_id
-        self._cached_synonyms = None
 
     def __repr__(self):
         return f'Tag:{self.id}:{self.name}'
@@ -1218,9 +1217,6 @@ class Tag(ObjectBase, GroupableMixin):
         }
         self.photodb.sql_insert(table='tag_synonyms', data=data)
 
-        if self._cached_synonyms is not None:
-            self._cached_synonyms.add(synname)
-
         if commit:
             self.photodb.commit(message='add synonym')
 
@@ -1248,8 +1244,6 @@ class Tag(ObjectBase, GroupableMixin):
             'mastername': (self.name, mastertag.name),
         }
         self.photodb.sql_update(table='tag_synonyms', pairs=data, where_key='mastername')
-        if mastertag._cached_synonyms is not None:
-            mastertag._cached_synonyms.update(my_synonyms)
 
         # Because these were two separate tags, perhaps in separate trees, it
         # is possible for a photo to have both at the moment.
@@ -1328,15 +1322,11 @@ class Tag(ObjectBase, GroupableMixin):
             self.photodb.commit(message='edit tag')
 
     def get_synonyms(self):
-        if self._cached_synonyms is not None:
-            return self._cached_synonyms.copy()
-
         syn_rows = self.photodb.sql_select(
             'SELECT name FROM tag_synonyms WHERE mastername == ?',
             [self.name]
         )
         synonyms = set(row[0] for row in syn_rows)
-        self._cached_synonyms = synonyms.copy()
         return synonyms
 
     @decorators.required_feature('tag.edit')
@@ -1371,8 +1361,6 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.photodb._cached_frozen_children = None
         self.photodb.sql_delete(table='tag_synonyms', pairs={'name': synname})
-        if self._cached_synonyms is not None:
-            self._cached_synonyms.remove(synname)
 
         if commit:
             self.photodb.commit(message='remove synonym')
