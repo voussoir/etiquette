@@ -60,7 +60,7 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.hide_spinner = function()
     {
-        this.spinner.classList.add("hidden");
+        this.spinner.hide();
     };
 
     this.open = function()
@@ -115,10 +115,10 @@ function Editor(elements, on_open, on_save, on_cancel)
         this.error_message.classList.remove("hidden");
     };
 
-    this.show_spinner = function()
+    this.show_spinner = function(delay)
     {
         this.hide_error();
-        this.spinner.classList.remove("hidden");
+        this.spinner.show(delay);
     };
 
     this.display_elements = [];
@@ -245,11 +245,12 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.error_message.classList.add("hidden");
     toolbox.appendChild(this.error_message);
 
-    this.spinner = document.createElement("span");
-    this.spinner.innerText = "Submitting...";
-    this.spinner.classList.add("editor_spinner");
-    this.spinner.classList.add("hidden");
-    toolbox.appendChild(this.spinner);
+    spinner_element = document.createElement("span");
+    spinner_element.innerText = "Submitting...";
+    spinner_element.classList.add("editor_spinner");
+    spinner_element.classList.add("hidden");
+    this.spinner = new spinner.Spinner(spinner_element);
+    toolbox.appendChild(spinner_element);
 
     for (var index = 0; index < this.edit_elements.length; index += 1)
     {
