@@ -835,6 +835,11 @@ class PDBTagMixin:
             tagname = tagname.tagname
 
         try:
+            # TODO: this logic is flawed because tags that were created in
+            # the past may have had different normalization.
+            # At the same time, I don't want to just pass the input directly
+            # into the query, we should still do SOME assumed normalization
+            # like whitespace strip.
             tagname = objects.Tag.normalize_name(
                 tagname,
                 valid_chars=self.config['tag']['valid_chars'],
