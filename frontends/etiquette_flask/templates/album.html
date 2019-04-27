@@ -37,6 +37,18 @@ h2, h3
     margin-right: auto;
 }
 
+#right .confirm_holder_stage2
+{
+    display: flex;
+    flex-direction: row;
+}
+#right .confirm_holder_stage2 span,
+#right .confirm_holder_stage2 input
+{
+    flex: 1;
+    min-width: 0;
+}
+
 .remove_child_button
 {
     display: none;
@@ -107,12 +119,16 @@ h2, h3
         {% else %}
             <a href="?view=grid">Grid view</a>
         {% endif %}
-        <div>
-            <button id="create_child_prompt_button" class="green_button" onclick="open_create_child(event);">Create album</button>
-            <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
-            <button id="create_child_submit_button" class="green_button hidden" onclick="create_child_form(event);">Create</button>
-            <button id="create_child_cancel_button" class="gray_button hidden" onclick="cancel_create_child(event);">Cancel</button>
-        </div>
+        <button
+        class="green_button button_with_confirm"
+        data-is-input="1"
+        data-prompt="Album title"
+        data-confirm-class="green_button"
+        data-cancel-class="gray_button"
+        data-onclick="create_child(event.target.input_source.value);"
+        >
+            Create child
+        </button>
     </div>
 </div>
 </body>
@@ -165,18 +181,27 @@ ALBUM_ID = undefined;
             Delete
         </button>
 
-        <div>
-            <button id="create_child_prompt_button" class="green_button" onclick="open_create_child(event);">Create child</button>
-            <input type="text" id="create_child_title_entry" class="hidden" placeholder="Album title">
-            <button id="create_child_submit_button" class="green_button hidden" onclick="create_child_form(event);">Create</button>
-            <button id="create_child_cancel_button" class="gray_button hidden" onclick="cancel_create_child(event);">Cancel</button>
-        </div>
-        <div>
-            <button id="add_child_prompt_button" class="green_button" onclick="open_add_child(event);">Add child</button>
-            <input type="text" id="add_child_id_entry" class="hidden" placeholder="Album ID">
-            <button id="add_child_submit_button" class="green_button hidden" onclick="add_child_form(event);">Add</button>
-            <button id="add_child_cancel_button" class="gray_button hidden" onclick="cancel_add_child(event);">Cancel</button>
-        </div>
+        <button
+        class="green_button button_with_confirm"
+        data-is-input="1"
+        data-prompt="Album title"
+        data-confirm-class="green_button"
+        data-cancel-class="gray_button"
+        data-onclick="create_child(event.target.input_source.value);"
+        >
+            Create child
+        </button>
+
+        <button
+        class="green_button button_with_confirm"
+        data-is-input="1"
+        data-prompt="Child ID"
+        data-confirm-class="green_button"
+        data-cancel-class="gray_button"
+        data-onclick="add_child(event.target.input_source.value);"
+        >
+            Add child
+        </button>
     </div>
 
     <div id="left">
@@ -265,28 +290,9 @@ ALBUM_ID = undefined;
 <script id="album_individual_script" type="text/javascript">
 var ALBUM_ID = "{{album.id}}";
 
-function open_add_child(event)
+function add_child(child_id)
 {
-    document.getElementById("add_child_prompt_button").classList.add("hidden");
-    document.getElementById("add_child_id_entry").classList.remove("hidden");
-    document.getElementById("add_child_id_entry").focus();
-    document.getElementById("add_child_submit_button").classList.remove("hidden");
-    document.getElementById("add_child_cancel_button").classList.remove("hidden");
-}
-
-function cancel_add_child(event)
-{
-    document.getElementById("add_child_prompt_button").classList.remove("hidden");
-    document.getElementById("add_child_id_entry").value = "";
-    document.getElementById("add_child_id_entry").classList.add("hidden");
-    document.getElementById("add_child_submit_button").classList.add("hidden");
-    document.getElementById("add_child_cancel_button").classList.add("hidden");
-}
-
-function add_child_form(event)
-{
-    var child_id = document.getElementById("add_child_id_entry").value;
-    if (! child_id)
+    if (! child_id.trim())
     {
         return;
     }
@@ -353,42 +359,14 @@ function on_cancel(ed, edit_element_map, display_element_map)
 var title_text = document.getElementById("title_text");
 var description_text = document.getElementById("description_text");
 var ed = new editor.Editor([title_text, description_text], on_open, on_save, on_cancel);
-
-function on_pageload()
-{
-    common.bind_box_to_button(
-        document.getElementById("add_child_id_entry"),
-        document.getElementById("add_child_submit_button")
-    );
-}
-document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
 
 {% endif %} {## Shared ############################################################################}
 
 <script id="album_shared_script" type="text/javascript">
 
-function open_create_child(event)
+function create_child(title)
 {
-    document.getElementById("create_child_prompt_button").classList.add("hidden");
-    document.getElementById("create_child_title_entry").classList.remove("hidden");
-    document.getElementById("create_child_title_entry").focus();
-    document.getElementById("create_child_submit_button").classList.remove("hidden");
-    document.getElementById("create_child_cancel_button").classList.remove("hidden");
-}
-
-function cancel_create_child(event)
-{
-    document.getElementById("create_child_prompt_button").classList.remove("hidden");
-    document.getElementById("create_child_title_entry").value = "";
-    document.getElementById("create_child_title_entry").classList.add("hidden");
-    document.getElementById("create_child_submit_button").classList.add("hidden");
-    document.getElementById("create_child_cancel_button").classList.add("hidden");
-}
-
-function create_child_form(event)
-{
-    var title = document.getElementById("create_child_title_entry").value;
     if (! title)
     {
         title = undefined;
@@ -396,14 +374,5 @@ function create_child_form(event)
     var parent_id = ALBUM_ID;
     api.albums.create(title, parent_id, api.albums.callback_follow);
 }
-
-function on_pageload()
-{
-    common.bind_box_to_button(
-        document.getElementById("create_child_title_entry"),
-        document.getElementById("create_child_submit_button")
-    );
-}
-document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
 </html>
