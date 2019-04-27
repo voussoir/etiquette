@@ -89,11 +89,12 @@ class PDBAlbumMixin:
         '''
         Create a new album. Photos can be added now or later.
         '''
+        # These might raise exceptions.
         title = objects.Album.normalize_title(title)
         description = objects.Album.normalize_description(description)
 
-        album_id = self.generate_id('albums')
-
+        # Ok.
+        album_id = self.generate_id(table='albums')
         self.log.debug('New Album: %s %s', album_id, title)
 
         author_id = self.get_user_id_or_none(author)
@@ -136,21 +137,26 @@ class PDBBookmarkMixin:
     @decorators.required_feature('bookmark.new')
     @decorators.transaction
     def new_bookmark(self, url, title=None, *, author=None, commit=True):
+        # These might raise exceptions.
         title = objects.Bookmark.normalize_title(title)
         url = objects.Bookmark.normalize_url(url)
 
-        bookmark_id = self.generate_id('bookmarks')
+        # Ok.
+        bookmark_id = self.generate_id(table='bookmarks')
+        self.log.debug('New Bookmark: %s %s %s', bookmark_id, title, url)
+
         author_id = self.get_user_id_or_none(author)
 
         data = {
-            'author_id': author_id,
             'id': bookmark_id,
+            'author_id': author_id,
             'title': title,
             'url': url,
         }
         self.sql_insert(table='bookmarks', data=data)
 
         bookmark = self.get_cached_instance('bookmark', data)
+
         if commit:
             self.commit(message='new bookmark')
         return bookmark
@@ -226,6 +232,7 @@ class PDBPhotoMixin:
 
         Returns the Photo object.
         '''
+        # These might raise exceptions
         filepath = pathclass.Path(filepath)
         if not filepath.is_file:
             raise FileNotFoundError(filepath.absolute_path)
@@ -233,18 +240,18 @@ class PDBPhotoMixin:
         if not allow_duplicates:
             self.assert_no_such_photo_by_path(filepath=filepath)
 
-        self.log.debug('New Photo: %s', filepath.absolute_path)
-        author_id = self.get_user_id_or_none(author)
+        # Ok.
+        photo_id = self.generate_id(table='photos')
+        self.log.debug('New Photo: %s %s', photo_id, filepath.absolute_path)
 
-        created = helpers.now()
-        photo_id = self.generate_id('photos')
+        author_id = self.get_user_id_or_none(author)
 
         data = {
             'id': photo_id,
             'filepath': filepath.absolute_path,
             'override_filename': None,
             'extension': filepath.extension,
-            'created': created,
+            'created': helpers.now(),
             'tagged_at': None,
             'author_id': author_id,
             'searchhidden': searchhidden,
@@ -870,6 +877,7 @@ class PDBTagMixin:
         '''
         Register a new tag and return the Tag object.
         '''
+        # These might raise exceptions.
         tagname = objects.Tag.normalize_name(
             tagname,
             valid_chars=self.config['tag']['valid_chars'],
@@ -880,22 +888,26 @@ class PDBTagMixin:
 
         description = objects.Tag.normalize_description(description)
 
-        self.log.debug('New Tag: %s', tagname)
+        # Ok.
+        tag_id = self.generate_id(table='tags')
+        self.log.debug('New Tag: %s %s', tag_id, tagname)
 
-        tagid = self.generate_id('tags')
-        self._uncache()
         author_id = self.get_user_id_or_none(author)
+
+        self._uncache()
+
         data = {
-            'id': tagid,
+            'id': tag_id,
             'name': tagname,
             'description': description,
             'author_id': author_id,
         }
         self.sql_insert(table='tags', data=data)
 
+        tag = self.get_cached_instance('tag', data)
+
         if commit:
             self.commit(message='new tag')
-        tag = self.get_cached_instance('tag', data)
         return tag
 
 
@@ -1020,6 +1032,7 @@ class PDBUserMixin:
     @decorators.required_feature('user.new')
     @decorators.transaction
     def register_user(self, username, password, *, display_name=None, commit=True):
+        # These might raise exceptions.
         self.assert_valid_username(username)
 
         if not isinstance(password, bytes):
@@ -1033,17 +1046,17 @@ class PDBUserMixin:
             max_length=self.config['user']['max_display_name_length'],
         )
 
-        self.log.debug('New User: %s', username)
-
+        # Ok.
         user_id = self.generate_user_id()
+        self.log.debug('New User: %s %s', user_id, username)
+
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
-        created = helpers.now()
 
         data = {
             'id': user_id,
             'username': username,
             'password': hashed_password,
-            'created': created,
+            'created': helpers.now(),
             'display_name': display_name,
         }
         self.sql_insert(table='users', data=data)
