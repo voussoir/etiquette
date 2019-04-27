@@ -435,6 +435,16 @@ class Album(ObjectBase, GroupableMixin):
         photos = sorted(photos, key=lambda x: x.basename.lower())
         return photos
 
+    def has_any_associated_directory(self):
+        '''
+        Return True if this album has at least 1 associated directory.
+        '''
+        row = self.photodb.sql_select_one(
+            'SELECT 1 FROM album_associated_directories WHERE albumid == ?',
+            [self.id]
+        )
+        return row is not None
+
     def has_any_photo(self, recurse=False):
         '''
         Return True if this album contains at least 1 photo.
