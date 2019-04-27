@@ -171,20 +171,38 @@ function init_button_with_confirm()
         holder_stage2.classList.add("hidden");
         holder.appendChild(holder_stage2);
 
-        var span_prompt = document.createElement("span");
-        span_prompt.innerText = (button.dataset.prompt || "Are you sure?") + " ";
-        span_prompt.className = button.dataset.promptClass || "";
-        holder_stage2.appendChild(span_prompt)
+        var prompt;
+        var input_source;
+        if (button.dataset.isInput)
+        {
+            prompt = document.createElement("input");
+            prompt.placeholder = button.dataset.prompt || "";
+            input_source = prompt;
+        }
+        else
+        {
+            prompt = document.createElement("span");
+            prompt.innerText = (button.dataset.prompt || "Are you sure?") + " ";
+            input_source = undefined;
+        }
+        prompt.className = button.dataset.promptClass || "";
+        holder_stage2.appendChild(prompt)
         delete button.dataset.prompt;
         delete button.dataset.promptClass;
 
         var button_confirm = document.createElement("button");
         button_confirm.innerText = (button.dataset.confirm || button.innerText).trim();
         button_confirm.className = button.dataset.confirmClass || "";
+        button_confirm.input_source = input_source;
         holder_stage2.appendChild(button_confirm);
         holder_stage2.appendChild(document.createTextNode(" "));
+        if (button.dataset.isInput)
+        {
+            common.bind_box_to_button(prompt, button_confirm);
+        }
         delete button.dataset.confirm;
         delete button.dataset.confirmClass;
+        delete button.dataset.isInput;
 
         var button_cancel = document.createElement("button");
         button_cancel.innerText = button.dataset.cancel || "Cancel";
@@ -207,6 +225,11 @@ function init_button_with_confirm()
             var holder = event.target.parentElement.parentElement;
             holder.getElementsByClassName("confirm_holder_stage1")[0].classList.add("hidden");
             holder.getElementsByClassName("confirm_holder_stage2")[0].classList.remove("hidden");
+            var input = holder.getElementsByTagName("input");
+            if (input)
+            {
+                input[0].focus();
+            }
         }
 
         button_cancel.onclick = function(event)
