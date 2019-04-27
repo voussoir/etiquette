@@ -13,6 +13,7 @@
     <script src="/static/js/api.js"></script>
     <script src="/static/js/hotkeys.js"></script>
     <script src="/static/js/photo_clipboard.js"></script>
+    <script src="/static/js/spinner.js"></script>
     <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
@@ -119,6 +120,7 @@
 
     <div id="refresh_metadata_area">
         <button class="green_button" id="refresh_metadata_button" onclick="refresh_metadata_form();">Refresh metadata</button>
+        <span id="refresh_metadata_spinner" class="hidden">Working...</span>
     </div>
 
     <div id="searchhidden_area">
@@ -300,11 +302,17 @@ function download_zip_form()
     common.post(url, data, download_zip_callback);
 }
 
-var refresh_in_progress = false;
+var refresh_metadata_button = document.getElementById("refresh_metadata_button");
+var refresh_metadata_spinner = document.getElementById("refresh_metadata_spinner")
+refresh_metadata_spinner = new spinner.Spinner(refresh_metadata_spinner);
+
 function refresh_metadata_callback(response)
 {
     response = response["data"];
-    refresh_in_progress = false;
+    refresh_metadata_button.disabled = false;
+    refresh_metadata_button.classList.remove("gray_button");
+    refresh_metadata_button.classList.add("green_button");
+    refresh_metadata_spinner.hide();
     if ("error_type" in response)
     {
         var message_area = document.getElementById("message_area");
@@ -317,11 +325,9 @@ function refresh_metadata_callback(response)
         common.refresh();
     }
 }
+
 function refresh_metadata_form()
 {
-    if (refresh_in_progress)
-        {return;}
-
     if (photo_clipboard.clipboard.size == 0)
         {return;}
 
@@ -329,7 +335,10 @@ function refresh_metadata_form()
     var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
     var data = new FormData();
     data.append("photo_ids", photo_ids);
-    refresh_in_progress = true;
+    refresh_metadata_spinner.show();
+    refresh_metadata_button.disabled = true;
+    refresh_metadata_button.classList.add("gray_button");
+    refresh_metadata_button.classList.remove("green_button");
     common.post(url, data, refresh_metadata_callback);
 }
 
