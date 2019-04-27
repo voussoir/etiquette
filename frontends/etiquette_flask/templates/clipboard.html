@@ -284,6 +284,8 @@ function remove_tag_form()
     return add_remove_tag("remove", tagname);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 function download_zip_callback(response)
 {
     var zip_token = response["data"]["zip_token"];
@@ -301,6 +303,8 @@ function download_zip_form()
     data.append("photo_ids", photo_ids);
     common.post(url, data, download_zip_callback);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 var refresh_metadata_button = document.getElementById("refresh_metadata_button");
 var refresh_metadata_spinner = document.getElementById("refresh_metadata_spinner")
@@ -341,6 +345,8 @@ function refresh_metadata_form()
     refresh_metadata_button.classList.remove("green_button");
     common.post(url, data, refresh_metadata_callback);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 function set_unset_searchhidden_callback(response)
 {
