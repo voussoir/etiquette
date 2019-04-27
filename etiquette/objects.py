@@ -18,6 +18,12 @@ from . import exceptions
 from . import helpers
 
 
+def normalize_db_row(db_row, table):
+    if isinstance(db_row, (list, tuple)):
+        db_row = dict(zip(constants.SQL_COLUMNS[table], db_row))
+    return db_row
+
+
 class ObjectBase:
     def __init__(self, photodb):
         super().__init__()
@@ -228,13 +234,13 @@ class GroupableMixin:
 
 
 class Album(ObjectBase, GroupableMixin):
+    table = 'albums'
     group_table = 'album_group_rel'
     group_sql_index = constants.SQL_INDEX[group_table]
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        if isinstance(db_row, (list, tuple)):
-            db_row = dict(zip(constants.SQL_COLUMNS['albums'], db_row))
+        db_row = normalize_db_row(db_row, self.table)
 
         self.id = db_row['id']
         self.title = self.normalize_title(db_row['title'])
@@ -549,10 +555,11 @@ class Album(ObjectBase, GroupableMixin):
 
 
 class Bookmark(ObjectBase):
+    table = 'bookmarks'
+
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        if isinstance(db_row, (list, tuple)):
-            db_row = dict(zip(constants.SQL_COLUMNS['bookmarks'], db_row))
+        db_row = normalize_db_row(db_row, self.table)
 
         self.id = db_row['id']
         self.title = self.normalize_title(db_row['title'])
@@ -634,10 +641,11 @@ class Photo(ObjectBase):
     Photo objects cannot exist without a corresponding PhotoDB object, because
     Photos are not the actual image data, just the database entry.
     '''
+    table = 'photos'
+
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        if isinstance(db_row, (list, tuple)):
-            db_row = dict(zip(constants.SQL_COLUMNS['photos'], db_row))
+        db_row = normalize_db_row(db_row, self.table)
 
         self.real_path = db_row['filepath']
         self.real_path = helpers.remove_path_badchars(self.real_path, allowed=':\\/')
@@ -1127,15 +1135,15 @@ class Tag(ObjectBase, GroupableMixin):
     '''
     A Tag, which can be applied to Photos for organization.
     '''
+    table = 'tags'
     group_table = 'tag_group_rel'
     group_sql_index = constants.SQL_INDEX[group_table]
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        if isinstance(db_row, (list, tuple)):
-            db_row = dict(zip(constants.SQL_COLUMNS['tags'], db_row))
-        self.id = db_row['id']
+        db_row = normalize_db_row(db_row, self.table)
 
+        self.id = db_row['id']
         # Do not pass the name through the normalizer. It may be grandfathered
         # from previous character / length rules.
         self.name = db_row['name']
@@ -1407,10 +1415,12 @@ class User(ObjectBase):
     '''
     A dear friend of ours.
     '''
+    table = 'users'
+
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        if isinstance(db_row, (list, tuple)):
-            db_row = dict(zip(constants.SQL_COLUMNS['users'], db_row))
+        db_row = normalize_db_row(db_row, self.table)
+
         self.id = db_row['id']
         self.username = db_row['username']
         self.created = db_row['created']
