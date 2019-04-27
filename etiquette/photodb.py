@@ -828,7 +828,12 @@ class PDBTagMixin:
             tagname = tagname.tagname
 
         try:
-            tagname = self.normalize_tagname(tagname)
+            tagname = objects.Tag.normalize_name(
+                tagname,
+                valid_chars=self.config['tag']['valid_chars'],
+                min_length=self.config['tag']['min_length'],
+                max_length=self.config['tag']['max_length'],
+            )
         except (exceptions.TagTooShort, exceptions.TagTooLong):
             raise exceptions.NoSuchTag(tagname)
 
@@ -865,7 +870,12 @@ class PDBTagMixin:
         '''
         Register a new tag and return the Tag object.
         '''
-        tagname = self.normalize_tagname(tagname)
+        tagname = objects.Tag.normalize_name(
+            tagname,
+            valid_chars=self.config['tag']['valid_chars'],
+            min_length=self.config['tag']['min_length'],
+            max_length=self.config['tag']['max_length'],
+        )
         self.assert_no_such_tag(name=tagname)
 
         description = objects.Tag.normalize_description(description)
@@ -887,15 +897,6 @@ class PDBTagMixin:
             self.commit(message='new tag')
         tag = self.get_cached_instance('tag', data)
         return tag
-
-    def normalize_tagname(self, tagname):
-        tagname = objects.Tag.normalize_name(
-            tagname,
-            valid_chars=self.config['tag']['valid_chars'],
-            min_length=self.config['tag']['min_length'],
-            max_length=self.config['tag']['max_length'],
-        )
-        return tagname
 
 
 class PDBUserMixin:
