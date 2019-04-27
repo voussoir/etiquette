@@ -200,7 +200,7 @@ function init_button_with_confirm()
             holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
             holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
         `
-        button_confirm.setAttribute("onclick", confirm_onclick);
+        button_confirm.onclick = Function(confirm_onclick);
         button.removeAttribute("onclick");
         button.onclick = function(event)
         {
