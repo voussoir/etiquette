@@ -137,18 +137,22 @@ common.init_button_with_confirm =
 function init_button_with_confirm()
 {
     /*
-    To create a button that requires confirmation, simply assign it the class
-    "button_with_confirm" and give it a data-onclick that would normally
-    be the onclick. The rest is taken care of automatically.
+    To create a button that requires a second confirmation step, assign it the
+    class "button_with_confirm".
+
+    Required:
+        data-onclick: String that would normally be the button's onclick.
 
     Optional:
-        data-prompt, otherwise "Are you sure?".
+        data-prompt: Text that appears next to the confirm button. Default is
+            "Are you sure?".
         data-prompt-class
 
-        data-confirm, otherwise inherits the original button's text.
+        data-confirm: Text inside the confirm button. Default is to inherit the
+            original button's text.
         data-confirm-class
 
-        data-cancel, otherwise "Cancel".
+        data-cancel: Text inside the cancel button. Default is "Cancel".
         data-cancel-class
     */
     var buttons = document.getElementsByClassName("button_with_confirm");
