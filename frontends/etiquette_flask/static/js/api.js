@@ -71,6 +71,13 @@ function edit(album_id, title, description, callback)
     common.post(url, data, callback);
 }
 
+api.albums.refresh_directories =
+function refresh_directories(album_id, callback)
+{
+    var url = `/album/${album_id}/refresh_directories`;
+    common.post(url, null, callback);
+}
+
 api.albums.remove_child =
 function remove_child(album_id, child_id, callback)
 {

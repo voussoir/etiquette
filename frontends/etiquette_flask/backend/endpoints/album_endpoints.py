@@ -78,6 +78,15 @@ def post_album_remove_child(album_id):
     response = etiquette.jsonify.album(child)
     return jsonify.make_json_response(response)
 
+@site.route('/album/<album_id>/refresh_directories', methods=['POST'])
+@decorators.catch_etiquette_exception
+def post_album_refresh_directories(album_id):
+    album = common.P_album(album_id)
+    for directory in album.get_associated_directories():
+        common.P.digest_directory(directory, commit=False, new_photo_ratelimit=0.1)
+    common.P.commit(message='refresh album directories endpoint')
+    return jsonify.make_json_response({})
+
 # Album photo operations ###########################################################################
 
 @site.route('/album/<album_id>/add_photo', methods=['POST'])
