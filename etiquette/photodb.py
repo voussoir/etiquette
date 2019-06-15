@@ -840,12 +840,7 @@ class PDBTagMixin:
             # At the same time, I don't want to just pass the input directly
             # into the query, we should still do SOME assumed normalization
             # like whitespace strip.
-            tagname = objects.Tag.normalize_name(
-                tagname,
-                valid_chars=self.config['tag']['valid_chars'],
-                min_length=self.config['tag']['min_length'],
-                max_length=self.config['tag']['max_length'],
-            )
+            tagname = self.normalize_tagname(tagname)
         except (exceptions.TagTooShort, exceptions.TagTooLong):
             raise exceptions.NoSuchTag(tagname)
 
@@ -883,12 +878,7 @@ class PDBTagMixin:
         Register a new tag and return the Tag object.
         '''
         # These might raise exceptions.
-        tagname = objects.Tag.normalize_name(
-            tagname,
-            valid_chars=self.config['tag']['valid_chars'],
-            min_length=self.config['tag']['min_length'],
-            max_length=self.config['tag']['max_length'],
-        )
+        tagname = self.normalize_tagname(tagname)
         self.assert_no_such_tag(name=tagname)
 
         description = objects.Tag.normalize_description(description)
@@ -914,6 +904,15 @@ class PDBTagMixin:
         if commit:
             self.commit(message='new tag')
         return tag
+
+    def normalize_tagname(self, tagname):
+        tagname = objects.Tag.normalize_name(
+            tagname,
+            valid_chars=self.config['tag']['valid_chars'],
+            min_length=self.config['tag']['min_length'],
+            max_length=self.config['tag']['max_length'],
+        )
+        return tagname
 
 
 class PDBUserMixin:
