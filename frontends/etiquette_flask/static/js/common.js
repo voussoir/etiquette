@@ -229,10 +229,10 @@ function init_button_with_confirm()
             var holder = event.target.parentElement.parentElement;
             holder.getElementsByClassName("confirm_holder_stage1")[0].classList.add("hidden");
             holder.getElementsByClassName("confirm_holder_stage2")[0].classList.remove("hidden");
-            var input = holder.getElementsByTagName("input");
+            var input = holder.getElementsByTagName("input")[0];
             if (input)
             {
-                input[0].focus();
+                input.focus();
             }
         }
 
