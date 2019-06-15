@@ -8,13 +8,13 @@ function Spinner(element)
         clearTimeout(this.delayed_showing_timeout);
         this.delayed_showing_timeout = null;
 
-        if (! delay)
+        if (delay)
         {
-            this.element.classList.remove("hidden");
+            this.delayed_showing_timeout = setTimeout(this.show, delay);
         }
         else
         {
-            this.delayed_showing_timeout = setTimeout(this.show, delay);
+            this.element.classList.remove("hidden");
         }
     }
 
