@@ -166,6 +166,10 @@ button *
 {
     color: black;
 }
+button:disabled
+{
+    background-color: #cccccc !important;
+}
 .gray_button
 {
     background-color: #cccccc;
