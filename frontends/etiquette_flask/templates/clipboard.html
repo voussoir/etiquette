@@ -41,6 +41,11 @@
     display: flex;
     padding: 8px;
 }
+#right .spinner_holder
+{
+    display: flex;
+    flex: 1;
+}
 #right button
 {
     flex: 1;
@@ -119,8 +124,7 @@
     </div>
 
     <div id="refresh_metadata_area">
-        <button class="green_button" id="refresh_metadata_button" onclick="refresh_metadata_form();">Refresh metadata</button>
-        <span id="refresh_metadata_spinner" class="hidden">Working...</span>
+        <button class="green_button button_with_spinner" id="refresh_metadata_button" data-spinner-delay="500" data-onclick="refresh_metadata_form();">Refresh metadata</button>
     </div>
 
     <div id="searchhidden_area">
@@ -307,14 +311,11 @@ function download_zip_form()
 ////////////////////////////////////////////////////////////////////////////////
 
 var refresh_metadata_button = document.getElementById("refresh_metadata_button");
-var refresh_metadata_spinner = document.getElementById("refresh_metadata_spinner");
-refresh_metadata_spinner = new spinner.Spinner(refresh_metadata_spinner);
 
 function refresh_metadata_callback(response)
 {
     response = response["data"];
-    refresh_metadata_button.disabled = false;
-    refresh_metadata_spinner.hide();
+    window[refresh_metadata_button.dataset.spinnerCloser]();
     if ("error_type" in response)
     {
         var message_area = document.getElementById("message_area");
@@ -337,8 +338,6 @@ function refresh_metadata_form()
     var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
     var data = new FormData();
     data.append("photo_ids", photo_ids);
-    refresh_metadata_spinner.show();
-    refresh_metadata_button.disabled = true;
     common.post(url, data, refresh_metadata_callback);
 }
 
