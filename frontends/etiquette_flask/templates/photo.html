@@ -142,7 +142,7 @@
         <ul id="this_tags">
             <li>
                 <input id="add_tag_textbox" type="text" list="tag_autocomplete_datalist" autofocus>
-                <button id="add_tag_button" class="green_button" onclick="add_photo_tag_form('{{photo.id}}');">add</button>
+                <button id="add_tag_button" class="green_button" onclick="add_photo_tag_form();">add</button>
             </li>
             {% set tags = photo.get_tags()|sort_tags %}
             {% for tag in tags %}
@@ -159,7 +159,7 @@
         <!-- METADATA & DOWNLOAD -->
         <h4>
             File info
-            <button id="refresh_metadata_button" class="green_button" onclick="refresh_metadata_form('{{photo.id}}');">refresh</button>
+            <button id="refresh_metadata_button" class="green_button" onclick="api.photos.refresh_metadata('{{photo.id}}', common.refresh);">refresh</button>
         </h4>
         <ul id="metadata">
             <li>Filename: {{photo.basename}}</li>
@@ -232,6 +232,8 @@
 
 
 <script type="text/javascript">
+var PHOTO_ID = "{{photo.id}}";
+
 var add_tag_box = document.getElementById('add_tag_textbox');
 var add_tag_button = document.getElementById('add_tag_button');
 add_tag_box.addEventListener("keyup", common.entry_with_history_hook);
@@ -239,14 +241,14 @@ common.bind_box_to_button(add_tag_box, add_tag_button, false);
 
 var message_area = document.getElementById('message_area');
 
-function add_photo_tag_form(photo_id)
+function add_photo_tag_form()
 {
     var tagname = document.getElementById("add_tag_textbox").value;
     if (tagname == "")
     {
         return;
     }
-    api.photos.add_tag('{{photo.id}}', tagname, receive_callback);
+    api.photos.add_tag(PHOTO_ID, tagname, receive_callback);
     add_tag_box.value = "";
 }
 
@@ -283,11 +285,6 @@ function receive_callback(response)
         }
     }
     common.create_message_bubble(message_area, message_positivity, message_text, 8000);
-}
-
-function refresh_metadata_form(photo_id)
-{
-    api.photos.refresh_metadata(photo_id, common.refresh);
 }
 
 var ZOOM_BG_URL = "url('{{photo|file_link}}')";

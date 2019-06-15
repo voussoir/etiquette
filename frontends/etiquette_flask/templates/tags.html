@@ -161,7 +161,7 @@ h2, h3
                     {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="remove_child_form('{{qualified_name.split('.')[-2]}}', '{{tag.name}}');"
+                    data-onclick="api.tags.remove_child('{{qualified_name.split('.')[-2]}}', '{{tag.name}}', receive_callback);"
                     data-prompt="Unlink Tags?"
                     data-confirm="Unlink"
                     data-confirm-class="remove_tag_button_perm red_button"
@@ -176,7 +176,7 @@ h2, h3
                     {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="delete_tag_form('{{qualified_name}}');"
+                    data-onclick="api.tags.delete('{{qualified_name}}', receive_callback);"
                     data-prompt="Delete Tag?"
                     data-confirm="Delete"
                     data-confirm-class="remove_tag_button_perm red_button"
@@ -194,7 +194,7 @@ h2, h3
                     {{tag_object.tag_object(tag, link='search', innertext=qualified_name + '+' + synonym)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="remove_synonym_form('{{tag.name}}', '{{synonym}}');"
+                    data-onclick="api.tags.remove_synonym('{{tag.name}}', '{{synonym}}', receive_callback);"
                     data-prompt="Remove Synonym?"
                     data-confirm="Remove"
                     data-confirm-class="remove_tag_button_perm red_button"
@@ -221,11 +221,6 @@ var message_area = document.getElementById('message_area');
 box.addEventListener("keyup", common.entry_with_history_hook);
 common.bind_box_to_button(box, button, false);
 
-function delete_tag_form(tag_name)
-{
-    api.tags.delete(tag_name, receive_callback);
-}
-
 function easybake_form()
 {
     var box = document.getElementById('add_tag_textbox');
@@ -237,16 +232,6 @@ function easybake_form()
     }
     api.tags.easybake(easybake_string, receive_callback);
     box.value = "";
-}
-
-function remove_child_form(tag_name, child_name)
-{
-    api.tags.remove_child(tag_name, child_name, receive_callback);
-}
-
-function remove_synonym_form(tag_name, syn_name)
-{
-    api.tags.remove_synonym(tag_name, syn_name, receive_callback);
 }
 
 function receive_callback(response)
