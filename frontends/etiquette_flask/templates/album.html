@@ -203,6 +203,14 @@ ALBUM_ID = undefined;
         >
             Add child
         </button>
+
+        <button
+        class="green_button button_with_spinner"
+        data-onclick="api.albums.refresh_directories(ALBUM_ID, common.refresh);"
+        data-spinner-delay="500"
+        >
+            Refresh directories
+        </button>
     </div>
 
     <div id="left">
