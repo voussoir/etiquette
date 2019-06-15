@@ -155,7 +155,7 @@ function init_button_with_confirm()
         data-cancel: Text inside the cancel button. Default is "Cancel".
         data-cancel-class
     */
-    var buttons = document.getElementsByClassName("button_with_confirm");
+    var buttons = Array.from(document.getElementsByClassName("button_with_confirm"));
     for (var index = 0; index < buttons.length; index += 1)
     {
         var button = buttons[index];
