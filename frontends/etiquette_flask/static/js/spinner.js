@@ -10,7 +10,7 @@ function Spinner(element)
 
         if (delay)
         {
-            this.delayed_showing_timeout = setTimeout(this.show, delay);
+            this.delayed_showing_timeout = setTimeout(function(thisthis){thisthis.show()}, delay, this);
         }
         else
         {
