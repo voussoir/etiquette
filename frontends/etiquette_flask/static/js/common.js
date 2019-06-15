@@ -154,11 +154,12 @@ function init_button_with_confirm()
 
         data-cancel: Text inside the cancel button. Default is "Cancel".
         data-cancel-class
+
+        data-holder-class: CSS class for the new span that holds the menu.
     */
     var buttons = Array.from(document.getElementsByClassName("button_with_confirm"));
-    for (var index = 0; index < buttons.length; index += 1)
+    buttons.forEach(function(button)
     {
-        var button = buttons[index];
         button.classList.remove("button_with_confirm");
 
         var holder = document.createElement("span");
@@ -245,7 +246,73 @@ function init_button_with_confirm()
             holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
         }
         delete button.dataset.onclick;
-    }
+    });
+}
+
+var spinner_button_count = 0;
+common.init_button_with_spinner =
+function init_button_with_spinner()
+{
+    /*
+    To create a button that has a spinner, and cannot be clicked again while
+    the action is running, assign it the class "button_with_spinner".
+
+    Required:
+        data-onclick: The string that would normally be the button's onclick.
+
+    Optional:
+        data-spinner-id: If you want to use your own element as the spinner,
+            give its ID here. Otherwise a new one will be created.
+
+        data-holder-class: CSS class for the new span that holds the menu.
+    */
+    var buttons = Array.from(document.getElementsByClassName("button_with_spinner"));
+    buttons.forEach(function(button)
+    {
+        button.classList.remove("button_with_spinner");
+        button.innerHTML = button.innerHTML.trim();
+
+        var holder = document.createElement("span");
+        holder.classList.add("spinner_holder");
+        holder.classList.add(button.dataset.holderClass || "spinner_holder");
+        button.parentElement.insertBefore(holder, button);
+        button.parentElement.removeChild(button);
+        holder.appendChild(button);
+
+        var spinner_element;
+        if (button.dataset.spinnerId)
+        {
+            spinner_element = document.getElementById(button.dataset.spinnerId);
+        }
+        else
+        {
+            spinner_element = document.createElement("span");
+            spinner_element.innerText = "Working...";
+            spinner_element.classList.add("hidden");
+            holder.appendChild(spinner_element);
+        }
+
+        var spin = new spinner.Spinner(spinner_element);
+        var spin_delay = parseFloat(button.dataset.spinnerDelay) || 0;
+
+        var wrapped_onclick = Function(button.dataset.onclick);
+        button.onclick = function()
+        {
+            spin.show(spin_delay);
+            button.disabled = true;
+            wrapped_onclick();
+        }
+        delete button.dataset.onclick;
+
+        var closer_id = "spinner_closer_" + spinner_button_count;
+        spinner_button_count += 1;
+        window[closer_id] = function spinner_closer()
+        {
+            spin.hide();
+            button.disabled = false;
+        }
+        button.dataset.spinnerCloser = closer_id;
+    });
 }
 
 common.normalize_tagname =
@@ -271,5 +338,6 @@ common.on_pageload =
 function on_pageload()
 {
     common.init_button_with_confirm();
+    common.init_button_with_spinner();
 }
 document.addEventListener("DOMContentLoaded", common.on_pageload);
