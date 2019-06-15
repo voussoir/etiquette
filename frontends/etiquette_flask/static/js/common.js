@@ -159,6 +159,8 @@ function init_button_with_confirm()
     for (var index = 0; index < buttons.length; index += 1)
     {
         var button = buttons[index];
+        button.classList.remove("button_with_confirm");
+
         var holder = document.createElement("span");
         holder.classList.add("confirm_holder");
         holder.classList.add(button.dataset.holderClass || "confirm_holder");
