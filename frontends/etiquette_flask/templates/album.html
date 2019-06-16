@@ -208,6 +208,10 @@ ALBUM_ID = undefined;
         class="green_button button_with_spinner"
         data-onclick="api.albums.refresh_directories(ALBUM_ID, common.refresh);"
         data-spinner-delay="500"
+        {% if not album.get_associated_directories() %}
+        title="No associated directories"
+        disabled
+        {% endif %}
         >
             Refresh directories
         </button>
