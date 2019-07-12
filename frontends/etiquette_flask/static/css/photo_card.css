@@ -136,6 +136,7 @@
     justify-self: start;
     grid-area: filename;
 
+    position: relative;
     overflow: hidden;
 
     min-width: 100%;
@@ -157,6 +158,14 @@
 {
     overflow: visible;
     max-height: none;
+}
+.photo_card_filename:hover a
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: inherit;
     z-index: 1;
 }
 .photo_card_tags
