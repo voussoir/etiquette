@@ -121,7 +121,7 @@ def comma_space_split(s):
     s = [x for x in s if x]
     return s
 
-def fit_into_bounds(image_width, image_height, frame_width, frame_height):
+def fit_into_bounds(image_width, image_height, frame_width, frame_height, only_shrink=False):
     '''
     Given the w+h of the image and the w+h of the frame,
     return new w+h that fits the image into the frame
@@ -136,6 +136,9 @@ def fit_into_bounds(image_width, image_height, frame_width, frame_height):
     new_width = int(image_width * ratio)
     new_height = int(image_height * ratio)
 
+    if only_shrink and (new_width > image_width or new_height > image_height):
+        return (image_width, image_height)
+
     return (new_width, new_height)
 
 def generate_image_thumbnail(filepath, width, height):
@@ -148,8 +151,9 @@ def generate_image_thumbnail(filepath, width, height):
         image_height=image_height,
         frame_width=width,
         frame_height=height,
+        only_shrink=True,
     )
-    if new_width < image_width or new_height < image_height:
+    if (new_width, new_height) != (image_width, image_height):
         image = image.resize((new_width, new_height))
 
     if image.mode == 'RGBA':
