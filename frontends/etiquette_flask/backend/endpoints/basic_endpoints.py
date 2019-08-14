@@ -13,8 +13,7 @@ session_manager = common.session_manager
 @session_manager.give_token
 def root():
     motd = random.choice(common.P.config['motd_strings'])
-    session = session_manager.get(request)
-    return flask.render_template('root.html', motd=motd, session=session)
+    return common.render_template(request, 'root.html', motd=motd)
 
 @site.route('/favicon.ico')
 @site.route('/favicon.png')

@@ -17,8 +17,7 @@ session_manager = common.session_manager
 @session_manager.give_token
 def get_user_html(username):
     user = common.P_user(username, response_type='html')
-    session = session_manager.get(request)
-    return flask.render_template('user.html', user=user, session=session)
+    return common.render_template(request, 'user.html', user=user)
 
 @site.route('/user/<username>.json')
 @session_manager.give_token
@@ -44,10 +43,9 @@ def get_user_id_redirect(user_id):
 @site.route('/login', methods=['GET'])
 @session_manager.give_token
 def get_login():
-    session = session_manager.get(request)
-    response = flask.render_template(
+    response = common.render_template(
+        request,
         'login.html',
-        session=session,
         min_username_length=common.P.config['user']['min_username_length'],
         min_password_length=common.P.config['user']['min_password_length'],
     )

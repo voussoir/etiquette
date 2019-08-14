@@ -19,11 +19,10 @@ session_manager = common.session_manager
 @session_manager.give_token
 def get_album_html(album_id):
     album = common.P_album(album_id)
-    session = session_manager.get(request)
-    response = flask.render_template(
+    response = common.render_template(
+        request,
         'album.html',
         album=album,
-        session=session,
         view=request.args.get('view', 'grid'),
     )
     return response
@@ -174,11 +173,10 @@ def get_albums_core():
 @session_manager.give_token
 def get_albums_html():
     albums = get_albums_core()
-    session = session_manager.get(request)
-    response = flask.render_template(
+    response = common.render_template(
+        request,
         'album.html',
         albums=albums,
-        session=session,
         view=request.args.get('view', 'grid'),
     )
     return response

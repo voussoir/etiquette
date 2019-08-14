@@ -108,6 +108,15 @@ def P_user(username):
 def P_user_id(user_id):
     return P.get_user(id=user_id)
 
+def render_template(request, *args, **kwargs):
+    session = session_manager.get(request)
+    ret = flask.render_template(
+        session=session,
+        theme=request.args.get('theme'),
+        *args,
+        **kwargs,
+    )
+    return ret
 
 def back_url():
     return request.args.get('goto') or request.referrer or '/'

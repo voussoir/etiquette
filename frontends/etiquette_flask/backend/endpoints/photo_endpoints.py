@@ -23,8 +23,7 @@ photo_download_zip_tokens = cacheclass.Cache(maxlen=100)
 @session_manager.give_token
 def get_photo_html(photo_id):
     photo = common.P_photo(photo_id, response_type='html')
-    session = session_manager.get(request)
-    return flask.render_template('photo.html', photo=photo, session=session)
+    return common.render_template(request, 'photo.html', photo=photo)
 
 @site.route('/photo/<photo_id>.json')
 @session_manager.give_token
@@ -201,8 +200,7 @@ def post_batch_photos_unset_searchhidden():
 @site.route('/clipboard')
 @session_manager.give_token
 def get_clipboard_page():
-    session = session_manager.get(request)
-    return flask.render_template('clipboard.html', session=session)
+    return common.render_template(request, 'clipboard.html')
 
 @site.route('/batch/photos/photo_card', methods=['POST'])
 @decorators.required_fields(['photo_ids'], forbid_whitespace=True)
@@ -428,14 +426,13 @@ def get_search_core():
 def get_search_html():
     search_results = get_search_core()
     search_kwargs = search_results['search_kwargs']
-    session = session_manager.get(request)
-    response = flask.render_template(
+    response = common.render_template(
+        request,
         'search.html',
         next_page_url=search_results['next_page_url'],
         prev_page_url=search_results['prev_page_url'],
         photos=search_results['photos'],
         search_kwargs=search_kwargs,
-        session=session,
         total_tags=search_results['total_tags'],
         warnings=search_results['warnings'],
     )

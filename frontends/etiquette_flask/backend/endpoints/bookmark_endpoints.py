@@ -38,9 +38,8 @@ def post_bookmark_edit(bookmark_id):
 @site.route('/bookmarks')
 @session_manager.give_token
 def get_bookmarks_html():
-    session = session_manager.get(request)
     bookmarks = list(common.P.get_bookmarks())
-    return flask.render_template('bookmarks.html', bookmarks=bookmarks, session=session)
+    return common.render_template(request, 'bookmarks.html', bookmarks=bookmarks)
 
 @site.route('/bookmarks.json')
 @session_manager.give_token

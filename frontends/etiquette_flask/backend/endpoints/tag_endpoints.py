@@ -91,7 +91,6 @@ def get_tags_html(specific_tag_name=None):
             response = flask.redirect(new_url)
             return response
 
-    session = session_manager.get(request)
     include_synonyms = request.args.get('synonyms')
     include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
 
@@ -101,10 +100,10 @@ def get_tags_html(specific_tag_name=None):
         tags = [specific_tag]
     tags = etiquette.tag_export.easybake(tags, include_synonyms=False, with_objects=True)
 
-    response = flask.render_template(
+    response = common.render_template(
+        request,
         'tags.html',
         include_synonyms=include_synonyms,
-        session=session,
         specific_tag=specific_tag,
         tags=tags,
     )
