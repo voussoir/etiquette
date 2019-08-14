@@ -36,11 +36,11 @@
         "searchhidden_area"
         "download_zip_area"
         "message_area" 1fr;
+    grid-row-gap: 8px;
 }
 #right > *
 {
     display: flex;
-    padding: 8px;
 }
 #right .spinner_holder
 {
@@ -71,7 +71,6 @@
 #message_area
 {
     grid-area: message_area;
-    margin: 8px;
 }
 @media screen and (max-width: 800px)
 {
@@ -108,8 +107,10 @@
 {{header.make_header(session=session)}}
 <div id="content_body" class="sticky_side_right">
 <div id="left">
-    <span>The clipboard contains <span class="clipboard_count">0</span> items.</span>
+    <div class="panel">The clipboard contains <span class="clipboard_count">0</span> items.
     <button id="clear_clipboard_button" class="red_button" onclick="photo_clipboard.clear_clipboard()">Clear it.</button>
+    </div>
+
     <div id="photo_card_holder">
     </div>
 </div>

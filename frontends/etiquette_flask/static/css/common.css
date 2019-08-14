@@ -117,23 +117,22 @@ pre
     grid-area: right;
 }
 
-.sticky_side_left
+#content_body.sticky_side_left
 {
     grid-template:
         "left right"
         /var(--size_sticky_side) 1fr;
 }
-.sticky_side_right
+#content_body.sticky_side_right
 {
     grid-template:
         "left right"
         /1fr var(--size_sticky_side);
 }
 
-.sticky_side_left #left,
-.sticky_side_right #right
+#content_body.sticky_side_left #left,
+#content_body.sticky_side_right #right
 {
-    grid-area: right;
     display: grid;
     grid-auto-rows: min-content;
 
@@ -141,15 +140,25 @@ pre
     position: fixed;
     bottom: 8px;
     top: 34px;
+    padding: 8px;
+    box-sizing: border-box;
     width: var(--size_sticky_side);
     overflow-y: auto;
     background-color: var(--color_site_transparency);
 }
-.sticky_side_left #left
+#content_body.sticky_side_right #left
+{
+    margin-right: 8px;
+}
+#content_body.sticky_side_left #right
+{
+    margin-left: 8px;
+}
+#content_body.sticky_side_left #left
 {
     left: 8px;
 }
-.sticky_side_right #right
+#content_body.sticky_side_right #right
 {
     right: 8px;
 }
@@ -163,6 +172,12 @@ pre
 .hidden
 {
     display: none !important;
+}
+.panel
+{
+    background-color: var(--color_site_transparency);
+    border-radius: 5px;
+    padding: 8px;
 }
 
 button,
@@ -241,9 +256,9 @@ is hovered over.
     padding-left: 2px;
     padding-right: 2px;
 
-    background-color: #fff;
+    background-color: var(--color_tag_object_bg);
+    color: var(--color_tag_object_fg);
 
-    color: blue;
     font-size: 0.9em;
     text-decoration: none;
     font-family: monospace;
@@ -266,6 +281,10 @@ is hovered over.
     margin: 4px;
 
     word-wrap: break-word;
+}
+.message_bubble *
+{
+    color: var(--color_text_bubble);
 }
 .message_positive
 {
