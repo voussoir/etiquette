@@ -3,7 +3,11 @@
     --color_theme_primary: #00d8f4;
     --color_theme_secondary: #ffffd4;
 
+    --color_tag_object_bg: #fff;
+    --color_tag_object_fg: blue;
+
     --color_text_normal: black;
+    --color_text_bubble: black;
     --color_text_link: blue;
 
     --color_site_textfields: white;
