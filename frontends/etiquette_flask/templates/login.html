@@ -39,11 +39,7 @@ button
     display: flex;
     flex-direction: column;
 
-    padding: 10px;
-    margin: 10px;
-
-    border-radius: 5px;
-    border: 1px solid black;
+    margin: 8px;
 }
 #login_form > *,
 #register_form > *
@@ -72,14 +68,14 @@ button
     {{header.make_header(session=session)}}
     <div id="content_body">
         <div id="login_register_box">
-            <div id="login_form" action="/login" method="post">
-                <span>Log in</span>
+            <div id="login_form" class="panel" action="/login" method="post">
+                <h2>Log in</h2>
                 <input type="text" id="login_input_username" name="username" placeholder="username" autofocus>
                 <input type="password" id="login_input_password" name="password" placeholder="password">
                 <button type="submit" id="login_submit_button" class="green_button" onclick="login_form()">Log in</button>
             </div>
-            <div id="register_form" action="/register" method="post">
-                <span>Register</span>
+            <div id="register_form" class="panel" action="/register" method="post">
+                <h2>Register</h2>
                 <input type="text" id="register_input_username" name="username" placeholder="username (at least {{min_username_length}})">
                 <input type="password" id="register_input_password_1" name="password_1" placeholder="password (at least {{min_password_length}})">
                 <input type="password" id="register_input_password_2" name="password_2" placeholder="password again">
