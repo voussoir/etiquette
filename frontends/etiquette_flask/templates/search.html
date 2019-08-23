@@ -147,7 +147,7 @@
 
 {% macro create_orderby_li(selected_column, selected_sorter) %}
 <li class="search_builder_orderby_li">
-    <select>
+    <select onchange="orderby_hide_direction_hook(event)">
         <option value="created"   {{"selected" if selected_column=="created" else ""}}   >Creation date</option>
         <option value="area"      {{"selected" if selected_column=="area" else ""}}      >Area</option>
         <option value="width"     {{"selected" if selected_column=="width" else ""}}     >Width</option>
@@ -158,7 +158,7 @@
         <option value="tagged_at" {{"selected" if selected_column=="tagged_at" else ""}} >Recently tagged</option>
         <option value="random"    {{"selected" if selected_column=="random" else ""}}    >Random</option>
     </select>
-    <select>
+    <select {% if selected_column=="random" %}class="hidden"{% endif %}>
         <option value="desc" {{"selected" if selected_sorter=="desc" else ""}} >Descending</option>
         <option value="asc"  {{"selected" if selected_sorter=="asc" else ""}}  >Ascending</option>
     </select>
@@ -456,6 +456,17 @@ function orderby_remove_hook(button)
     {
         /* You can't remove the only one left */
         ul.removeChild(li);
+    }
+}
+function orderby_hide_direction_hook(event)
+{
+    if (event.target.value == "random")
+    {
+        event.target.nextElementSibling.classList.add("hidden");
+    }
+    else
+    {
+        event.target.nextElementSibling.classList.remove("hidden");
     }
 }
 function simplify_tagnames(tags)
