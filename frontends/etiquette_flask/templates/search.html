@@ -436,17 +436,15 @@ function add_new_orderby()
 {
     /* Called by the green + button */
     var ul = document.getElementById("search_builder_orderby_ul");
-    if (ul.children.length >= 9)
+    var lis = ul.children;
+    if (lis.length >= 9)
     {
         /* 9 because there are only 9 sortable properties */
         return;
     }
-    var li = ul.children;
-    li = li[li.length - 2];
-    var clone_children = true;
-    var new_li = li.cloneNode(clone_children)
-    var button = document.getElementById("search_builder_orderby_newrow");
-    ul.insertBefore(new_li, button);
+    prev_li = lis[lis.length - 2];
+    var new_li = prev_li.cloneNode(true);
+    ul.insertBefore(new_li, prev_li.nextSibling);
 }
 function orderby_remove_hook(button)
 {
