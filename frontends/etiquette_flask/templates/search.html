@@ -521,8 +521,15 @@ function submit_search()
     {
         var row = orderby_rows[index];
         var column = row.children[0].value;
-        var sorter = row.children[1].value;
-        orderby_params.push(column + "-" + sorter);
+        if (column == "random")
+        {
+            orderby_params.push(column);
+        }
+        else
+        {
+            var sorter = row.children[1].value;
+            orderby_params.push(column + "-" + sorter);
+        }
     }
     orderby_params = orderby_params.join(",");
     if (orderby_params && orderby_params != "created-desc")
