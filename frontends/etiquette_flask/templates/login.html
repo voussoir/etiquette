@@ -68,20 +68,20 @@ button
     {{header.make_header(session=session)}}
     <div id="content_body">
         <div id="login_register_box">
-            <div id="login_form" class="panel" action="/login" method="post">
+            <form id="login_form" class="panel" action="/login" method="post">
                 <h2>Log in</h2>
                 <input type="text" id="login_input_username" name="username" placeholder="username" autofocus>
                 <input type="password" id="login_input_password" name="password" placeholder="password">
-                <button type="submit" id="login_submit_button" class="green_button" onclick="login_form()">Log in</button>
-            </div>
-            <div id="register_form" class="panel" action="/register" method="post">
+                <button type="submit" id="login_submit_button" class="green_button" onclick="login_form(event)">Log in</button>
+            </form>
+            <form id="register_form" class="panel" action="/register" method="post">
                 <h2>Register</h2>
                 <input type="text" id="register_input_username" name="username" placeholder="username (at least {{min_username_length}})">
                 <input type="text" id="register_input_display_name" name="display_name" placeholder="display name (optional)">
                 <input type="password" id="register_input_password_1" name="password_1" placeholder="password (at least {{min_password_length}})">
                 <input type="password" id="register_input_password_2" name="password_2" placeholder="password again">
-                <button type="submit" id="register_input_button" class="green_button" onclick="register_form()">Register</button>
-            </div>
+                <button type="submit" id="register_input_button" class="green_button" onclick="register_form(event)">Register</button>
+            </form>
         </div>
         <div id="message_area">
         </div>
@@ -90,24 +90,11 @@ button
 
 
 <script type="text/javascript">
-var login_input_username = document.getElementById("login_input_username");
-var login_input_password = document.getElementById("login_input_password");
-var login_submit_button = document.getElementById("login_submit_button");
-common.bind_box_to_button(login_input_username, login_submit_button);
-common.bind_box_to_button(login_input_password, login_submit_button);
-
-var register_input_username = document.getElementById("register_input_username");
-var register_input_password_1 = document.getElementById("register_input_password_1");
-var register_input_password_2 = document.getElementById("register_input_password_2");
-var register_input_button = document.getElementById("register_input_button");
-common.bind_box_to_button(register_input_username, register_input_button);
-common.bind_box_to_button(register_input_password_1, register_input_button);
-common.bind_box_to_button(register_input_password_2, register_input_button);
-
 var message_area = document.getElementById("message_area");
 
-function login_form()
+function login_form(event)
 {
+    event.preventDefault();
     var username = document.getElementById("login_input_username").value;
     var password = document.getElementById("login_input_password").value;
     if (username == "" || password == "")
@@ -118,8 +105,9 @@ function login_form()
     api.users.login(username, password, receive_callback)
 }
 
-function register_form()
+function register_form(event)
 {
+    event.preventDefault();
     var username = document.getElementById("register_input_username").value;
     var display_name = document.getElementById("register_input_display_name").value;
     var password_1 = document.getElementById("register_input_password_1").value;
