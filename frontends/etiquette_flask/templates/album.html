@@ -7,10 +7,6 @@ h2, h3
 {
     margin-top: 0;
 }
-#left > *:not(:last-child)
-{
-    margin-bottom: 30px;
-}
 #album_metadata h2 .editor_input
 {
     font-size: inherit;
@@ -22,6 +18,12 @@ h2, h3
     padding: 8px;
 }
 
+#left
+{
+    display: grid;
+    grid-row-gap: 30px;
+    grid-auto-rows: max-content;
+}
 #right
 {
     grid-row-gap: 8px;
