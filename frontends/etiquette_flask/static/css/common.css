@@ -122,12 +122,14 @@ pre
     grid-template:
         "left right"
         /var(--size_sticky_side) 1fr;
+    grid-column-gap: 8px;
 }
 #content_body.sticky_side_right
 {
     grid-template:
         "left right"
         /1fr var(--size_sticky_side);
+    grid-column-gap: 8px;
 }
 
 #content_body.sticky_side_left #left,
@@ -145,14 +147,6 @@ pre
     width: var(--size_sticky_side);
     overflow-y: auto;
     background-color: var(--color_site_transparency);
-}
-#content_body.sticky_side_right #left
-{
-    margin-right: 8px;
-}
-#content_body.sticky_side_left #right
-{
-    margin-left: 8px;
 }
 #content_body.sticky_side_left #left
 {
