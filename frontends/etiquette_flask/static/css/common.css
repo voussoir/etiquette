@@ -82,7 +82,7 @@ body
     grid-area: content_body;
     display: grid;
     grid-auto-rows: min-content;
-    grid-column-gap: 8px;
+    grid-gap: 8px;
 
     margin: 8px;
     margin-top: 0;
