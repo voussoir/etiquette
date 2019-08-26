@@ -77,6 +77,7 @@ button
             <div id="register_form" class="panel" action="/register" method="post">
                 <h2>Register</h2>
                 <input type="text" id="register_input_username" name="username" placeholder="username (at least {{min_username_length}})">
+                <input type="text" id="register_input_display_name" name="display_name" placeholder="display name (optional)">
                 <input type="password" id="register_input_password_1" name="password_1" placeholder="password (at least {{min_password_length}})">
                 <input type="password" id="register_input_password_2" name="password_2" placeholder="password again">
                 <button type="submit" id="register_input_button" class="green_button" onclick="register_form()">Register</button>
@@ -120,6 +121,7 @@ function login_form()
 function register_form()
 {
     var username = document.getElementById("register_input_username").value;
+    var display_name = document.getElementById("register_input_display_name").value;
     var password_1 = document.getElementById("register_input_password_1").value;
     var password_2 = document.getElementById("register_input_password_2").value;
     if (username == "" || password_1 == "" || password_2 == "")
@@ -127,7 +129,7 @@ function register_form()
         common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.");
         return;
     }
-    api.users.register(username, password_1, password_2, receive_callback);
+    api.users.register(username, display_name, password_1, password_2, receive_callback);
 }
 
 function receive_callback(response)

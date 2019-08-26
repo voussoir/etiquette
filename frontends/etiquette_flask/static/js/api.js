@@ -269,11 +269,12 @@ function logout(callback)
 }
 
 api.users.register =
-function register(username, password_1, password_2, callback)
+function register(username, display_name, password_1, password_2, callback)
 {
     var url = "/register";
     data = new FormData();
     data.append("username", username);
+    data.append("display_name", display_name);
     data.append("password_1", password_1);
     data.append("password_2", password_2);
     common.post(url, data, callback);

@@ -106,6 +106,7 @@ def post_register():
         return jsonify.make_json_response(response, status=403)
 
     username = request.form['username']
+    display_name = request.form.get('display_name', None)
     password_1 = request.form['password_1']
     password_2 = request.form['password_2']
 
@@ -116,7 +117,7 @@ def post_register():
         }
         return jsonify.make_json_response(response, status=422)
 
-    user = common.P.register_user(username, password_1)
+    user = common.P.register_user(username, password_1, display_name=display_name)
 
     session = sessions.Session(request, user)
     session_manager.add(session)
