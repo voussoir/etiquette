@@ -286,8 +286,7 @@ function update_clipboard_tray()
 photo_clipboard.open_full_clipboard_tab =
 function open_full_clipboard_tab()
 {
-    var url = "/clipboard";
-    window.open(url, "full_clipboard");
+    window.open("/clipboard");
 }
 
 photo_clipboard.update_clipboard_count =
