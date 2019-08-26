@@ -82,6 +82,7 @@ body
     grid-area: content_body;
     display: grid;
     grid-auto-rows: min-content;
+    grid-column-gap: 8px;
 
     margin: 8px;
     margin-top: 0;
@@ -122,14 +123,12 @@ pre
     grid-template:
         "left right"
         /var(--size_sticky_side) 1fr;
-    grid-column-gap: 8px;
 }
 #content_body.sticky_side_right
 {
     grid-template:
         "left right"
         /1fr var(--size_sticky_side);
-    grid-column-gap: 8px;
 }
 
 #content_body.sticky_side_left #left,
