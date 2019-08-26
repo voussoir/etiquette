@@ -24,35 +24,37 @@
 }
 #right
 {
+    grid-row-gap: 8px;
     grid-template:
-        "add_tag_area"
-        "remove_tag_area"
-        "refresh_metadata_area"
-        "searchhidden_area"
-        "download_zip_area"
-        "message_area" 1fr;
+        "toolbox" auto
+        "message_area" 1fr
+        / 1fr;
+}
+#toolbox
+{
+    display: grid;
+    grid-auto-rows: min-content;
     grid-row-gap: 8px;
 }
-#right > *
+#toolbox > *
 {
     display: flex;
 }
-#right input
+#toolbox input
 {
     margin: 0;
 }
-#right .spinner_holder
+#toolbox .spinner_holder
 {
     display: flex;
     flex: 1;
 }
-#right button
+#toolbox button
 {
     flex: 1;
 }
-#add_tag_area { grid-area: add_tag_area; }
-#remove_tag_area { grid-area: remove_tag_area; }
-
+#toolbox { grid-area: toolbox; }
+#message_area { grid-area: message_area; }
 #add_tag_area input,
 #remove_tag_area input
 {
@@ -64,20 +66,14 @@
     flex: initial;
 }
 
-#refresh_metadata_area { grid-area: refresh_metadata_area; }
-#searchhidden_area { grid-area: searchhidden_area; }
-#download_zip_area { grid-area: download_zip_area; }
-#message_area
-{
-    grid-area: message_area;
-}
 @media screen and (max-width: 800px)
 {
     #content_body
     {
         grid-template:
             "left" 1fr
-            "right" 200px;
+            "right" 200px
+            / 1fr !important;
     }
     #right
     {
@@ -89,13 +85,8 @@
         height: 200px;
 
         grid-template:
-            "add_tag_area          message_area"
-            "remove_tag_area       message_area"
-            "refresh_metadata_area message_area"
-            "searchhidden_area     message_area"
-            "download_zip_area     message_area"
-            "extra                 message_area" 1fr
-            /1fr                   minmax(50px, 200px);
+            "toolbox message_area" 1fr
+            /1fr     minmax(50px, 200px);
     }
 }
 </style>
@@ -114,27 +105,29 @@
     </div>
 </div>
 <div id="right">
-    <div id="add_tag_area">
-        <input type="text" id="add_tag_textbox" list="tag_autocomplete_datalist">
-        <button class="add_tag_button green_button" id="add_tag_button" onclick="add_tag_form();">Add tag</button>
-    </div>
+    <div id="toolbox">
+        <div id="add_tag_area">
+            <input type="text" id="add_tag_textbox" list="tag_autocomplete_datalist">
+            <button class="add_tag_button green_button" id="add_tag_button" onclick="add_tag_form();">Add tag</button>
+        </div>
 
-    <div id="remove_tag_area">
-        <input type="text" id="remove_tag_textbox" list="tag_autocomplete_datalist">
-        <button class="red_button" id="remove_tag_button" onclick="remove_tag_form();">Remove tag</button>
-    </div>
+        <div id="remove_tag_area">
+            <input type="text" id="remove_tag_textbox" list="tag_autocomplete_datalist">
+            <button class="red_button" id="remove_tag_button" onclick="remove_tag_form();">Remove tag</button>
+        </div>
 
-    <div id="refresh_metadata_area">
-        <button class="green_button button_with_spinner" id="refresh_metadata_button" data-spinner-delay="500" data-onclick="refresh_metadata_form();">Refresh metadata</button>
-    </div>
+        <div id="refresh_metadata_area">
+            <button class="green_button button_with_spinner" id="refresh_metadata_button" data-spinner-delay="500" data-onclick="refresh_metadata_form();">Refresh metadata</button>
+        </div>
 
-    <div id="searchhidden_area">
-        <button class="yellow_button" id="set_searchhidden_button" onclick="set_searchhidden_form()">Searchhide</button>
-        <button class="yellow_button" id="unset_searchhidden_button" onclick="unset_searchhidden_form()">Unhide</button>
-    </div>
+        <div id="searchhidden_area">
+            <button class="yellow_button" id="set_searchhidden_button" onclick="set_searchhidden_form()">Searchhide</button>
+            <button class="yellow_button" id="unset_searchhidden_button" onclick="unset_searchhidden_form()">Unhide</button>
+        </div>
 
-    <div id="download_zip_area">
-        <button class="yellow_button" id="download_zip_button" onclick="download_zip_form()">Download .zip</button>
+        <div id="download_zip_area">
+            <button class="yellow_button" id="download_zip_button" onclick="download_zip_form()">Download .zip</button>
+        </div>
     </div>
 
     <div id="message_area">
