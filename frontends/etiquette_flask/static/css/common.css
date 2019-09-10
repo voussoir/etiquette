@@ -24,6 +24,12 @@
 html
 {
     height: 100vh;
+    box-sizing: border-box;
+}
+
+*, *:before, *:after
+{
+    box-sizing: inherit;
 }
 
 body
@@ -53,7 +59,6 @@ input::placeholder, textarea::placeholder
     color: var(--color_text_placeholder);
     opacity: 1;
 }
-
 
 body
 {
