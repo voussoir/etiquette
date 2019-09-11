@@ -159,6 +159,25 @@ pre
 {
     right: 8px;
 }
+@media screen and (max-width: 800px)
+{
+    #content_body.sticky_side_right #right
+    {
+        outline: 8px solid var(--color_theme_primary);
+        background-color: var(--color_theme_primary) !important;
+    }
+    #content_body.sticky_side_right #right:before
+    {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: var(--color_site_transparency);
+        z-index: -1;
+    }
+}
 
 .editor_input
 {
