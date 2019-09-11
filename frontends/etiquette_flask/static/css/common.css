@@ -147,7 +147,6 @@ pre
     bottom: 8px;
     top: 34px;
     padding: 8px;
-    box-sizing: border-box;
     width: var(--size_sticky_side);
     overflow-y: auto;
     background-color: var(--color_site_transparency);
