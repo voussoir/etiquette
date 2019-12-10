@@ -324,6 +324,8 @@ def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=bytestring.
     Yield chunks of bytes from the file between the endpoints.
     '''
     filepath = pathclass.Path(filepath)
+    if not filepath.exists:
+        raise FileNotFoundError(filepath)
     if range_max is None:
         range_max = filepath.size
     range_span = (range_max + 1) - range_min
