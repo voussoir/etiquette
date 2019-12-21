@@ -46,6 +46,11 @@
     max-height: 100%;
     margin: auto;
 }
+.album_card_list .album_card_thumbnail
+{
+    display: none;
+}
+
 .album_card_title
 {
     grid-area: title;
@@ -59,6 +64,10 @@
     position: absolute;
     right: 4px;
     bottom: 4px;
+}
+.album_card_list .album_card_tools
+{
+    display: none;
 }
 
 .photo_card
