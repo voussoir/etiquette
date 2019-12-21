@@ -255,7 +255,7 @@ ALBUM_ID = undefined;
                 {% endfor %}
             {% else %}
                 <h3>1 Parent</h3>
-                {{album_card.create_root_album_card(view=view)}}
+                {{album_card.create_album_card("root", view=view)}}
             {% endif %}
         </div>
 

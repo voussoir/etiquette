@@ -1,29 +1,13 @@
-{% macro create_root_album_card(view="grid") %}
-{% set view = (view if view in ("list", "grid") else "grid") %}
-{% set viewparam = "?view=list" if view == "list" else "" %}
-    {% if view == "list" %}
-    <div class="album_card album_card_list">
-        <div class="album_card_title">
-            <a href="/albums{{viewparam}}">Albums</a>
-        </div>
-    </div>
-    {% else %}
-    <div class="album_card album_card_grid">
-        <a class="album_card_thumbnail" href="/albums"></a>
-
-        <div class="album_card_title">
-            <a href="/albums">Albums</a>
-        </div>
-    </div>
-    {% endif %}
-{% endmacro %}
-
 {% macro create_album_card(album, view="grid", unlink_parent=none) %}
 {% set view = (view if view in ("list", "grid") else "grid") %}
 {% set viewparam = "?view=list" if view == "list" else "" %}
     <div class="album_card album_card_{{view}}" data-id="{{album.id}}">
-    {% if view == "grid" %}
+        {% if album == "root" %}
+        <a class="album_card_thumbnail" href="/albums{{viewparam}}"></a>
+        {% else %}
         <a class="album_card_thumbnail" href="/album/{{album.id}}{{viewparam}}"></a>
+        {% endif %}
+
         <div class="album_card_tools">
             {% if unlink_parent is not none %}
             <button
@@ -37,17 +21,24 @@
             </button>
             {% endif %}
         </div>
-    {% endif %}
+
         <div class="album_card_title">
+            {% if album == "root" %}
+            <a href="/albums{{viewparam}}">Albums</a>
+            {% else %}
             <a href="/album/{{album.id}}{{viewparam}}">{{album.display_name}}</a>
+            {% endif %}
         </div>
 
         <div class="album_card_metadata">
+            {% if album == "root" %}
+            {% else %}
             {% set child_count = album.get_children()|length %}
             {% set photo_count = album.sum_photos(recurse=False) %}
             <span class="album_card_child_count" title="{{child_count}} children">{{child_count}}</span>
             {{-' | '-}}
             <span class="album_card_photo_count" title="{{photo_count}} photos">{{photo_count}}</span>
+            {% endif %}
         </div>
     </div>
 {% endmacro %}
