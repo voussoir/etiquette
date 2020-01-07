@@ -433,7 +433,7 @@ def seconds_to_hms(seconds):
     parts = []
     if hours:
         parts.append(hours)
-    if minutes:
+    if hours or minutes:
         parts.append(minutes)
     parts.append(seconds)
     hms = ':'.join(f'{part:02d}' for part in parts)
