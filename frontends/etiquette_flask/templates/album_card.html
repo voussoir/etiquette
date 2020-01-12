@@ -3,10 +3,12 @@
 {% set viewparam = "?view=list" if view == "list" else "" %}
 <div class="album_card album_card_{{view}}" data-id="{{album.id}}">
     {% if album == "root" %}
-    <a class="album_card_thumbnail" href="/albums{{viewparam}}"></a>
+    <a class="album_card_thumbnail" href="/albums{{viewparam}}">
     {% else %}
-    <a class="album_card_thumbnail" href="/album/{{album.id}}{{viewparam}}"></a>
+    <a class="album_card_thumbnail" href="/album/{{album.id}}{{viewparam}}">
     {% endif %}
+    <img src="/static/basic_thumbnails/album.png"/>
+    </a>
 
     <div class="album_card_tools">
         {% if unlink_parent is not none %}
