@@ -80,6 +80,7 @@
 }
 .photo_card_list
 {
+    position: relative;
     display: grid;
     grid-template:
         "checkbox filename metadata" auto
@@ -195,4 +196,15 @@
 
     font-family: monospace;
     font-size: 11px;
+}
+
+.photo_card_selected::after
+{
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 0; right: 0;
+    pointer-events: none;
+    border: 2px solid blue;
+    background-color: rgba(0, 0, 255, 0.25);
+    border-radius: inherit;
 }
