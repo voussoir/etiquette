@@ -12,6 +12,7 @@
     <script src="/static/js/api.js"></script>
     <script src="/static/js/hotkeys.js"></script>
     <script src="/static/js/photo_clipboard.js"></script>
+    <script src="/static/js/spinner.js"></script>
     <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
@@ -39,6 +40,7 @@
     grid-area: right;
 
     display: grid;
+    position: relative;
     grid-template: "viewer" 1fr / 1fr;
 }
 #editor_area
@@ -96,6 +98,14 @@
 {
     max-height: 100%;
     max-width: 100%;
+}
+
+#hovering_tools
+{
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    background-color: var(--color_theme_primary);
 }
 
 @media screen and (max-width: 800px)
@@ -226,6 +236,11 @@
 
         {% endif %}
     </div>
+    <div id="hovering_tools">
+        {% if photo.simple_mimetype == "video" %}
+        <button id="generate_thumbnail_button" class="green_button button_with_spinner" data-onclick="generate_thumbnail_for_video(event)">Capture thumbnail</button>
+        {% endif %}
+    </div>
 </div>
 </div>
 </body>
@@ -285,6 +300,27 @@ function add_remove_photo_tag_callback(response)
         }
     }
     common.create_message_bubble(message_area, message_positivity, message_text, 8000);
+}
+
+function generate_thumbnail_callback(response)
+{
+    if (response["meta"]["status"] == 200)
+    {
+        common.create_message_bubble(message_area, "message_positive", "Thumbnail captured", 8000);
+    }
+    else
+    {
+        common.create_message_bubble(message_area, "message_negative", response["data"]["error_message"], 8000);
+    }
+    generate_thumbnail_button = document.getElementById("generate_thumbnail_button");
+    window[generate_thumbnail_button.dataset.spinnerCloser]();
+}
+
+function generate_thumbnail_for_video(event)
+{
+    var timestamp = document.querySelector("#right video").currentTime;
+    var special = {"timestamp": timestamp};
+    api.photos.generate_thumbnail(PHOTO_ID, special, generate_thumbnail_callback)
 }
 
 var ZOOM_BG_URL = "url('{{photo|file_link}}')";

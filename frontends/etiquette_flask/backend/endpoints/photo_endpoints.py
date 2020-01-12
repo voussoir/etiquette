@@ -138,6 +138,18 @@ def post_batch_photos_remove_tag():
 # Photo metadata operations ########################################################################
 
 @decorators.catch_etiquette_exception
+@site.route('/photo/<photo_id>/generate_thumbnail', methods=['POST'])
+def post_photo_generate_thumbnail(photo_id):
+    special = request.form.to_dict()
+    special.pop('commit', None)
+
+    photo = common.P_photo(photo_id, response_type='json')
+    photo.generate_thumbnail(**special)
+
+    response = jsonify.make_json_response({})
+    return response
+
+@decorators.catch_etiquette_exception
 def post_photo_refresh_metadata_core(photo_ids):
     if isinstance(photo_ids, str):
         photo_ids = etiquette.helpers.comma_space_split(photo_ids)

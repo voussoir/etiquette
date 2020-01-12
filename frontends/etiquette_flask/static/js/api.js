@@ -165,6 +165,18 @@ function add_tag(photo_id, tagname, callback)
     common.post(url, data, callback);
 }
 
+api.photos.generate_thumbnail =
+function generate_thumbnail(photo_id, special, callback)
+{
+    var url = `/photo/${photo_id}/generate_thumbnail`
+    var data = new FormData();
+    for (x in special)
+    {
+        data.append(x, special[x]);
+    }
+    common.post(url, data, callback);
+}
+
 api.photos.refresh_metadata =
 function refresh_metadata(photo_id, callback)
 {
