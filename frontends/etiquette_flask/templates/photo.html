@@ -248,16 +248,16 @@ function add_photo_tag_form()
     {
         return;
     }
-    api.photos.add_tag(PHOTO_ID, tagname, receive_callback);
+    api.photos.add_tag(PHOTO_ID, tagname, add_remove_photo_tag_callback);
     add_tag_box.value = "";
 }
 
 function remove_photo_tag_form(photo_id, tagname)
 {
-    api.photos.remove_tag(photo_id, tagname, receive_callback);
+    api.photos.remove_tag(photo_id, tagname, add_remove_photo_tag_callback);
 }
 
-function receive_callback(response)
+function add_remove_photo_tag_callback(response)
 {
     var message_text;
     var message_positivity;
