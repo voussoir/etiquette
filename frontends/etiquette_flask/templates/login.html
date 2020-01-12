@@ -98,7 +98,7 @@ function login_form(event)
         common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.");
         return;
     }
-    api.users.login(username, password, receive_callback)
+    api.users.login(username, password, login_register_callback)
 }
 
 function register_form(event)
@@ -113,10 +113,10 @@ function register_form(event)
         common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.");
         return;
     }
-    api.users.register(username, display_name, password_1, password_2, receive_callback);
+    api.users.register(username, display_name, password_1, password_2, login_register_callback);
 }
 
-function receive_callback(response)
+function login_register_callback(response)
 {
     response = response["data"];
     if ("error_type" in response)
