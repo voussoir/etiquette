@@ -18,6 +18,13 @@ def file_link(photo, short=False):
     basename = jinja2.filters.do_urlencode(photo.basename)
     return f'/file/{photo.id}/{basename}'
 
+def make_attributes(*booleans, **keyvalues):
+    keyvalues = {key: value for (key, value) in keyvalues.items() if value is not None}
+    attributes = [f'{key}="{jinja2.filters.escape(value)}"' for (key, value) in keyvalues.items()]
+    attributes.extend(booleans)
+    attributes = ' '.join(attributes)
+    return attributes
+
 def sort_tags(tags):
     tags = sorted(tags, key=lambda x: x.name)
     return tags
