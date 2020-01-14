@@ -18,40 +18,21 @@
     extra_classes="",
     innertext=None,
     link='search',
+    onclick=None,
     with_alt_description=False
 ) -%}
 
-{%- if link is not none -%}
-    {%- set closing="</a>" -%}
-    <a
-    {%- if link == 'search' -%}
-        {{' '}}href="/search?tag_musts={{tag.name}}"
-    {%- elif link == 'info' -%}
-        {{' '}}href="/tag/{{tag.name}}"
-    {%- elif link == 'void' -%}
-        {{' '}}href="javascript:void(0)"
-    {%- else -%}
-        {{' '}}href="{{link}}"
-    {%- endif -%}
-{%- else -%}
-    {% set closing="</span>" %}
-    <span
-{%- endif -%}
+{% set href = {
+        "search": "/search?tag_musts=" + tag.name,
+        "info": "/tag/" + tag.name,
+        "void": "javascript:void(0)",
+        None: None,
+    }.get(link, link)
+%}
+{% set class = ("tag_object" + " " + extra_classes).strip() %}
+{% set title = (with_alt_description and tag.description) or None %}
+{% set innertext = innertext or tag.name %}
 
-{{' '}}class="tag_object {{extra_classes}}"
-
-{%- set altlines=[] -%}
-{% if with_alt_description and tag.description != "" %}{% do altlines.append(tag.description) %}{% endif %}
-{% set altlines=altlines|join("\n") %}
-{%- if altlines -%}
-    {{' '}}title="{{altlines}}"
-{%- endif -%}
->
-{%- if innertext is not none -%}
-    {{innertext}}
-{%- else -%}
-    {{tag.name}}
-{%- endif %}
-
-{{- closing|safe -}}
+<a {{make_attributes(class=class, title=title, href=href, onclick=onclick)|safe}}>{{innertext}}</a>
+{{-''-}}
 {% endmacro %}
