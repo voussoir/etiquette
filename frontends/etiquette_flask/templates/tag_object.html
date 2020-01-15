@@ -9,7 +9,6 @@
         None = no link, just a <span>
         'search' = link to /search?tag_musts=tagname
         'info' = link to /tags/tagname
-        'void' = javascript:void(0)
     with_alt_description:
         True: Include the description in the alt text
 -->
@@ -25,7 +24,6 @@
 {% set href = {
         "search": "/search?tag_musts=" + tag.name,
         "info": "/tag/" + tag.name,
-        "void": "javascript:void(0)",
         None: None,
     }.get(link, link)
 %}
