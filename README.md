@@ -101,7 +101,6 @@ Here is a brief overview of the project to help you learn your way around:
 ### To do list
 - Make the wording between "new", "create", "add"; and "remove", "delete" more consistent.
 - User account system, permission levels, private pages.
-- Improve the "tags on this page" list. Maybe add separate buttons for must/may/forbid on each.
 - Some way for the database to re-identify a file that was moved / renamed (lost & found). Maybe file hash of the first few mb is good enough.
 - Debate whether the `UserMixin.login` method should accept usernames or I should standardize the usage of IDs only internally.
 - Ability to access user photos by user's ID, not just username.

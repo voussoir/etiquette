@@ -71,6 +71,12 @@
 
     word-wrap: break-word;
 }
+#tags_on_this_page_list
+{
+    list-style-type: none;
+    padding: 0;
+}
+
 #right
 {
     grid-area: right;
@@ -265,7 +271,7 @@
             <input type="text" class="basic_param"
             {%if search_kwargs['author']%} value="{{search_kwargs['author']}}" {%endif%}
             name="author" placeholder="Author">
-            
+
             <select name="limit" class="basic_param">
                 {% set limit_options = [20, 50, 100, 200] %}
                 {% if search_kwargs['limit'] not in limit_options %}
@@ -295,15 +301,37 @@
             <button type="submit" id="search_go_button" class="green_button" value="">Search</button>
         </form>
         {% if total_tags %}
-        <span>Tags on this page (click to join query):</span>
-        <ul>
+        <h4>Tags on this page:</h4>
+        <ul id="tags_on_this_page_list">
             {% for tag in total_tags %}
-            <li>{{tag_object.tag_object(
-                tag,
-                extra_classes="tags_on_this_page",
-                link='void',
-                with_alt_description=True,
-            )}}</li>
+            <li>
+                {{tag_object.tag_object(
+                    tag,
+                    link=None,
+                    onclick="tags_on_this_page_add_must(event, '" + tag.name + "');",
+                    innertext="(+)",
+                )}}
+
+                {{tag_object.tag_object(
+                    tag,
+                    link=None,
+                    onclick="tags_on_this_page_add_may(event, '" + tag.name + "');",
+                    innertext="(~)",
+                )}}
+
+                {{tag_object.tag_object(
+                    tag,
+                    link=None,
+                    onclick="tags_on_this_page_add_forbid(event, '" + tag.name + "');",
+                    innertext="(x)",
+                )}}
+
+                {{tag_object.tag_object(
+                    tag,
+                    link="info",
+                    with_alt_description=True,
+                )}}
+            </li>
             {% endfor %}
         </ul>
         {% endif %}
@@ -558,19 +586,33 @@ function submit_search()
     window.location.href = url;
     return false;
 }
-function tags_on_this_page_hook()
+function tags_on_this_page_add_must(event, tagname)
 {
-    /*
-    This is hooked onto the tag objects listed under "Found on this page".
-    Clicking them will add it to your current search query under Musts
-    */
-    var tagname = this.innerHTML.split(/\./);
-    tagname = tagname[tagname.length-1];
     add_searchtag(
         input_musts,
         tagname,
         inputted_musts,
         "search_builder_musts_inputted"
+    );
+    return false;
+}
+function tags_on_this_page_add_may(event, tagname)
+{
+    add_searchtag(
+        input_mays,
+        tagname,
+        inputted_mays,
+        "search_builder_mays_inputted"
+    );
+    return false;
+}
+function tags_on_this_page_add_forbid(event, tagname)
+{
+    add_searchtag(
+        input_forbids,
+        tagname,
+        inputted_forbids,
+        "search_builder_forbids_inputted"
     );
     return false;
 }
@@ -615,18 +657,6 @@ var inputted_forbids = [];
     {% endfor %}
     {% endif %}
 {% endfor %}
-
-/* Assign the click handler to "Tags on this page" results. */
-var found_on_page = document.getElementsByClassName("tags_on_this_page");
-for (var index = 0; index < found_on_page.length; index += 1)
-{
-    var tag_object = found_on_page[index];
-    if (tag_object.tagName != "A")
-    {continue}
-
-    tag_object.onclick = tags_on_this_page_hook;
-    
-}
 
 input_musts.addEventListener("keyup", function(){tag_input_hook(this, inputted_musts, "search_builder_musts_inputted")});
 input_mays.addEventListener("keyup", function(){tag_input_hook(this, inputted_mays, "search_builder_mays_inputted")});
