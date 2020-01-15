@@ -39,7 +39,12 @@ body
 }
 
 * { color: var(--color_text_normal); }
-a { color: var(--color_text_link); }
+
+a
+{
+    color: var(--color_text_link);
+    cursor: pointer;
+}
 
 input, select, textarea
 {
