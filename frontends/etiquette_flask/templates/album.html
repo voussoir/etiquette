@@ -113,7 +113,7 @@ h2, h3
         <div id="album_list" class="panel">
             <h2>Albums</h2>
             {% for album in albums %}
-            {{album_card.create_album_card(album, view=view)}}
+            {{album_card.create_album_card(album, view=view, draggable=true)}}
             {% endfor %}
         </div>
     </div>
@@ -264,7 +264,7 @@ ALBUM_ID = undefined;
         <div id="hierarchy_children" class="panel">
             <h3>{{sub_albums|length}} Children</h3>
             {% for sub_album in sub_albums|sort(attribute='title') %}
-                {{album_card.create_album_card(sub_album, view=view, unlink_parent=album)}}
+                {{album_card.create_album_card(sub_album, view=view, unlink_parent=album, draggable=true)}}
             {% endfor %}
         </div>
         {% endif %}
@@ -391,6 +391,47 @@ function create_child(title)
     }
     var parent_id = ALBUM_ID;
     api.albums.create(title, parent_id, api.albums.callback_follow);
+}
+
+function on_album_drag_start(event)
+{
+    event.dataTransfer.setData("text/plain", event.target.id);
+}
+function on_album_drag_end(event)
+{
+}
+function on_album_drag_over(event)
+{
+    event.preventDefault();
+}
+function on_album_drag_drop(event)
+{
+    var child_id = event.dataTransfer.getData("text");
+    var child = document.getElementById(child_id);
+    child_id = child.dataset.id;
+    var parent = event.currentTarget;
+    var parent_id = parent.dataset.id;
+    event.dataTransfer.clearData();
+
+    if (child_id == parent_id)
+    {
+        return;
+    }
+
+    var child_title = child.querySelector('.album_card_title').textContent.trim();
+    var parent_title = parent.querySelector('.album_card_title').textContent.trim();
+    if (confirm(`Move\n${child_title}\ninto\n${parent_title}?`))
+    {
+        if (ALBUM_ID)
+        {
+            api.albums.add_child(parent_id, child_id, null);
+            api.albums.remove_child(ALBUM_ID, child_id, common.refresh);
+        }
+        else
+        {
+            api.albums.add_child(parent_id, child_id, common.refresh);
+        }
+    }
 }
 </script>
 </html>

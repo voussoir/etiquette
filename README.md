@@ -122,7 +122,6 @@ Here is a brief overview of the project to help you learn your way around:
 - A "card" representation of albums, like photos.
 - Similarly, rename all "tag_object" to tag card and unify that experience a bit.
 - Batch movement of Albums... but without winding up with a second clipboard system?
-- Drag-and-drop of cards on album pages for easier moving.
 - Overall, more dynamism with cards and tag objects and updating page without requiring refresh.
 - Absolute consistency of CSS classes for divs that hold photo cards.
 

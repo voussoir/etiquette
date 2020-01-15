@@ -1,7 +1,19 @@
-{% macro create_album_card(album, view="grid", unlink_parent=none) %}
+{% macro create_album_card(album, view="grid", unlink_parent=none, draggable=false) %}
+{% set id = "album_card_root" if album == "root" else "album_card_" + album.id %}
 {% set view = (view if view in ("list", "grid") else "grid") %}
 {% set viewparam = "?view=list" if view == "list" else "" %}
-<div class="album_card album_card_{{view}}" data-id="{{album.id}}">
+<div
+id="{{id}}"
+class="album_card album_card_{{view}}"
+data-id="{{album.id}}"
+ondragstart="on_album_drag_start(event)"
+ondragend="on_album_drag_end(event)"
+ondragover="on_album_drag_over(event)"
+ondrop="on_album_drag_drop(event)"
+{% if album != "root" and draggable %}
+draggable=true
+{% endif %}
+>
     {% if album == "root" %}
     <a class="album_card_thumbnail" href="/albums{{viewparam}}">
     {% else %}
