@@ -1,5 +1,5 @@
 {% macro make_header(session) %}
-<div id="header">
+<nav id="header">
     <a class="header_element" href="/">Etiquette</a>
     <a class="header_element" href="/search">Search</a>
     <a class="header_element" href="/tags">Tags</a>
@@ -9,5 +9,5 @@
     {% else %}
     <a class="header_element" href="/login">Log in</a>
     {% endif %}
-</div>
+</nav>
 {% endmacro %}
