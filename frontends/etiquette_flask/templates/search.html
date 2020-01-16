@@ -659,8 +659,12 @@ var inputted_forbids = [];
 {% endfor %}
 
 input_musts.addEventListener("keyup", function(){tag_input_hook(this, inputted_musts, "search_builder_musts_inputted")});
+input_musts.addEventListener("keyup", common.entry_with_tagname_replacements);
 input_mays.addEventListener("keyup", function(){tag_input_hook(this, inputted_mays, "search_builder_mays_inputted")});
+input_mays.addEventListener("keyup", common.entry_with_tagname_replacements);
 input_forbids.addEventListener("keyup", function(){tag_input_hook(this, inputted_forbids, "search_builder_forbids_inputted")});
+input_forbids.addEventListener("keyup", common.entry_with_tagname_replacements);
+
 common.bind_box_to_button(input_expression, document.getElementById("search_go_button"));
 </script>
 </html>

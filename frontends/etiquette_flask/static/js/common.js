@@ -125,6 +125,15 @@ function entry_with_history_hook(event)
     }
 }
 
+common.entry_with_tagname_replacements =
+function entry_with_tagname_replacements(event)
+{
+    var cursor_position = event.target.selectionStart;
+    event.target.value = common.tagname_replacements(event.target.value);
+    event.target.selectionStart = cursor_position;
+    event.target.selectionEnd = cursor_position;
+}
+
 common.html_to_element =
 function html_to_element(html)
 {
@@ -323,6 +332,13 @@ function normalize_tagname(tagname)
     tagname = tagname.split(".");
     tagname = tagname[tagname.length-1];
     tagname = tagname.split("+")[0];
+    tagname = common.tagname_replacements(tagname);
+    return tagname;
+}
+
+common.tagname_replacements =
+function tagname_replacements(tagname)
+{
     tagname = tagname.replace(new RegExp(" ", 'g'), "_");
     tagname = tagname.replace(new RegExp("-", 'g'), "_");
     return tagname;

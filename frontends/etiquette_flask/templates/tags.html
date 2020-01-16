@@ -216,6 +216,7 @@ var add_tag_textbox = document.getElementById('add_tag_textbox');
 var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
 add_tag_textbox.addEventListener("keyup", common.entry_with_history_hook);
+add_tag_textbox.addEventListener("keyup", common.entry_with_tagname_replacements);
 common.bind_box_to_button(add_tag_textbox, add_tag_button, false);
 
 function easybake_form()
