@@ -212,23 +212,22 @@ h2, h3
 
 
 <script type="text/javascript">
-var box = document.getElementById('add_tag_textbox');
-var button = document.getElementById('add_tag_button');
+var add_tag_textbox = document.getElementById('add_tag_textbox');
+var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
-box.addEventListener("keyup", common.entry_with_history_hook);
-common.bind_box_to_button(box, button, false);
+add_tag_textbox.addEventListener("keyup", common.entry_with_history_hook);
+common.bind_box_to_button(add_tag_textbox, add_tag_button, false);
 
 function easybake_form()
 {
-    var box = document.getElementById('add_tag_textbox');
-    var easybake_string = box.value;
+    var easybake_string = add_tag_textbox.value;
     if (easybake_string === "")
     {
-        box.focus();
+        add_tag_textbox.focus();
         return;
     }
     api.tags.easybake(easybake_string, tag_action_callback);
-    box.value = "";
+    add_tag_textbox.value = "";
 }
 
 function tag_action_callback(response)
