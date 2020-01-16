@@ -30,7 +30,8 @@
 {% set class = ("tag_object" + " " + extra_classes).strip() %}
 {% set title = (with_alt_description and tag.description) or None %}
 {% set innertext = innertext or tag.name %}
+{% set element = "a" if (link or onclick) else "span" %}
 
-<a {{make_attributes(class=class, title=title, href=href, onclick=onclick)|safe}}>{{innertext}}</a>
+<{{element}} {{make_attributes(class=class, title=title, href=href, onclick=onclick)|safe}}>{{innertext}}</{{element}}>
 {{-''-}}
 {% endmacro %}
