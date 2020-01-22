@@ -8,6 +8,8 @@ import string
 import traceback
 import warnings
 
+from voussoirkit import winwhich
+
 # FFmpeg ###########################################################################################
 
 FFMPEG_NOT_FOUND = '''
@@ -18,8 +20,8 @@ Windows: where ffmpeg & where ffprobe
 '''
 
 def _load_ffmpeg():
-    ffmpeg_path = shutil.which('ffmpeg')
-    ffprobe_path = shutil.which('ffprobe')
+    ffmpeg_path = winwhich.which('ffmpeg')
+    ffprobe_path = winwhich.which('ffprobe')
 
     if (not ffmpeg_path) or (not ffprobe_path):
         warnings.warn(FFMPEG_NOT_FOUND)
