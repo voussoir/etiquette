@@ -1349,7 +1349,11 @@ class PhotoDB(
         '''
         existing = self.sql_execute('PRAGMA user_version').fetchone()[0]
         if existing != constants.DATABASE_VERSION:
-            raise exceptions.DatabaseOutOfDate(existing=existing, new=constants.DATABASE_VERSION)
+            raise exceptions.DatabaseOutOfDate(
+                existing=existing,
+                new=constants.DATABASE_VERSION,
+                filepath=self.database_filepath,
+            )
 
     def _first_time_setup(self):
         self.log.debug('Running first-time database setup.')
