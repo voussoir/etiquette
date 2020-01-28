@@ -43,15 +43,19 @@ ffmpeg = _load_ffmpeg()
 # Database #########################################################################################
 
 DATABASE_VERSION = 14
+DB_VERSION_PRAGMA = f'''
+PRAGMA user_version = {DATABASE_VERSION};
+'''
+
 DB_PRAGMAS = f'''
 PRAGMA cache_size = 10000;
 PRAGMA count_changes = OFF;
 PRAGMA foreign_keys = ON;
-PRAGMA user_version = {DATABASE_VERSION};
 '''
 
 DB_INIT = f'''
 {DB_PRAGMAS}
+{DB_VERSION_PRAGMA}
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users(
     id TEXT PRIMARY KEY NOT NULL,
