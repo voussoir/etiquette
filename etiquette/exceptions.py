@@ -178,7 +178,7 @@ class FeatureDisabled(EtiquetteException):
     '''
     For when features of the system have been disabled by the configuration.
     '''
-    error_message = 'This feature has been disabled.'
+    error_message = 'This feature has been disabled. Requires {}.'
 
 class NotExclusive(EtiquetteException):
     '''

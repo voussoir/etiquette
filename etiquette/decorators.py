@@ -40,7 +40,7 @@ def required_feature(features):
                     pass
 
                 elif cfg is False:
-                    raise exceptions.FeatureDisabled(method.__qualname__)
+                    raise exceptions.FeatureDisabled(feature)
 
                 else:
                     raise ValueError(f'Bad required_feature: "{feature}" led to {cfg}')
