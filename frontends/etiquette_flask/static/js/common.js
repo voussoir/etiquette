@@ -129,9 +129,13 @@ common.entry_with_tagname_replacements =
 function entry_with_tagname_replacements(event)
 {
     var cursor_position = event.target.selectionStart;
-    event.target.value = common.tagname_replacements(event.target.value);
-    event.target.selectionStart = cursor_position;
-    event.target.selectionEnd = cursor_position;
+    var new_value = common.tagname_replacements(event.target.value);
+    if (new_value != event.target.value)
+    {
+        event.target.value = new_value;
+        event.target.selectionStart = cursor_position;
+        event.target.selectionEnd = cursor_position;
+    }
 }
 
 common.html_to_element =
