@@ -54,6 +54,7 @@ PRAGMA foreign_keys = ON;
 '''
 
 DB_INIT = f'''
+BEGIN;
 {DB_PRAGMAS}
 {DB_VERSION_PRAGMA}
 ----------------------------------------------------------------------------------------------------
@@ -186,6 +187,7 @@ CREATE TABLE IF NOT EXISTS tag_synonyms(
 );
 CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
 ----------------------------------------------------------------------------------------------------
+COMMIT;
 '''
 
 def _extract_table_statements(script):
