@@ -157,6 +157,14 @@ class WrongLogin(EtiquetteException):
     error_message = 'Wrong username-password combination.'
 
 
+# SQL ERRORS
+class BadSQL(EtiquetteException):
+    pass
+
+class BadTable(BadSQL):
+    error_message = 'Table "{}" does not exist.'
+
+
 # GENERAL ERRORS
 class BadDataDirectory(EtiquetteException):
     '''
