@@ -12,6 +12,7 @@ import unicodedata
 import zipstream
 
 from voussoirkit import bytestring
+from voussoirkit import imagetools
 from voussoirkit import pathclass
 
 from . import constants
@@ -121,32 +122,12 @@ def comma_space_split(s):
     s = [x for x in s if x]
     return s
 
-def fit_into_bounds(image_width, image_height, frame_width, frame_height, only_shrink=False):
-    '''
-    Given the w+h of the image and the w+h of the frame,
-    return new w+h that fits the image into the frame
-    while maintaining the aspect ratio.
-
-    (1920, 1080, 400, 400) -> (400, 225)
-    '''
-    width_ratio = frame_width / image_width
-    height_ratio = frame_height / image_height
-    ratio = min(width_ratio, height_ratio)
-
-    new_width = int(image_width * ratio)
-    new_height = int(image_height * ratio)
-
-    if only_shrink and (new_width > image_width or new_height > image_height):
-        return (image_width, image_height)
-
-    return (new_width, new_height)
-
 def generate_image_thumbnail(filepath, width, height):
     if not os.path.isfile(filepath):
         raise FileNotFoundError(filepath)
     image = PIL.Image.open(filepath)
     (image_width, image_height) = image.size
-    (new_width, new_height) = fit_into_bounds(
+    (new_width, new_height) = imagetools.fit_into_bounds(
         image_width=image_width,
         image_height=image_height,
         frame_width=width,
@@ -178,7 +159,7 @@ def generate_video_thumbnail(filepath, outfile, width, height, **special):
     if not probe.video:
         return False
 
-    size = fit_into_bounds(
+    size = imagetools.fit_into_bounds(
         image_width=probe.video.video_width,
         image_height=probe.video.video_height,
         frame_width=width,
