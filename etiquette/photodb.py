@@ -722,7 +722,7 @@ class PDBSQLMixin:
                 return
 
         self.log.debug('Rolling back to %s', savepoint)
-        query = 'ROLLBACK TO "%s"' % savepoint
+        query = f'ROLLBACK TO "{savepoint}"'
         self.sql_execute(query)
         self.savepoints = _savepoints
         self.on_commit_queue = helpers.slice_before(self.on_commit_queue, savepoint)
@@ -733,7 +733,7 @@ class PDBSQLMixin:
             self.log.debug('Savepoint %s for %s.', savepoint_id, message)
         else:
             self.log.debug('Savepoint %s.', savepoint_id)
-        query = 'SAVEPOINT "%s"' % savepoint_id
+        query = f'SAVEPOINT "{savepoint_id}"'
         self.sql.execute(query)
         self.savepoints.append(savepoint_id)
         self.on_commit_queue.append(savepoint_id)
@@ -741,7 +741,7 @@ class PDBSQLMixin:
 
     def sql_delete(self, table, pairs):
         (qmarks, bindings) = sqlhelpers.delete_filler(pairs)
-        query = 'DELETE FROM %s %s' % (table, qmarks)
+        query = f'DELETE FROM {table} {qmarks}'
         self.sql_execute(query, bindings)
 
     def sql_execute(self, query, bindings=[]):
@@ -755,7 +755,7 @@ class PDBSQLMixin:
         column_names = constants.SQL_COLUMNS[table]
         (qmarks, bindings) = sqlhelpers.insert_filler(column_names, data)
 
-        query = 'INSERT INTO %s VALUES(%s)' % (table, qmarks)
+        query = f'INSERT INTO {table} VALUES({qmarks})'
         self.sql_execute(query, bindings)
 
     def sql_select(self, query, bindings=None):
@@ -772,7 +772,7 @@ class PDBSQLMixin:
 
     def sql_update(self, table, pairs, where_key):
         (qmarks, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
-        query = 'UPDATE %s %s' % (table, qmarks)
+        query = f'UPDATE {table} {qmarks}'
         self.sql_execute(query, bindings)
 
 
