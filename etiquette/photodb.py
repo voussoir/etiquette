@@ -250,7 +250,7 @@ class PDBPhotoMixin:
             'id': photo_id,
             'filepath': filepath.absolute_path,
             'override_filename': None,
-            'extension': filepath.extension,
+            'extension': filepath.extension.no_dot,
             'created': helpers.now(),
             'tagged_at': None,
             'author_id': author_id,
