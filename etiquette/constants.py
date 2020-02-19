@@ -35,7 +35,7 @@ def _load_ffmpeg():
         )
     except converter.ffmpeg.FFMpegError:
         traceback.print_exc()
-        ffmpeg = None
+        return None
 
     return ffmpeg
 
