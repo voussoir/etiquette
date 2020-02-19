@@ -1,6 +1,3 @@
-# Use with
-# py -i etiquette_easy.py
-
 import logging
 handler = logging.StreamHandler()
 log_format = '{levelname}:etiquette.{module}.{funcName}: {message}'
@@ -8,6 +5,7 @@ handler.setFormatter(logging.Formatter(log_format, style='{'))
 logging.getLogger().addHandler(handler)
 
 import argparse
+import code
 import os
 import sys
 import traceback
@@ -33,12 +31,16 @@ def photag(photo_id):
     print(photo.get_tags())
     while True:
         photo.add_tag(input('> '))
+
 get = P.get_tag
 
-
+################################################################################
 def erepl_argparse(args):
     if args.exec_statement:
         exec(args.exec_statement)
+    else:
+        import code
+        code.interact(banner='', local=dict(globals(), **locals()))
 
 def main(argv):
     parser = argparse.ArgumentParser()
