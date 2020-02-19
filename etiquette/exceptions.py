@@ -84,7 +84,7 @@ class AlbumExists(Exists):
         EtiquetteException.__init__(self, album)
 
 class GroupExists(Exists):
-    error_message = '{member} already in group {group}'
+    error_message = '{member} already in group {group}.'
 
 class PhotoExists(Exists):
     error_message = 'Photo "{}" already exists.'
