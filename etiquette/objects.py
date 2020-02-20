@@ -1009,6 +1009,8 @@ class Photo(ObjectBase):
         if new_path.absolute_path == old_path.absolute_path:
             raise ValueError('The new and old names are the same')
 
+        new_path.assert_not_exists()
+
         os.makedirs(new_path.parent.absolute_path, exist_ok=True)
 
         if new_path.normcase != old_path.normcase:
