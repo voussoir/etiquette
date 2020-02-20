@@ -89,7 +89,6 @@ class GroupableMixin:
         for parent in parents:
             parent.add_children(children)
 
-    @decorators.transaction
     def add_child(self, member, *, commit=False):
         self.assert_same_type(member)
 
@@ -113,7 +112,6 @@ class GroupableMixin:
 
         self.photodb._cached_frozen_children = None
 
-    @decorators.transaction
     def add_children(self, members, *, commit=False):
         for member in members:
             self.add_child(member)
@@ -124,7 +122,6 @@ class GroupableMixin:
         if self.photodb != other.photodb:
             raise TypeError(f'Objects must belong to the same PhotoDB.')
 
-    @decorators.transaction
     def delete(self, *, delete_children=False, commit=False):
         '''
         Delete this object's relationships to other groupables.
@@ -187,7 +184,6 @@ class GroupableMixin:
         row = self.photodb.sql_select_one(query, [self.id, member.id])
         return row is not None
 
-    @decorators.transaction
     def remove_child(self, member, *, commit=False):
         if not self.has_child(member):
             return
@@ -276,12 +272,12 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.caches['album'].remove(self.id)
 
     @decorators.required_feature('album.edit')
-    # GroupableMixin.add_child already has @transaction.
+    @decorators.transaction
     def add_child(self, *args, **kwargs):
         return super().add_child(*args, **kwargs)
 
     @decorators.required_feature('album.edit')
-    # GroupableMixin.add_children already has @transaction.
+    @decorators.transaction
     def add_children(self, *args, **kwargs):
         return super().add_children(*args, **kwargs)
 
@@ -458,7 +454,7 @@ class Album(ObjectBase, GroupableMixin):
         return row is not None
 
     @decorators.required_feature('album.edit')
-    # GroupableMixin.remove_child already has @transaction.
+    @decorators.transaction
     def remove_child(self, *args, **kwargs):
         return super().remove_child(*args, **kwargs)
 
@@ -717,8 +713,8 @@ class Photo(ObjectBase):
             return bytestring.bytestring(self.bytes)
         return '??? b'
 
-    # Photo.add_tag already has required_feature add_remove_tag
-    # Photo.add_tag already has @transaction.
+    # Photo.add_tag already has @required_feature add_remove_tag
+    @decorators.transaction
     def copy_tags(self, other_photo, *, commit=False):
         '''
         Take all of the tags owned by other_photo and apply them to this photo.
@@ -873,7 +869,7 @@ class Photo(ObjectBase):
         return hopeful_filepath
 
     # Photo.rename_file already has @required_feature
-    # Photo.rename_file already has @transaction
+    @decorators.transaction
     def move_file(self, directory, commit=False):
         directory = pathclass.Path(directory)
         directory.assert_is_directory()
@@ -1147,12 +1143,12 @@ class Tag(ObjectBase, GroupableMixin):
         self.photodb.caches['tag'].remove(self.id)
 
     @decorators.required_feature('tag.edit')
-    # GroupableMixin.add_child already has @transaction.
+    @decorators.transaction
     def add_child(self, *args, **kwargs):
         return super().add_child(*args, **kwargs)
 
     @decorators.required_feature('tag.edit')
-    # GroupableMixin.add_children already has @transaction.
+    @decorators.transaction
     def add_children(self, *args, **kwargs):
         return super().add_children(*args, **kwargs)
 
@@ -1280,8 +1276,7 @@ class Tag(ObjectBase, GroupableMixin):
         return synonyms
 
     @decorators.required_feature('tag.edit')
-    @decorators.required_feature('tag.edit')
-    # GroupableMixin.remove_child already has @transaction.
+    @decorators.transaction
     def remove_child(self, *args, **kwargs):
         return super().remove_child(*args, **kwargs)
 
