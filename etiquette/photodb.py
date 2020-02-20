@@ -116,8 +116,6 @@ class PDBAlbumMixin:
             photos = [self.get_photo(photo) for photo in photos]
             album.add_photos(photos)
 
-        if commit:
-            self.commit(message='new album')
         return album
 
 
@@ -157,8 +155,6 @@ class PDBBookmarkMixin:
 
         bookmark = self.get_cached_instance('bookmark', data)
 
-        if commit:
-            self.commit(message='new bookmark')
         return bookmark
 
 
@@ -278,8 +274,6 @@ class PDBPhotoMixin:
         for tag in tags:
             photo.add_tag(tag)
 
-        if commit:
-            self.commit(message='new photo')
         return photo
 
     @decorators.transaction
@@ -299,9 +293,6 @@ class PDBPhotoMixin:
                 continue
             photo.delete()
 
-        if commit:
-            self.commit(message='purge deleted photos')
-
     @decorators.transaction
     def purge_empty_albums(self, albums=None, *, commit=False):
         if albums is None:
@@ -318,9 +309,6 @@ class PDBPhotoMixin:
             # This may have been the last child of an otherwise empty parent.
             to_check.update(album.get_parents())
             album.delete()
-
-        if commit:
-            self.commit(message='purge empty albums')
 
     def search(
             self,
@@ -940,8 +928,6 @@ class PDBTagMixin:
 
         tag = self.get_cached_instance('tag', data)
 
-        if commit:
-            self.commit(message='new tag')
         return tag
 
     def normalize_tagname(self, tagname):
@@ -1104,9 +1090,6 @@ class PDBUserMixin:
         }
         self.sql_insert(table='users', data=data)
 
-        if commit:
-            self.commit(message='register user')
-
         return self.get_cached_instance('user', data)
 
 
@@ -1237,9 +1220,6 @@ class PDBUtilMixin:
 
             current_album.add_photos(photos)
 
-        if commit:
-            self.commit(message='digest directory')
-
         if make_albums:
             return main_album
         else:
@@ -1289,8 +1269,6 @@ class PDBUtilMixin:
             note = ('new_synonym', f'{tag.name}+{synonym}')
             output_notes.append(note)
 
-        if commit:
-            self.commit(message='easybake')
         return output_notes
 
 
