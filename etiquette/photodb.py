@@ -1072,7 +1072,7 @@ class PDBUserMixin:
 
     @decorators.required_feature('user.new')
     @decorators.transaction
-    def register_user(self, username, password, *, display_name=None):
+    def new_user(self, username, password, *, display_name=None):
         # These might raise exceptions.
         self.assert_valid_username(username)
 
