@@ -715,27 +715,27 @@ class PDBSQLMixin:
         savepoint was created. Keep in mind that a @transaction savepoint is
         always created *before* the method actually does anything.
 
-        If no savepoint is provided then just roll back the most recent save.
+        If no savepoint is provided then rollback the entire transaction.
         '''
-        if savepoint is None:
-            try:
-                savepoint = self.savepoints.pop(-1)
-            except IndexError:
-                self.log.debug('Nothing to roll back.')
-                return
-        else:
-            try:
-                # Will reassign after everything goes well.
-                _savepoints = helpers.slice_before(self.savepoints, savepoint)
-            except ValueError:
-                self.log.warn('Tried to restore nonexistent savepoint %s.', savepoint)
-                return
+        if savepoint is not None and savepoint not in self.savepoints:
+            self.log.warn('Tried to restore nonexistent savepoint %s.', savepoint)
+            return
 
-        self.log.debug('Rolling back to %s', savepoint)
-        query = f'ROLLBACK TO "{savepoint}"'
-        self.sql_execute(query)
-        self.savepoints = _savepoints
-        self.on_commit_queue = helpers.slice_before(self.on_commit_queue, savepoint)
+        if len(self.savepoints) == 0:
+            self.log.debug('Nothing to roll back.')
+            return
+
+        if savepoint is not None:
+            self.log.debug('Rolling back to %s', savepoint)
+            self.sql_execute(f'ROLLBACK TO "{savepoint}"')
+            self.savepoints = helpers.slice_before(self.savepoints, savepoint)
+            self.on_commit_queue = helpers.slice_before(self.on_commit_queue, savepoint)
+
+        else:
+            self.log.debug('Rolling back.')
+            self.sql_execute('ROLLBACK')
+            self.savepoints = []
+            self.on_commit_queue = []
 
     def savepoint(self, message=None):
         savepoint_id = helpers.random_hex(length=16)
