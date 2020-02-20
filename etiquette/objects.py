@@ -1280,10 +1280,6 @@ class Tag(ObjectBase, GroupableMixin):
         return synonyms
 
     @decorators.required_feature('tag.edit')
-    # GroupableMixin.leave_group already has @transaction.
-    def leave_group(self, *args, **kwargs):
-        return super().leave_group(*args, **kwargs)
-
     @decorators.required_feature('tag.edit')
     # GroupableMixin.remove_child already has @transaction.
     def remove_child(self, *args, **kwargs):
