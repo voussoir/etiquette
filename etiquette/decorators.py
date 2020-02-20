@@ -78,12 +78,22 @@ def transaction(method):
     @functools.wraps(method)
     def wrapped_transaction(self, *args, **kwargs):
         photodb = _get_relevant_photodb(self)
+
+        commit = kwargs.pop('commit', False)
+        is_root = len(photodb.savepoints) == 0
+
         savepoint_id = photodb.savepoint(message=method.__qualname__)
+
         try:
             result = method(self, *args, **kwargs)
         except Exception as e:
             photodb.rollback(savepoint=savepoint_id)
             raise
-        else:
-            return result
+
+        if commit:
+            photodb.commit(message=method.__qualname__)
+        elif not is_root:
+            photodb.release_savepoint(savepoint=savepoint_id)
+        return result
+
     return wrapped_transaction
