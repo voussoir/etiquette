@@ -924,8 +924,9 @@ class Photo(ObjectBase):
     def move_file(self, directory, commit=True):
         directory = pathclass.Path(directory)
         directory.assert_is_directory()
-        new_path = directory.with_child(self.real_path.basename).absolute_path
-        self.rename_file(new_path, move=True, commit=commit)
+        new_path = directory.with_child(self.real_path.basename)
+        new_path.assert_not_exists()
+        self.rename_file(new_path.absolute_path, move=True, commit=commit)
 
     #@decorators.time_me
     @decorators.required_feature('photo.reload_metadata')
