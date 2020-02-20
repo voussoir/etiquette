@@ -710,6 +710,31 @@ class PDBSQLMixin:
         tables = set(row[0] for row in cur.fetchall())
         return tables
 
+    def release_savepoint(self, savepoint, allow_commit=False):
+        '''
+        Releasing a savepoint removes that savepoint from the timeline, so that
+        you can no longer roll back to it. Then your choices are to commit
+        everything, or roll back to a previous point. If you release the
+        earliest savepoint, the database will commit.
+        '''
+        if savepoint not in self.savepoints:
+            self.log.warn('Tried to release nonexistent savepoint %s.', savepoint)
+            return
+
+        is_commit = savepoint == self.savepoints[0]
+        if is_commit and not allow_commit:
+            self.log.debug('Not committing %s without allow_commit=True.', savepoint)
+            return
+
+        if is_commit:
+            # We want to perform the on_commit_queue so let's use our commit
+            # method instead of allowing sql's release to commit.
+            self.commit()
+        else:
+            self.log.debug('Releasing savepoint %s', savepoint)
+            self.sql_execute(f'RELEASE "{savepoint}"')
+            self.savepoints = helpers.slice_before(self.savepoints, savepoint)
+
     def rollback(self, savepoint=None):
         '''
         Given a savepoint, roll the database back to the moment before that
