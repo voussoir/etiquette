@@ -90,7 +90,7 @@ class GroupableMixin:
             parent.add_children(children)
 
     @decorators.transaction
-    def add_child(self, member, *, commit=True):
+    def add_child(self, member, *, commit=False):
         self.assert_same_type(member)
 
         if member == self:
@@ -117,7 +117,7 @@ class GroupableMixin:
             self.photodb.commit(message='add to group')
 
     @decorators.transaction
-    def add_children(self, members, *, commit=True):
+    def add_children(self, members, *, commit=False):
         for member in members:
             self.add_child(member, commit=False)
 
@@ -131,7 +131,7 @@ class GroupableMixin:
             raise TypeError(f'Objects must belong to the same PhotoDB.')
 
     @decorators.transaction
-    def delete(self, *, delete_children=False, commit=True):
+    def delete(self, *, delete_children=False, commit=False):
         '''
         Delete this object's relationships to other groupables.
         Any unique / specific deletion methods should be written within the
@@ -196,7 +196,7 @@ class GroupableMixin:
         return row is not None
 
     @decorators.transaction
-    def remove_child(self, member, *, commit=True):
+    def remove_child(self, member, *, commit=False):
         if not self.has_child(member):
             return
 
@@ -298,7 +298,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def add_associated_directory(self, path, *, commit=True):
+    def add_associated_directory(self, path, *, commit=False):
         '''
         Add a directory from which this album will pull files during rescans.
         These relationships are not unique and multiple albums
@@ -326,7 +326,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def add_photo(self, photo, *, commit=True):
+    def add_photo(self, photo, *, commit=False):
         if self.has_photo(photo):
             return
 
@@ -337,7 +337,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def add_photos(self, photos, *, commit=True):
+    def add_photos(self, photos, *, commit=False):
         existing_photos = set(self.get_photos())
         photos = set(photos)
         photos = photos.difference(existing_photos)
@@ -350,7 +350,7 @@ class Album(ObjectBase, GroupableMixin):
 
     # Photo.add_tag already has @required_feature
     @decorators.transaction
-    def add_tag_to_all(self, tag, *, nested_children=True, commit=True):
+    def add_tag_to_all(self, tag, *, nested_children=True, commit=False):
         '''
         Add this tag to every photo in the album. Saves you from having to
         write the for-loop yourself.
@@ -373,7 +373,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def delete(self, *, delete_children=False, commit=True):
+    def delete(self, *, delete_children=False, commit=False):
         self.photodb.log.debug('Deleting %s', self)
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
         self.photodb.sql_delete(table='album_associated_directories', pairs={'albumid': self.id})
@@ -392,7 +392,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def edit(self, title=None, description=None, *, commit=True):
+    def edit(self, title=None, description=None, *, commit=False):
         '''
         Change the title or description. Leave None to keep current value.
         '''
@@ -497,7 +497,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def remove_photo(self, photo, *, commit=True):
+    def remove_photo(self, photo, *, commit=False):
         self._remove_photo(photo)
 
         if commit:
@@ -505,7 +505,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def remove_photos(self, photos, *, commit=True):
+    def remove_photos(self, photos, *, commit=False):
         existing_photos = set(self.get_photos())
         photos = set(photos)
         photos = photos.intersection(existing_photos)
@@ -613,7 +613,7 @@ class Bookmark(ObjectBase):
 
     @decorators.required_feature('bookmark.edit')
     @decorators.transaction
-    def delete(self, *, commit=True):
+    def delete(self, *, commit=False):
         self.photodb.sql_delete(table='bookmarks', pairs={'id': self.id})
         self._uncache()
         if commit:
@@ -621,7 +621,7 @@ class Bookmark(ObjectBase):
 
     @decorators.required_feature('bookmark.edit')
     @decorators.transaction
-    def edit(self, title=None, url=None, *, commit=True):
+    def edit(self, title=None, url=None, *, commit=False):
         '''
         Change the title or URL. Leave None to keep current.
         '''
@@ -708,7 +708,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.add_remove_tag')
     @decorators.transaction
-    def add_tag(self, tag, *, commit=True):
+    def add_tag(self, tag, *, commit=False):
         tag = self.photodb.get_tag(name=tag)
 
         existing = self.has_tag(tag, check_children=False)
@@ -760,7 +760,7 @@ class Photo(ObjectBase):
 
     # Photo.add_tag already has required_feature add_remove_tag
     # Photo.add_tag already has @transaction.
-    def copy_tags(self, other_photo, *, commit=True):
+    def copy_tags(self, other_photo, *, commit=False):
         '''
         Take all of the tags owned by other_photo and apply them to this photo.
         '''
@@ -771,7 +771,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def delete(self, *, delete_file=False, commit=True):
+    def delete(self, *, delete_file=False, commit=False):
         '''
         Delete the Photo and its relation to any tags and albums.
         '''
@@ -800,7 +800,7 @@ class Photo(ObjectBase):
     #@decorators.time_me
     @decorators.required_feature('photo.generate_thumbnail')
     @decorators.transaction
-    def generate_thumbnail(self, *, commit=True, **special):
+    def generate_thumbnail(self, *, commit=False, **special):
         '''
         special:
             For videos, you can provide a `timestamp` to take the thumbnail at.
@@ -921,7 +921,7 @@ class Photo(ObjectBase):
 
     # Photo.rename_file already has @required_feature
     # Photo.rename_file already has @transaction
-    def move_file(self, directory, commit=True):
+    def move_file(self, directory, commit=False):
         directory = pathclass.Path(directory)
         directory.assert_is_directory()
         new_path = directory.with_child(self.real_path.basename)
@@ -931,7 +931,7 @@ class Photo(ObjectBase):
     #@decorators.time_me
     @decorators.required_feature('photo.reload_metadata')
     @decorators.transaction
-    def reload_metadata(self, *, commit=True):
+    def reload_metadata(self, *, commit=False):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
         '''
@@ -993,7 +993,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def relocate(self, new_filepath, *, allow_duplicates=False, commit=True):
+    def relocate(self, new_filepath, *, allow_duplicates=False, commit=False):
         '''
         Point the Photo object to a different filepath.
 
@@ -1023,7 +1023,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.add_remove_tag')
     @decorators.transaction
-    def remove_tag(self, tag, *, commit=True):
+    def remove_tag(self, tag, *, commit=False):
         tag = self.photodb.get_tag(name=tag)
 
         self.photodb.log.debug('Removing %s from %s', tag, self)
@@ -1044,7 +1044,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def rename_file(self, new_filename, *, move=False, commit=True):
+    def rename_file(self, new_filename, *, move=False, commit=False):
         '''
         Rename the file on the disk as well as in the database.
 
@@ -1108,7 +1108,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def set_searchhidden(self, searchhidden, *, commit=True):
+    def set_searchhidden(self, searchhidden, *, commit=False):
         data = {
             'id': self.id,
             'searchhidden': bool(searchhidden),
@@ -1122,7 +1122,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def set_override_filename(self, new_filename, *, commit=True):
+    def set_override_filename(self, new_filename, *, commit=False):
         if new_filename is not None:
             cleaned = helpers.remove_path_badchars(new_filename)
             cleaned = cleaned.strip()
@@ -1218,7 +1218,7 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def add_synonym(self, synname, *, commit=True):
+    def add_synonym(self, synname, *, commit=False):
         synname = self.photodb.normalize_tagname(synname)
 
         if synname == self.name:
@@ -1243,7 +1243,7 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def convert_to_synonym(self, mastertag, *, commit=True):
+    def convert_to_synonym(self, mastertag, *, commit=False):
         '''
         Convert this tag into a synonym for a different tag.
         All photos which possess the current tag will have it replaced with the
@@ -1308,7 +1308,7 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def delete(self, *, delete_children=False, commit=True):
+    def delete(self, *, delete_children=False, commit=False):
         self.photodb.log.debug('Deleting %s', self)
         self.photodb._cached_frozen_children = None
         GroupableMixin.delete(self, delete_children=delete_children, commit=False)
@@ -1321,7 +1321,7 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def edit(self, description=None, *, commit=True):
+    def edit(self, description=None, *, commit=False):
         '''
         Change the description. Leave None to keep current value.
         '''
@@ -1360,7 +1360,7 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def remove_synonym(self, synname, *, commit=True):
+    def remove_synonym(self, synname, *, commit=False):
         '''
         Delete a synonym.
         This will have no effect on photos or other synonyms because
@@ -1386,7 +1386,7 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def rename(self, new_name, *, apply_to_synonyms=True, commit=True):
+    def rename(self, new_name, *, apply_to_synonyms=True, commit=False):
         '''
         Rename the tag. Does not affect its relation to Photos or tag groups.
         '''
@@ -1472,7 +1472,7 @@ class User(ObjectBase):
 
     @decorators.required_feature('user.edit')
     @decorators.transaction
-    def set_display_name(self, display_name, *, commit=True):
+    def set_display_name(self, display_name, *, commit=False):
         display_name = self.normalize_display_name(
             display_name,
             max_length=self.photodb.config['user']['max_display_name_length'],

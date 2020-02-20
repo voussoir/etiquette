@@ -83,7 +83,7 @@ class PDBAlbumMixin:
             *,
             associated_directory=None,
             author=None,
-            commit=True,
+            commit=False,
             photos=None,
         ):
         '''
@@ -136,7 +136,7 @@ class PDBBookmarkMixin:
 
     @decorators.required_feature('bookmark.new')
     @decorators.transaction
-    def new_bookmark(self, url, title=None, *, author=None, commit=True):
+    def new_bookmark(self, url, title=None, *, author=None, commit=False):
         # These might raise exceptions.
         title = objects.Bookmark.normalize_title(title)
         url = objects.Bookmark.normalize_url(url)
@@ -217,7 +217,7 @@ class PDBPhotoMixin:
             *,
             allow_duplicates=False,
             author=None,
-            commit=True,
+            commit=False,
             do_metadata=True,
             do_thumbnail=True,
             searchhidden=False,
@@ -283,7 +283,7 @@ class PDBPhotoMixin:
         return photo
 
     @decorators.transaction
-    def purge_deleted_files(self, photos=None, *, commit=True):
+    def purge_deleted_files(self, photos=None, *, commit=False):
         '''
         Delete Photos whose corresponding file on disk is missing.
 
@@ -303,7 +303,7 @@ class PDBPhotoMixin:
             self.commit(message='purge deleted photos')
 
     @decorators.transaction
-    def purge_empty_albums(self, albums=None, *, commit=True):
+    def purge_empty_albums(self, albums=None, *, commit=False):
         if albums is None:
             to_check = set(self.get_albums())
         else:
@@ -912,7 +912,7 @@ class PDBTagMixin:
 
     @decorators.required_feature('tag.new')
     @decorators.transaction
-    def new_tag(self, tagname, description=None, *, author=None, commit=True):
+    def new_tag(self, tagname, description=None, *, author=None, commit=False):
         '''
         Register a new tag and return the Tag object.
         '''
@@ -1074,7 +1074,7 @@ class PDBUserMixin:
 
     @decorators.required_feature('user.new')
     @decorators.transaction
-    def register_user(self, username, password, *, display_name=None, commit=True):
+    def register_user(self, username, password, *, display_name=None, commit=False):
         # These might raise exceptions.
         self.assert_valid_username(username)
 
@@ -1125,7 +1125,7 @@ class PDBUtilMixin:
             new_photo_kwargs={},
             new_photo_ratelimit=None,
             recurse=True,
-            commit=True,
+            commit=False,
         ):
         '''
         Create an album, and add the directory's contents to it recursively.
@@ -1246,7 +1246,7 @@ class PDBUtilMixin:
         else:
             return None
 
-    def easybake(self, ebstring, author=None, *, commit=True):
+    def easybake(self, ebstring, author=None, *, commit=False):
         '''
         Easily create tags, groups, and synonyms with a string like
         "group1.group2.tag+synonym"
