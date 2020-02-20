@@ -694,8 +694,9 @@ class PDBSQLMixin:
             self.log.debug('Committing - %s.', message)
 
         while len(self.on_commit_queue) > 0:
-            task = self.on_commit_queue.pop()
+            task = self.on_commit_queue.pop(-1)
             if isinstance(task, str):
+                # savepoints.
                 continue
             args = task.get('args', [])
             kwargs = task.get('kwargs', {})
