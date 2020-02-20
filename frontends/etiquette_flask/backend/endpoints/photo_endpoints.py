@@ -84,7 +84,7 @@ def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
             photo.add_tag(tag)
         elif add_or_remove == 'remove':
             photo.remove_tag(tag)
-    common.P.commit()
+    common.P.commit('photo add remove tag core')
 
     response = {'action': add_or_remove, 'tagname': tag.name}
     return jsonify.make_json_response(response)
@@ -144,7 +144,7 @@ def post_photo_generate_thumbnail(photo_id):
     special.pop('commit', None)
 
     photo = common.P_photo(photo_id, response_type='json')
-    photo.generate_thumbnail(**special)
+    photo.generate_thumbnail(commit=True, **special)
 
     response = jsonify.make_json_response({})
     return response
@@ -166,7 +166,7 @@ def post_photo_refresh_metadata_core(photo_ids):
             except Exception:
                 traceback.print_exc()
 
-    common.P.commit()
+    common.P.commit('photo refresh metadata core')
 
     return jsonify.make_json_response({})
 
@@ -191,7 +191,7 @@ def post_photo_searchhidden_core(photo_ids, searchhidden):
     for photo in photos:
         photo.set_searchhidden(searchhidden)
 
-    common.P.commit()
+    common.P.commit('photo set searchhidden core')
 
     return jsonify.make_json_response({})
 

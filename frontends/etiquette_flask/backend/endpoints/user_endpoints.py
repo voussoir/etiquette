@@ -117,7 +117,7 @@ def post_register():
         }
         return jsonify.make_json_response(response, status=422)
 
-    user = common.P.new_user(username, password_1, display_name=display_name)
+    user = common.P.new_user(username, password_1, display_name=display_name, commit=True)
 
     session = sessions.Session(request, user)
     session_manager.add(session)

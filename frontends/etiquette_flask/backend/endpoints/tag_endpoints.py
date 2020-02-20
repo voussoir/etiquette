@@ -40,7 +40,7 @@ def post_tag_edit(specific_tag):
         tag.rename(name)
 
     description = request.form.get('description', None)
-    tag.edit(description=description)
+    tag.edit(description=description, commit=True)
 
     response = etiquette.jsonify.tag(tag)
     response = jsonify.make_json_response(response)
@@ -53,7 +53,7 @@ def post_tag_edit(specific_tag):
 def post_tag_add_child(tagname):
     parent = common.P_tag(tagname)
     child = common.P_tag(request.form['child_name'])
-    parent.add_child(child)
+    parent.add_child(child, commit=True)
     response = {'action': 'add_child', 'tagname': f'{parent.name}.{child.name}'}
     return jsonify.make_json_response(response)
 
@@ -64,7 +64,7 @@ def post_tag_add_child(tagname):
 def post_tag_remove_child(tagname):
     parent = common.P_tag(tagname)
     child = common.P_tag(request.form['child_name'])
-    parent.remove_child(child)
+    parent.remove_child(child, commit=True)
     response = {'action': 'remove_child', 'tagname': f'{parent.name}.{child.name}'}
     return jsonify.make_json_response(response)
 
@@ -141,7 +141,7 @@ def post_tag_create():
     name = request.form['name']
     description = request.form.get('description', None)
 
-    tag = P.new_tag(name, description, author=session_manager.get(request).user)
+    tag = P.new_tag(name, description, author=session_manager.get(request).user, commit=True)
     response = etiquette.jsonify.tag(tag)
     return jsonify.make_json_response(response)
 
@@ -152,7 +152,7 @@ def post_tag_create():
 def post_tag_easybake():
     easybake_string = request.form['easybake_string']
 
-    notes = common.P.easybake(easybake_string, author=session_manager.get(request).user)
+    notes = common.P.easybake(easybake_string, author=session_manager.get(request).user, commit=True)
     notes = [{'action': action, 'tagname': tagname} for (action, tagname) in notes]
     return jsonify.make_json_response(notes)
 
@@ -161,7 +161,7 @@ def post_tag_easybake():
 @session_manager.give_token
 def post_tag_delete(tagname):
     tag = common.P_tag(tagname)
-    tag.delete()
+    tag.delete(commit=True)
     response = {'action': 'delete_tag', 'tagname': tag.name}
     return jsonify.make_json_response(response)
 
@@ -173,7 +173,7 @@ def post_tag_remove_synonym(tagname):
     syn_name = request.form['syn_name']
 
     master_tag = common.P_tag(tagname)
-    master_tag.remove_synonym(syn_name)
+    master_tag.remove_synonym(syn_name, commit=True)
 
     response = {'action':'delete_synonym', 'synonym': syn_name}
     return jsonify.make_json_response(response)
