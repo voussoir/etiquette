@@ -735,11 +735,8 @@ class Photo(ObjectBase):
 
         if delete_file:
             path = self.real_path.absolute_path
-            if commit:
-                os.remove(path)
-            else:
-                queue_action = {'action': os.remove, 'args': [path]}
-                self.photodb.on_commit_queue.append(queue_action)
+            queue_action = {'action': os.remove, 'args': [path]}
+            self.photodb.on_commit_queue.append(queue_action)
         self._uncache()
 
     @property
@@ -1039,12 +1036,8 @@ class Photo(ObjectBase):
             args = [old_path.absolute_path]
 
         self._uncache()
-        if commit:
-            action(*args)
-            self.photodb.commit(message='rename file')
-        else:
-            queue_action = {'action': action, 'args': args}
-            self.photodb.on_commit_queue.append(queue_action)
+        queue_action = {'action': action, 'args': args}
+        self.photodb.on_commit_queue.append(queue_action)
 
         self.__reinit__()
 
