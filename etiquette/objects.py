@@ -1013,11 +1013,14 @@ class Photo(ObjectBase):
 
         os.makedirs(new_path.parent.absolute_path, exist_ok=True)
 
+        # The plan is to make a hardlink now, then delete the original file
+        # during commit. This only applies to normcase != normcase, because on
+        # case-insensitive systems (Windows), if we're trying to rename "AFILE"
+        # to "afile", we will not be able to hardlink nor copy the file to the
+        # new name, we'll just want to do an os.rename during commit.
         if new_path.normcase != old_path.normcase:
-            # It's possible on case-insensitive systems to have the paths point
-            # to the same place while being differently cased, thus we couldn't
-            # make the intermediate link.
-            # Instead, we will do a simple rename in just a moment.
+            # If we're on the same partition, make a hardlink.
+            # Otherwise make a copy.
             try:
                 os.link(old_path.absolute_path, new_path.absolute_path)
             except OSError:
