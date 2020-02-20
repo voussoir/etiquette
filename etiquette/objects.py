@@ -119,7 +119,7 @@ class GroupableMixin:
     @decorators.transaction
     def add_children(self, members, *, commit=False):
         for member in members:
-            self.add_child(member, commit=False)
+            self.add_child(member)
 
         if commit:
             self.photodb.commit(message='add multiple to group')
@@ -147,7 +147,7 @@ class GroupableMixin:
         self.photodb._cached_frozen_children = None
         if delete_children:
             for child in self.get_children():
-                child.delete(delete_children=True, commit=False)
+                child.delete(delete_children=True)
         else:
             self._lift_children()
 
@@ -366,7 +366,7 @@ class Album(ObjectBase, GroupableMixin):
             photos = self.get_photos()
 
         for photo in photos:
-            photo.add_tag(tag, commit=False)
+            photo.add_tag(tag)
 
         if commit:
             self.photodb.commit(message='add tag to all')
@@ -375,7 +375,7 @@ class Album(ObjectBase, GroupableMixin):
     @decorators.transaction
     def delete(self, *, delete_children=False, commit=False):
         self.photodb.log.debug('Deleting %s', self)
-        GroupableMixin.delete(self, delete_children=delete_children, commit=False)
+        GroupableMixin.delete(self, delete_children=delete_children)
         self.photodb.sql_delete(table='album_associated_directories', pairs={'albumid': self.id})
         self.photodb.sql_delete(table='album_photo_rel', pairs={'albumid': self.id})
         self.photodb.sql_delete(table='albums', pairs={'id': self.id})
@@ -726,7 +726,7 @@ class Photo(ObjectBase):
         for parent in tag.walk_parents():
             if self.has_tag(parent, check_children=False):
                 self.photodb.log.debug('Preferring new %s over %s', tag, parent)
-                self.remove_tag(parent, commit=False)
+                self.remove_tag(parent)
 
         self.photodb.log.debug('Applying %s to %s', tag, self)
 
@@ -765,7 +765,7 @@ class Photo(ObjectBase):
         Take all of the tags owned by other_photo and apply them to this photo.
         '''
         for tag in other_photo.get_tags():
-            self.add_tag(tag, commit=False)
+            self.add_tag(tag)
         if commit:
             self.photodb.commit(message='copy tags')
 
@@ -1299,10 +1299,10 @@ class Tag(ObjectBase, GroupableMixin):
         # For photos that have the old tag and DO already have the new one,
         # don't worry because the old rels will be deleted when the tag is
         # deleted.
-        self.delete(commit=False)
+        self.delete()
 
         # Enjoy your new life as a monk.
-        mastertag.add_synonym(self.name, commit=False)
+        mastertag.add_synonym(self.name)
         if commit:
             self.photodb.commit(message='convert to synonym')
 
@@ -1311,7 +1311,7 @@ class Tag(ObjectBase, GroupableMixin):
     def delete(self, *, delete_children=False, commit=False):
         self.photodb.log.debug('Deleting %s', self)
         self.photodb._cached_frozen_children = None
-        GroupableMixin.delete(self, delete_children=delete_children, commit=False)
+        GroupableMixin.delete(self, delete_children=delete_children)
         self.photodb.sql_delete(table='photo_tag_rel', pairs={'tagid': self.id})
         self.photodb.sql_delete(table='tag_synonyms', pairs={'mastername': self.name})
         self.photodb.sql_delete(table='tags', pairs={'id': self.id})

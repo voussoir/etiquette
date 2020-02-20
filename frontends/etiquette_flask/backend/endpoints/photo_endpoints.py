@@ -81,9 +81,9 @@ def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
 
     for photo in photos:
         if add_or_remove == 'add':
-            photo.add_tag(tag, commit=False)
+            photo.add_tag(tag)
         elif add_or_remove == 'remove':
-            photo.remove_tag(tag, commit=False)
+            photo.remove_tag(tag)
     common.P.commit()
 
     response = {'action': add_or_remove, 'tagname': tag.name}
@@ -159,10 +159,10 @@ def post_photo_refresh_metadata_core(photo_ids):
     for photo in photos:
         common.P.caches['photo'].remove(photo.id)
         photo = common.P_photo(photo.id, response_type='json')
-        photo.reload_metadata(commit=False)
+        photo.reload_metadata()
         if photo.thumbnail is None:
             try:
-                photo.generate_thumbnail(commit=False)
+                photo.generate_thumbnail()
             except Exception:
                 traceback.print_exc()
 
@@ -189,7 +189,7 @@ def post_photo_searchhidden_core(photo_ids, searchhidden):
     photos = list(common.P_photos(photo_ids, response_type='json'))
 
     for photo in photos:
-        photo.set_searchhidden(searchhidden, commit=False)
+        photo.set_searchhidden(searchhidden)
 
     common.P.commit()
 

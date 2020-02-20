@@ -110,11 +110,11 @@ class PDBAlbumMixin:
         album = self.get_cached_instance('album', data)
 
         if associated_directory is not None:
-            album.add_associated_directory(associated_directory, commit=False)
+            album.add_associated_directory(associated_directory)
 
         if photos is not None:
             photos = [self.get_photo(photo) for photo in photos]
-            album.add_photos(photos, commit=False)
+            album.add_photos(photos)
 
         if commit:
             self.commit(message='new album')
@@ -269,14 +269,14 @@ class PDBPhotoMixin:
         photo = self.get_cached_instance('photo', data)
 
         if do_metadata:
-            photo.reload_metadata(commit=False)
+            photo.reload_metadata()
         if do_thumbnail:
-            photo.generate_thumbnail(commit=False)
+            photo.generate_thumbnail()
 
         tags = tags or []
         tags = [self.get_tag(name=tag) for tag in tags]
         for tag in tags:
-            photo.add_tag(tag, commit=False)
+            photo.add_tag(tag)
 
         if commit:
             self.commit(message='new photo')
@@ -297,7 +297,7 @@ class PDBPhotoMixin:
         for photo in photos:
             if photo.real_path.exists:
                 continue
-            photo.delete(commit=False)
+            photo.delete()
 
         if commit:
             self.commit(message='purge deleted photos')
@@ -317,7 +317,7 @@ class PDBPhotoMixin:
                 continue
             # This may have been the last child of an otherwise empty parent.
             to_check.update(album.get_parents())
-            album.delete(commit=False)
+            album.delete()
 
         if commit:
             self.commit(message='purge empty albums')
@@ -1176,7 +1176,7 @@ class PDBUtilMixin:
                 try:
                     photo = self.get_photo_by_path(filepath)
                 except exceptions.NoSuchPhoto:
-                    photo = self.new_photo(filepath.absolute_path, commit=False, **new_photo_kwargs)
+                    photo = self.new_photo(filepath.absolute_path, **new_photo_kwargs)
                     if new_photo_ratelimit is not None:
                         new_photo_ratelimit.limit()
 
@@ -1193,7 +1193,6 @@ class PDBUtilMixin:
             except exceptions.NoSuchAlbum:
                 current_album = self.new_album(
                     associated_directory=current_directory.absolute_path,
-                    commit=False,
                     title=current_directory.basename,
                 )
             albums_by_path[current_directory.absolute_path] = current_album
@@ -1207,7 +1206,7 @@ class PDBUtilMixin:
             if not current_album.has_any_parent():
                 parent = albums_by_path.get(current_directory.parent.absolute_path, None)
                 if parent is not None:
-                    parent.add_child(current_album, commit=False)
+                    parent.add_child(current_album)
 
         directory = _normalize_directory(directory)
         exclude_directories = _normalize_exclude_directories(exclude_directories)
@@ -1236,7 +1235,7 @@ class PDBUtilMixin:
             current_album = create_or_fetch_current_album(albums_by_path, current_directory)
             orphan_join_parent_album(albums_by_path, current_album, current_directory)
 
-            current_album.add_photos(photos, commit=False)
+            current_album.add_photos(photos)
 
         if commit:
             self.commit(message='digest directory')
@@ -1260,7 +1259,7 @@ class PDBUtilMixin:
                 item = self.get_tag(name=name)
                 note = ('existing_tag', item.name)
             except exceptions.NoSuchTag:
-                item = self.new_tag(name, author=author, commit=False)
+                item = self.new_tag(name, author=author)
                 note = ('new_tag', item.name)
             output_notes.append(note)
             return item
@@ -1278,7 +1277,7 @@ class PDBUtilMixin:
             tags = [create_or_get(t) for t in tag_parts]
             for (higher, lower) in zip(tags, tags[1:]):
                 try:
-                    higher.add_child(lower, commit=False)
+                    higher.add_child(lower)
                     note = ('join_group', f'{higher.name}.{lower.name}')
                     output_notes.append(note)
                 except exceptions.GroupExists:

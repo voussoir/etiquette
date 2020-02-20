@@ -37,7 +37,7 @@ def post_tag_edit(specific_tag):
     tag = common.P_tag(specific_tag)
     name = request.form.get('name', '').strip()
     if name:
-        tag.rename(name, commit=False)
+        tag.rename(name)
 
     description = request.form.get('description', None)
     tag.edit(description=description)
