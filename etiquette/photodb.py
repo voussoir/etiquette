@@ -671,6 +671,7 @@ class PDBSQLMixin:
     def __init__(self):
         super().__init__()
         self.on_commit_queue = []
+        self.on_rollback_queue = []
         self.savepoints = []
 
     def assert_table_exists(self, table):
@@ -689,6 +690,7 @@ class PDBSQLMixin:
             args = task.get('args', [])
             kwargs = task.get('kwargs', {})
             task['action'](*args, **kwargs)
+
         self.savepoints.clear()
         self.sql.commit()
 
@@ -739,6 +741,17 @@ class PDBSQLMixin:
             self.log.debug('Nothing to roll back.')
             return
 
+        while len(self.on_rollback_queue) > 0:
+            task = self.on_rollback_queue.pop(-1)
+            if task == savepoint:
+                break
+            if isinstance(task, str):
+                # Intermediate savepoints.
+                continue
+            args = task.get('args', [])
+            kwargs = task.get('kwargs', {})
+            task['action'](*args, **kwargs)
+
         if savepoint is not None:
             self.log.debug('Rolling back to %s', savepoint)
             self.sql_execute(f'ROLLBACK TO "{savepoint}"')
@@ -761,6 +774,7 @@ class PDBSQLMixin:
         self.sql.execute(query)
         self.savepoints.append(savepoint_id)
         self.on_commit_queue.append(savepoint_id)
+        self.on_rollback_queue.append(savepoint_id)
         return savepoint_id
 
     def sql_delete(self, table, pairs):

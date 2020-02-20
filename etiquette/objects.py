@@ -1033,16 +1033,22 @@ class Photo(ObjectBase):
 
         if new_path.normcase == old_path.normcase:
             # If they are equivalent but differently cased, just rename.
-            action = os.rename
-            args = [old_path.absolute_path, new_path.absolute_path]
+            self.photodb.on_commit_queue.append({
+                'action': os.rename,
+                'args': [old_path.absolute_path, new_path.absolute_path],
+            })
         else:
             # Delete the original, leaving only the new copy / hardlink.
-            action = os.remove
-            args = [old_path.absolute_path]
+            self.photodb.on_commit_queue.append({
+                'action': os.remove,
+                'args': [old_path.absolute_path],
+            })
+            self.photodb.on_rollback_queue.append({
+                'action': os.remove,
+                'args': [new_path.absolute_path],
+            })
 
         self._uncache()
-        queue_action = {'action': action, 'args': args}
-        self.photodb.on_commit_queue.append(queue_action)
 
         self.__reinit__()
 
