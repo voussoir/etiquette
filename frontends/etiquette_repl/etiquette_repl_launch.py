@@ -6,7 +6,6 @@ logging.getLogger().addHandler(handler)
 
 import argparse
 import code
-import os
 import sys
 import traceback
 
@@ -23,7 +22,7 @@ def easytagger():
             i = i.split('?')[1] or None
             try:
                 etiquette.tag_export.stdout([P.get_tag(name=i)])
-            except:
+            except Exception:
                 traceback.print_exc()
         else:
             P.easybake(i)
@@ -42,7 +41,6 @@ def erepl_argparse(args):
         exec(args.exec_statement)
         P.commit()
     else:
-        import code
         while True:
             try:
                 code.interact(banner='', local=dict(globals(), **locals()))

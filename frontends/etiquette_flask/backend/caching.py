@@ -1,10 +1,8 @@
 import flask; from flask import request
 import functools
-import hashlib
 import time
 
 from voussoirkit import cacheclass
-from voussoirkit import pathclass
 
 import etiquette
 

@@ -1,5 +1,4 @@
 import flask; from flask import request
-import os
 import mimetypes
 import traceback
 

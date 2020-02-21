@@ -1195,7 +1195,6 @@ class Tag(ObjectBase, GroupableMixin):
 
         # Migrate the old tag's synonyms to the new one
         # UPDATE is safe for this operation because there is no chance of duplicates.
-        my_synonyms = self.get_synonyms()
         data = {
             'mastername': (self.name, mastertag.name),
         }

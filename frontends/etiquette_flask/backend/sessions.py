@@ -1,7 +1,5 @@
 import flask; from flask import request
 import functools
-import math
-import os
 import werkzeug.wrappers
 
 from voussoirkit import cacheclass

@@ -474,7 +474,6 @@ class PDBPhotoMixin:
         )
         (tag_musts, tag_mays, tag_forbids, tag_expression) = tags_fixed
 
-
         if tag_expression:
             frozen_children = self.get_cached_frozen_children()
             tag_expression_tree = searchhelpers.tag_expression_tree_builder(

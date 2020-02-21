@@ -1,5 +1,4 @@
 import flask; from flask import request
-import json
 
 import etiquette
 
@@ -76,7 +75,7 @@ def get_all_tag_names():
     all_tags = common.P.get_all_tag_names()
     all_synonyms = common.P.get_all_synonyms()
     response = {'tags': all_tags, 'synonyms': all_synonyms}
-    return json.dumps(response)
+    return jsonify.make_json_response(response)
 
 @site.route('/tag/<specific_tag_name>')
 @site.route('/tags')
@@ -141,7 +140,7 @@ def post_tag_create():
     name = request.form['name']
     description = request.form.get('description', None)
 
-    tag = P.new_tag(name, description, author=session_manager.get(request).user, commit=True)
+    tag = common.P.new_tag(name, description, author=session_manager.get(request).user, commit=True)
     response = etiquette.jsonify.tag(tag)
     return jsonify.make_json_response(response)
 
@@ -175,5 +174,5 @@ def post_tag_remove_synonym(tagname):
     master_tag = common.P_tag(tagname)
     master_tag.remove_synonym(syn_name, commit=True)
 
-    response = {'action':'delete_synonym', 'synonym': syn_name}
+    response = {'action': 'delete_synonym', 'synonym': syn_name}
     return jsonify.make_json_response(response)

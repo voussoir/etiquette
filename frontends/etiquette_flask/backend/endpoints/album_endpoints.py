@@ -1,7 +1,5 @@
 import flask; from flask import request
-import os
 import urllib.parse
-import zipstream
 
 import etiquette
 

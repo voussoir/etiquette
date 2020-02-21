@@ -3,8 +3,6 @@ import jinja2.filters
 
 import voussoirkit.bytestring
 
-import etiquette
-
 
 def bytestring(x):
     try:
