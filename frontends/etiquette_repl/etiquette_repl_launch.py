@@ -10,6 +10,8 @@ import os
 import sys
 import traceback
 
+from voussoirkit import getpermission
+
 import etiquette
 
 P = etiquette.photodb.PhotoDB()
@@ -38,9 +40,19 @@ get = P.get_tag
 def erepl_argparse(args):
     if args.exec_statement:
         exec(args.exec_statement)
+        P.commit()
     else:
         import code
-        code.interact(banner='', local=dict(globals(), **locals()))
+        while True:
+            try:
+                code.interact(banner='', local=dict(globals(), **locals()))
+            except SystemExit:
+                pass
+            if len(P.savepoints) == 0:
+                break
+            print('You have uncommited changes, are you sure you want to quit?')
+            if getpermission.getpermission():
+                break
 
 def main(argv):
     parser = argparse.ArgumentParser()
