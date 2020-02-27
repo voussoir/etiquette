@@ -147,6 +147,8 @@
 <div id="content_body">
 <div id="left">
     <div id="editor_area">
+        <h3>{{photo.basename}}</h3>
+
         <!-- TAG INFO -->
         <h4>Tags</h4>
         <ul id="this_tags">
@@ -171,7 +173,6 @@
             File info
         </h4>
         <ul id="metadata">
-            <li>Filename: {{photo.basename}}</li>
             {% set author = photo.get_author() %}
             {% if author is not none %}
                 <li>Author: <a href="/user/{{author.username}}">{{author.display_name}}</a></li>
