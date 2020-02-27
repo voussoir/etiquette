@@ -11,6 +11,9 @@ pillow
 # For probing and thumbnailing video files.
 git+https://github.com/senko/python-video-converter.git
 
+# Supports the recycle_instead_of_delete config.
+send2trash
+
 # For serving downloadable zip files as a generator.
 zipstream
 

@@ -5,6 +5,7 @@ but are returned by the PDB accesses.
 import os
 import PIL.Image
 import string
+import send2trash
 import traceback
 
 from voussoirkit import bytestring
@@ -735,7 +736,13 @@ class Photo(ObjectBase):
 
         if delete_file:
             path = self.real_path.absolute_path
-            queue_action = {'action': os.remove, 'args': [path]}
+            if self.photodb.config['recycle_instead_of_delete']:
+                self.photodb.log.debug('Recycling %s', path)
+                action = send2trash.send2trash
+            else:
+                self.photodb.log.debug('Deleting %s', path)
+                action = os.remove
+            queue_action = {'action': action, 'args': [path]}
             self.photodb.on_commit_queue.append(queue_action)
         self._uncache()
 

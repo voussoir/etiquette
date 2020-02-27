@@ -316,6 +316,8 @@ DEFAULT_CONFIGURATION = {
     'thumbnail_width': 400,
     'thumbnail_height': 400,
 
+    'recycle_instead_of_delete': True,
+
     'motd_strings': [
         'Good morning, Paul. What will your first sequence of the day be?',
     ],
