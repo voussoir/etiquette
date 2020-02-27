@@ -105,7 +105,12 @@
     position: absolute;
     right: 8px;
     top: 8px;
-    background-color: var(--color_theme_primary);
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    /*background-color: var(--color_theme_primary);*/
 }
 
 @media screen and (max-width: 800px)
@@ -204,11 +209,13 @@
         </ul>
         {% endif %}
 
+        <!-- BEFORE & AFTER SEARCH LINKS -->
         <div id="before_after_links">
             <a href="/search?created=-{{photo.created}}">&larr;Before</a>
             <span> | </span>
             <a href="/search?created={{photo.created}}-&orderby=created-asc">After&rarr;</a>
         </div>
+
     </div>
     <div id="message_area"></div>
 </div>
@@ -239,6 +246,25 @@
         {% if photo.simple_mimetype == "video" %}
         <button id="generate_thumbnail_button" class="green_button button_with_spinner" data-onclick="generate_thumbnail_for_video(event)">Capture thumbnail</button>
         {% endif %}
+        <button
+        class="red_button button_with_confirm"
+        data-onclick="api.photos.delete(PHOTO_ID, false, api.photos.callback_go_to_search)"
+        data-prompt="Delete photo, keep file?"
+        data-confirm-class="red_button"
+        data-cancel-class="gray_button"
+        >
+            Remove
+        </button>
+
+        <button
+        class="red_button button_with_confirm"
+        data-onclick="api.photos.delete(PHOTO_ID, true, api.photos.callback_go_to_search)"
+        data-prompt="Delete file on disk?"
+        data-confirm-class="red_button"
+        data-cancel-class="gray_button"
+        >
+            Delete
+        </button>
     </div>
 </div>
 </div>
