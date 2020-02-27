@@ -48,10 +48,6 @@
     padding: 8px;
     word-wrap: break-word;
 }
-#refresh_metadata_button
-{
-    font-size: 11px;
-}
 #before_after_links
 {
     width: max-content;
@@ -173,7 +169,6 @@
         <!-- METADATA & DOWNLOAD -->
         <h4>
             File info
-            <button id="refresh_metadata_button" class="green_button" onclick="api.photos.refresh_metadata('{{photo.id}}', common.refresh);">refresh</button>
         </h4>
         <ul id="metadata">
             <li>Filename: {{photo.basename}}</li>
@@ -192,6 +187,7 @@
             {% endif %}
             <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as original filename</a></li>
             <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
+            <li><button id="refresh_metadata_button" class="green_button" onclick="api.photos.refresh_metadata('{{photo.id}}', common.refresh);">refresh</button></li>
         </ul>
 
         <div>
