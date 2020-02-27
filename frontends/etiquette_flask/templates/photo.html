@@ -189,11 +189,9 @@
             <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as original filename</a></li>
             <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
             <li><button id="refresh_metadata_button" class="green_button" onclick="api.photos.refresh_metadata('{{photo.id}}', common.refresh);">refresh</button></li>
+            <li><label class="photo_card" data-id="{{photo.id}}"><input type="checkbox" class="photo_card_selector_checkbox" onclick="photo_clipboard.on_photo_select(event)"/>Clipboard</label></li>
         </ul>
 
-        <div>
-            <label class="photo_card" data-id="{{photo.id}}"><input type="checkbox" class="photo_card_selector_checkbox" onclick="photo_clipboard.on_photo_select(event)"/>Clipboard</label>
-        </div>
 
         <!-- CONTAINING ALBUMS -->
         {% set albums = photo.get_containing_albums() %}
