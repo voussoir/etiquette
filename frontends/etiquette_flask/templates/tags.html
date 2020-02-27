@@ -125,6 +125,18 @@ h2, h3
                 </pre>
             </div>
             <button class="green_button editor_toolbox_placeholder">Edit</button>
+
+            <button
+            class="red_button button_with_confirm"
+            data-onclick="api.tags.delete('{{specific_tag.name}}', api.tags.callback_go_to_tags);"
+            data-prompt="Delete Tag?"
+            data-confirm="Delete"
+            data-confirm-class="red_button"
+            data-cancel-class="gray_button"
+            >
+            Delete
+            </button>
+
         </div>
 
         {% set parents = specific_tag.get_parents() %}

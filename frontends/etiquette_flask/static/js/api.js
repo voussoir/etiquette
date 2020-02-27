@@ -281,6 +281,18 @@ function remove_synonym(tag_name, syn_name, callback)
     common.post(url, data, callback);
 }
 
+api.tags.callback_go_to_tags =
+function callback_go_to_tags(response)
+{
+    if (response["meta"]["status"] == 200)
+    {
+        window.location.href = "/tags";
+    }
+    else
+    {
+        console.log(response);
+    }
+}
 
 /**************************************************************************************************/
 api.users = {};
