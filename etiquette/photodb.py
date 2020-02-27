@@ -1133,13 +1133,13 @@ class PDBUtilMixin:
             return directory
 
         def _normalize_exclude_directories(exclude_directories):
-            if exclude_directories is None:
-                exclude_directories = self.config['digest_exclude_dirs']
+            exclude_directories = exclude_directories or []
+            exclude_directories.extend(self.config['digest_exclude_dirs'])
             return exclude_directories
 
         def _normalize_exclude_filenames(exclude_filenames):
-            if exclude_filenames is None:
-                exclude_filenames = self.config['digest_exclude_files']
+            exclude_filenames = exclude_filenames or []
+            exclude_filenames.extend(self.config['digest_exclude_files'])
             return exclude_filenames
 
         def _normalize_new_photo_kwargs(new_photo_kwargs):
