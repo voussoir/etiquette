@@ -68,6 +68,19 @@ def get_thumbnail(photo_id):
         flask.abort(404, 'That file doesnt have a thumbnail')
     return common.send_file(path)
 
+# Photo create and delete ##########################################################################
+
+@site.route('/photo/<photo_id>/delete', methods=['POST'])
+@decorators.catch_etiquette_exception
+@session_manager.give_token
+def post_photo_delete(photo_id):
+    print(photo_id)
+    photo = common.P_photo(photo_id, response_type='json')
+    delete_file = request.form.get('delete_file', False)
+    delete_file = etiquette.helpers.truthystring(delete_file)
+    photo.delete(delete_file=delete_file, commit=True)
+    return jsonify.make_json_response({})
+
 # Photo tag operations #############################################################################
 
 @decorators.catch_etiquette_exception

@@ -165,6 +165,15 @@ function add_tag(photo_id, tagname, callback)
     common.post(url, data, callback);
 }
 
+api.photos.delete =
+function _delete(photo_id, delete_file, callback)
+{
+    var url = `/photo/${photo_id}/delete`;
+    var data = new FormData();
+    data.append("delete_file", delete_file);
+    common.post(url, data, callback);
+}
+
 api.photos.generate_thumbnail =
 function generate_thumbnail(photo_id, special, callback)
 {
@@ -191,6 +200,19 @@ function remove_tag(photo_id, tagname, callback)
     var data = new FormData();
     data.append("tagname", tagname);
     common.post(url, data, callback);
+}
+
+api.photos.callback_go_to_search =
+function callback_go_to_albums(response)
+{
+    if (response["meta"]["status"] == 200)
+    {
+        window.location.href = "/search";
+    }
+    else
+    {
+        console.log(response);
+    }
 }
 
 /**************************************************************************************************/
