@@ -61,7 +61,7 @@ def get_file(photo_id, basename=None):
 @site.route('/thumbnail/<photo_id>')
 def get_thumbnail(photo_id):
     photo_id = photo_id.split('.')[0]
-    photo = common.P_photo(photo_id)
+    photo = common.P_photo(photo_id, response_type='html')
     if photo.thumbnail:
         path = photo.thumbnail
     else:

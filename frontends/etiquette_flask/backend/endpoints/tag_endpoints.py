@@ -33,7 +33,7 @@ def get_tag_id_redirect(tag_id):
 @site.route('/tag/<specific_tag>/edit', methods=['POST'])
 @decorators.catch_etiquette_exception
 def post_tag_edit(specific_tag):
-    tag = common.P_tag(specific_tag)
+    tag = common.P_tag(specific_tag, response_type='json')
     name = request.form.get('name', '').strip()
     if name:
         tag.rename(name)
@@ -50,8 +50,8 @@ def post_tag_edit(specific_tag):
 @session_manager.give_token
 @decorators.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_add_child(tagname):
-    parent = common.P_tag(tagname)
-    child = common.P_tag(request.form['child_name'])
+    parent = common.P_tag(tagname, response_type='json')
+    child = common.P_tag(request.form['child_name'], response_type='json')
     parent.add_child(child, commit=True)
     response = {'action': 'add_child', 'tagname': f'{parent.name}.{child.name}'}
     return jsonify.make_json_response(response)
@@ -61,8 +61,8 @@ def post_tag_add_child(tagname):
 @session_manager.give_token
 @decorators.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_remove_child(tagname):
-    parent = common.P_tag(tagname)
-    child = common.P_tag(request.form['child_name'])
+    parent = common.P_tag(tagname, response_type='json')
+    child = common.P_tag(request.form['child_name'], response_type='json')
     parent.remove_child(child, commit=True)
     response = {'action': 'remove_child', 'tagname': f'{parent.name}.{child.name}'}
     return jsonify.make_json_response(response)
@@ -159,7 +159,7 @@ def post_tag_easybake():
 @decorators.catch_etiquette_exception
 @session_manager.give_token
 def post_tag_delete(tagname):
-    tag = common.P_tag(tagname)
+    tag = common.P_tag(tagname, response_type='json')
     tag.delete(commit=True)
     response = {'action': 'delete_tag', 'tagname': tag.name}
     return jsonify.make_json_response(response)
@@ -171,7 +171,7 @@ def post_tag_delete(tagname):
 def post_tag_remove_synonym(tagname):
     syn_name = request.form['syn_name']
 
-    master_tag = common.P_tag(tagname)
+    master_tag = common.P_tag(tagname, response_type='json')
     master_tag.remove_synonym(syn_name, commit=True)
 
     response = {'action': 'delete_synonym', 'synonym': syn_name}

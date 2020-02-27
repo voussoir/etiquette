@@ -16,7 +16,7 @@ session_manager = common.session_manager
 @site.route('/album/<album_id>')
 @session_manager.give_token
 def get_album_html(album_id):
-    album = common.P_album(album_id)
+    album = common.P_album(album_id, response_type='html')
     response = common.render_template(
         request,
         'album.html',
@@ -28,13 +28,13 @@ def get_album_html(album_id):
 @site.route('/album/<album_id>.json')
 @session_manager.give_token
 def get_album_json(album_id):
-    album = common.P_album(album_id)
+    album = common.P_album(album_id, response_type='json')
     album = etiquette.jsonify.album(album)
     return jsonify.make_json_response(album)
 
 @site.route('/album/<album_id>.zip')
 def get_album_zip(album_id):
-    album = common.P_album(album_id)
+    album = common.P_album(album_id, response_type='html')
 
     recursive = request.args.get('recursive', True)
     recursive = etiquette.helpers.truthystring(recursive)
@@ -59,8 +59,8 @@ def get_album_zip(album_id):
 @decorators.catch_etiquette_exception
 @decorators.required_fields(['child_id'], forbid_whitespace=True)
 def post_album_add_child(album_id):
-    album = common.P_album(album_id)
-    child = common.P_album(request.form['child_id'])
+    album = common.P_album(album_id, response_type='json')
+    child = common.P_album(request.form['child_id'], response_type='json')
     album.add_child(child, commit=True)
     response = etiquette.jsonify.album(child)
     return jsonify.make_json_response(response)
@@ -69,8 +69,8 @@ def post_album_add_child(album_id):
 @decorators.catch_etiquette_exception
 @decorators.required_fields(['child_id'], forbid_whitespace=True)
 def post_album_remove_child(album_id):
-    album = common.P_album(album_id)
-    child = common.P_album(request.form['child_id'])
+    album = common.P_album(album_id, response_type='json')
+    child = common.P_album(request.form['child_id'], response_type='json')
     album.remove_child(child, commit=True)
     response = etiquette.jsonify.album(child)
     return jsonify.make_json_response(response)
@@ -78,7 +78,7 @@ def post_album_remove_child(album_id):
 @site.route('/album/<album_id>/refresh_directories', methods=['POST'])
 @decorators.catch_etiquette_exception
 def post_album_refresh_directories(album_id):
-    album = common.P_album(album_id)
+    album = common.P_album(album_id, response_type='json')
     for directory in album.get_associated_directories():
         common.P.digest_directory(directory, new_photo_ratelimit=0.1)
     common.P.commit(message='refresh album directories endpoint')
@@ -95,10 +95,10 @@ def post_album_add_photo(album_id):
     Add a photo or photos to this album.
     '''
     response = {}
-    album = common.P_album(album_id)
+    album = common.P_album(album_id, response_type='json')
 
     photo_ids = etiquette.helpers.comma_space_split(request.form['photo_id'])
-    photos = list(common.P_photos(photo_ids))
+    photos = list(common.P_photos(photo_ids, response_type='json'))
     album.add_photos(photos, commit=True)
     return jsonify.make_json_response(response)
 
@@ -111,10 +111,10 @@ def post_album_remove_photo(album_id):
     Remove a photo or photos from this album.
     '''
     response = {}
-    album = common.P_album(album_id)
+    album = common.P_album(album_id, response_type='json')
 
     photo_ids = etiquette.helpers.comma_space_split(request.form['photo_id'])
-    photos = list(common.P_photos(photo_ids))
+    photos = list(common.P_photos(photo_ids, response_type='json'))
     album.remove_photos(photos, commit=True)
     return jsonify.make_json_response(response)
 
@@ -128,11 +128,11 @@ def post_album_add_tag(album_id):
     Apply a tag to every photo in the album.
     '''
     response = {}
-    album = common.P_album(album_id)
+    album = common.P_album(album_id, response_type='json')
 
     tag = request.form['tagname'].strip()
     try:
-        tag = common.P_tag(tag)
+        tag = common.P_tag(tag, response_type='json')
     except etiquette.exceptions.NoSuchTag as exc:
         response = etiquette.jsonify.exception(exc)
         return jsonify.make_json_response(response, status=404)
@@ -152,7 +152,7 @@ def post_album_edit(album_id):
     '''
     Edit the title / description.
     '''
-    album = common.P_album(album_id)
+    album = common.P_album(album_id, response_type='json')
 
     title = request.form.get('title', None)
     description = request.form.get('description', None)
@@ -196,7 +196,7 @@ def post_albums_create():
     description = request.form.get('description', None)
     parent_id = request.form.get('parent_id', None)
     if parent_id is not None:
-        parent = common.P_album(parent_id)
+        parent = common.P_album(parent_id, response_type='json')
 
     user = session_manager.get(request).user
 

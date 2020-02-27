@@ -50,7 +50,10 @@ file_cache_manager = caching.FileCacheManager(
 )
 
 def P_wrapper(function):
-    def P_wrapped(thingid, response_type='html'):
+    def P_wrapped(thingid, response_type):
+        if response_type not in {'html', 'json'}:
+            raise TypeError(f'response_type should be html or json, not {response_type}.')
+
         try:
             return function(thingid)
 
