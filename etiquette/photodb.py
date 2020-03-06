@@ -1300,6 +1300,25 @@ class PhotoDB(
             ephemeral=False,
             skip_version_check=False,
         ):
+        '''
+        data_directory:
+            This directory will contain the sql file, config file,
+            generated thumbnails, etc. The directory is the database for all
+            intents and purposes.
+
+        create:
+            If True, the data_directory will be created if it does not exist.
+            If False, we expect that data_directory and the sql file exist.
+
+        ephemeral:
+            Use an in-memory sql database, and a temporary directory for
+            everything else, so that the whole PhotoDB disappears after closing.
+            Requires that data_directory=None.
+
+        skip_version_check:
+            Skip the version check so that you don't get DatabaseOutOfDate.
+            Beware of modifying any data in this state.
+        '''
         super().__init__()
 
         ephemeral = bool(ephemeral)
@@ -1325,6 +1344,7 @@ class PhotoDB(
         if self.data_directory.exists and not self.data_directory.is_dir:
             raise exceptions.BadDataDirectory(self.data_directory.absolute_path)
 
+        # LOGGING
         self.log = logging.getLogger('etiquette:%s' % self.data_directory.absolute_path)
         self.log.setLevel(logging.DEBUG)
 
