@@ -48,7 +48,7 @@ def expand_mmf(tag_musts, tag_mays, tag_forbids):
         for tag in tagset:
             if tag in total:
                 continue
-            this_expanded = _expand_flat(set([tag]))
+            this_expanded = _expand_flat({tag})
             total.update(this_expanded)
             expanded.append(this_expanded)
         return expanded
