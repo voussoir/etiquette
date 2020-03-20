@@ -408,8 +408,7 @@ def get_search_core():
     # TAGS ON THIS PAGE
     total_tags = set()
     for photo in photos:
-        for tag in photo.get_tags():
-            total_tags.add(tag)
+        total_tags.update(photo.get_tags())
     total_tags = sorted(total_tags, key=lambda t: t.name)
 
     # PREV-NEXT PAGE URLS
