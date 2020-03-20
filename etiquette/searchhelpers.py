@@ -13,6 +13,15 @@ from voussoirkit import sqlhelpers
 
 
 def expand_mmf(tag_musts, tag_mays, tag_forbids):
+    '''
+    In order to generate SQL queries for `tagid IN (options)`, we need to
+    expand the descendents of the given must/may/forbid tags to generate the
+    complete list of options able to satisfy each query.
+    - musts becomes a list of sets and the photo must have at least one tag
+      from each set.
+    - mays becomes a set and the photo must have at least one.
+    - forbids becomes a set and the photo must not have any.
+    '''
     def _set(x):
         if x is None:
             return set()
@@ -24,13 +33,27 @@ def expand_mmf(tag_musts, tag_mays, tag_forbids):
 
     forbids_expanded = set()
 
+    def _remove_redundant_musts(tagset):
+        '''
+        Suppose B is a child of A, and the user searches for tag_musts=[A, B]
+        for some reason. In this case, A is redundant since having B already
+        satisfies A, so it makes sense to only expand and generate SQL for B.
+        This function will remove any tags which are ancestors of other tags
+        in the set so that we generate the minimum amount of SQL queries.
+        '''
+        ancestors = set()
+        for tag in tagset:
+            if tag in ancestors:
+                continue
+            ancestors.update(tag.walk_parents())
+        pruned = tagset.difference(ancestors)
+        return pruned
+
     def _expand_flat(tagset):
-        '''
-        I am not using tag.walk_children because if the user happens to give us
-        two tags in the same lineage, we have the opportunity to bail early,
-        which walk_children won't know about. So instead I'm doing the queue
-        popping and pushing myself.
-        '''
+        # I am not using tag.walk_children because if the user happens to give
+        # us two tags in the same lineage, we have the opportunity to bail
+        # early, which walk_children won't know about. So instead I'm doing the
+        # queue popping and pushing myself.
         expanded = set()
         while len(tagset) > 0:
             tag = tagset.pop()
@@ -42,21 +65,10 @@ def expand_mmf(tag_musts, tag_mays, tag_forbids):
             tagset.update(tag.get_children())
         return expanded
 
-    def _expand_nested(tagset):
-        expanded = []
-        total = set()
-        for tag in tagset:
-            if tag in total:
-                continue
-            this_expanded = _expand_flat({tag})
-            total.update(this_expanded)
-            expanded.append(this_expanded)
-        return expanded
-
     # forbids must come first so that musts and mays don't waste their time
     # expanding the forbidden subtrees.
     forbids_expanded = _expand_flat(tag_forbids)
-    musts_expanded = _expand_nested(tag_musts)
+    musts_expanded = [_expand_flat({tag}) for tag in _remove_redundant_musts(tag_musts)]
     mays_expanded = _expand_flat(tag_mays)
 
     return (musts_expanded, mays_expanded, forbids_expanded)
@@ -382,6 +394,7 @@ def photo_tag_rel_exist_clauses(tag_musts, tag_mays, tag_forbids):
     )
 
     clauses = []
+    # Notice musts is a loop and the others are ifs.
     for tag_must_group in tag_musts:
         clauses.append( ('EXISTS', tag_must_group) )
     if tag_mays:
