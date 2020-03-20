@@ -199,13 +199,16 @@ class GroupableMixin:
         self.photodb._cached_frozen_children = None
 
     def walk_children(self):
+        '''
+        Yield self and all descendants.
+        '''
         yield self
         for child in self.get_children():
             yield from child.walk_children()
 
     def walk_parents(self):
         '''
-        Yield all ancestors in no particular order.
+        Yield all ancestors, but not self, in no particular order.
         '''
         parents = self.get_parents()
         seen = set(parents)
