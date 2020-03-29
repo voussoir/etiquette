@@ -415,7 +415,8 @@ def get_search_core():
     offset = search_kwargs['offset'] or 0
     original_params = request.args.to_dict()
     original_params['limit'] = limit
-    if len(photos) == limit:
+
+    if limit and len(photos) == limit:
         next_params = original_params.copy()
         next_params['offset'] = offset + limit
         next_params = helpers.dict_to_params(next_params)
@@ -423,7 +424,7 @@ def get_search_core():
     else:
         next_page_url = None
 
-    if offset > 0:
+    if limit and offset > 0:
         prev_params = original_params.copy()
         prev_offset = max(0, offset - limit)
         if prev_offset > 0:
