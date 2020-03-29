@@ -7,9 +7,8 @@ def dict_to_params(d):
     if not d:
         return ''
 
-    params = [f'{key}={value}' for (key, value) in d.items() if value]
+    params = [f'{key}={value}' for (key, value) in d.items()]
     params = '&'.join(params)
-    if params:
-        params = '?' + params
+    params = '?' + params
 
     return params
