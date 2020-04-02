@@ -381,19 +381,13 @@ function add_searchtag(box, value, inputted_list, li_class)
     }
     console.log("adding " + value);
     var already_have = false;
-    // We're going to be doing some in-place splicing to remove,
-    // so make a duplicate for iterating
-    existing_tags = Array.from(inputted_list);
-    for (var index = 0; index < existing_tags.length; index += 1)
+    for (var index = 0; index < inputted_list.length; index += 1)
     {
-        existing_tag = existing_tags[index];
+        existing_tag = inputted_list[index];
         if (existing_tag == value)
         {
             already_have = true;
-        }
-        else if (existing_tag.startsWith(value + ".") || value.startsWith(existing_tag + "."))
-        {
-            remove_searchtag(box, existing_tag, inputted_list);
+            break;
         }
     }
     if (already_have)
