@@ -396,35 +396,35 @@ function add_searchtag(box, value, inputted_list, li_class)
             remove_searchtag(box, existing_tag, inputted_list);
         }
     }
-    if (!already_have)
-    {
-        inputted_list.push(value);
-        var new_li = document.createElement("li");
-        new_li.className = li_class;
+    if (already_have)
+    {return;}
 
-        var new_span = document.createElement("span");
-        new_span.className = "tag_object";
-        new_span.innerHTML = value;
+    inputted_list.push(value);
+    var new_li = document.createElement("li");
+    new_li.className = li_class;
 
-        var new_delbutton = document.createElement("button")
-        new_delbutton.classList.add("remove_tag_button");
-        new_delbutton.classList.add("red_button");
-        new_delbutton.onclick = function(){remove_searchtag(new_delbutton, value, inputted_list)};
+    var new_span = document.createElement("span");
+    new_span.className = "tag_object";
+    new_span.innerHTML = value;
 
-        new_li.appendChild(new_span);
-        new_li.appendChild(new_delbutton);
+    var new_delbutton = document.createElement("button")
+    new_delbutton.classList.add("remove_tag_button");
+    new_delbutton.classList.add("red_button");
+    new_delbutton.onclick = function(){remove_searchtag(new_delbutton, value, inputted_list)};
 
-        box_li = box.parentElement;
-        ul = box_li.parentElement;
-        ul.insertBefore(new_li, box_li);
+    new_li.appendChild(new_span);
+    new_li.appendChild(new_delbutton);
 
-        // The datalist autocomplete box can sometimes stick around after the
-        // tag has already been submitted and the input box moves down -- now
-        // covered by the autocomplete. So we temporarily unfocus it to make
-        // that thing go away.
-        box.blur();
-        box.focus();
-    }
+    box_li = box.parentElement;
+    ul = box_li.parentElement;
+    ul.insertBefore(new_li, box_li);
+
+    // The datalist autocomplete box can sometimes stick around after the
+    // tag has already been submitted and the input box moves down -- now
+    // covered by the autocomplete. So we temporarily unfocus it to make
+    // that thing go away.
+    box.blur();
+    box.focus();
 }
 function remove_searchtag(li_member, value, inputted_list)
 {
