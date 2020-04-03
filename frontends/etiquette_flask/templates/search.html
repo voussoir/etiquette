@@ -372,16 +372,7 @@ PARAM_DEFAULTS = {
 function add_searchtag(ul, value, inputted_list, li_class)
 {
     console.log("adding " + value);
-    var already_have = false;
-    for (var index = 0; index < inputted_list.length; index += 1)
-    {
-        existing_tag = inputted_list[index];
-        if (existing_tag == value)
-        {
-            already_have = true;
-            break;
-        }
-    }
+    var already_have = inputted_list.indexOf(value) !== -1;
     if (already_have)
     {return;}
 
