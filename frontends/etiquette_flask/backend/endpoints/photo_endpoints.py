@@ -416,7 +416,7 @@ def get_search_core():
     original_params = request.args.to_dict()
     original_params['limit'] = limit
 
-    if limit and len(photos) == limit:
+    if limit and len(photos) >= limit:
         next_params = original_params.copy()
         next_params['offset'] = offset + limit
         next_params = helpers.dict_to_params(next_params)
