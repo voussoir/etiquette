@@ -1116,6 +1116,7 @@ class PDBUtilMixin:
             exclude_directories=None,
             exclude_filenames=None,
             make_albums=True,
+            natural_sort=True,
             new_photo_kwargs={},
             new_photo_ratelimit=None,
             recurse=True,
@@ -1220,6 +1221,9 @@ class PDBUtilMixin:
         )
 
         for (current_directory, subdirectories, files) in walk_generator:
+            if natural_sort:
+                files = sorted(files, key=lambda f: helpers.natural_sorter(f.basename))
+
             photos = create_or_fetch_photos(files, new_photo_kwargs=new_photo_kwargs)
 
             if not make_albums:
