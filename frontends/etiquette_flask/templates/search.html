@@ -599,6 +599,7 @@ function tags_on_this_page_add_must(event, tagname)
         inputted_musts,
         "search_builder_musts_inputted"
     );
+    submit_search();
     return false;
 }
 function tags_on_this_page_add_may(event, tagname)
@@ -609,6 +610,7 @@ function tags_on_this_page_add_may(event, tagname)
         inputted_mays,
         "search_builder_mays_inputted"
     );
+    submit_search();
     return false;
 }
 function tags_on_this_page_add_forbid(event, tagname)
@@ -619,6 +621,7 @@ function tags_on_this_page_add_forbid(event, tagname)
         inputted_forbids,
         "search_builder_forbids_inputted"
     );
+    submit_search();
     return false;
 }
 
