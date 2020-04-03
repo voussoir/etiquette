@@ -396,20 +396,19 @@ def get_search_core():
     search_kwargs['tag_mays'] = tagname_helper(search_kwargs['tag_mays'])
     search_kwargs['tag_forbids'] = tagname_helper(search_kwargs['tag_forbids'])
 
-    search_results = list(search_generator)
     warnings = set()
-    photos = []
-    for item in search_results:
+    search_results = []
+    for item in search_generator:
         if isinstance(item, etiquette.objects.WarningBag):
             warnings.update(item.warnings)
         else:
-            photos.append(item)
+            search_results.append(item)
 
     # TAGS ON THIS PAGE
     total_tags = set()
-    for photo in photos:
-        if isinstance(photo, etiquette.objects.Photo):
-            total_tags.update(photo.get_tags())
+    for result in search_results:
+        if isinstance(result, etiquette.objects.Photo):
+            total_tags.update(result.get_tags())
     total_tags = sorted(total_tags, key=lambda t: t.name)
 
     # PREV-NEXT PAGE URLS
@@ -417,7 +416,7 @@ def get_search_core():
     original_params = request.args.to_dict()
     original_params['limit'] = limit
 
-    if limit and len(photos) >= limit:
+    if limit and len(search_results) >= limit:
         next_params = original_params.copy()
         next_params['offset'] = offset + limit
         next_params = helpers.dict_to_params(next_params)
@@ -443,7 +442,7 @@ def get_search_core():
     final_results = {
         'next_page_url': next_page_url,
         'prev_page_url': prev_page_url,
-        'photos': photos,
+        'results': search_results,
         'total_tags': total_tags,
         'warnings': list(warnings),
         'search_kwargs': search_kwargs,
@@ -460,7 +459,7 @@ def get_search_html():
         'search.html',
         next_page_url=search_results['next_page_url'],
         prev_page_url=search_results['prev_page_url'],
-        photos=search_results['photos'],
+        results=search_results['results'],
         search_kwargs=search_kwargs,
         total_tags=search_results['total_tags'],
         warnings=search_results['warnings'],
@@ -471,8 +470,11 @@ def get_search_html():
 @session_manager.give_token
 def get_search_json():
     search_results = get_search_core()
-    search_results['photos'] = [
-        etiquette.jsonify.photo(photo, include_albums=False) for photo in search_results['photos']
+    search_results['results'] = [
+        etiquette.jsonify.photo(result, include_albums=False)
+        if isinstance(result, etiquette.objects.Photo) else
+        etiquette.jsonify.album(result, minimal=True)
+        for result in search_results['results']
     ]
     search_results['total_tags'] = [
         etiquette.jsonify.tag(tag, minimal=True) for tag in search_results['total_tags']

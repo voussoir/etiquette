@@ -343,16 +343,16 @@
         {% endfor %}
     </div>
     <div id="happy_message_area">
-        <p>You got {{photos|length}} items.</p>
+        <p>You got {{results|length}} items.</p>
     </div>
     <div id="right">
         {{prev_next_buttons()}}
         <div id="search_results_holder">
-            {% for photo in photos %}
-                {% if photo.__class__.__name__ == 'Photo' %}
-                {{photo_card.create_photo_card(photo, view=search_kwargs["view"])}}
-                {% elif photo.__class__.__name__ == 'Album' %}
-                {{album_card.create_album_card(photo, view=search_kwargs["view"])}}
+            {% for result in results %}
+                {% if result.__class__.__name__ == 'Photo' %}
+                {{photo_card.create_photo_card(result, view=search_kwargs["view"])}}
+                {% elif result.__class__.__name__ == 'Album' %}
+                {{album_card.create_album_card(result, view=search_kwargs["view"])}}
                 {% endif %}
             {% endfor %}
         </div>
