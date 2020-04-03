@@ -188,7 +188,7 @@
                         <li class="search_builder_{{tagtype}}_inputted">
                             <span class="tag_object">{{tagname}}</span>{{-''-}}
                             <button class="remove_tag_button red_button"
-                            onclick="remove_searchtag(this.parentElement.parentElement, '{{tagname}}', inputted_{{tagtype}});"></button>
+                            onclick="remove_searchtag(ul_{{tagtype}}, '{{tagname}}', inputted_{{tagtype}});"></button>
                         </li>
                     {% endfor %}
                 {% endif %}
@@ -594,7 +594,7 @@ function submit_search()
 function tags_on_this_page_add_must(event, tagname)
 {
     add_searchtag(
-        input_musts,
+        ul_musts,
         tagname,
         inputted_musts,
         "search_builder_musts_inputted"
@@ -604,7 +604,7 @@ function tags_on_this_page_add_must(event, tagname)
 function tags_on_this_page_add_may(event, tagname)
 {
     add_searchtag(
-        input_mays,
+        ul_mays,
         tagname,
         inputted_mays,
         "search_builder_mays_inputted"
@@ -614,7 +614,7 @@ function tags_on_this_page_add_may(event, tagname)
 function tags_on_this_page_add_forbid(event, tagname)
 {
     add_searchtag(
-        input_forbids,
+        ul_forbids,
         tagname,
         inputted_forbids,
         "search_builder_forbids_inputted"
@@ -649,8 +649,11 @@ function tag_input_hook_forbids()
 
 tag_autocomplete.init_datalist();
 var input_musts = document.getElementById("search_builder_musts_input");
+var ul_musts = input_musts.parentElement.parentElement;
 var input_mays = document.getElementById("search_builder_mays_input");
+var ul_mays = input_mays.parentElement.parentElement;
 var input_forbids = document.getElementById("search_builder_forbids_input");
+var ul_forbids = input_forbids.parentElement.parentElement;
 var input_expression = document.getElementById("search_builder_expression_input");
 
 /* Prefix the form with the parameters from last search */
