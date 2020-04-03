@@ -429,6 +429,8 @@ def get_search_core():
         prev_offset = max(0, offset - limit)
         if prev_offset > 0:
             prev_params['offset'] = prev_offset
+        else:
+            prev_params.pop('offset', None)
         prev_params = helpers.dict_to_params(prev_params)
         prev_page_url = '/search' + prev_params
     else:
