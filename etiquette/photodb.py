@@ -628,6 +628,7 @@ class PDBPhotoMixin:
         #explain = self.sql_execute('EXPLAIN QUERY PLAN ' + query, bindings)
         #print('\n'.join(str(x) for x in explain.fetchall()))
         generator = self.sql_select(query, bindings)
+        seen_albums = set()
         photos_received = 0
         for row in generator:
             photo = self.get_cached_instance('photo', row)
@@ -653,6 +654,11 @@ class PDBPhotoMixin:
 
             if limit is not None and photos_received >= limit:
                 break
+
+            for album in photo.get_containing_albums():
+                if album not in seen_albums:
+                    seen_albums.add(album)
+                    yield album
 
             photos_received += 1
             yield photo

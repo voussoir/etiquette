@@ -2,6 +2,7 @@
 <html>
 <head>
     {% import "photo_card.html" as photo_card %}
+    {% import "album_card.html" as album_card %}
     {% import "header.html" as header %}
     {% import "tag_object.html" as tag_object %}
     {% import "clipboard_tray.html" as clipboard_tray %}
@@ -348,7 +349,11 @@
         {{prev_next_buttons()}}
         <div id="search_results_holder">
             {% for photo in photos %}
+                {% if photo.__class__.__name__ == 'Photo' %}
                 {{photo_card.create_photo_card(photo, view=search_kwargs["view"])}}
+                {% elif photo.__class__.__name__ == 'Album' %}
+                {{album_card.create_album_card(photo, view=search_kwargs["view"])}}
+                {% endif %}
             {% endfor %}
         </div>
 
