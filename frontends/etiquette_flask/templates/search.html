@@ -361,8 +361,9 @@
 
 <script type="text/javascript">
 /*
-These are defined so that we know we don't need to include them in the
-constructed search URL, keeping it more tidy.
+These values should match those of the server itself. The purpose of this dict
+is to know that we DON'T need to include these parameters in the url if the
+selected form values are these.
 */
 PARAM_DEFAULTS = {
     'limit': 50,
@@ -454,6 +455,7 @@ function remove_searchtag(ul, value, inputted_list)
         inputted_list.splice(splice_at, 1);
     }
 }
+
 function add_new_orderby()
 {
     /* Called by the green + button */
@@ -468,6 +470,7 @@ function add_new_orderby()
     var new_li = prev_li.cloneNode(true);
     ul.insertBefore(new_li, prev_li.nextSibling);
 }
+
 function orderby_remove_hook(button)
 {
     /* Called by the red button next to orderby dropdowns */
@@ -480,6 +483,7 @@ function orderby_remove_hook(button)
         ul.removeChild(li);
     }
 }
+
 function orderby_hide_direction_hook(event)
 {
     if (event.target.value == "random")
@@ -491,6 +495,7 @@ function orderby_hide_direction_hook(event)
         event.target.nextElementSibling.classList.remove("hidden");
     }
 }
+
 function simplify_tagnames(tags)
 {
     var new_tags = [];
@@ -503,6 +508,7 @@ function simplify_tagnames(tags)
     }
     return new_tags;
 }
+
 function submit_search()
 {
     /*
@@ -611,6 +617,7 @@ function tags_on_this_page_add_forbid(event, tagname)
     );
     return false;
 }
+
 function tag_input_hook(box, inputted_list, li_class)
 {
     /*
