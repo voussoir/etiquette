@@ -1496,8 +1496,8 @@ class PhotoDB(
         '''
         thing_map = _THING_CLASSES[thing_type]
 
-        thing_table = thing_map['table']
         thing_class = thing_map['class']
+        thing_table = thing_class.table
         thing_cache = self.caches[thing_type]
 
         if isinstance(db_row, dict):
@@ -1520,7 +1520,7 @@ class PhotoDB(
         thing_map = _THING_CLASSES[thing_type]
 
         thing_class = thing_map['class']
-        thing_table = thing_map['table']
+        thing_table = thing_class.table
         group_table = thing_class.group_table
 
         query = f'''
@@ -1559,7 +1559,7 @@ class PhotoDB(
         except KeyError:
             pass
 
-        query = 'SELECT * FROM %s WHERE id == ?' % thing_map['table']
+        query = 'SELECT * FROM %s WHERE id == ?' % thing_class.table
         bindings = [thing_id]
         thing_row = self.sql_select_one(query, bindings)
         if thing_row is None:
@@ -1574,7 +1574,7 @@ class PhotoDB(
         '''
         thing_map = _THING_CLASSES[thing_type]
 
-        query = 'SELECT * FROM %s' % thing_map['table']
+        query = 'SELECT * FROM %s' % thing_map['class'].table
 
         things = self.sql_select(query)
         for thing_row in things:
@@ -1609,7 +1609,7 @@ class PhotoDB(
 
             qmarks = ','.join('?' * len(id_batch))
             qmarks = '(%s)' % qmarks
-            query = 'SELECT * FROM %s WHERE id IN %s' % (thing_map['table'], qmarks)
+            query = 'SELECT * FROM %s WHERE id IN %s' % (thing_class.table, qmarks)
             more_things = self.sql_select(query, id_batch)
             for thing_row in more_things:
                 # Normally we would call `get_cached_instance` instead of
@@ -1654,31 +1654,26 @@ _THING_CLASSES = {
     {
         'class': objects.Album,
         'exception': exceptions.NoSuchAlbum,
-        'table': 'albums',
     },
     'bookmark':
     {
         'class': objects.Bookmark,
         'exception': exceptions.NoSuchBookmark,
-        'table': 'bookmarks',
     },
     'photo':
     {
         'class': objects.Photo,
         'exception': exceptions.NoSuchPhoto,
-        'table': 'photos',
     },
     'tag':
     {
         'class': objects.Tag,
         'exception': exceptions.NoSuchTag,
-        'table': 'tags',
     },
     'user':
     {
         'class': objects.User,
         'exception': exceptions.NoSuchUser,
-        'table': 'users',
     }
 }
 
