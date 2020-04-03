@@ -1485,6 +1485,15 @@ class PhotoDB(
         return self._cached_frozen_children
 
     def get_cached_instance(self, thing_type, db_row):
+        '''
+        Check if there is already an instance in the cache and return that.
+        Otherwise, a new instance is created, cached, and returned.
+
+        Note that in order to call this method you have to already have a
+        db_row which means performing some select. If you only have the ID,
+        use get_thing_by_id, as there may already be a cached instance to save
+        you the select.
+        '''
         thing_map = _THING_CLASSES[thing_type]
 
         thing_table = thing_map['table']
@@ -1528,10 +1537,20 @@ class PhotoDB(
             yield thing
 
     def get_thing_by_id(self, thing_type, thing_id):
+        '''
+        This method will first check the cache to see if there is already an
+        instance with that ID, in which case we don't need to perform any SQL
+        select. If it is not in the cache, then a new instance is created,
+        cached, and returned.
+        '''
         thing_map = _THING_CLASSES[thing_type]
 
         thing_class = thing_map['class']
         if isinstance(thing_id, thing_class):
+            # This could be used to check if your old reference to an object is
+            # still in the cache, or re-select it from the db to make sure it
+            # still exists and re-cache.
+            # Probably an uncommon need but... no harm I think.
             thing_id = thing_id.id
 
         thing_cache = self.caches[thing_type]
@@ -1563,6 +1582,12 @@ class PhotoDB(
             yield thing
 
     def get_things_by_id(self, thing_type, thing_ids):
+        '''
+        Given multiple IDs, this method will find which ones are in the cache
+        and which ones need to be selected from the db.
+        This is better than calling get_thing_by_id in a loop because we can
+        use a single SQL select to get batches of up to 999 items.
+        '''
         thing_map = _THING_CLASSES[thing_type]
         thing_class = thing_map['class']
         thing_cache = self.caches[thing_type]
