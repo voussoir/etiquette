@@ -507,6 +507,14 @@ function submit_search()
     */
     var url = window.location.origin + "/search";
     var parameters = [];
+
+    // If the user has left any text in the tag boxes, but not hit Enter on
+    // them, then they will not be in the `inputted_` lists and would get
+    // ignored. So let's run through each of their hooks to get them all saved.
+    add_searchtag_from_box(input_musts, inputted_musts, "search_builder_musts_inputted");
+    add_searchtag_from_box(input_mays, inputted_mays, "search_builder_mays_inputted");
+    add_searchtag_from_box(input_forbids, inputted_forbids, "search_builder_forbids_inputted");
+
     var has_tag_params = false;
     var musts = simplify_tagnames(inputted_musts).join(",");
     if (musts) {parameters.push("tag_musts=" + musts); has_tag_params=true;}
