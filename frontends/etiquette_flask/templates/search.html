@@ -187,7 +187,7 @@
                         <li class="search_builder_{{tagtype}}_inputted">
                             <span class="tag_object">{{tagname}}</span>{{-''-}}
                             <button class="remove_tag_button red_button"
-                            onclick="remove_searchtag(this, '{{tagname}}', inputted_{{tagtype}});"></button>
+                            onclick="remove_searchtag(this.parentElement.parentElement, '{{tagname}}', inputted_{{tagtype}});"></button>
                         </li>
                     {% endfor %}
                 {% endif %}
@@ -368,17 +368,8 @@ PARAM_DEFAULTS = {
     'limit': 50,
     'view': 'grid',
 }
-function add_searchtag(box, value, inputted_list, li_class)
+function add_searchtag(ul, value, inputted_list, li_class)
 {
-    /*
-    Called by hitting Enter within a must/may/forbid field. Checks whether the
-    tag exists and adds it to the query.
-    */
-    if (box.offsetParent === null)
-    {
-        // The box is hidden probably because we're in Expression mode.
-        return;
-    }
     console.log("adding " + value);
     var already_have = false;
     for (var index = 0; index < inputted_list.length; index += 1)
@@ -404,15 +395,33 @@ function add_searchtag(box, value, inputted_list, li_class)
     var new_delbutton = document.createElement("button")
     new_delbutton.classList.add("remove_tag_button");
     new_delbutton.classList.add("red_button");
-    new_delbutton.onclick = function(){remove_searchtag(new_delbutton, value, inputted_list)};
+    new_delbutton.onclick = function(){remove_searchtag(ul, value, inputted_list)};
 
     new_li.appendChild(new_span);
     new_li.appendChild(new_delbutton);
 
-    box_li = box.parentElement;
-    ul = box_li.parentElement;
-    ul.insertBefore(new_li, box_li);
+    ul.insertBefore(new_li, ul.lastElementChild);
+}
+function add_searchtag_from_box(box, inputted_list, li_class)
+{
+    if (box.offsetParent === null)
+    {
+        // The box is hidden probably because we're in Expression mode.
+        return;
+    }
 
+    if (!box.value)
+    {return;}
+
+    var value = box.value;
+    value = tag_autocomplete.resolve(value);
+    if (value === null)
+    {return;}
+
+    console.log(inputted_list);
+    ul = box.parentElement.parentElement;
+    add_searchtag(ul, value, inputted_list, li_class)
+    box.value = "";
     // The datalist autocomplete box can sometimes stick around after the
     // tag has already been submitted and the input box moves down -- now
     // covered by the autocomplete. So we temporarily unfocus it to make
@@ -420,28 +429,20 @@ function add_searchtag(box, value, inputted_list, li_class)
     box.blur();
     box.focus();
 }
-function remove_searchtag(li_member, value, inputted_list)
-{
-    /*
-    Given a member of the same tag type as the one we intend to remove,
-    find the tag of interest and remove it from both the DOM and the
-    inputted_list.
 
-    Sorry for the roundabout technique.
-    */
+function remove_searchtag(ul, value, inputted_list)
+{
     console.log("removing " + value);
-    var li = li_member.parentElement;
-    var ul = li.parentElement;
     var lis = ul.children;
     //console.log(lis);
     for (var index = 0; index < lis.length; index += 1)
     {
-        li = lis[index];
-        var span = li.children[0];
-        if (span.tagName != "SPAN")
+        var li = lis[index];
+        var tag_object = li.children[0];
+        if (! tag_object.classList.contains("tag_object"))
         {continue}
 
-        var tagname = span.innerHTML;
+        var tagname = tag_object.innerHTML;
         if (tagname != value)
         {continue}
 
@@ -616,21 +617,23 @@ function tag_input_hook(box, inputted_list, li_class)
     Assigned to the input boxes for musts, mays, forbids.
     Hitting Enter will add the resovled tag to the search form.
     */
-    if (event.keyCode != 13)
+    if (event.key !== "Enter")
     {return;}
 
-    if (!box.value)
-    {return;}
+    add_searchtag_from_box(box, inputted_list, li_class)
+}
 
-    var value = box.value;
-    value = tag_autocomplete.resolve(value);
-    if (value === null)
-    {
-        return;
-    }
-    console.log(inputted_list);
-    add_searchtag(box, value, inputted_list, li_class)
-    box.value = "";
+function tag_input_hook_musts()
+{
+    tag_input_hook(this, inputted_musts, "search_builder_musts_inputted");
+}
+function tag_input_hook_mays()
+{
+    tag_input_hook(this, inputted_mays, "search_builder_mays_inputted");
+}
+function tag_input_hook_forbids()
+{
+    tag_input_hook(this, inputted_forbids, "search_builder_forbids_inputted");
 }
 
 tag_autocomplete.init_datalist();
@@ -652,11 +655,11 @@ var inputted_forbids = [];
     {% endif %}
 {% endfor %}
 
-input_musts.addEventListener("keyup", function(){tag_input_hook(this, inputted_musts, "search_builder_musts_inputted")});
+input_musts.addEventListener("keyup", tag_input_hook_musts);
 input_musts.addEventListener("keyup", common.entry_with_tagname_replacements);
-input_mays.addEventListener("keyup", function(){tag_input_hook(this, inputted_mays, "search_builder_mays_inputted")});
+input_mays.addEventListener("keyup",tag_input_hook_mays);
 input_mays.addEventListener("keyup", common.entry_with_tagname_replacements);
-input_forbids.addEventListener("keyup", function(){tag_input_hook(this, inputted_forbids, "search_builder_forbids_inputted")});
+input_forbids.addEventListener("keyup", tag_input_hook_forbids);
 input_forbids.addEventListener("keyup", common.entry_with_tagname_replacements);
 
 common.bind_box_to_button(input_expression, document.getElementById("search_go_button"));
