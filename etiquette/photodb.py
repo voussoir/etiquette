@@ -718,7 +718,7 @@ class PDBSQLMixin:
             # method instead of allowing sql's release to commit.
             self.commit()
         else:
-            self.log.debug('Releasing savepoint %s', savepoint)
+            self.log.log(5, 'Releasing savepoint %s', savepoint)
             self.sql_execute(f'RELEASE "{savepoint}"')
             self.savepoints = helpers.slice_before(self.savepoints, savepoint)
 
@@ -764,9 +764,9 @@ class PDBSQLMixin:
     def savepoint(self, message=None):
         savepoint_id = helpers.random_hex(length=16)
         if message:
-            self.log.debug('Savepoint %s for %s.', savepoint_id, message)
+            self.log.log(5, 'Savepoint %s for %s.', savepoint_id, message)
         else:
-            self.log.debug('Savepoint %s.', savepoint_id)
+            self.log.log(5, 'Savepoint %s.', savepoint_id)
         query = f'SAVEPOINT "{savepoint_id}"'
         self.sql.execute(query)
         self.savepoints.append(savepoint_id)
