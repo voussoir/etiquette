@@ -341,50 +341,6 @@ def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=bytestring.
             yield chunk
             sent_amount += len(chunk)
 
-def recursive_dict_update(target, supply):
-    '''
-    Update target using supply, but when the value is a dictionary update the
-    insides instead of replacing the dictionary itself. This prevents keys that
-    exist in the target but don't exist in the supply from being erased.
-    Note that we are modifying target in place.
-
-    eg:
-    target = {'hi': 'ho', 'neighbor': {'name': 'Wilson'}}
-    supply = {'neighbor': {'behind': 'fence'}}
-
-    result: {'hi': 'ho', 'neighbor': {'name': 'Wilson', 'behind': 'fence'}}
-    whereas a regular dict.update would have produced:
-    {'hi': 'ho', 'neighbor': {'behind': 'fence'}}
-    '''
-    for (key, value) in supply.items():
-        if isinstance(value, dict):
-            existing = target.get(key, None)
-            if existing is None:
-                target[key] = value
-            else:
-                recursive_dict_update(target=existing, supply=value)
-        else:
-            target[key] = value
-
-def recursive_dict_keys(d):
-    '''
-    Given a dictionary, return a set containing all of its keys and the keys of
-    all other dictionaries that appear as values within. The subkeys will use \\
-    to indicate their lineage.
-
-    {'hi': {'ho': 'neighbor'}}
-
-    returns
-
-    {'hi', 'hi\\ho'}
-    '''
-    keys = set(d.keys())
-    for (key, value) in d.items():
-        if isinstance(value, dict):
-            subkeys = {f'{key}\\{subkey}' for subkey in recursive_dict_keys(value)}
-            keys.update(subkeys)
-    return keys
-
 def remove_characters(text, characters):
     translator = {ord(c): None for c in characters}
     text = text.translate(translator)

@@ -10,6 +10,7 @@ import tempfile
 import time
 
 from voussoirkit import cacheclass
+from voussoirkit import configlayers
 from voussoirkit import expressionmatch
 from voussoirkit import pathclass
 from voussoirkit import ratelimiter
@@ -1621,27 +1622,13 @@ class PhotoDB(
                 yield thing
 
     def load_config(self):
-        config = copy.deepcopy(constants.DEFAULT_CONFIGURATION)
-        user_config_exists = self.config_filepath.is_file
-        needs_dump = False
-        if user_config_exists:
-            with open(self.config_filepath.absolute_path, 'r', encoding='utf-8') as handle:
-                user_config = json.load(handle)
-
-            # If the default config has been updated and contains new keys,
-            # then they will not yet exist in the user's config, and we should
-            # save the file after giving it those default values.
-            default_keys = helpers.recursive_dict_keys(config)
-            stored_keys = helpers.recursive_dict_keys(user_config)
-            needs_dump = default_keys > stored_keys
-
-            helpers.recursive_dict_update(target=config, supply=user_config)
-        else:
-            needs_dump = True
-
+        (config, needs_rewrite) = configlayers.load_file(
+            filepath=self.config_filepath,
+            defaults=constants.DEFAULT_CONFIGURATION,
+        )
         self.config = config
 
-        if needs_dump:
+        if needs_rewrite:
             self.save_config()
 
     def save_config(self):
