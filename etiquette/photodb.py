@@ -562,7 +562,7 @@ class PDBPhotoMixin:
                 wheres.append('extension != ""')
             else:
                 qmarks = ', '.join('?' * len(extension))
-                wheres.append('extension IN (%s)' % qmarks)
+                wheres.append(f'extension IN ({qmarks})')
                 bindings.extend(extension)
 
         if extension_not:
@@ -570,7 +570,7 @@ class PDBPhotoMixin:
                 wheres.append('extension == ""')
             else:
                 qmarks = ', '.join('?' * len(extension_not))
-                wheres.append('extension NOT IN (%s)' % qmarks)
+                wheres.append(f'extension NOT IN ({qmarks})')
                 bindings.extend(extension_not)
 
         if mimetype:
@@ -616,7 +616,7 @@ class PDBPhotoMixin:
             query.append(wheres)
 
         if orderby:
-            orderby = ['%s %s' % (column, direction) for (column, direction) in orderby]
+            orderby = [f'{column} {direction}' for (column, direction) in orderby]
             orderby = ', '.join(orderby)
             orderby = 'ORDER BY ' + orderby
             query.append(orderby)
@@ -1048,7 +1048,7 @@ class PDBUserMixin:
             author_id = self.get_user(id=user_obj_or_id).id
 
         else:
-            raise TypeError('Unworkable type %s' % type(user_obj_or_id))
+            raise TypeError(f'Unworkable type {type(user_obj_or_id)}')
 
         return author_id
 
@@ -1456,7 +1456,7 @@ class PhotoDB(
         '''
         table = table.lower()
         if table not in ['photos', 'tags', 'albums', 'bookmarks']:
-            raise ValueError('Invalid table requested: %s.', table)
+            raise ValueError(f'Invalid table requested: {table}.')
 
         last_id = self.sql_select_one('SELECT last_id FROM id_numbers WHERE tab == ?', [table])
         if last_id is None:
