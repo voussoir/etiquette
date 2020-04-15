@@ -158,6 +158,175 @@ class PDBBookmarkMixin:
         return bookmark
 
 
+class PDBCacheManagerMixin:
+    _THING_CLASSES = {
+        'album':
+        {
+            'class': objects.Album,
+            'exception': exceptions.NoSuchAlbum,
+        },
+        'bookmark':
+        {
+            'class': objects.Bookmark,
+            'exception': exceptions.NoSuchBookmark,
+        },
+        'photo':
+        {
+            'class': objects.Photo,
+            'exception': exceptions.NoSuchPhoto,
+        },
+        'tag':
+        {
+            'class': objects.Tag,
+            'exception': exceptions.NoSuchTag,
+        },
+        'user':
+        {
+            'class': objects.User,
+            'exception': exceptions.NoSuchUser,
+        }
+    }
+
+    def __init__(self):
+        super().__init__()
+
+    def get_cached_instance(self, thing_type, db_row):
+        '''
+        Check if there is already an instance in the cache and return that.
+        Otherwise, a new instance is created, cached, and returned.
+
+        Note that in order to call this method you have to already have a
+        db_row which means performing some select. If you only have the ID,
+        use get_thing_by_id, as there may already be a cached instance to save
+        you the select.
+        '''
+        thing_map = self._THING_CLASSES[thing_type]
+
+        thing_class = thing_map['class']
+        thing_table = thing_class.table
+        thing_cache = self.caches[thing_type]
+
+        if isinstance(db_row, dict):
+            thing_id = db_row['id']
+        else:
+            thing_index = constants.SQL_INDEX[thing_table]
+            thing_id = db_row[thing_index['id']]
+
+        try:
+            thing = thing_cache[thing_id]
+        except KeyError:
+            thing = thing_class(self, db_row)
+            thing_cache[thing_id] = thing
+        return thing
+
+    def get_root_things(self, thing_type):
+        '''
+        For Groupable types, yield things which have no parent.
+        '''
+        thing_map = self._THING_CLASSES[thing_type]
+
+        thing_class = thing_map['class']
+        thing_table = thing_class.table
+        group_table = thing_class.group_table
+
+        query = f'''
+        SELECT * FROM {thing_table}
+        WHERE NOT EXISTS (
+            SELECT 1 FROM {group_table}
+            WHERE memberid == {thing_table}.id
+        )
+        '''
+
+        rows = self.sql_select(query)
+        for row in rows:
+            thing = self.get_cached_instance(thing_type, row)
+            yield thing
+
+    def get_thing_by_id(self, thing_type, thing_id):
+        '''
+        This method will first check the cache to see if there is already an
+        instance with that ID, in which case we don't need to perform any SQL
+        select. If it is not in the cache, then a new instance is created,
+        cached, and returned.
+        '''
+        thing_map = self._THING_CLASSES[thing_type]
+
+        thing_class = thing_map['class']
+        if isinstance(thing_id, thing_class):
+            # This could be used to check if your old reference to an object is
+            # still in the cache, or re-select it from the db to make sure it
+            # still exists and re-cache.
+            # Probably an uncommon need but... no harm I think.
+            thing_id = thing_id.id
+
+        thing_cache = self.caches[thing_type]
+        try:
+            return thing_cache[thing_id]
+        except KeyError:
+            pass
+
+        query = f'SELECT * FROM {thing_class.table} WHERE id == ?'
+        bindings = [thing_id]
+        thing_row = self.sql_select_one(query, bindings)
+        if thing_row is None:
+            raise thing_map['exception'](thing_id)
+        thing = thing_class(self, thing_row)
+        thing_cache[thing_id] = thing
+        return thing
+
+    def get_things(self, thing_type):
+        '''
+        Yield things, unfiltered, in whatever order they appear in the database.
+        '''
+        thing_map = self._THING_CLASSES[thing_type]
+        table = thing_map['class'].table
+        query = f'SELECT * FROM {table}'
+
+        things = self.sql_select(query)
+        for thing_row in things:
+            thing = self.get_cached_instance(thing_type, thing_row)
+            yield thing
+
+    def get_things_by_id(self, thing_type, thing_ids):
+        '''
+        Given multiple IDs, this method will find which ones are in the cache
+        and which ones need to be selected from the db.
+        This is better than calling get_thing_by_id in a loop because we can
+        use a single SQL select to get batches of up to 999 items.
+        '''
+        thing_map = self._THING_CLASSES[thing_type]
+        thing_class = thing_map['class']
+        thing_cache = self.caches[thing_type]
+
+        ids_needed = set()
+        for thing_id in thing_ids:
+            try:
+                thing = thing_cache[thing_id]
+            except KeyError:
+                ids_needed.add(thing_id)
+            else:
+                yield thing
+
+        ids_needed = list(ids_needed)
+        while ids_needed:
+            # SQLite3 has a limit of 999 ? in a query, so we must batch them.
+            id_batch = ids_needed[:999]
+            ids_needed = ids_needed[999:]
+
+            qmarks = ','.join('?' * len(id_batch))
+            qmarks = f'({qmarks})'
+            query = f'SELECT * FROM {thing_class.table} WHERE id IN {qmarks}'
+            more_things = self.sql_select(query, id_batch)
+            for thing_row in more_things:
+                # Normally we would call `get_cached_instance` instead of
+                # constructing here. But we already know for a fact that this
+                # object is not in the cache because it made it past the
+                # previous loop.
+                thing = thing_class(self, db_row=thing_row)
+                thing_cache[thing.id] = thing
+                yield thing
+
+
 class PDBPhotoMixin:
     def __init__(self):
         super().__init__()
@@ -1300,6 +1469,7 @@ class PDBUtilMixin:
 class PhotoDB(
         PDBAlbumMixin,
         PDBBookmarkMixin,
+        PDBCacheManagerMixin,
         PDBPhotoMixin,
         PDBSQLMixin,
         PDBTagMixin,
@@ -1486,142 +1656,6 @@ class PhotoDB(
             self._cached_frozen_children = tag_export.flat_dict(self.get_tags())
         return self._cached_frozen_children
 
-    def get_cached_instance(self, thing_type, db_row):
-        '''
-        Check if there is already an instance in the cache and return that.
-        Otherwise, a new instance is created, cached, and returned.
-
-        Note that in order to call this method you have to already have a
-        db_row which means performing some select. If you only have the ID,
-        use get_thing_by_id, as there may already be a cached instance to save
-        you the select.
-        '''
-        thing_map = _THING_CLASSES[thing_type]
-
-        thing_class = thing_map['class']
-        thing_table = thing_class.table
-        thing_cache = self.caches[thing_type]
-
-        if isinstance(db_row, dict):
-            thing_id = db_row['id']
-        else:
-            thing_index = constants.SQL_INDEX[thing_table]
-            thing_id = db_row[thing_index['id']]
-
-        try:
-            thing = thing_cache[thing_id]
-        except KeyError:
-            thing = thing_class(self, db_row)
-            thing_cache[thing_id] = thing
-        return thing
-
-    def get_root_things(self, thing_type):
-        '''
-        For Groupable types, yield things which have no parent.
-        '''
-        thing_map = _THING_CLASSES[thing_type]
-
-        thing_class = thing_map['class']
-        thing_table = thing_class.table
-        group_table = thing_class.group_table
-
-        query = f'''
-        SELECT * FROM {thing_table}
-        WHERE NOT EXISTS (
-            SELECT 1 FROM {group_table}
-            WHERE memberid == {thing_table}.id
-        )
-        '''
-
-        rows = self.sql_select(query)
-        for row in rows:
-            thing = self.get_cached_instance(thing_type, row)
-            yield thing
-
-    def get_thing_by_id(self, thing_type, thing_id):
-        '''
-        This method will first check the cache to see if there is already an
-        instance with that ID, in which case we don't need to perform any SQL
-        select. If it is not in the cache, then a new instance is created,
-        cached, and returned.
-        '''
-        thing_map = _THING_CLASSES[thing_type]
-
-        thing_class = thing_map['class']
-        if isinstance(thing_id, thing_class):
-            # This could be used to check if your old reference to an object is
-            # still in the cache, or re-select it from the db to make sure it
-            # still exists and re-cache.
-            # Probably an uncommon need but... no harm I think.
-            thing_id = thing_id.id
-
-        thing_cache = self.caches[thing_type]
-        try:
-            return thing_cache[thing_id]
-        except KeyError:
-            pass
-
-        query = 'SELECT * FROM %s WHERE id == ?' % thing_class.table
-        bindings = [thing_id]
-        thing_row = self.sql_select_one(query, bindings)
-        if thing_row is None:
-            raise thing_map['exception'](thing_id)
-        thing = thing_class(self, thing_row)
-        thing_cache[thing_id] = thing
-        return thing
-
-    def get_things(self, thing_type):
-        '''
-        Yield things, unfiltered, in whatever order they appear in the database.
-        '''
-        thing_map = _THING_CLASSES[thing_type]
-
-        query = 'SELECT * FROM %s' % thing_map['class'].table
-
-        things = self.sql_select(query)
-        for thing_row in things:
-            thing = self.get_cached_instance(thing_type, thing_row)
-            yield thing
-
-    def get_things_by_id(self, thing_type, thing_ids):
-        '''
-        Given multiple IDs, this method will find which ones are in the cache
-        and which ones need to be selected from the db.
-        This is better than calling get_thing_by_id in a loop because we can
-        use a single SQL select to get batches of up to 999 items.
-        '''
-        thing_map = _THING_CLASSES[thing_type]
-        thing_class = thing_map['class']
-        thing_cache = self.caches[thing_type]
-
-        ids_needed = set()
-        for thing_id in thing_ids:
-            try:
-                thing = thing_cache[thing_id]
-            except KeyError:
-                ids_needed.add(thing_id)
-            else:
-                yield thing
-
-        ids_needed = list(ids_needed)
-        while ids_needed:
-            # SQLite3 has a limit of 999 ? in a query, so we must batch them.
-            id_batch = ids_needed[:999]
-            ids_needed = ids_needed[999:]
-
-            qmarks = ','.join('?' * len(id_batch))
-            qmarks = '(%s)' % qmarks
-            query = 'SELECT * FROM %s WHERE id IN %s' % (thing_class.table, qmarks)
-            more_things = self.sql_select(query, id_batch)
-            for thing_row in more_things:
-                # Normally we would call `get_cached_instance` instead of
-                # constructing here. But we already know for a fact that this
-                # object is not in the cache because it made it past the
-                # previous loop.
-                thing = thing_class(self, db_row=thing_row)
-                thing_cache[thing.id] = thing
-                yield thing
-
     def load_config(self):
         (config, needs_rewrite) = configlayers.load_file(
             filepath=self.config_filepath,
@@ -1636,34 +1670,6 @@ class PhotoDB(
         with open(self.config_filepath.absolute_path, 'w', encoding='utf-8') as handle:
             handle.write(json.dumps(self.config, indent=4, sort_keys=True))
 
-
-_THING_CLASSES = {
-    'album':
-    {
-        'class': objects.Album,
-        'exception': exceptions.NoSuchAlbum,
-    },
-    'bookmark':
-    {
-        'class': objects.Bookmark,
-        'exception': exceptions.NoSuchBookmark,
-    },
-    'photo':
-    {
-        'class': objects.Photo,
-        'exception': exceptions.NoSuchPhoto,
-    },
-    'tag':
-    {
-        'class': objects.Tag,
-        'exception': exceptions.NoSuchTag,
-    },
-    'user':
-    {
-        'class': objects.User,
-        'exception': exceptions.NoSuchUser,
-    }
-}
 
 if __name__ == '__main__':
     p = PhotoDB()
