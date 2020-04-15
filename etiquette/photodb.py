@@ -677,8 +677,11 @@ class PDBSQLMixin:
         self.on_commit_queue = []
         self.on_rollback_queue = []
         self.savepoints = []
+        self._cached_sql_tables = None
 
     def assert_table_exists(self, table):
+        if not self._cached_sql_tables:
+            self._cached_sql_tables = self.get_sql_tables()
         if table not in self._cached_sql_tables:
             raise exceptions.BadTable(table)
 
@@ -1390,8 +1393,6 @@ class PhotoDB(
         self.log.setLevel(self.config['log_level'])
 
         # OTHER
-        self._cached_sql_tables = self.get_sql_tables()
-
         self._cached_frozen_children = None
 
         self.caches = {
