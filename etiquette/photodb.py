@@ -765,8 +765,8 @@ class PDBSQLMixin:
         else:
             self.log.debug('Rolling back.')
             self.sql_execute('ROLLBACK')
-            self.savepoints = []
-            self.on_commit_queue = []
+            self.savepoints.clear()
+            self.on_commit_queue.clear()
 
     def savepoint(self, message=None):
         savepoint_id = helpers.random_hex(length=16)
