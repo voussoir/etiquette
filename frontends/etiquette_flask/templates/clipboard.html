@@ -326,7 +326,10 @@ function refresh_metadata_callback(response)
 function refresh_metadata_form()
 {
     if (photo_clipboard.clipboard.size == 0)
-        {return;}
+    {
+        window[refresh_metadata_button.dataset.spinnerCloser]();
+        return;
+    }
 
     var url = "/batch/photos/refresh_metadata";
     var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
