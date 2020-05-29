@@ -262,7 +262,7 @@ function init_button_with_confirm()
     });
 }
 
-var spinner_button_count = 0;
+var spinner_button_index = 0;
 common.init_button_with_spinner =
 function init_button_with_spinner()
 {
@@ -317,8 +317,8 @@ function init_button_with_spinner()
         }
         delete button.dataset.onclick;
 
-        var closer_id = "spinner_closer_" + spinner_button_count;
-        spinner_button_count += 1;
+        var closer_id = "spinner_closer_" + spinner_button_index;
+        spinner_button_index += 1;
         window[closer_id] = function spinner_closer()
         {
             spin.hide();
