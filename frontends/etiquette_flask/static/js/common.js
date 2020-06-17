@@ -133,6 +133,32 @@ function html_to_element(html)
     return template.content.firstChild;
 }
 
+common.init_atag_merge_params =
+function init_atag_merge_params()
+{
+    /*
+    To create an <a> tag where the ?parameters written on the href are merged
+    with the parameters of the current page URL, give it the class
+    "merge_params". If the URL and href contain the same parameter, the href
+    takes priority.
+
+    Example:
+        URL: ?filter=hello&orderby=score
+        href: "?orderby=date"
+        Result: "?filter=hello&orderby=date"
+    */
+    var as = Array.from(document.getElementsByClassName("merge_params"));
+    page_params = new URLSearchParams(window.location.search);
+    as.forEach(function(a){
+        var a_params = new URLSearchParams(a.search);
+        var new_params = new URLSearchParams();
+        page_params.forEach(function(value, key) {new_params.set(key, value); });
+        a_params.forEach(function(value, key) {new_params.set(key, value); });
+        a.search = new_params.toString();
+        a.classList.remove("merge_params");
+    });
+}
+
 common.init_button_with_confirm =
 function init_button_with_confirm()
 {
@@ -258,6 +284,7 @@ function refresh()
 common.on_pageload =
 function on_pageload()
 {
+    common.init_atag_merge_params();
     common.init_button_with_confirm();
 }
 document.addEventListener("DOMContentLoaded", common.on_pageload);
