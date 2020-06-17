@@ -80,9 +80,6 @@ function init_button_with_spinner()
     When you're ready for the spinner to disappear, call
     window[button.dataset.spinnerCloser]().
 
-    Required:
-        data-onclick: The string that would normally be the button's onclick.
-
     Optional:
         data-spinner-id: If you want to use your own element as the spinner,
             give its ID here. Otherwise a new one will be created.
@@ -139,7 +136,7 @@ function init_button_with_spinner()
             spin.show(spin_delay);
             button.disabled = true;
         }
-        // It is expected that the function referenced by data-onclick will call
+        // It is expected that the function referenced by onclick will call
         // window[button.dataset.spinnerCloser]() when appropriate, since from
         // our perspective we cannot be sure when to close the spinner.
         button.dataset.spinnerCloser = "spinner_closer_" + spinner.spinner_button_index;
@@ -150,7 +147,8 @@ function init_button_with_spinner()
             button.disabled = false;
         }
 
-        var wrapped_onclick = Function(button.dataset.onclick);
+        var wrapped_onclick = button.onclick;
+        button.removeAttribute('onclick');
         button.onclick = function()
         {
             if (button.dataset.spinnerGroup)
@@ -163,7 +161,6 @@ function init_button_with_spinner()
             }
             return wrapped_onclick();
         }
-        delete button.dataset.onclick;
 
         spinner.spinner_button_index += 1;
     });

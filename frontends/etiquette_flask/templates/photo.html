@@ -244,7 +244,7 @@
     </div>
     <div id="hovering_tools">
         {% if photo.simple_mimetype == "video" %}
-        <button id="generate_thumbnail_button" class="green_button button_with_spinner" data-onclick="generate_thumbnail_for_video(event)">Capture thumbnail</button>
+        <button id="generate_thumbnail_button" class="green_button button_with_spinner" onclick="generate_thumbnail_for_video(event)">Capture thumbnail</button>
         {% endif %}
         <button
         class="red_button button_with_confirm"
