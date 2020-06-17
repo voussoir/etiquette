@@ -13,8 +13,8 @@ function _request(method, url, callback)
             if (callback != null)
             {
                 var response = {
-                    "data": JSON.parse(request.responseText),
-                    "meta": {}
+                    "meta": {},
+                    "data": JSON.parse(request.responseText)
                 };
                 response["meta"]["request_url"] = url;
                 response["meta"]["status"] = request.status;
