@@ -125,19 +125,6 @@ function entry_with_history_hook(event)
     }
 }
 
-common.entry_with_tagname_replacements =
-function entry_with_tagname_replacements(event)
-{
-    var cursor_position = event.target.selectionStart;
-    var new_value = common.tagname_replacements(event.target.value);
-    if (new_value != event.target.value)
-    {
-        event.target.value = new_value;
-        event.target.selectionStart = cursor_position;
-        event.target.selectionEnd = cursor_position;
-    }
-}
-
 common.html_to_element =
 function html_to_element(html)
 {
@@ -260,26 +247,6 @@ function init_button_with_confirm()
         }
         delete button.dataset.onclick;
     });
-}
-
-common.normalize_tagname =
-function normalize_tagname(tagname)
-{
-    tagname = tagname.trim();
-    tagname = tagname.toLocaleLowerCase();
-    tagname = tagname.split(".");
-    tagname = tagname[tagname.length-1];
-    tagname = tagname.split("+")[0];
-    tagname = common.tagname_replacements(tagname);
-    return tagname;
-}
-
-common.tagname_replacements =
-function tagname_replacements(tagname)
-{
-    tagname = tagname.replace(new RegExp(" ", 'g'), "_");
-    tagname = tagname.replace(new RegExp("-", 'g'), "_");
-    return tagname;
 }
 
 common.refresh =

@@ -673,11 +673,11 @@ var inputted_forbids = [];
 {% endfor %}
 
 input_musts.addEventListener("keyup", tag_input_hook_musts);
-input_musts.addEventListener("keyup", common.entry_with_tagname_replacements);
-input_mays.addEventListener("keyup",tag_input_hook_mays);
-input_mays.addEventListener("keyup", common.entry_with_tagname_replacements);
+input_musts.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
+input_mays.addEventListener("keyup", tag_input_hook_mays);
+input_mays.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
 input_forbids.addEventListener("keyup", tag_input_hook_forbids);
-input_forbids.addEventListener("keyup", common.entry_with_tagname_replacements);
+input_forbids.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
 
 common.bind_box_to_button(input_expression, document.getElementById("search_go_button"));
 </script>

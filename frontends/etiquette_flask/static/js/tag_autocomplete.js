@@ -2,7 +2,8 @@ var tag_autocomplete = {};
 
 tag_autocomplete.tagset = {"tags": [], "synonyms": {}};
 
-tag_autocomplete.DATALIST_ID = "tag_autocomplete_datalist"
+tag_autocomplete.DATALIST_ID = "tag_autocomplete_datalist";
+
 tag_autocomplete.init_datalist =
 function init_datalist()
 {
@@ -30,10 +31,43 @@ function init_datalist()
     }
 }
 
+tag_automplete.normalize_tagname =
+function normalize_tagname(tagname)
+{
+    tagname = tagname.trim();
+    tagname = tagname.toLocaleLowerCase();
+    tagname = tagname.split(".");
+    tagname = tagname[tagname.length-1];
+    tagname = tagname.split("+")[0];
+    tagname = tag_automplete.tagname_replacements(tagname);
+    return tagname;
+}
+
+tag_automplete.tagname_replacements =
+function tagname_replacements(tagname)
+{
+    tagname = tagname.replace(new RegExp(" ", 'g'), "_");
+    tagname = tagname.replace(new RegExp("-", 'g'), "_");
+    return tagname;
+}
+
+tag_automplete.entry_with_tagname_replacements_hook =
+function entry_with_tagname_replacements_hook(event)
+{
+    var cursor_position = event.target.selectionStart;
+    var new_value = tag_automplete.tagname_replacements(event.target.value);
+    if (new_value != event.target.value)
+    {
+        event.target.value = new_value;
+        event.target.selectionStart = cursor_position;
+        event.target.selectionEnd = cursor_position;
+    }
+}
+
 tag_autocomplete.resolve =
 function resolve(tagname)
 {
-    tagname = common.normalize_tagname(tagname);
+    tagname = tag_autocomplete.normalize_tagname(tagname);
     if (tag_autocomplete.tagset["tags"].indexOf(tagname) != -1)
     {
         return tagname;
@@ -59,6 +93,7 @@ function update_tagset_callback(response)
         {
             tag_autocomplete.init_datalist();
         }
+        console.log(`Updated tagset contains ${tag_autocomplete.tagset.tags.length}.`);
         return tag_autocomplete.tagset;
     }
     console.error(response);

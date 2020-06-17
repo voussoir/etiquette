@@ -277,7 +277,7 @@ var PHOTO_ID = "{{photo.id}}";
 var add_tag_box = document.getElementById('add_tag_textbox');
 var add_tag_button = document.getElementById('add_tag_button');
 add_tag_box.addEventListener("keyup", common.entry_with_history_hook);
-add_tag_box.addEventListener("keyup", common.entry_with_tagname_replacements);
+add_tag_box.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
 common.bind_box_to_button(add_tag_box, add_tag_button, false);
 
 var message_area = document.getElementById('message_area');

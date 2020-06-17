@@ -14,8 +14,9 @@
     {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
-    <script src="/static/js/spinner.js"></script>
     <script src="/static/js/editor.js"></script>
+    <script src="/static/js/spinner.js"></script>
+    <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
 h2, h3
@@ -228,7 +229,7 @@ var add_tag_textbox = document.getElementById('add_tag_textbox');
 var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
 add_tag_textbox.addEventListener("keyup", common.entry_with_history_hook);
-add_tag_textbox.addEventListener("keyup", common.entry_with_tagname_replacements);
+add_tag_textbox.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
 common.bind_box_to_button(add_tag_textbox, add_tag_button, false);
 
 function easybake_form()
