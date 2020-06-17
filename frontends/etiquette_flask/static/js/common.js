@@ -168,6 +168,10 @@ function init_button_with_confirm()
 
     Required:
         data-onclick: String that would normally be the button's onclick.
+            This is done so that if the button_with_confirm fails to initialize,
+            the button will be non-operational as opposed to being operational
+            but with no confirmation. For dangerous actions I think this is a
+            worthwhile move though it could lead to feature downtime.
 
     Optional:
         data-prompt: Text that appears next to the confirm button. Default is
