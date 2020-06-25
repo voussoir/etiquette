@@ -31,7 +31,7 @@ function init_datalist()
     }
 }
 
-tag_automplete.normalize_tagname =
+tag_autocomplete.normalize_tagname =
 function normalize_tagname(tagname)
 {
     tagname = tagname.trim();
@@ -39,11 +39,11 @@ function normalize_tagname(tagname)
     tagname = tagname.split(".");
     tagname = tagname[tagname.length-1];
     tagname = tagname.split("+")[0];
-    tagname = tag_automplete.tagname_replacements(tagname);
+    tagname = tag_autocomplete.tagname_replacements(tagname);
     return tagname;
 }
 
-tag_automplete.tagname_replacements =
+tag_autocomplete.tagname_replacements =
 function tagname_replacements(tagname)
 {
     tagname = tagname.replace(new RegExp(" ", 'g'), "_");
@@ -51,11 +51,11 @@ function tagname_replacements(tagname)
     return tagname;
 }
 
-tag_automplete.entry_with_tagname_replacements_hook =
+tag_autocomplete.entry_with_tagname_replacements_hook =
 function entry_with_tagname_replacements_hook(event)
 {
     var cursor_position = event.target.selectionStart;
-    var new_value = tag_automplete.tagname_replacements(event.target.value);
+    var new_value = tag_autocomplete.tagname_replacements(event.target.value);
     if (new_value != event.target.value)
     {
         event.target.value = new_value;
