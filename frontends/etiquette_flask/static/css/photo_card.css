@@ -1,10 +1,10 @@
 .album_card
 {
-    background-color: var(--color_theme_secondary);
+    background-color: var(--color_secondary);
 }
 .album_card:hover
 {
-    box-shadow: 2px 2px 5px 0px var(--color_site_dropshadow);
+    box-shadow: 2px 2px 5px 0px var(--color_dropshadow);
 }
 .album_card_list
 {
@@ -36,7 +36,7 @@
 .album_card_thumbnail
 {
     grid-area: thumbnail;
-    background-color: var(--color_site_transparency);
+    background-color: var(--color_transparency);
     display: flex;
     width:  100%;
     height: 150px;
@@ -77,11 +77,11 @@
 
 .photo_card
 {
-    background-color: var(--color_theme_secondary);
+    background-color: var(--color_secondary);
 }
 .photo_card:hover
 {
-    box-shadow: 2px 2px 5px 0px var(--color_site_dropshadow);
+    box-shadow: 2px 2px 5px 0px var(--color_dropshadow);
 }
 .photo_card_list
 {

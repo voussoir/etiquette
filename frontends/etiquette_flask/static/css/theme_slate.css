@@ -1,9 +1,9 @@
 :root
 {
-    --color_theme_primary: #222;
-    --color_theme_secondary: #3b4d5d;
-    --color_site_textfields: var(--color_theme_secondary);
-    --color_site_transparency: rgba(255, 255, 255, 0.05);
+    --color_primary: #222;
+    --color_secondary: #3b4d5d;
+    --color_textfields: var(--color_secondary);
+    --color_transparency: rgba(255, 255, 255, 0.05);
     --color_text_normal: #efefef;
     --color_text_link: #1edeff;
     --color_text_bubble: black;

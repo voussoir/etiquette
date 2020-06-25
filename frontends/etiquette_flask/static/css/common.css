@@ -1,7 +1,7 @@
 :root
 {
-    --color_theme_primary: #00d8f4;
-    --color_theme_secondary: #ffffd4;
+    --color_primary: #00d8f4;
+    --color_secondary: #ffffd4;
 
     --color_tag_object_bg: #fff;
     --color_tag_object_fg: blue;
@@ -10,11 +10,11 @@
     --color_text_bubble: black;
     --color_text_link: blue;
 
-    --color_site_textfields: white;
+    --color_textfields: white;
     --color_text_placeholder: gray;
 
-    --color_site_transparency: rgba(0, 0, 0, 0.1);
-    --color_site_dropshadow: rgba(0, 0, 0, 0.25);
+    --color_transparency: rgba(0, 0, 0, 0.1);
+    --color_dropshadow: rgba(0, 0, 0, 0.25);
     --color_3d_shadow: rgba(0, 0, 0, 0.5);
     --color_3d_highlight: rgba(255, 255, 255, 0.5);
 
@@ -56,7 +56,7 @@ input, select, textarea
     border: none;
     border-radius: 2px;
 
-    background-color: var(--color_site_textfields);
+    background-color: var(--color_textfields);
 }
 
 input::placeholder, textarea::placeholder
@@ -73,7 +73,7 @@ body
         "content_body" 1fr
         /1fr;
 
-    background-color: var(--color_theme_primary);
+    background-color: var(--color_primary);
 }
 
 #header
@@ -85,7 +85,7 @@ body
 
     margin: 8px;
 
-    background-color: var(--color_site_transparency);
+    background-color: var(--color_transparency);
 }
 #content_body
 {
@@ -111,7 +111,7 @@ body
 }
 .header_element:hover
 {
-    background-color: var(--color_theme_secondary);
+    background-color: var(--color_secondary);
 }
 
 pre
@@ -154,7 +154,7 @@ pre
     padding: 8px;
     width: var(--size_sticky_side);
     overflow-y: auto;
-    background-color: var(--color_site_transparency);
+    background-color: var(--color_transparency);
 }
 #content_body.sticky_side_left #left
 {
@@ -168,8 +168,8 @@ pre
 {
     #content_body.sticky_side_right #right
     {
-        outline: 8px solid var(--color_theme_primary);
-        background-color: var(--color_theme_primary) !important;
+        outline: 8px solid var(--color_primary);
+        background-color: var(--color_primary) !important;
     }
     #content_body.sticky_side_right #right:before
     {
@@ -179,7 +179,7 @@ pre
         bottom: 0;
         left: 0;
         right: 0;
-        background-color: var(--color_site_transparency);
+        background-color: var(--color_transparency);
         z-index: -1;
     }
 }
@@ -196,7 +196,7 @@ pre
 }
 .panel
 {
-    background-color: var(--color_site_transparency);
+    background-color: var(--color_transparency);
     border-radius: 5px;
     padding: 8px;
 }
@@ -294,7 +294,7 @@ is hovered over.
 
     overflow-y: auto;
 
-    background-color: var(--color_site_transparency);
+    background-color: var(--color_transparency);
 }
 .message_bubble
 {
