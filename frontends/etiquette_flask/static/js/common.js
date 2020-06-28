@@ -18,10 +18,10 @@ function _request(method, url, callback)
             {
                 if (request.status != 0)
                 {
-                    response["completed"] = true;
-                    response["data"] = JSON.parse(request.responseText);
+                    response.completed = true;
+                    response.data = JSON.parse(request.responseText);
                 }
-                response["meta"] = {
+                response.meta = {
                     "request_url": url,
                     "status": request.status
                 }
