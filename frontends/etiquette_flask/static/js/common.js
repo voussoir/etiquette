@@ -6,18 +6,25 @@ common._request =
 function _request(method, url, callback)
 {
     var request = new XMLHttpRequest();
+    var response = {
+        "completed": false,
+    };
+
     request.onreadystatechange = function()
     {
         if (request.readyState == 4)
         {
             if (callback != null)
             {
-                var response = {
-                    "meta": {},
-                    "data": JSON.parse(request.responseText)
-                };
-                response["meta"]["request_url"] = url;
-                response["meta"]["status"] = request.status;
+                if (request.status != 0)
+                {
+                    response["completed"] = true;
+                    response["data"] = JSON.parse(request.responseText);
+                }
+                response["meta"] = {
+                    "request_url": url,
+                    "status": request.status
+                }
                 callback(response);
             }
         }
