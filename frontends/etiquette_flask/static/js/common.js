@@ -12,22 +12,26 @@ function _request(method, url, callback)
 
     request.onreadystatechange = function()
     {
-        if (request.readyState == 4)
+        if (request.readyState != 4)
         {
-            if (callback != null)
-            {
-                if (request.status != 0)
-                {
-                    response.completed = true;
-                    response.data = JSON.parse(request.responseText);
-                }
-                response.meta = {
-                    "request_url": url,
-                    "status": request.status
-                }
-                callback(response);
-            }
+            return;
         }
+
+        if (callback == null)
+        {
+            return;
+        }
+
+        if (request.status != 0)
+        {
+            response.completed = true;
+            response.data = JSON.parse(request.responseText);
+        }
+        response.meta = {
+            "request_url": url,
+            "status": request.status
+        }
+        callback(response);
     };
     var asynchronous = true;
     request.open(method, url, asynchronous);
