@@ -246,25 +246,25 @@ function easybake_form()
 
 function tag_action_callback(response)
 {
-    responses = response["data"];
-    if (!(responses instanceof Array))
+    datas = response.data;
+    if (!(datas instanceof Array))
     {
-        responses = [responses];
+        datas = [datas];
     }
-    for (var index = 0; index < responses.length; index += 1)
+    for (var index = 0; index < datas.length; index += 1)
     {
-        var response = responses[index];
-        var tagname = response["tagname"];
+        var data = datas[index];
+        var tagname = data.tagname;
         var message_positivity;
         var message_text;
-        if ("error_type" in response)
+        if ("error_type" in data)
         {
             message_positivity = "message_negative";
-            message_text = response["error_message"];
+            message_text = data.error_message;
         }
-        else if ("action" in response)
+        else if ("action" in data)
         {
-            var action = response["action"];
+            var action = data.action;
             message_positivity = "message_positive";
             if (action == "new_tag")
             {message_text = `Created tag ${tagname}`;}
@@ -285,7 +285,7 @@ function tag_action_callback(response)
             {message_text = `Deleted tag ${tagname}`;}
 
             else if (action == "delete_synonym")
-            {message_text = `Deleted synonym ${response["synonym"]}`;}
+            {message_text = `Deleted synonym ${data.synonym}`;}
 
             else if (action == "remove_child")
             {message_text = `Unlinked tags ${tagname}`;}
@@ -308,10 +308,10 @@ function on_save(ed, edit_element_map, display_element_map)
     {
         console.log(response);
         ed.hide_spinner();
-        if (response["meta"]["status"] == 200)
+        if (response.meta.status == 200)
         {
-            var new_name = response["data"]["name"];
-            var new_description = response["data"]["description"];
+            var new_name = response.data.name;
+            var new_description = response.data.description;
             document.title = new_name + " | Tags";
             window.history.replaceState(null, null, "/tag/" + new_name);
             name_editor.value = new_name;

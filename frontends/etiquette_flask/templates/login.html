@@ -118,10 +118,9 @@ function register_form(event)
 
 function login_register_callback(response)
 {
-    response = response["data"];
-    if ("error_type" in response)
+    if ("error_type" in response.data)
     {
-        common.create_message_bubble(message_area, "message_negative", response["error_message"]);
+        common.create_message_bubble(message_area, "message_negative", response.data.error_message);
         return;
     }
     else

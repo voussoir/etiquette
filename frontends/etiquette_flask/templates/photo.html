@@ -302,21 +302,21 @@ function add_remove_photo_tag_callback(response)
 {
     var message_text;
     var message_positivity;
-    var tagname = response["data"]["tagname"];
-    if ("error_type" in response["data"])
+    var tagname = response.data.tagname;
+    if ("error_type" in response.data)
     {
         message_positivity = "message_negative";
-        message_text = response["data"]["error_message"];
+        message_text = response.data.error_message;
     }
     else
     {
         var action;
         message_positivity = "message_positive";
-        if (response["meta"]["request_url"].includes("add_tag"))
+        if (response.meta.request_url.includes("add_tag"))
         {
             message_text = "Added tag " + tagname;
         }
-        else if (response["meta"]["request_url"].includes("remove_tag"))
+        else if (response.meta.request_url.includes("remove_tag"))
         {
             message_text = "Removed tag " + tagname;
         }
@@ -330,13 +330,13 @@ function add_remove_photo_tag_callback(response)
 
 function generate_thumbnail_callback(response)
 {
-    if (response["meta"]["status"] == 200)
+    if (response.meta.status == 200)
     {
         common.create_message_bubble(message_area, "message_positive", "Thumbnail captured", 8000);
     }
     else
     {
-        common.create_message_bubble(message_area, "message_negative", response["data"]["error_message"], 8000);
+        common.create_message_bubble(message_area, "message_negative", response.data.error_message, 8000);
     }
     generate_thumbnail_button = document.getElementById("generate_thumbnail_button");
     window[generate_thumbnail_button.dataset.spinnerCloser]();

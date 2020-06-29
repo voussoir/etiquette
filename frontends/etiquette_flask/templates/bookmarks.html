@@ -119,15 +119,15 @@ function on_save(ed, edit_element_map, display_element_map)
 {
     function callback(response)
     {
-        if (response["meta"]["status"] != 200)
+        if (response.meta.status != 200)
         {
-            ed.show_error("Status: " + response["meta"]["status"]);
+            ed.show_error("Status: " + response.meta.status);
             return;
         }
 
         ed.save();
-        display_element_map["title"].href = response["data"]["url"];
-        display_element_map["url"].href = response["data"]["url"];
+        display_element_map["title"].href = response.data.url;
+        display_element_map["url"].href = response.data.url;
     }
 
     edit_element_map["url"].value = edit_element_map["url"].value.trim();

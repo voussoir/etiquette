@@ -194,15 +194,14 @@ function request_more_divs()
     data.append("photo_ids", photo_ids);
     function callback(response)
     {
-        if (response["meta"]["status"] !== 200)
+        if (response.meta.status !== 200)
         {
             return;
         }
-        response = response["data"];
         var holder = document.getElementById("photo_card_holder");
-        for (photo_id in response)
+        for (photo_id in response.data)
         {
-            photo_div = common.html_to_element(response[photo_id]);
+            photo_div = common.html_to_element(response.data[photo_id]);
             divs[photo_id] = photo_div;
             needed.delete(photo_id)
             holder.appendChild(photo_div);
@@ -238,20 +237,19 @@ function add_remove_tag(action, tagname)
 }
 function add_remove_tag_callback(response)
 {
-    response = response["data"];
-    var tagname = response["tagname"];
+    var tagname = response.data.tagname;
     var message_area = document.getElementById("message_area");
     var message_positivity;
     var message_text;
 
-    if ("error_type" in response)
+    if ("error_type" in response.data)
     {
         message_positivity = "message_negative";
-        message_text = response["error_message"];
+        message_text = response.data.error_message;
     }
-    else if ("action" in response)
+    else if ("action" in response.data)
     {
-        var action = response["action"];
+        var action = response.data.action;
         message_positivity = "message_positive";
         if (action == "add")
         {message_text = "Added tag " + tagname;}
@@ -286,7 +284,7 @@ function remove_tag_form()
 
 function download_zip_callback(response)
 {
-    var zip_token = response["data"]["zip_token"];
+    var zip_token = response.data.zip_token;
     var url = `/batch/photos/download_zip/${zip_token}.zip`;
     window.location.href = url;
 }
@@ -308,13 +306,12 @@ var refresh_metadata_button = document.getElementById("refresh_metadata_button")
 
 function refresh_metadata_callback(response)
 {
-    response = response["data"];
     window[refresh_metadata_button.dataset.spinnerCloser]();
-    if ("error_type" in response)
+    if ("error_type" in response.data)
     {
         var message_area = document.getElementById("message_area");
         var message_positivity = "message_negative";
-        var message_text = response["error_message"];
+        var message_text = response.data.error_message;
         common.create_message_bubble(message_area, message_positivity, message_text, 8000);
     }
     else
@@ -342,14 +339,13 @@ function refresh_metadata_form()
 
 function set_unset_searchhidden_callback(response)
 {
-    response = response["data"];
     var message_area = document.getElementById("message_area");
     var message_positivity;
     var message_text;
-    if ("error_type" in response)
+    if ("error_type" in response.data)
     {
         message_positivity = "message_negative";
-        message_text = response["error_message"];
+        message_text = response.data.error_message;
     }
     else
     {
