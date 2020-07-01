@@ -247,7 +247,7 @@ function easybake_form()
 function tag_action_callback(response)
 {
     datas = response.data;
-    if (!(datas instanceof Array))
+    if (!Array.isArray(datas))
     {
         datas = [datas];
     }
