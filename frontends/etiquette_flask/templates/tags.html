@@ -143,7 +143,7 @@ h2, h3
         {% set parents = specific_tag.get_parents() %}
         {% if parents %}
         <div id="hierarchy_parents">
-            <h3>Parents</h3>
+            <h3>{{parents|length}} Parents</h3>
             <ul id="parent_list">
             {% for ancestor in specific_tag.get_parents() %}
             <li>
@@ -155,14 +155,16 @@ h2, h3
         </div>
         {% endif %}
 
-        {% set tag_list_header = "<h3>Children</h3>" %}
         {% else %}
-        {% set tag_list_header = "<h2>Tags</h2>" %}
         {% endif %}
 
         {% if tags or not specific_tag %}
         <div id="hierarchy_tags">
-            {{ tag_list_header | safe }}
+            {% if specific_tag %}
+            <h3>{{tags|length}} Descendants</h3>
+            {% else %}
+            <h2>{{tags|length}} Tags</h2>
+            {% endif %}
             <ul id="tag_list">
             {% for (qualified_name, tag) in tags %}
                 {% if "." in qualified_name %}
