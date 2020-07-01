@@ -13,14 +13,10 @@ function _request(method, url, callback)
     request.onreadystatechange = function()
     {
         if (request.readyState != 4)
-        {
-            return;
-        }
+            {return;}
 
         if (callback == null)
-        {
-            return;
-        }
+            {return;}
 
         if (request.status != 0)
         {
@@ -55,14 +51,22 @@ function post(url, data, callback)
 common.bind_box_to_button =
 function bind_box_to_button(box, button, ctrl_enter)
 {
-    // Thanks Yaroslav Yakovlev
-    // http://stackoverflow.com/a/9343095
+    /*
+    Bind a textbox to a button so that pressing Enter within the textbox is the
+    same as clicking the button.
+
+    If `ctrl_enter` is true, then you must press ctrl+Enter to trigger the
+    button, which is important for textareas.
+
+    Thanks Yaroslav Yakovlev
+    http://stackoverflow.com/a/9343095
+    */
     var bound_box_hook = function(event)
     {
         if (event.key !== "Enter")
             {return;}
 
-        ctrl_success = !ctrl_enter || (event.ctrlKey)
+        ctrl_success = !ctrl_enter || (event.ctrlKey);
 
         if (! ctrl_success)
             {return;}
