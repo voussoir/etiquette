@@ -86,7 +86,9 @@ function init_button_with_spinner()
 
         data-spinner-delay: The number of milliseconds to wait before the
             spinner appears. For tasks that you expect to run very quickly,
-            this helps prevent a pointlessly short spinner.
+            this helps prevent a pointlessly short spinner. Note that the button
+            always becomes disabled immediately, and this delay only affects
+            the separate spinner element.
 
         data-holder-class: CSS class for the new span that holds the menu.
 
