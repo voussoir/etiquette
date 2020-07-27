@@ -32,6 +32,8 @@
     height: 225px;
     margin: 8px;
     padding: 8px;
+
+    border-radius: 8px;
 }
 .album_card_thumbnail
 {
