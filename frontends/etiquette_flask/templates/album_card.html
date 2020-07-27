@@ -49,7 +49,7 @@ draggable=true
         {% else %}
         {% set child_count = album.get_children()|length %}
         {% set photo_count = album.sum_photos(recurse=False) %}
-        <span class="album_card_child_count" title="{{child_count}} children">{{child_count}}</span>
+        <span class="album_card_child_count" title="{{child_count}} child albums">{{child_count}}</span>
         {{-' | '-}}
         <span class="album_card_photo_count" title="{{photo_count}} photos">{{photo_count}}</span>
         {% endif %}
