@@ -210,6 +210,20 @@ button:disabled
 {
     background-color: #cccccc !important;
 }
+button
+{
+    border-top: 2px solid var(--color_3d_highlight);
+    border-left: 2px solid var(--color_3d_highlight);
+    border-right: 2px solid var(--color_3d_shadow);
+    border-bottom: 2px solid var(--color_3d_shadow);
+}
+button:active
+{
+    border-top: 2px solid var(--color_3d_shadow);
+    border-left: 2px solid var(--color_3d_shadow);
+    border-right: 2px solid var(--color_3d_highlight);
+    border-bottom: 2px solid var(--color_3d_highlight);
+}
 .gray_button
 {
     background-color: #cccccc;
@@ -225,21 +239,6 @@ button:disabled
 .yellow_button
 {
     background-color: #ffea57;
-}
-
-button
-{
-    border-top: 2px solid var(--color_3d_highlight);
-    border-left: 2px solid var(--color_3d_highlight);
-    border-right: 2px solid var(--color_3d_shadow);
-    border-bottom: 2px solid var(--color_3d_shadow);
-}
-button:active
-{
-    border-top: 2px solid var(--color_3d_shadow);
-    border-left: 2px solid var(--color_3d_shadow);
-    border-right: 2px solid var(--color_3d_highlight);
-    border-bottom: 2px solid var(--color_3d_highlight);
 }
 
 .remove_tag_button,
