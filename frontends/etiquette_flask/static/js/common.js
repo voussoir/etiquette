@@ -195,7 +195,9 @@ function init_button_with_confirm()
 
         data-confirm: Text inside the confirm button. Default is to inherit the
             original button's text.
-        data-confirm-class
+        data-confirm-class: CSS class for the confirm button. Default is to
+            inheret all classes of the original button, except for
+            "button_with_confirm" of course.
 
         data-cancel: Text inside the cancel button. Default is "Cancel".
         data-cancel-class
@@ -244,7 +246,15 @@ function init_button_with_confirm()
 
         var button_confirm = document.createElement("button");
         button_confirm.innerText = (button.dataset.confirm || button.innerText).trim();
-        button_confirm.className = button.dataset.confirmClass || "";
+        if (button.dataset.confirmClass === undefined)
+        {
+            button_confirm.className = button.className;
+            button_confirm.classList.remove("button_with_confirm");
+        }
+        else
+        {
+            button_confirm.className = button.dataset.confirmClass;
+        }
         button_confirm.input_source = input_source;
         holder_stage2.appendChild(button_confirm);
         holder_stage2.appendChild(document.createTextNode(" "));

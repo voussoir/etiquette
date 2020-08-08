@@ -127,7 +127,6 @@ h2, h3
         class="green_button button_with_confirm"
         data-is-input="1"
         data-prompt="Album title"
-        data-confirm-class="green_button"
         data-cancel-class="gray_button"
         data-onclick="create_child(event.target.input_source.value);"
         >
@@ -181,7 +180,6 @@ ALBUM_ID = undefined;
         class="red_button button_with_confirm"
         data-onclick="api.albums.delete(ALBUM_ID, api.albums.callback_go_to_albums)"
         data-prompt="Delete Album?"
-        data-confirm-class="red_button"
         data-cancel-class="gray_button"
         >
             Delete
@@ -191,7 +189,6 @@ ALBUM_ID = undefined;
         class="green_button button_with_confirm"
         data-is-input="1"
         data-prompt="Album title"
-        data-confirm-class="green_button"
         data-cancel-class="gray_button"
         data-onclick="create_child(event.target.input_source.value);"
         >
@@ -202,7 +199,6 @@ ALBUM_ID = undefined;
         class="green_button button_with_confirm"
         data-is-input="1"
         data-prompt="Child ID"
-        data-confirm-class="green_button"
         data-cancel-class="gray_button"
         data-onclick="add_child(event.target.input_source.value);"
         >
