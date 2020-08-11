@@ -284,9 +284,17 @@ def upgrade_all(data_directory):
         print('Upgrading from %d to %d.' % (current_version, version_number))
         upgrade_function = 'upgrade_%d_to_%d' % (current_version, version_number)
         upgrade_function = eval(upgrade_function)
-        upgrade_function(photodb)
-        photodb.sql.cursor().execute('PRAGMA user_version = %d' % version_number)
-        photodb.commit()
+
+        try:
+            photodb.sql.execute('BEGIN')
+            upgrade_function(photodb)
+        except Exception as exc:
+            photodb.rollback()
+            raise
+        else:
+            photodb.sql.cursor().execute('PRAGMA user_version = %d' % version_number)
+            photodb.commit()
+
         current_version = version_number
     print('Upgrades finished.')
 
