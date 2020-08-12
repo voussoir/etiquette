@@ -88,26 +88,21 @@ def checkerboard_image(color_1, color_2, image_size, checker_size):
 
 def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
     '''
-    Given a sequence, divide it into sequences of length `chunk_length`.
+    Given a sequence, yield lists of length `chunk_length`.
 
     allow_incomplete:
         If True, allow the final chunk to be shorter if the
         given sequence is not an exact multiple of `chunk_length`.
         If False, the incomplete chunk will be discarded.
     '''
-    (complete, leftover) = divmod(len(sequence), chunk_length)
-    if not allow_incomplete:
-        leftover = 0
-
-    chunk_count = complete + min(leftover, 1)
-
-    chunks = []
-    for x in range(chunk_count):
-        left = chunk_length * x
-        right = left + chunk_length
-        chunks.append(sequence[left:right])
-
-    return chunks
+    import itertools
+    iterator = iter(sequence)
+    while True:
+        chunk = list(itertools.islice(iterator, chunk_length))
+        if not chunk:
+            break
+        if len(chunk) == chunk_length or allow_incomplete:
+            yield chunk
 
 def comma_space_split(s):
     '''
