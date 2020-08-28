@@ -304,6 +304,17 @@ function init_button_with_confirm()
     });
 }
 
+common.init_enable_on_pageload =
+function init_enable_on_pageload()
+{
+    var elements = Array.from(document.getElementsByClassName("enable_on_pageload"));
+    elements.forEach(function(element)
+    {
+        element.disabled = false;
+        element.classList.remove("enable_on_pageload");
+    });
+}
+
 common.refresh =
 function refresh()
 {
@@ -315,5 +326,6 @@ function on_pageload()
 {
     common.init_atag_merge_params();
     common.init_button_with_confirm();
+    common.init_enable_on_pageload();
 }
 document.addEventListener("DOMContentLoaded", common.on_pageload);
