@@ -57,7 +57,7 @@
     {% else %}
         {% set tag_names_inner = "" %}
     {% endif -%}
-    <a class="photo_card_thumbnail" target="_blank" href="/photo/{{photo.id}}"><img src="{{thumbnail_src}}"></a>
+    <a class="photo_card_thumbnail" target="_blank" href="/photo/{{photo.id}}"><img loading="lazy" src="{{thumbnail_src}}"></a>
     <span class="photo_card_tags" title="{{tag_names_title}}">{{tag_names_inner}}</span>
     {% endif %}
 </div>
