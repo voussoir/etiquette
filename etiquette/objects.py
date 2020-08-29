@@ -893,15 +893,22 @@ class Photo(ObjectBase):
         '''
         self.photodb.log.debug('Reloading metadata for %s', self)
 
-        # If the file has disappeared, this will just return None.
-        self.bytes = self.real_path.size
+        self.bytes = None
         self.width = None
         self.height = None
         self.area = None
         self.ratio = None
         self.duration = None
 
-        if self.simple_mimetype == 'image':
+        try:
+            self.bytes = self.real_path.size
+        except pathclass.NotExists:
+            pass
+
+        if self.bytes is None:
+            pass
+
+        elif self.simple_mimetype == 'image':
             try:
                 image = PIL.Image.open(self.real_path.absolute_path)
             except (OSError, ValueError):
