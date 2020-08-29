@@ -214,4 +214,5 @@
     border: 2px solid blue;
     background-color: rgba(0, 0, 255, 0.25);
     border-radius: inherit;
+    z-index: 1;
 }
