@@ -884,6 +884,48 @@ class Photo(ObjectBase):
         new_path.assert_not_exists()
         self.rename_file(new_path.absolute_path, move=True)
 
+    def _reload_image_metadata(self):
+        try:
+            image = PIL.Image.open(self.real_path.absolute_path)
+        except (OSError, ValueError):
+            traceback.print_exc()
+            return
+
+        (self.width, self.height) = image.size
+        image.close()
+
+    def _reload_video_metadata(self):
+        if not constants.ffmpeg:
+            return
+
+        try:
+            probe = constants.ffmpeg.probe(self.real_path.absolute_path)
+        except Exception:
+            traceback.print_exc()
+            return
+
+        if not probe or not probe.video:
+            return
+
+        self.width = probe.video.video_width
+        self.height = probe.video.video_height
+        self.duration = probe.format.duration or probe.video.duration
+
+    def _reload_audio_metadata(self):
+        if not constants.ffmpeg:
+            return
+
+        try:
+            probe = constants.ffmpeg.probe(self.real_path.absolute_path)
+        except Exception:
+            traceback.print_exc()
+            return
+
+        if not probe or not probe.audio:
+            return
+
+        self.duration = probe.audio.duration
+
     #@decorators.time_me
     @decorators.required_feature('photo.reload_metadata')
     @decorators.transaction
@@ -909,31 +951,13 @@ class Photo(ObjectBase):
             pass
 
         elif self.simple_mimetype == 'image':
-            try:
-                image = PIL.Image.open(self.real_path.absolute_path)
-            except (OSError, ValueError):
-                self.photodb.log.debug('Failed to read image data for %s', self)
-            else:
-                (self.width, self.height) = image.size
-                image.close()
+            self._reload_image_metadata()
 
-        elif self.simple_mimetype == 'video' and constants.ffmpeg:
-            try:
-                probe = constants.ffmpeg.probe(self.real_path.absolute_path)
-                if probe and probe.video:
-                    self.duration = probe.format.duration or probe.video.duration
-                    self.width = probe.video.video_width
-                    self.height = probe.video.video_height
-            except Exception:
-                traceback.print_exc()
+        elif self.simple_mimetype == 'video':
+            self._reload_video_metadata()
 
-        elif self.simple_mimetype == 'audio' and constants.ffmpeg:
-            try:
-                probe = constants.ffmpeg.probe(self.real_path.absolute_path)
-                if probe and probe.audio:
-                    self.duration = probe.audio.duration
-            except Exception:
-                traceback.print_exc()
+        elif self.simple_mimetype == 'audio':
+            self._reload_audio_metadata()
 
         if self.width and self.height:
             self.area = self.width * self.height
