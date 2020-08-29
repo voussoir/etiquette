@@ -866,7 +866,7 @@ class Photo(ObjectBase):
         '''
         Create the filepath that should be the location of our thumbnail.
         '''
-        chunked_id = helpers.chunk_sequence(self.id, 3)
+        chunked_id = [''.join(chunk) for chunk in helpers.chunk_sequence(self.id, 3)]
         (folder, basename) = (chunked_id[:-1], chunked_id[-1])
         folder = os.sep.join(folder)
         folder = self.photodb.thumbnail_directory.join(folder)
