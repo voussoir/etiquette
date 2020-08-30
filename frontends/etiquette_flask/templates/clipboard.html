@@ -198,7 +198,6 @@ function request_more_divs()
         {
             return;
         }
-        var holder = document.getElementById("photo_card_holder");
         for (photo_id in response.data)
         {
             photo_div = common.html_to_element(response.data[photo_id]);
