@@ -217,7 +217,7 @@ function ingest_toolbox_items()
         var box = moreboxes[i];
         while (box.firstElementChild)
         {
-            toolbox.appendChild(box.removeChild(box.firstElementChild));
+            toolbox.appendChild(box.firstElementChild);
         }
         box.parentElement.removeChild(box);
     }
