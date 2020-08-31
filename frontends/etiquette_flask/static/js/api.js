@@ -165,6 +165,53 @@ function add_tag(photo_id, tagname, callback)
     common.post(url, data, callback);
 }
 
+api.photos.batch_add_tag =
+function batch_add_tag(photo_ids, tagname, callback)
+{
+    var url = "/batch/photos/add_tag";
+    var data = new FormData();
+    data.append("photo_ids", photo_ids.join(","));
+    data.append("tagname", tagname);
+    common.post(url, data, add_remove_tag_callback);
+}
+
+api.photos.batch_refresh_metadata =
+function batch_refresh_metadata(photo_ids, callback)
+{
+    var url = "/batch/photos/refresh_metadata";
+    var data = new FormData();
+    data.append("photo_ids", photo_ids.join(","));
+    common.post(url, data, callback);
+}
+
+api.photos.batch_remove_tag =
+function batch_remove_tag(photo_ids, tagname, callback)
+{
+    var url = "/batch/photos/remove_tag";
+    var data = new FormData();
+    data.append("photo_ids", photo_ids.join(","));
+    data.append("tagname", tagname);
+    common.post(url, data, add_remove_tag_callback);
+}
+
+api.photos.batch_set_searchhidden =
+function batch_set_searchhidden(photo_ids, callback)
+{
+    var url = "/batch/photos/set_searchhidden";
+    var data = new FormData();
+    data.append("photo_ids", photo_ids.join(","));
+    common.post(url, data, callback);
+}
+
+api.photos.batch_unset_searchhidden =
+function batch_unset_searchhidden(photo_ids, callback)
+{
+    var url = "/batch/photos/unset_searchhidden";
+    var data = new FormData();
+    data.append("photo_ids", photo_ids.join(","));
+    common.post(url, data, callback);
+}
+
 api.photos.delete =
 function _delete(photo_id, delete_file, callback)
 {
@@ -184,6 +231,29 @@ function generate_thumbnail(photo_id, special, callback)
         data.append(x, special[x]);
     }
     common.post(url, data, callback);
+}
+
+api.photos.get_download_zip_token =
+function get_download_zip_token(photo_ids, callback)
+{
+    var url = "/batch/photos/download_zip";
+    var data = new FormData();
+    data.append("photo_ids", photo_ids.join(","));
+    common.post(url, data, callback);
+}
+
+api.photos.download_zip =
+function download_zip(zip_token)
+{
+    var url = `/batch/photos/download_zip/${zip_token}.zip`;
+    window.location.href = url;
+}
+
+api.photos.callback_download_zip =
+function callback_download_zip(response)
+{
+    var zip_token = response.data.zip_token;
+    api.photos.download_zip(zip_token);
 }
 
 api.photos.refresh_metadata =

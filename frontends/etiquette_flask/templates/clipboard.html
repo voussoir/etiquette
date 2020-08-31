@@ -223,17 +223,6 @@ photo_clipboard.on_save_hooks.push(my_clipboard_load_save_hook);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-function add_remove_tag(action, tagname)
-{
-    if (photo_clipboard.clipboard.size == 0)
-        {return;}
-    var url = "/batch/photos/" + action + "_tag";
-    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
-    var data = new FormData();
-    data.append("photo_ids", photo_ids);
-    data.append("tagname", tagname);
-    common.post(url, data, add_remove_tag_callback);
-}
 function add_remove_tag_callback(response)
 {
     var tagname = response.data.tagname;
@@ -258,45 +247,46 @@ function add_remove_tag_callback(response)
     }
     common.create_message_bubble(message_area, message_positivity, message_text, 8000);
 }
+
 function add_tag_form()
 {
+    if (photo_clipboard.clipboard.size == 0)
+        {return;}
+
     var box = document.getElementById("add_tag_textbox");
     var tagname = box.value.trim();
     if (! tagname)
         {return}
 
     box.value = "";
-    return add_remove_tag("add", tagname);
+    var photo_ids = Array.from(photo_clipboard.clipboard);
+    api.photos.batch_add_tag(photo_ids, tagname, add_remove_tag_callback);
 }
+
 function remove_tag_form()
 {
+    if (photo_clipboard.clipboard.size == 0)
+        {return;}
+
     var box = document.getElementById("remove_tag_textbox");
     var tagname = box.value.trim();
     if (! tagname)
         {return}
 
     box.value = "";
-    return add_remove_tag("remove", tagname);
+    var photo_ids = Array.from(photo_clipboard.clipboard);
+    api.photos.batch_remove_tag(photo_ids, tagname, add_remove_tag_callback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function download_zip_callback(response)
-{
-    var zip_token = response.data.zip_token;
-    var url = `/batch/photos/download_zip/${zip_token}.zip`;
-    window.location.href = url;
-}
 function download_zip_form()
 {
     if (photo_clipboard.clipboard.size == 0)
         {return;}
 
-    var url = "/batch/photos/download_zip";
-    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
-    var data = new FormData();
-    data.append("photo_ids", photo_ids);
-    common.post(url, data, download_zip_callback);
+    var photo_ids = Array.from(photo_clipboard.clipboard);
+    api.photos.get_download_zip_token(photo_ids, api.photos.callback_download_zip);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -327,11 +317,8 @@ function refresh_metadata_form()
         return;
     }
 
-    var url = "/batch/photos/refresh_metadata";
-    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
-    var data = new FormData();
-    data.append("photo_ids", photo_ids);
-    common.post(url, data, refresh_metadata_callback);
+    var photo_ids = Array.from(photo_clipboard.clipboard);
+    api.photos.batch_refresh_metadata(photo_ids, refresh_metadata_callback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -358,24 +345,16 @@ function set_searchhidden_form()
     if (photo_clipboard.clipboard.size == 0)
         {return;}
 
-    var url = "/batch/photos/set_searchhidden";
-    var data = new FormData();
-    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
-
-    data.append("photo_ids", photo_ids);
-    common.post(url, data, set_unset_searchhidden_callback);
+    var photo_ids = Array.from(photo_clipboard.clipboard);
+    api.photos.batch_set_searchhidden(photo_ids, set_unset_searchhidden_callback);
 }
 function unset_searchhidden_form()
 {
     if (photo_clipboard.clipboard.size == 0)
         {return;}
 
-    var url = "/batch/photos/unset_searchhidden";
-    var data = new FormData();
-    var photo_ids = Array.from(photo_clipboard.clipboard).join(",");
-
-    data.append("photo_ids", photo_ids);
-    common.post(url, data, set_unset_searchhidden_callback);
+    var photo_ids = Array.from(photo_clipboard.clipboard);
+    api.photos.batch_unset_searchhidden(photo_ids, set_unset_searchhidden_callback);
 }
 </script>
 </html>
