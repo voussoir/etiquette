@@ -57,19 +57,19 @@ function show_all_hotkeys()
     alert(lines);
 }
 
-window.addEventListener(
-    "keydown",
-    function(event)
+hotkeys.hotkeys_listener =
+function hotkeys_listener(event)
+{
+    if (hotkeys.should_prevent_hotkey(event)) { return; }
+    identifier = hotkeys.hotkey_identifier(event.key, event.ctrlKey, event.shiftKey, event.altKey);
+    console.log(identifier);
+    if (identifier in hotkeys.HOTKEYS)
     {
-        if (hotkeys.should_prevent_hotkey(event)) { return; }
-        identifier = hotkeys.hotkey_identifier(event.key, event.ctrlKey, event.shiftKey, event.altKey);
-        console.log(identifier);
-        if (identifier in hotkeys.HOTKEYS)
-        {
-            hotkeys.HOTKEYS[identifier]["action"]();
-            event.preventDefault();
-        }
+        hotkeys.HOTKEYS[identifier]["action"]();
+        event.preventDefault();
     }
-);
+}
+
+window.addEventListener("keydown", hotkeys.hotkeys_listener);
 
 hotkeys.register_hotkey("/", 0, 0, 0, hotkeys.show_all_hotkeys, "Show hotkeys.");
