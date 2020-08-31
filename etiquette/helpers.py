@@ -504,6 +504,8 @@ def zip_photos(photos):
     zipfile = zipstream.ZipFile()
 
     for photo in photos:
+        if not photo.real_path.is_file:
+            continue
         arcname = os.path.join('photos', f'{photo.id} - {photo.basename}')
         zipfile.write(filename=photo.real_path.absolute_path, arcname=arcname)
 
