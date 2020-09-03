@@ -162,6 +162,11 @@ button:active
     font-family: inherit;
     font-size: 1.3em;
     border-radius: 8px 8px 0 0;
+    background-color: transparent;
+}
+.tabbed_container .tab_button:hover
+{
+    background-color: var(--color_transparency);
 }
 .tabbed_container .tab,
 .tabbed_container .tab_button
@@ -170,14 +175,15 @@ button:active
     border-style: solid;
     border-color: #888;
 }
-.tabbed_container .tab_button_inactive
+.tabbed_container .tab_button.tab_button_inactive
 {
     border-top-color: transparent;
     border-left-color: transparent;
     border-right-color: transparent;
 }
-.tabbed_container .tab_button_active
+.tabbed_container .tab_button.tab_button_active
 {
+    background-color: var(--color_transparency);
     border-bottom-color: transparent;
 }
 .tabbed_container .tab
