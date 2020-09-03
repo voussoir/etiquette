@@ -670,13 +670,20 @@ var inputted_forbids = [];
     {% endif %}
 {% endfor %}
 
+document.getElementById("search_go_button");
 input_musts.addEventListener("keyup", tag_input_hook_musts);
 input_musts.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
+common.bind_box_to_button(input_musts, search_go_button, true);
+
 input_mays.addEventListener("keyup", tag_input_hook_mays);
 input_mays.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
+common.bind_box_to_button(input_mays, search_go_button, true);
+
 input_forbids.addEventListener("keyup", tag_input_hook_forbids);
 input_forbids.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
+common.bind_box_to_button(input_forbids, search_go_button, true);
 
-common.bind_box_to_button(input_expression, document.getElementById("search_go_button"));
+
+common.bind_box_to_button(input_expression, search_go_button);
 </script>
 </html>
