@@ -1,0 +1,153 @@
+:root
+{
+    --color_primary: #00d8f4;
+    --color_secondary: #ffffd4;
+
+    --color_tag_object_bg: #fff;
+    --color_tag_object_fg: blue;
+
+    --size_sticky_side: 300px;
+}
+
+input, select, textarea
+{
+    margin-top: 2px;
+    margin-bottom: 2px;
+
+    padding: 2px;
+
+    border: none;
+    border-radius: 2px;
+}
+
+.header_element:hover
+{
+    background-color: var(--color_secondary);
+}
+
+#left
+{
+    grid-area: left;
+}
+#right
+{
+    grid-area: right;
+}
+
+#content_body.sticky_side_left
+{
+    grid-template:
+        "left right"
+        /var(--size_sticky_side) 1fr;
+}
+#content_body.sticky_side_right
+{
+    grid-template:
+        "left right"
+        /1fr var(--size_sticky_side);
+}
+
+#content_body.sticky_side_left #left,
+#content_body.sticky_side_right #right
+{
+    display: grid;
+    grid-auto-rows: min-content;
+
+    z-index: 1;
+    position: fixed;
+    bottom: 8px;
+    top: 34px;
+    padding: 8px;
+    width: var(--size_sticky_side);
+    overflow-y: auto;
+    background-color: var(--color_transparency);
+}
+#content_body.sticky_side_left #left
+{
+    left: 8px;
+}
+#content_body.sticky_side_right #right
+{
+    right: 8px;
+}
+
+@media screen and (max-width: 800px)
+{
+    #content_body.sticky_side_right #right
+    {
+        outline: 8px solid var(--color_primary);
+        background-color: var(--color_primary) !important;
+    }
+    #content_body.sticky_side_right #right:before
+    {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: var(--color_transparency);
+        z-index: -1;
+    }
+}
+
+.editor_input
+{
+    width: 100%;
+    max-width: 800px;
+}
+
+.panel
+{
+    background-color: var(--color_transparency);
+    border-radius: 5px;
+    padding: 8px;
+}
+
+.remove_tag_button,
+.remove_tag_button_perm
+{
+    /*position: absolute;*/
+    vertical-align: middle;
+    font-size: 7pt;
+
+    min-width:  18px;
+    min-height: 14px;
+    /*padding: 0;*/
+
+}
+/*
+The Remove button will be display:none by default, but is shown when the tag
+is hovered over.
+*/
+.remove_tag_button
+{
+    display: none;
+}
+.tag_object:hover + * .remove_tag_button,
+.tag_object:hover + .remove_tag_button,
+.remove_tag_button:hover,
+.remove_tag_button_perm:hover
+{
+    display:inline;
+}
+
+.tag_object
+{
+    border-radius: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+
+    background-color: var(--color_tag_object_bg);
+    color: var(--color_tag_object_fg);
+
+    font-size: 0.9em;
+    text-decoration: none;
+    font-family: monospace;
+    line-height: 1.5;
+}
+
+#message_area
+{
+    flex: 2;
+}
