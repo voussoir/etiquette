@@ -320,6 +320,68 @@ function init_enable_on_pageload()
     });
 }
 
+common.init_tabbed_container =
+function init_tabbed_container()
+{
+    var switch_tab =
+    function switch_tab(event)
+    {
+        var tab_button = event.target;
+        if (tab_button.classList.contains("tab_button_active"))
+            { return; }
+
+        var tab_id = tab_button.dataset.tabId;
+        var tab_buttons = tab_button.parentElement.getElementsByClassName("tab_button");
+        var tabs = tab_button.parentElement.parentElement.getElementsByClassName("tab");
+        for (let tab_button of tab_buttons)
+        {
+            if (tab_button.dataset.tabId === tab_id)
+            {
+                tab_button.classList.remove("tab_button_inactive");
+                tab_button.classList.add("tab_button_active");
+            }
+            else
+            {
+                tab_button.classList.remove("tab_button_active");
+                tab_button.classList.add("tab_button_inactive");
+            }
+        }
+        for (let tab of tabs)
+        {
+            if (tab.dataset.tabId === tab_id)
+                { tab.classList.remove("hidden"); }
+            else
+                { tab.classList.add("hidden"); }
+        }
+    }
+
+    var tabbed_containers = Array.from(document.getElementsByClassName("tabbed_container"));
+    tabbed_containers.forEach(function(tabbed_container)
+    {
+        var button_container = document.createElement("div");
+        button_container.className = "tab_buttons";
+        tabbed_container.prepend(button_container);
+        var tabs = Array.from(tabbed_container.getElementsByClassName("tab"));
+        tabs.forEach(function(tab)
+        {
+            tab.classList.add("hidden");
+            var tab_id = tab.dataset.tabId || tab.dataset.tabTitle;
+            tab.dataset.tabId = tab_id;
+            tab.style.borderTopColor = "transparent";
+
+            var button = document.createElement("button");
+            button.className = "tab_button tab_button_inactive";
+            button.onclick = switch_tab;
+            button.innerText = tab.dataset.tabTitle;
+            button.dataset.tabId = tab_id;
+            button_container.append(button);
+        });
+        tabs[0].classList.remove("hidden");
+        button_container.firstElementChild.classList.remove("tab_button_inactive");
+        button_container.firstElementChild.classList.add("tab_button_active");
+    });
+}
+
 common.refresh =
 function refresh()
 {
@@ -332,5 +394,6 @@ function on_pageload()
     common.init_atag_merge_params();
     common.init_button_with_confirm();
     common.init_enable_on_pageload();
+    common.init_tabbed_container();
 }
 document.addEventListener("DOMContentLoaded", common.on_pageload);

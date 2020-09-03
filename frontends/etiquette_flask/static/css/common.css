@@ -143,6 +143,51 @@ button:active
     background-color: #ffea57;
 }
 
+.tabbed_container
+{
+    display: flex;
+    flex-direction: column;
+}
+.tabbed_container .tab_buttons
+{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.tabbed_container .tab_button
+{
+    /* outline: none; prevents the blue outline left after clicking on it */
+    outline: none;
+    flex: 1;
+    font-family: inherit;
+    font-size: 1.3em;
+    border-radius: 8px 8px 0 0;
+}
+.tabbed_container .tab,
+.tabbed_container .tab_button
+{
+    border-width: 2px;
+    border-style: solid;
+    border-color: #888;
+}
+.tabbed_container .tab_button_inactive
+{
+    border-top-color: transparent;
+    border-left-color: transparent;
+    border-right-color: transparent;
+}
+.tabbed_container .tab_button_active
+{
+    border-bottom-color: transparent;
+}
+.tabbed_container .tab
+{
+    /* This will be set by javascript after the tabs have been initialized.
+    That way, the tab panes don't have a missing top border while the dom is
+    loading or if javascript is disabled.
+    /*border-top-color: transparent;*/
+}
+
 #message_area
 {
     display: flex;
