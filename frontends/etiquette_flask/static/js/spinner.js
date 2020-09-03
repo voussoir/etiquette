@@ -54,7 +54,7 @@ function close_grouped_spinners(group_id)
     if (group_id && !(spinner.spinner_group_closing[group_id]))
     {
         spinner.spinner_group_closing[group_id] = true;
-        for (let button of spinner.button_spinner_groups[group_id])
+        for (const button of spinner.button_spinner_groups[group_id])
         {
             window[button.dataset.spinnerCloser]();
         }
@@ -65,7 +65,7 @@ function close_grouped_spinners(group_id)
 spinner.open_grouped_spinners =
 function open_grouped_spinners(group_id)
 {
-    for (let button of spinner.button_spinner_groups[group_id])
+    for (const button of spinner.button_spinner_groups[group_id])
     {
         window[button.dataset.spinnerOpener]();
     }

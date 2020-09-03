@@ -30,9 +30,9 @@ function load_clipboard(event)
         photo_clipboard.clipboard = new Set(JSON.parse(stored));
     }
 
-    for (var index = 0; index < photo_clipboard.on_load_hooks.length; index += 1)
+    for (const on_load_hook of photo_clipboard.on_load_hooks)
     {
-        photo_clipboard.on_load_hooks[index]();
+        on_load_hook();
     }
 
     return photo_clipboard.clipboard;
@@ -46,9 +46,9 @@ function save_clipboard()
     localStorage.setItem("photo_clipboard", serialized);
     photo_clipboard.update_pagestate();
 
-    for (var index = 0; index < photo_clipboard.on_save_hooks.length; index += 1)
+    for (const on_save_hook of photo_clipboard.on_save_hooks)
     {
-        photo_clipboard.on_save_hooks[index]();
+        on_save_hook();
     }
 }
 
@@ -212,14 +212,14 @@ function ingest_toolbox_items()
     */
     let toolbox = document.getElementById("clipboard_tray_toolbox");
     let moreboxes = document.getElementsByClassName("my_clipboard_tray_toolbox");
-    for (var i = 0; i < moreboxes.length; i += 1)
+
+    for (const morebox of moreboxes)
     {
-        let box = moreboxes[i];
-        while (box.firstElementChild)
+        while (morebox.firstElementChild)
         {
-            toolbox.appendChild(box.firstElementChild);
+            toolbox.appendChild(morebox.firstElementChild);
         }
-        box.parentElement.removeChild(box);
+        morebox.parentElement.removeChild(morebox);
     }
 }
 
@@ -258,11 +258,11 @@ function update_clipboard_tray()
         common.delete_all_children(tray_lines);
         let photo_ids = Array.from(photo_clipboard.clipboard);
         photo_ids.sort();
-        for (var i = 0; i < photo_ids.length; i += 1)
+        for (const photo_id of photo_ids)
         {
             let clipboard_line = document.createElement("div");
             clipboard_line.classList.add("clipboard_tray_line");
-            clipboard_line.dataset.id = photo_ids[i];
+            clipboard_line.dataset.id = photo_id;
 
             let clipboard_line_delete_button = document.createElement("button");
             clipboard_line_delete_button.classList.add("remove_tag_button_perm");
@@ -271,8 +271,8 @@ function update_clipboard_tray()
 
             let clipboard_line_link = document.createElement("a");
             clipboard_line_link.target = "_blank";
-            clipboard_line_link.href = "/photo/" + photo_ids[i];
-            clipboard_line_link.innerText = photo_ids[i];
+            clipboard_line_link.href = "/photo/" + photo_id;
+            clipboard_line_link.innerText = photo_id;
 
             clipboard_line.appendChild(clipboard_line_delete_button);
             clipboard_line.appendChild(clipboard_line_link);
@@ -293,9 +293,9 @@ photo_clipboard.update_clipboard_count =
 function update_clipboard_count()
 {
     let elements = document.getElementsByClassName("clipboard_count");
-    for (var index = 0; index < elements.length; index += 1)
+    for (const element of elements)
     {
-        elements[index].innerText = photo_clipboard.clipboard.size;
+        element.innerText = photo_clipboard.clipboard.size;
     }
 }
 

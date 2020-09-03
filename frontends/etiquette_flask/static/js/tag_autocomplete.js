@@ -17,13 +17,13 @@ function init_datalist()
     }
 
     common.delete_all_children(datalist);
-    for (var index = 0; index < tag_autocomplete.tagset["tags"].length; index += 1)
+    for (const tag_name of tag_autocomplete.tagset["tags"])
     {
         let option = document.createElement("option");
-        option.value = tag_autocomplete.tagset["tags"][index];
+        option.value = tag_name;
         datalist.appendChild(option);
     }
-    for (var synonym in tag_autocomplete.tagset["synonyms"])
+    for (const synonym in tag_autocomplete.tagset["synonyms"])
     {
         let option = document.createElement("option");
         option.value = tag_autocomplete.tagset["synonyms"][synonym] + "+" + synonym;

@@ -433,9 +433,8 @@ function remove_searchtag(ul, value, inputted_list)
     console.log("removing " + value);
     let lis = ul.children;
     //console.log(lis);
-    for (var index = 0; index < lis.length; index += 1)
+    for (const li of lis)
     {
-        let li = lis[index];
         let tag_object = li.children[0];
         if (! tag_object.classList.contains("tag_object"))
         {continue}
@@ -496,9 +495,8 @@ function orderby_hide_direction_hook(event)
 function simplify_tagnames(tags)
 {
     let new_tags = [];
-    for (var index = 0; index < tags.length; index += 1)
+    for (const tag of tags)
     {
-        let tag = tags[index];
         tag = tag.split(".");
         tag = tag[tag.length - 1];
         new_tags.push(tag);
@@ -540,9 +538,9 @@ function submit_search()
     }
 
     let basic_inputs = document.getElementsByClassName("basic_param");
-    for (var index = 0; index < basic_inputs.length; index += 1)
+    for (const basic_input of basic_inputs)
     {
-        let boxname = basic_inputs[index].name;
+        let boxname = basic_input.name;
         let box = document.getElementsByName(boxname)[0];
         let value = box.value;
         value = value.split("&").join("%26");
@@ -561,17 +559,16 @@ function submit_search()
 
     orderby_rows = document.getElementsByClassName("search_builder_orderby_li");
     orderby_params = [];
-    for (var index = 0; index < orderby_rows.length; index += 1)
+    for (const orderby_row of orderby_rows)
     {
-        let row = orderby_rows[index];
-        let column = row.children[0].value;
+        let column = orderby_row.children[0].value;
         if (column == "random")
         {
             orderby_params.push(column);
         }
         else
         {
-            let sorter = row.children[1].value;
+            let sorter = orderby_row.children[1].value;
             orderby_params.push(column + "-" + sorter);
         }
     }

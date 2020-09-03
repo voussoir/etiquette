@@ -164,7 +164,7 @@ function init_atag_merge_params()
     */
     page_params = new URLSearchParams(window.location.search);
     let as = Array.from(document.getElementsByClassName("merge_params"));
-    for (let a of as)
+    for (const a of as)
     {
         let a_params = new URLSearchParams(a.search);
         let new_params = new URLSearchParams();
@@ -206,7 +206,7 @@ function init_button_with_confirm()
         data-holder-class: CSS class for the new span that holds the menu.
     */
     let buttons = Array.from(document.getElementsByClassName("button_with_confirm"));
-    for (let button of buttons)
+    for (const button of buttons)
     {
         button.classList.remove("button_with_confirm");
 
@@ -314,7 +314,7 @@ function init_enable_on_pageload()
     class "enable_on_pageload".
     */
     let elements = Array.from(document.getElementsByClassName("enable_on_pageload"));
-    for (let element of elements)
+    for (const element of elements)
     {
         element.disabled = false;
         element.classList.remove("enable_on_pageload");
@@ -334,7 +334,7 @@ function init_tabbed_container()
         let tab_id = tab_button.dataset.tabId;
         let tab_buttons = tab_button.parentElement.getElementsByClassName("tab_button");
         let tabs = tab_button.parentElement.parentElement.getElementsByClassName("tab");
-        for (let tab_button of tab_buttons)
+        for (const tab_button of tab_buttons)
         {
             if (tab_button.dataset.tabId === tab_id)
             {
@@ -347,7 +347,7 @@ function init_tabbed_container()
                 tab_button.classList.add("tab_button_inactive");
             }
         }
-        for (let tab of tabs)
+        for (const tab of tabs)
         {
             if (tab.dataset.tabId === tab_id)
                 { tab.classList.remove("hidden"); }
@@ -357,13 +357,13 @@ function init_tabbed_container()
     }
 
     let tabbed_containers = Array.from(document.getElementsByClassName("tabbed_container"));
-    for (let tabbed_container of tabbed_containers)
+    for (const tabbed_container of tabbed_containers)
     {
         let button_container = document.createElement("div");
         button_container.className = "tab_buttons";
         tabbed_container.prepend(button_container);
         let tabs = Array.from(tabbed_container.getElementsByClassName("tab"));
-        for (let tab of tabs)
+        for (const tab of tabs)
         {
             tab.classList.add("hidden");
             let tab_id = tab.dataset.tabId || tab.dataset.tabTitle;

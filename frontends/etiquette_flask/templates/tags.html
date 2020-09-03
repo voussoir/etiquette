@@ -253,7 +253,7 @@ function tag_action_callback(response)
     {
         datas = [datas];
     }
-    for (var index = 0; index < datas.length; index += 1)
+    for (const data of datas)
     {
         let tagname = data.tagname;
         let message_positivity;

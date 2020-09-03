@@ -41,7 +41,7 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.close = function()
     {
-        for (var index = 0; index < this.display_elements.length; index += 1)
+        for (let index = 0; index < this.display_elements.length; index += 1)
         {
             this.display_elements[index].classList.remove("hidden");
             this.edit_elements[index].classList.add("hidden");
@@ -65,7 +65,7 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.open = function()
     {
-        for (var index = 0; index < this.display_elements.length; index += 1)
+        for (let index = 0; index < this.display_elements.length; index += 1)
         {
             let display_element = this.display_elements[index];
             let edit_element = this.edit_elements[index];
@@ -90,7 +90,7 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.save = function()
     {
-        for (var index = 0; index < this.display_elements.length; index += 1)
+        for (let index = 0; index < this.display_elements.length; index += 1)
         {
             let display_element = this.display_elements[index];
             let edit_element = this.edit_elements[index];
@@ -130,9 +130,8 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.misc_data = {};
 
-    for (var index = 0; index < elements.length; index += 1)
+    for (const display_element of elements)
     {
-        let display_element = elements[index];
         let edit_element;
         if (editor.PARAGRAPH_TYPES.has(display_element.tagName))
         {
@@ -203,9 +202,9 @@ function Editor(elements, on_open, on_save, on_cancel)
     }
 
     let placeholders = document.getElementsByClassName("editor_toolbox_placeholder");
-    for (var index = 0; index < placeholders.length; index += 1)
+    for (const placeholder of placeholders)
     {
-        placeholders[index].parentElement.removeChild(placeholders[index]);
+        placeholder.parentElement.removeChild(placeholder);
     }
 
     let last_element = this.edit_elements[this.edit_elements.length - 1];
@@ -252,9 +251,8 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.spinner = new spinner.Spinner(spinner_element);
     toolbox.appendChild(spinner_element);
 
-    for (var index = 0; index < this.edit_elements.length; index += 1)
+    for (const edit_element of this.edit_elements)
     {
-        let edit_element = this.edit_elements[index];
         if (edit_element.tagName == "TEXTAREA")
         {
             common.bind_box_to_button(edit_element, this.save_button, true);

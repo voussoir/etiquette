@@ -59,7 +59,7 @@ function show_all_hotkeys()
 {
     // Display an Alert with a list of all the hotkeys.
     let lines = [];
-    for (var identifier in hotkeys.HOTKEYS)
+    for (const identifier in hotkeys.HOTKEYS)
     {
         let line = hotkeys.HOTKEYS[identifier]["human"] + " :  " + hotkeys.HOTKEYS[identifier]["description"];
         lines.push(line);

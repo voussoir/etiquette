@@ -165,7 +165,7 @@ function recalculate_needed()
     divs is in `request_more_divs`.
     */
     needed = new Set();
-    for (let photo_id of photo_clipboard.clipboard)
+    for (const photo_id of photo_clipboard.clipboard)
     {
         if (!(photo_id in divs))
         {
@@ -180,7 +180,7 @@ function refresh_divs()
     Add new divs to the page, and remove divs which the user has removed from
     their clipboard.
     */
-    for (let photo_id of divs)
+    for (const photo_id in divs)
     {
         let photo_div = divs[photo_id];
         let should_keep = photo_clipboard.clipboard.has(photo_id);
