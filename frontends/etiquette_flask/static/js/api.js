@@ -14,7 +14,7 @@ function _add_remove_photos(album_id, photo_ids, add_or_remove, callback)
     else
         { throw `should be 'add' or 'remove', not ${add_or_remove}.`; }
 
-    let data = new FormData();
+    const data = new FormData();
 
     if (Array.isArray(photo_ids))
         { photo_ids = photo_ids.join(","); }
@@ -26,8 +26,8 @@ function _add_remove_photos(album_id, photo_ids, add_or_remove, callback)
 api.albums.add_child =
 function add_child(album_id, child_id, callback)
 {
-    let url = `/album/${album_id}/add_child`;
-    let data = new FormData();
+    const url = `/album/${album_id}/add_child`;
+    const data = new FormData();
     data.append("child_id", child_id);
     common.post(url, data, callback);
 }
@@ -41,8 +41,8 @@ function add_photos(album_id, photo_ids, callback)
 api.albums.create =
 function create(title, parent_id, callback)
 {
-    let url = "/albums/create_album";
-    let data = new FormData();
+    const url = "/albums/create_album";
+    const data = new FormData();
     if (title !== undefined)
     {
         data.append("title", title);
@@ -57,15 +57,15 @@ function create(title, parent_id, callback)
 api.albums.delete =
 function _delete(album_id, callback)
 {
-    let url = `/album/${album_id}/delete`;
+    const url = `/album/${album_id}/delete`;
     common.post(url, null, callback);
 }
 
 api.albums.edit =
 function edit(album_id, title, description, callback)
 {
-    let url = `/album/${album_id}/edit`;
-    let data = new FormData();
+    const url = `/album/${album_id}/edit`;
+    const data = new FormData();
     data.append("title", title);
     data.append("description", description);
     common.post(url, data, callback);
@@ -74,15 +74,15 @@ function edit(album_id, title, description, callback)
 api.albums.refresh_directories =
 function refresh_directories(album_id, callback)
 {
-    let url = `/album/${album_id}/refresh_directories`;
+    const url = `/album/${album_id}/refresh_directories`;
     common.post(url, null, callback);
 }
 
 api.albums.remove_child =
 function remove_child(album_id, child_id, callback)
 {
-    let url = `/album/${album_id}/remove_child`;
-    let data = new FormData();
+    const url = `/album/${album_id}/remove_child`;
+    const data = new FormData();
     data.append("child_id", child_id);
     common.post(url, data, callback);
 }
@@ -125,8 +125,8 @@ api.bookmarks = {};
 api.bookmarks.create =
 function create(b_url, title, callback)
 {
-    let url = "/bookmarks/create_bookmark";
-    let data = new FormData();
+    const url = "/bookmarks/create_bookmark";
+    const data = new FormData();
     data.append("url", b_url.trim());
     title = title.trim();
     if (title)
@@ -139,15 +139,15 @@ function create(b_url, title, callback)
 api.bookmarks.delete =
 function _delete(bookmark_id, callback)
 {
-    let url = `/bookmark/${bookmark_id}/delete`;
+    const url = `/bookmark/${bookmark_id}/delete`;
     common.post(url, null, callback);
 }
 
 api.bookmarks.edit =
 function edit(bookmark_id, title, b_url, callback)
 {
-    let url = `/bookmark/${bookmark_id}/edit`;
-    let data = new FormData();
+    const url = `/bookmark/${bookmark_id}/edit`;
+    const data = new FormData();
     data.append("title", title.trim());
     data.append("url", b_url.trim());
     common.post(url, data, callback);
@@ -159,8 +159,8 @@ api.photos = {};
 api.photos.add_tag =
 function add_tag(photo_id, tagname, callback)
 {
-    let url = `/photo/${photo_id}/add_tag`;
-    let data = new FormData();
+    const url = `/photo/${photo_id}/add_tag`;
+    const data = new FormData();
     data.append("tagname", tagname);
     common.post(url, data, callback);
 }
@@ -168,8 +168,8 @@ function add_tag(photo_id, tagname, callback)
 api.photos.batch_add_tag =
 function batch_add_tag(photo_ids, tagname, callback)
 {
-    let url = "/batch/photos/add_tag";
-    let data = new FormData();
+    const url = "/batch/photos/add_tag";
+    const data = new FormData();
     data.append("photo_ids", photo_ids.join(","));
     data.append("tagname", tagname);
     common.post(url, data, add_remove_tag_callback);
@@ -178,8 +178,8 @@ function batch_add_tag(photo_ids, tagname, callback)
 api.photos.batch_refresh_metadata =
 function batch_refresh_metadata(photo_ids, callback)
 {
-    let url = "/batch/photos/refresh_metadata";
-    let data = new FormData();
+    const url = "/batch/photos/refresh_metadata";
+    const data = new FormData();
     data.append("photo_ids", photo_ids.join(","));
     common.post(url, data, callback);
 }
@@ -187,8 +187,8 @@ function batch_refresh_metadata(photo_ids, callback)
 api.photos.batch_remove_tag =
 function batch_remove_tag(photo_ids, tagname, callback)
 {
-    let url = "/batch/photos/remove_tag";
-    let data = new FormData();
+    const url = "/batch/photos/remove_tag";
+    const data = new FormData();
     data.append("photo_ids", photo_ids.join(","));
     data.append("tagname", tagname);
     common.post(url, data, add_remove_tag_callback);
@@ -197,8 +197,8 @@ function batch_remove_tag(photo_ids, tagname, callback)
 api.photos.batch_set_searchhidden =
 function batch_set_searchhidden(photo_ids, callback)
 {
-    let url = "/batch/photos/set_searchhidden";
-    let data = new FormData();
+    const url = "/batch/photos/set_searchhidden";
+    const data = new FormData();
     data.append("photo_ids", photo_ids.join(","));
     common.post(url, data, callback);
 }
@@ -206,8 +206,8 @@ function batch_set_searchhidden(photo_ids, callback)
 api.photos.batch_unset_searchhidden =
 function batch_unset_searchhidden(photo_ids, callback)
 {
-    let url = "/batch/photos/unset_searchhidden";
-    let data = new FormData();
+    const url = "/batch/photos/unset_searchhidden";
+    const data = new FormData();
     data.append("photo_ids", photo_ids.join(","));
     common.post(url, data, callback);
 }
@@ -215,8 +215,8 @@ function batch_unset_searchhidden(photo_ids, callback)
 api.photos.delete =
 function _delete(photo_id, delete_file, callback)
 {
-    let url = `/photo/${photo_id}/delete`;
-    let data = new FormData();
+    const url = `/photo/${photo_id}/delete`;
+    const data = new FormData();
     data.append("delete_file", delete_file);
     common.post(url, data, callback);
 }
@@ -224,8 +224,8 @@ function _delete(photo_id, delete_file, callback)
 api.photos.generate_thumbnail =
 function generate_thumbnail(photo_id, special, callback)
 {
-    let url = `/photo/${photo_id}/generate_thumbnail`
-    let data = new FormData();
+    const url = `/photo/${photo_id}/generate_thumbnail`
+    const data = new FormData();
     for (x in special)
     {
         data.append(x, special[x]);
@@ -236,8 +236,8 @@ function generate_thumbnail(photo_id, special, callback)
 api.photos.get_download_zip_token =
 function get_download_zip_token(photo_ids, callback)
 {
-    let url = "/batch/photos/download_zip";
-    let data = new FormData();
+    const url = "/batch/photos/download_zip";
+    const data = new FormData();
     data.append("photo_ids", photo_ids.join(","));
     common.post(url, data, callback);
 }
@@ -245,7 +245,7 @@ function get_download_zip_token(photo_ids, callback)
 api.photos.download_zip =
 function download_zip(zip_token)
 {
-    let url = `/batch/photos/download_zip/${zip_token}.zip`;
+    const url = `/batch/photos/download_zip/${zip_token}.zip`;
     window.location.href = url;
 }
 
@@ -259,15 +259,15 @@ function callback_download_zip(response)
 api.photos.refresh_metadata =
 function refresh_metadata(photo_id, callback)
 {
-    let url = `/photo/${photo_id}/refresh_metadata`;
+    const url = `/photo/${photo_id}/refresh_metadata`;
     common.post(url, null, callback);
 }
 
 api.photos.remove_tag =
 function remove_tag(photo_id, tagname, callback)
 {
-    let url = `/photo/${photo_id}/remove_tag`;
-    let data = new FormData();
+    const url = `/photo/${photo_id}/remove_tag`;
+    const data = new FormData();
     data.append("tagname", tagname);
     common.post(url, data, callback);
 }
@@ -291,8 +291,8 @@ api.tags = {};
 api.tags.add_child =
 function add_child(tag_name, child_name, callback)
 {
-    let url = `/tag/${tag_name}/add_child`;
-    let data = new FormData();
+    const url = `/tag/${tag_name}/add_child`;
+    const data = new FormData();
     data.append("child_name", child_name);
     common.post(url, data, callback);
 }
@@ -300,8 +300,8 @@ function add_child(tag_name, child_name, callback)
 api.tags.create =
 function create(name, description, callback)
 {
-    let url = `/tags/create_tag`;
-    let data = new FormData();
+    const url = `/tags/create_tag`;
+    const data = new FormData();
     data.append("name", name);
     data.append("description", description);
     common.post(url, data, callback);
@@ -310,15 +310,15 @@ function create(name, description, callback)
 api.tags.delete =
 function _delete(tag_name, callback)
 {
-    let url = `/tag/${tag_name}/delete`;
+    const url = `/tag/${tag_name}/delete`;
     common.post(url, null, callback);
 }
 
 api.tags.easybake =
 function easybake(easybake_string, callback)
 {
-    let url = "/tags/easybake";
-    let data = new FormData();
+    const url = "/tags/easybake";
+    const data = new FormData();
     data.append("easybake_string", easybake_string);
     common.post(url, data, callback);
 }
@@ -326,8 +326,8 @@ function easybake(easybake_string, callback)
 api.tags.edit =
 function edit(tag_name, name, description, callback)
 {
-    let url = `/tag/${tag_name}/edit`;
-    let data = new FormData();
+    const url = `/tag/${tag_name}/edit`;
+    const data = new FormData();
     data.append("name", name);
     data.append("description", description);
     common.post(url, data, callback);
@@ -336,8 +336,8 @@ function edit(tag_name, name, description, callback)
 api.tags.remove_child =
 function remove_child(tag_name, child_name, callback)
 {
-    let url = `/tag/${tag_name}/remove_child`;
-    let data = new FormData();
+    const url = `/tag/${tag_name}/remove_child`;
+    const data = new FormData();
     data.append("child_name", child_name);
     common.post(url, data, callback);
 }
@@ -345,8 +345,8 @@ function remove_child(tag_name, child_name, callback)
 api.tags.remove_synonym =
 function remove_synonym(tag_name, syn_name, callback)
 {
-    let url = `/tag/${tag_name}/remove_synonym`;
-    let data = new FormData();
+    const url = `/tag/${tag_name}/remove_synonym`;
+    const data = new FormData();
     data.append("syn_name", syn_name);
     common.post(url, data, callback);
 }
@@ -370,8 +370,8 @@ api.users = {};
 api.users.login =
 function login(username, password, callback)
 {
-    let url = "/login";
-    let data = new FormData();
+    const url = "/login";
+    const data = new FormData();
     data.append("username", username);
     data.append("password", password);
     common.post(url, data, callback);
@@ -380,15 +380,15 @@ function login(username, password, callback)
 api.users.logout =
 function logout(callback)
 {
-    let url = "/logout";
+    const url = "/logout";
     common.post(url, null, callback);
 }
 
 api.users.register =
 function register(username, display_name, password_1, password_2, callback)
 {
-    let url = "/register";
-    let data = new FormData();
+    const url = "/register";
+    const data = new FormData();
     data.append("username", username);
     data.append("display_name", display_name);
     data.append("password_1", password_1);
