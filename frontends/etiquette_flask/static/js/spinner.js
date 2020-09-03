@@ -98,22 +98,28 @@ function init_button_with_spinner()
             page, or two buttons which do opposite things and you only want one
             to run at a time.
     */
-    let buttons = Array.from(document.getElementsByClassName("button_with_spinner"));
+    const buttons = Array.from(document.getElementsByClassName("button_with_spinner"));
     for (const button of buttons)
     {
         button.classList.remove("button_with_spinner");
         button.innerHTML = button.innerHTML.trim();
 
-        let holder = document.createElement("span");
+        const holder = document.createElement("span");
         holder.classList.add("spinner_holder");
         holder.classList.add(button.dataset.holderClass || "spinner_holder");
         button.parentElement.insertBefore(holder, button);
         holder.appendChild(button);
 
+        if (button.dataset.spinnerGroup)
+        {
+            spinner.add_to_spinner_group(button.dataset.spinnerGroup, button);
+        }
+
         let spinner_element;
         if (button.dataset.spinnerId)
         {
             spinner_element = document.getElementById(button.dataset.spinnerId);
+            spinner_element.classList.add("hidden");
         }
         else
         {
@@ -123,13 +129,8 @@ function init_button_with_spinner()
             holder.appendChild(spinner_element);
         }
 
-        if (button.dataset.spinnerGroup)
-        {
-            spinner.add_to_spinner_group(button.dataset.spinnerGroup, button);
-        }
-
-        let spin = new spinner.Spinner(spinner_element);
-        let spin_delay = parseFloat(button.dataset.spinnerDelay) || 0;
+        const spin = new spinner.Spinner(spinner_element);
+        const spin_delay = parseFloat(button.dataset.spinnerDelay) || 0;
 
         button.dataset.spinnerOpener = "spinner_opener_" + spinner.spinner_button_index;
         window[button.dataset.spinnerOpener] = function spinner_opener()
@@ -148,7 +149,7 @@ function init_button_with_spinner()
             button.disabled = false;
         }
 
-        let wrapped_onclick = button.onclick;
+        const wrapped_onclick = button.onclick;
         button.removeAttribute('onclick');
         button.onclick = function()
         {
