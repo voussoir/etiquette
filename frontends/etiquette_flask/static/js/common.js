@@ -162,16 +162,17 @@ function init_atag_merge_params()
         href: "?orderby=date"
         Result: "?filter=hello&orderby=date"
     */
-    var as = Array.from(document.getElementsByClassName("merge_params"));
     page_params = new URLSearchParams(window.location.search);
-    as.forEach(function(a){
+    var as = Array.from(document.getElementsByClassName("merge_params"));
+    for (let a of as)
+    {
         var a_params = new URLSearchParams(a.search);
         var new_params = new URLSearchParams();
         page_params.forEach(function(value, key) {new_params.set(key, value); });
         a_params.forEach(function(value, key) {new_params.set(key, value); });
         a.search = new_params.toString();
         a.classList.remove("merge_params");
-    });
+    }
 }
 
 common.init_button_with_confirm =
@@ -205,7 +206,7 @@ function init_button_with_confirm()
         data-holder-class: CSS class for the new span that holds the menu.
     */
     var buttons = Array.from(document.getElementsByClassName("button_with_confirm"));
-    buttons.forEach(function(button)
+    for (let button of buttons)
     {
         button.classList.remove("button_with_confirm");
 
@@ -301,7 +302,7 @@ function init_button_with_confirm()
             holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
         }
         delete button.dataset.onclick;
-    });
+    }
 }
 
 common.init_enable_on_pageload =
@@ -313,11 +314,11 @@ function init_enable_on_pageload()
     class "enable_on_pageload".
     */
     var elements = Array.from(document.getElementsByClassName("enable_on_pageload"));
-    elements.forEach(function(element)
+    for (let element of elements)
     {
         element.disabled = false;
         element.classList.remove("enable_on_pageload");
-    });
+    }
 }
 
 common.init_tabbed_container =
@@ -356,13 +357,13 @@ function init_tabbed_container()
     }
 
     var tabbed_containers = Array.from(document.getElementsByClassName("tabbed_container"));
-    tabbed_containers.forEach(function(tabbed_container)
+    for (let tabbed_container of tabbed_containers)
     {
         var button_container = document.createElement("div");
         button_container.className = "tab_buttons";
         tabbed_container.prepend(button_container);
         var tabs = Array.from(tabbed_container.getElementsByClassName("tab"));
-        tabs.forEach(function(tab)
+        for (let tab of tabs)
         {
             tab.classList.add("hidden");
             var tab_id = tab.dataset.tabId || tab.dataset.tabTitle;
@@ -375,11 +376,11 @@ function init_tabbed_container()
             button.innerText = tab.dataset.tabTitle;
             button.dataset.tabId = tab_id;
             button_container.append(button);
-        });
+        }
         tabs[0].classList.remove("hidden");
         button_container.firstElementChild.classList.remove("tab_button_inactive");
         button_container.firstElementChild.classList.add("tab_button_active");
-    });
+    }
 }
 
 common.refresh =

@@ -165,13 +165,13 @@ function recalculate_needed()
     divs is in `request_more_divs`.
     */
     needed = new Set();
-    photo_clipboard.clipboard.forEach(function(photo_id)
+    for (let photo_id of photo_clipboard.clipboard)
     {
         if (!(photo_id in divs))
         {
             needed.add(photo_id);
         }
-    });
+    }
 }
 
 function refresh_divs()

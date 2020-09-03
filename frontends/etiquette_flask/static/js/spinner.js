@@ -54,10 +54,10 @@ function close_grouped_spinners(group_id)
     if (group_id && !(spinner.spinner_group_closing[group_id]))
     {
         spinner.spinner_group_closing[group_id] = true;
-        spinner.button_spinner_groups[group_id].forEach(function(button)
+        for (let button of spinner.button_spinner_groups[group_id])
         {
             window[button.dataset.spinnerCloser]();
-        });
+        }
         delete spinner.spinner_group_closing[group_id];
     }
 }
@@ -65,10 +65,10 @@ function close_grouped_spinners(group_id)
 spinner.open_grouped_spinners =
 function open_grouped_spinners(group_id)
 {
-    spinner.button_spinner_groups[group_id].forEach(function(button)
+    for (let button of spinner.button_spinner_groups[group_id])
     {
         window[button.dataset.spinnerOpener]();
-    });
+    }
 }
 
 spinner.init_button_with_spinner =
@@ -99,7 +99,7 @@ function init_button_with_spinner()
             to run at a time.
     */
     var buttons = Array.from(document.getElementsByClassName("button_with_spinner"));
-    buttons.forEach(function(button)
+    for (const button of buttons)
     {
         button.classList.remove("button_with_spinner");
         button.innerHTML = button.innerHTML.trim();
@@ -165,7 +165,7 @@ function init_button_with_spinner()
         }
 
         spinner.spinner_button_index += 1;
-    });
+    }
 }
 
 spinner.on_pageload =
