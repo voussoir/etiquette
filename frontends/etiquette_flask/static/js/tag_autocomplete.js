@@ -107,8 +107,9 @@ function update_tagset()
     common.get(url, tag_autocomplete.update_tagset_callback);
 }
 
+tag_autocomplete.on_pageload =
 function on_pageload()
 {
     tag_autocomplete.update_tagset();
 }
-document.addEventListener("DOMContentLoaded", on_pageload);
+document.addEventListener("DOMContentLoaded", tag_autocomplete.on_pageload);
