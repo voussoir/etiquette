@@ -13,7 +13,7 @@ hotkeys.hotkey_human =
 function hotkey_human(key, ctrlKey, shiftKey, altKey)
 {
     // Return the string that will be displayed to the user to represent this hotkey.
-    mods = [];
+    var mods = [];
     if (ctrlKey) { mods.push("Ctrl"); }
     if (shiftKey) { mods.push("Shift"); }
     if (altKey) { mods.push("Alt"); }
@@ -23,10 +23,21 @@ function hotkey_human(key, ctrlKey, shiftKey, altKey)
 }
 
 hotkeys.register_hotkey =
-function register_hotkey(key, ctrlKey, shiftKey, altKey, action, description)
+function register_hotkey(hotkey, action, description)
 {
-    identifier = hotkeys.hotkey_identifier(key, ctrlKey, shiftKey, altKey);
-    human = hotkeys.hotkey_human(key, ctrlKey, shiftKey, altKey);
+    if (! Array.isArray(hotkey))
+    {
+        hotkey = hotkey.split(/\s+/g);
+    }
+
+    var key = hotkey.pop();
+    modifiers = hotkey.map(word => word.toLocaleLowerCase());
+    var ctrlKey = modifiers.includes("control") || modifiers.includes("ctrl");
+    var shiftKey = modifiers.includes("shift");
+    var altKey = modifiers.includes("alt");
+
+    var identifier = hotkeys.hotkey_identifier(key, ctrlKey, shiftKey, altKey);
+    var human = hotkeys.hotkey_human(key, ctrlKey, shiftKey, altKey);
     hotkeys.HOTKEYS[identifier] = {"action": action, "human": human, "description": description}
 }
 
@@ -72,4 +83,4 @@ function hotkeys_listener(event)
 
 window.addEventListener("keydown", hotkeys.hotkeys_listener);
 
-hotkeys.register_hotkey("/", 0, 0, 0, hotkeys.show_all_hotkeys, "Show hotkeys.");
+hotkeys.register_hotkey("/", hotkeys.show_all_hotkeys, "Show hotkeys.");
