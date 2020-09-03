@@ -98,20 +98,19 @@ function init_button_with_spinner()
             page, or two buttons which do opposite things and you only want one
             to run at a time.
     */
-    var buttons = Array.from(document.getElementsByClassName("button_with_spinner"));
+    let buttons = Array.from(document.getElementsByClassName("button_with_spinner"));
     for (const button of buttons)
     {
         button.classList.remove("button_with_spinner");
         button.innerHTML = button.innerHTML.trim();
 
-        var holder = document.createElement("span");
+        let holder = document.createElement("span");
         holder.classList.add("spinner_holder");
         holder.classList.add(button.dataset.holderClass || "spinner_holder");
         button.parentElement.insertBefore(holder, button);
-        button.parentElement.removeChild(button);
         holder.appendChild(button);
 
-        var spinner_element;
+        let spinner_element;
         if (button.dataset.spinnerId)
         {
             spinner_element = document.getElementById(button.dataset.spinnerId);
@@ -129,8 +128,8 @@ function init_button_with_spinner()
             spinner.add_to_spinner_group(button.dataset.spinnerGroup, button);
         }
 
-        var spin = new spinner.Spinner(spinner_element);
-        var spin_delay = parseFloat(button.dataset.spinnerDelay) || 0;
+        let spin = new spinner.Spinner(spinner_element);
+        let spin_delay = parseFloat(button.dataset.spinnerDelay) || 0;
 
         button.dataset.spinnerOpener = "spinner_opener_" + spinner.spinner_button_index;
         window[button.dataset.spinnerOpener] = function spinner_opener()
@@ -149,7 +148,7 @@ function init_button_with_spinner()
             button.disabled = false;
         }
 
-        var wrapped_onclick = button.onclick;
+        let wrapped_onclick = button.onclick;
         button.removeAttribute('onclick');
         button.onclick = function()
         {

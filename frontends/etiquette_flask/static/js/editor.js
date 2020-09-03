@@ -67,13 +67,13 @@ function Editor(elements, on_open, on_save, on_cancel)
     {
         for (var index = 0; index < this.display_elements.length; index += 1)
         {
-            var display_element = this.display_elements[index];
-            var edit_element = this.edit_elements[index];
+            let display_element = this.display_elements[index];
+            let edit_element = this.edit_elements[index];
 
             display_element.classList.add("hidden");
             edit_element.classList.remove("hidden");
 
-            var empty_text = display_element.dataset.editorEmptyText;
+            let empty_text = display_element.dataset.editorEmptyText;
             if (empty_text !== undefined && display_element.innerText == empty_text)
             {
                 edit_element.value = "";
@@ -92,8 +92,8 @@ function Editor(elements, on_open, on_save, on_cancel)
     {
         for (var index = 0; index < this.display_elements.length; index += 1)
         {
-            var display_element = this.display_elements[index];
-            var edit_element = this.edit_elements[index];
+            let display_element = this.display_elements[index];
+            let edit_element = this.edit_elements[index];
 
             if (display_element.dataset.editorEmptyText !== undefined && edit_element.value == "")
             {
@@ -132,8 +132,8 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     for (var index = 0; index < elements.length; index += 1)
     {
-        var display_element = elements[index];
-        var edit_element;
+        let display_element = elements[index];
+        let edit_element;
         if (editor.PARAGRAPH_TYPES.has(display_element.tagName))
         {
             edit_element = document.createElement("textarea");
@@ -188,7 +188,7 @@ function Editor(elements, on_open, on_save, on_cancel)
             return fallback.bind(this);
         }
 
-        var bindable = function()
+        let bindable = function()
         {
             if (this.can_use_element_map)
             {
@@ -202,14 +202,14 @@ function Editor(elements, on_open, on_save, on_cancel)
         return bindable.bind(this);
     }
 
-    var placeholders = document.getElementsByClassName("editor_toolbox_placeholder");
+    let placeholders = document.getElementsByClassName("editor_toolbox_placeholder");
     for (var index = 0; index < placeholders.length; index += 1)
     {
         placeholders[index].parentElement.removeChild(placeholders[index]);
     }
 
-    var last_element = this.edit_elements[this.edit_elements.length - 1];
-    var toolbox = document.createElement("div");
+    let last_element = this.edit_elements[this.edit_elements.length - 1];
+    let toolbox = document.createElement("div");
     toolbox.classList.add("editor_toolbox");
     last_element.parentElement.insertBefore(toolbox, last_element.nextSibling);
 
@@ -254,7 +254,7 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     for (var index = 0; index < this.edit_elements.length; index += 1)
     {
-        var edit_element = this.edit_elements[index];
+        let edit_element = this.edit_elements[index];
         if (edit_element.tagName == "TEXTAREA")
         {
             common.bind_box_to_button(edit_element, this.save_button, true);

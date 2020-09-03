@@ -283,7 +283,7 @@ var message_area = document.getElementById('message_area');
 
 function add_photo_tag_form()
 {
-    var tagname = document.getElementById("add_tag_textbox").value;
+    let tagname = document.getElementById("add_tag_textbox").value;
     if (tagname == "")
     {
         return;
@@ -299,9 +299,9 @@ function remove_photo_tag_form(photo_id, tagname)
 
 function add_remove_photo_tag_callback(response)
 {
-    var message_text;
-    var message_positivity;
-    var tagname = response.data.tagname;
+    let message_text;
+    let message_positivity;
+    let tagname = response.data.tagname;
     if ("error_type" in response.data)
     {
         message_positivity = "message_negative";
@@ -309,7 +309,7 @@ function add_remove_photo_tag_callback(response)
     }
     else
     {
-        var action;
+        let action;
         message_positivity = "message_positive";
         if (response.meta.request_url.includes("add_tag"))
         {
@@ -343,8 +343,8 @@ function generate_thumbnail_callback(response)
 
 function generate_thumbnail_for_video(event)
 {
-    var timestamp = document.querySelector("#right video").currentTime;
-    var special = {"timestamp": timestamp};
+    let timestamp = document.querySelector("#right video").currentTime;
+    let special = {"timestamp": timestamp};
     api.photos.generate_thumbnail(PHOTO_ID, special, generate_thumbnail_callback)
 }
 
@@ -352,8 +352,8 @@ var ZOOM_BG_URL = "url('{{photo|file_link}}')";
 function enable_hoverzoom(event)
 {
     //console.log("enable zoom");
-    var photo_viewer = document.getElementById("photo_viewer");
-    var photo_img = photo_viewer.children[0];
+    let photo_viewer = document.getElementById("photo_viewer");
+    let photo_img = photo_viewer.children[0];
     if (
         photo_img.naturalWidth < photo_viewer.offsetWidth &&
         photo_img.naturalHeight < photo_viewer.offsetHeight
@@ -372,8 +372,8 @@ function enable_hoverzoom(event)
 function disable_hoverzoom()
 {
     //console.log("disable zoom");
-    var photo_viewer = document.getElementById("photo_viewer");
-    var photo_img = photo_viewer.children[0];
+    let photo_viewer = document.getElementById("photo_viewer");
+    let photo_img = photo_viewer.children[0];
 
     photo_img.style.opacity = "100";
     photo_viewer.style.cursor = "";
@@ -383,7 +383,7 @@ function disable_hoverzoom()
 }
 function toggle_hoverzoom(event)
 {
-    var photo_img = document.getElementById("photo_viewer").children[0];
+    let photo_img = document.getElementById("photo_viewer").children[0];
     if (photo_img.style.opacity === "0")
     {
         disable_hoverzoom();
@@ -392,7 +392,7 @@ function toggle_hoverzoom(event)
     {
         enable_hoverzoom(event);
     }
-    var content_body = document.getElementById('content_body');
+    let content_body = document.getElementById('content_body');
     if (getComputedStyle(content_body).getPropertyValue("--narrow") == 0)
     {
         add_tag_box.focus();
@@ -401,10 +401,10 @@ function toggle_hoverzoom(event)
 
 function move_hoverzoom(event)
 {
-    var photo_viewer = document.getElementById("photo_viewer");
-    var photo_img = photo_viewer.children[0];
-    var x;
-    var y;
+    let photo_viewer = document.getElementById("photo_viewer");
+    let photo_img = photo_viewer.children[0];
+    let x;
+    let y;
 
     /*
     When clicking on the image, the event handler takes the image as the event
@@ -415,8 +415,8 @@ function move_hoverzoom(event)
     the event triggers on the holder, the event X is based on its bounding box,
     but when it triggers on the image it's based on the viewport.
     */
-    var mouse_x = event.offsetX;
-    var mouse_y = event.offsetY;
+    let mouse_x = event.offsetX;
+    let mouse_y = event.offsetY;
     if (event.target !== photo_viewer)
     {
         mouse_x -= photo_viewer.offsetLeft;
@@ -472,7 +472,7 @@ setTimeout(
     */
     function()
     {
-        var content_body = document.getElementById("content_body");
+        let content_body = document.getElementById("content_body");
         if (getComputedStyle(content_body).getPropertyValue("--narrow") == 1)
         {
             add_tag_box.autofocus = false;

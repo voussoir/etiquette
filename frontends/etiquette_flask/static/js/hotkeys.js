@@ -13,7 +13,7 @@ hotkeys.hotkey_human =
 function hotkey_human(key, ctrlKey, shiftKey, altKey)
 {
     // Return the string that will be displayed to the user to represent this hotkey.
-    var mods = [];
+    let mods = [];
     if (ctrlKey) { mods.push("Ctrl"); }
     if (shiftKey) { mods.push("Shift"); }
     if (altKey) { mods.push("Alt"); }
@@ -30,14 +30,14 @@ function register_hotkey(hotkey, action, description)
         hotkey = hotkey.split(/\s+/g);
     }
 
-    var key = hotkey.pop();
+    let key = hotkey.pop();
     modifiers = hotkey.map(word => word.toLocaleLowerCase());
-    var ctrlKey = modifiers.includes("control") || modifiers.includes("ctrl");
-    var shiftKey = modifiers.includes("shift");
-    var altKey = modifiers.includes("alt");
+    let ctrlKey = modifiers.includes("control") || modifiers.includes("ctrl");
+    let shiftKey = modifiers.includes("shift");
+    let altKey = modifiers.includes("alt");
 
-    var identifier = hotkeys.hotkey_identifier(key, ctrlKey, shiftKey, altKey);
-    var human = hotkeys.hotkey_human(key, ctrlKey, shiftKey, altKey);
+    let identifier = hotkeys.hotkey_identifier(key, ctrlKey, shiftKey, altKey);
+    let human = hotkeys.hotkey_human(key, ctrlKey, shiftKey, altKey);
     hotkeys.HOTKEYS[identifier] = {"action": action, "human": human, "description": description}
 }
 
@@ -58,10 +58,10 @@ hotkeys.show_all_hotkeys =
 function show_all_hotkeys()
 {
     // Display an Alert with a list of all the hotkeys.
-    var lines = [];
+    let lines = [];
     for (var identifier in hotkeys.HOTKEYS)
     {
-        var line = hotkeys.HOTKEYS[identifier]["human"] + " :  " + hotkeys.HOTKEYS[identifier]["description"];
+        let line = hotkeys.HOTKEYS[identifier]["human"] + " :  " + hotkeys.HOTKEYS[identifier]["description"];
         lines.push(line);
     }
     lines = lines.join("\n");

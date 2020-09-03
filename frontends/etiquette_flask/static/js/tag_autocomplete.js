@@ -7,11 +7,11 @@ tag_autocomplete.DATALIST_ID = "tag_autocomplete_datalist";
 tag_autocomplete.init_datalist =
 function init_datalist()
 {
-    var datalist;
+    let datalist;
     datalist = document.getElementById(tag_autocomplete.DATALIST_ID);
     if (!datalist)
     {
-        var datalist = document.createElement("datalist");
+        datalist = document.createElement("datalist");
         datalist.id = tag_autocomplete.DATALIST_ID;
         document.body.appendChild(datalist);
     }
@@ -19,13 +19,13 @@ function init_datalist()
     common.delete_all_children(datalist);
     for (var index = 0; index < tag_autocomplete.tagset["tags"].length; index += 1)
     {
-        var option = document.createElement("option");
+        let option = document.createElement("option");
         option.value = tag_autocomplete.tagset["tags"][index];
         datalist.appendChild(option);
     }
     for (var synonym in tag_autocomplete.tagset["synonyms"])
     {
-        var option = document.createElement("option");
+        let option = document.createElement("option");
         option.value = tag_autocomplete.tagset["synonyms"][synonym] + "+" + synonym;
         datalist.appendChild(option);
     }
@@ -54,8 +54,8 @@ function tagname_replacements(tagname)
 tag_autocomplete.entry_with_tagname_replacements_hook =
 function entry_with_tagname_replacements_hook(event)
 {
-    var cursor_position = event.target.selectionStart;
-    var new_value = tag_autocomplete.tagname_replacements(event.target.value);
+    let cursor_position = event.target.selectionStart;
+    let new_value = tag_autocomplete.tagname_replacements(event.target.value);
     if (new_value != event.target.value)
     {
         event.target.value = new_value;
@@ -103,7 +103,7 @@ tag_autocomplete.update_tagset =
 function update_tagset()
 {
     console.log("Updating known tagset.");
-    var url = "/all_tags.json";
+    let url = "/all_tags.json";
     common.get(url, tag_autocomplete.update_tagset_callback);
 }
 

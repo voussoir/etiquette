@@ -378,19 +378,19 @@ PARAM_DEFAULTS = {
 function add_searchtag(ul, value, inputted_list, li_class)
 {
     console.log("adding " + value);
-    var already_have = inputted_list.indexOf(value) !== -1;
+    let already_have = inputted_list.indexOf(value) !== -1;
     if (already_have)
     {return;}
 
     inputted_list.push(value);
-    var new_li = document.createElement("li");
+    let new_li = document.createElement("li");
     new_li.className = li_class;
 
-    var new_span = document.createElement("span");
+    let new_span = document.createElement("span");
     new_span.className = "tag_object";
     new_span.innerHTML = value;
 
-    var new_delbutton = document.createElement("button")
+    let new_delbutton = document.createElement("button")
     new_delbutton.classList.add("remove_tag_button");
     new_delbutton.classList.add("red_button");
     new_delbutton.onclick = function(){remove_searchtag(ul, value, inputted_list)};
@@ -411,7 +411,7 @@ function add_searchtag_from_box(box, inputted_list, li_class)
     if (!box.value)
     {return;}
 
-    var value = box.value;
+    let value = box.value;
     value = tag_autocomplete.resolve(value);
     if (value === null)
     {return;}
@@ -431,16 +431,16 @@ function add_searchtag_from_box(box, inputted_list, li_class)
 function remove_searchtag(ul, value, inputted_list)
 {
     console.log("removing " + value);
-    var lis = ul.children;
+    let lis = ul.children;
     //console.log(lis);
     for (var index = 0; index < lis.length; index += 1)
     {
-        var li = lis[index];
-        var tag_object = li.children[0];
+        let li = lis[index];
+        let tag_object = li.children[0];
         if (! tag_object.classList.contains("tag_object"))
         {continue}
 
-        var tagname = tag_object.innerHTML;
+        let tagname = tag_object.innerHTML;
         if (tagname != value)
         {continue}
 
@@ -456,23 +456,23 @@ function remove_searchtag(ul, value, inputted_list)
 function add_new_orderby()
 {
     /* Called by the green + button */
-    var ul = document.getElementById("search_builder_orderby_ul");
-    var lis = ul.children;
+    let ul = document.getElementById("search_builder_orderby_ul");
+    let lis = ul.children;
     if (lis.length >= 9)
     {
         /* 9 because there are only 9 sortable properties */
         return;
     }
     prev_li = lis[lis.length - 2];
-    var new_li = prev_li.cloneNode(true);
+    let new_li = prev_li.cloneNode(true);
     ul.insertBefore(new_li, prev_li.nextSibling);
 }
 
 function orderby_remove_hook(button)
 {
     /* Called by the red button next to orderby dropdowns */
-    var li = button.parentElement;
-    var ul = li.parentElement;
+    let li = button.parentElement;
+    let ul = li.parentElement;
     // 2 because keep 1 row and the adder button
     if (ul.children.length>2)
     {
@@ -495,10 +495,10 @@ function orderby_hide_direction_hook(event)
 
 function simplify_tagnames(tags)
 {
-    var new_tags = [];
+    let new_tags = [];
     for (var index = 0; index < tags.length; index += 1)
     {
-        var tag = tags[index];
+        let tag = tags[index];
         tag = tag.split(".");
         tag = tag[tag.length - 1];
         new_tags.push(tag);
@@ -511,8 +511,8 @@ function submit_search()
     /*
     Gather up all the form data and tags and compose the search URL
     */
-    var url = window.location.origin + "/search";
-    var parameters = [];
+    let url = window.location.origin + "/search";
+    let parameters = [];
 
     // If the user has left any text in the tag boxes, but not hit Enter on
     // them, then they will not be in the `inputted_` lists and would get
@@ -521,17 +521,17 @@ function submit_search()
     add_searchtag_from_box(input_mays, inputted_mays, "search_builder_mays_inputted");
     add_searchtag_from_box(input_forbids, inputted_forbids, "search_builder_forbids_inputted");
 
-    var has_tag_params = false;
-    var musts = simplify_tagnames(inputted_musts).join(",");
+    let has_tag_params = false;
+    let musts = simplify_tagnames(inputted_musts).join(",");
     if (musts) {parameters.push("tag_musts=" + musts); has_tag_params=true;}
 
-    var mays = simplify_tagnames(inputted_mays).join(",");
+    let mays = simplify_tagnames(inputted_mays).join(",");
     if (mays) {parameters.push("tag_mays=" + mays); has_tag_params=true;}
 
-    var forbids = simplify_tagnames(inputted_forbids).join(",");
+    let forbids = simplify_tagnames(inputted_forbids).join(",");
     if (forbids) {parameters.push("tag_forbids=" + forbids); has_tag_params=true;}
 
-    var expression = document.getElementsByName("tag_expression")[0].value;
+    let expression = document.getElementsByName("tag_expression")[0].value;
     if (expression)
     {
         //expression = expression.replace(new RegExp(" ", 'g'), "-");
@@ -539,12 +539,12 @@ function submit_search()
         has_tag_params=true;
     }
 
-    var basic_inputs = document.getElementsByClassName("basic_param");
+    let basic_inputs = document.getElementsByClassName("basic_param");
     for (var index = 0; index < basic_inputs.length; index += 1)
     {
-        var boxname = basic_inputs[index].name;
-        var box = document.getElementsByName(boxname)[0];
-        var value = box.value;
+        let boxname = basic_inputs[index].name;
+        let box = document.getElementsByName(boxname)[0];
+        let value = box.value;
         value = value.split("&").join("%26");
         console.log(value);
         if (PARAM_DEFAULTS[boxname] == value)
@@ -563,15 +563,15 @@ function submit_search()
     orderby_params = [];
     for (var index = 0; index < orderby_rows.length; index += 1)
     {
-        var row = orderby_rows[index];
-        var column = row.children[0].value;
+        let row = orderby_rows[index];
+        let column = row.children[0].value;
         if (column == "random")
         {
             orderby_params.push(column);
         }
         else
         {
-            var sorter = row.children[1].value;
+            let sorter = row.children[1].value;
             orderby_params.push(column + "-" + sorter);
         }
     }

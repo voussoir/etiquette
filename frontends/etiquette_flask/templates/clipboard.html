@@ -180,11 +180,11 @@ function refresh_divs()
     Add new divs to the page, and remove divs which the user has removed from
     their clipboard.
     */
-    for (var photo_id in divs)
+    for (let photo_id of divs)
     {
-        var photo_div = divs[photo_id];
-        var should_keep = photo_clipboard.clipboard.has(photo_id);
-        var on_page = holder.contains(photo_div);
+        let photo_div = divs[photo_id];
+        let should_keep = photo_clipboard.clipboard.has(photo_id);
+        let on_page = holder.contains(photo_div);
         if (on_page && !should_keep)
         {
             holder.removeChild(photo_div)
@@ -206,9 +206,9 @@ function request_more_divs()
     {
         return;
     }
-    var url = "/batch/photos/photo_card";
-    var data = new FormData();
-    var photo_ids = Array.from(needed).join(",");
+    let url = "/batch/photos/photo_card";
+    let data = new FormData();
+    let photo_ids = Array.from(needed).join(",");
     data.append("photo_ids", photo_ids);
     function callback(response)
     {
@@ -244,10 +244,10 @@ photo_clipboard.on_save_hooks.push(my_clipboard_load_save_hook);
 
 function add_remove_tag_callback(response)
 {
-    var tagname = response.data.tagname;
-    var message_area = document.getElementById("message_area");
-    var message_positivity;
-    var message_text;
+    let tagname = response.data.tagname;
+    let message_area = document.getElementById("message_area");
+    let message_positivity;
+    let message_text;
 
     if ("error_type" in response.data)
     {
@@ -256,7 +256,7 @@ function add_remove_tag_callback(response)
     }
     else if ("action" in response.data)
     {
-        var action = response.data.action;
+        let action = response.data.action;
         message_positivity = "message_positive";
         if (action == "add")
         {message_text = "Added tag " + tagname;}
@@ -272,13 +272,13 @@ function add_tag_form()
     if (photo_clipboard.clipboard.size == 0)
         {return;}
 
-    var box = document.getElementById("add_tag_textbox");
-    var tagname = box.value.trim();
+    let box = document.getElementById("add_tag_textbox");
+    let tagname = box.value.trim();
     if (! tagname)
         {return}
 
     box.value = "";
-    var photo_ids = Array.from(photo_clipboard.clipboard);
+    let photo_ids = Array.from(photo_clipboard.clipboard);
     api.photos.batch_add_tag(photo_ids, tagname, add_remove_tag_callback);
 }
 
@@ -287,13 +287,13 @@ function remove_tag_form()
     if (photo_clipboard.clipboard.size == 0)
         {return;}
 
-    var box = document.getElementById("remove_tag_textbox");
-    var tagname = box.value.trim();
+    let box = document.getElementById("remove_tag_textbox");
+    let tagname = box.value.trim();
     if (! tagname)
         {return}
 
     box.value = "";
-    var photo_ids = Array.from(photo_clipboard.clipboard);
+    let photo_ids = Array.from(photo_clipboard.clipboard);
     api.photos.batch_remove_tag(photo_ids, tagname, add_remove_tag_callback);
 }
 
@@ -304,7 +304,7 @@ function download_zip_form()
     if (photo_clipboard.clipboard.size == 0)
         {return;}
 
-    var photo_ids = Array.from(photo_clipboard.clipboard);
+    let photo_ids = Array.from(photo_clipboard.clipboard);
     api.photos.get_download_zip_token(photo_ids, api.photos.callback_download_zip);
 }
 
@@ -317,9 +317,9 @@ function refresh_metadata_callback(response)
     window[refresh_metadata_button.dataset.spinnerCloser]();
     if ("error_type" in response.data)
     {
-        var message_area = document.getElementById("message_area");
-        var message_positivity = "message_negative";
-        var message_text = response.data.error_message;
+        let message_area = document.getElementById("message_area");
+        let message_positivity = "message_negative";
+        let message_text = response.data.error_message;
         common.create_message_bubble(message_area, message_positivity, message_text, 8000);
     }
     else
@@ -336,7 +336,7 @@ function refresh_metadata_form()
         return;
     }
 
-    var photo_ids = Array.from(photo_clipboard.clipboard);
+    let photo_ids = Array.from(photo_clipboard.clipboard);
     api.photos.batch_refresh_metadata(photo_ids, refresh_metadata_callback);
 }
 
@@ -344,9 +344,9 @@ function refresh_metadata_form()
 
 function set_unset_searchhidden_callback(response)
 {
-    var message_area = document.getElementById("message_area");
-    var message_positivity;
-    var message_text;
+    let message_area = document.getElementById("message_area");
+    let message_positivity;
+    let message_text;
     if ("error_type" in response.data)
     {
         message_positivity = "message_negative";
@@ -364,7 +364,7 @@ function set_searchhidden_form()
     if (photo_clipboard.clipboard.size == 0)
         {return;}
 
-    var photo_ids = Array.from(photo_clipboard.clipboard);
+    let photo_ids = Array.from(photo_clipboard.clipboard);
     api.photos.batch_set_searchhidden(photo_ids, set_unset_searchhidden_callback);
 }
 function unset_searchhidden_form()
@@ -372,7 +372,7 @@ function unset_searchhidden_form()
     if (photo_clipboard.clipboard.size == 0)
         {return;}
 
-    var photo_ids = Array.from(photo_clipboard.clipboard);
+    let photo_ids = Array.from(photo_clipboard.clipboard);
     api.photos.batch_unset_searchhidden(photo_ids, set_unset_searchhidden_callback);
 }
 </script>

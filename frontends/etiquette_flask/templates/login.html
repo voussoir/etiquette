@@ -92,8 +92,8 @@ var message_area = document.getElementById("message_area");
 function login_form(event)
 {
     event.preventDefault();
-    var username = document.getElementById("login_input_username").value;
-    var password = document.getElementById("login_input_password").value;
+    let username = document.getElementById("login_input_username").value;
+    let password = document.getElementById("login_input_password").value;
     if (username == "" || password == "")
     {
         common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.");
@@ -105,10 +105,10 @@ function login_form(event)
 function register_form(event)
 {
     event.preventDefault();
-    var username = document.getElementById("register_input_username").value;
-    var display_name = document.getElementById("register_input_display_name").value;
-    var password_1 = document.getElementById("register_input_password_1").value;
-    var password_2 = document.getElementById("register_input_password_2").value;
+    let username = document.getElementById("register_input_username").value;
+    let display_name = document.getElementById("register_input_display_name").value;
+    let password_1 = document.getElementById("register_input_password_1").value;
+    let password_2 = document.getElementById("register_input_password_2").value;
     if (username == "" || password_1 == "" || password_2 == "")
     {
         common.create_message_bubble(message_area, "message_negative", "Fill out the form, yo.");

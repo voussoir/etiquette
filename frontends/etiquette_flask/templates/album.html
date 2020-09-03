@@ -321,12 +321,12 @@ function add_child(child_id)
 
 function paste_photo_clipboard()
 {
-    var photo_ids = Array.from(photo_clipboard.clipboard);
+    let photo_ids = Array.from(photo_clipboard.clipboard);
     api.albums.add_photos(ALBUM_ID, photo_ids, common.refresh);
 }
 function unpaste_photo_clipboard()
 {
-    var photo_ids = Array.from(photo_clipboard.clipboard);
+    let photo_ids = Array.from(photo_clipboard.clipboard);
     api.albums.remove_photos(ALBUM_ID, photo_ids, common.refresh);
 }
 
@@ -348,8 +348,8 @@ function on_save(ed, edit_element_map, display_element_map)
 
         ed.save();
 
-        var title_display = display_element_map["title"];
-        var description_display = display_element_map["description"];
+        let title_display = display_element_map["title"];
+        let description_display = display_element_map["description"];
 
         document.title = title_display.innerText + " | Albums";
 
@@ -360,8 +360,8 @@ function on_save(ed, edit_element_map, display_element_map)
     }
 
     edit_element_map["title"].value = edit_element_map["title"].value.trim();
-    var title = edit_element_map["title"].value;
-    var description = edit_element_map["description"].value;
+    let title = edit_element_map["title"].value;
+    let description = edit_element_map["description"].value;
 
     ed.show_spinner();
     api.albums.edit(ALBUM_ID, title, description, callback);
@@ -391,7 +391,7 @@ function create_child(title)
     {
         title = undefined;
     }
-    var parent_id = ALBUM_ID;
+    let parent_id = ALBUM_ID;
     api.albums.create(title, parent_id, api.albums.callback_follow);
 }
 
@@ -408,11 +408,11 @@ function on_album_drag_over(event)
 }
 function on_album_drag_drop(event)
 {
-    var child_id = event.dataTransfer.getData("text");
-    var child = document.getElementById(child_id);
+    let child_id = event.dataTransfer.getData("text");
+    let child = document.getElementById(child_id);
     child_id = child.dataset.id;
-    var parent = event.currentTarget;
-    var parent_id = parent.dataset.id;
+    let parent = event.currentTarget;
+    let parent_id = parent.dataset.id;
     event.dataTransfer.clearData();
 
     if (child_id == parent_id)
@@ -420,8 +420,8 @@ function on_album_drag_drop(event)
         return;
     }
 
-    var child_title = child.querySelector('.album_card_title').textContent.trim();
-    var parent_title = parent.querySelector('.album_card_title').textContent.trim();
+    let child_title = child.querySelector('.album_card_title').textContent.trim();
+    let parent_title = parent.querySelector('.album_card_title').textContent.trim();
     if (confirm(`Move\n${child_title}\ninto\n${parent_title}?`))
     {
         if (ALBUM_ID)

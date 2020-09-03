@@ -236,7 +236,7 @@ common.bind_box_to_button(add_tag_textbox, add_tag_button, false);
 
 function easybake_form()
 {
-    var easybake_string = add_tag_textbox.value;
+    let easybake_string = add_tag_textbox.value;
     if (easybake_string === "")
     {
         add_tag_textbox.focus();
@@ -255,10 +255,9 @@ function tag_action_callback(response)
     }
     for (var index = 0; index < datas.length; index += 1)
     {
-        var data = datas[index];
-        var tagname = data.tagname;
-        var message_positivity;
-        var message_text;
+        let tagname = data.tagname;
+        let message_positivity;
+        let message_text;
         if ("error_type" in data)
         {
             message_positivity = "message_negative";
@@ -266,7 +265,7 @@ function tag_action_callback(response)
         }
         else if ("action" in data)
         {
-            var action = data.action;
+            let action = data.action;
             message_positivity = "message_positive";
             if (action == "new_tag")
             {message_text = `Created tag ${tagname}`;}
@@ -312,8 +311,8 @@ function on_save(ed, edit_element_map, display_element_map)
         ed.hide_spinner();
         if (response.meta.status == 200)
         {
-            var new_name = response.data.name;
-            var new_description = response.data.description;
+            let new_name = response.data.name;
+            let new_description = response.data.description;
             document.title = new_name + " | Tags";
             window.history.replaceState(null, null, "/tag/" + new_name);
             name_editor.value = new_name;
@@ -327,14 +326,14 @@ function on_save(ed, edit_element_map, display_element_map)
         }
     }
 
-    var name_display = display_element_map["name"];
-    var name_editor = edit_element_map["name"];
-    var description_display = display_element_map["description"];
-    var description_editor = edit_element_map["description"];
+    let name_display = display_element_map["name"];
+    let name_editor = edit_element_map["name"];
+    let description_display = display_element_map["description"];
+    let description_editor = edit_element_map["description"];
 
-    var tag_name = name_display.innerText;
-    var name = name_editor.value;
-    var description = description_editor.value;
+    let tag_name = name_display.innerText;
+    let name = name_editor.value;
+    let description = description_editor.value;
 
     ed.show_spinner();
     api.tags.edit(tag_name, name, description, callback)

@@ -5,8 +5,8 @@ common.INPUT_TYPES = new Set(["INPUT", "TEXTAREA"]);
 common._request =
 function _request(method, url, callback)
 {
-    var request = new XMLHttpRequest();
-    var response = {
+    let request = new XMLHttpRequest();
+    let response = {
         "completed": false,
     };
 
@@ -29,7 +29,7 @@ function _request(method, url, callback)
         }
         callback(response);
     };
-    var asynchronous = true;
+    let asynchronous = true;
     request.open(method, url, asynchronous);
     return request;
 }
@@ -61,7 +61,7 @@ function bind_box_to_button(box, button, ctrl_enter)
     Thanks Yaroslav Yakovlev
     http://stackoverflow.com/a/9343095
     */
-    var bound_box_hook = function(event)
+    let bound_box_hook = function(event)
     {
         if (event.key !== "Enter")
             {return;}
@@ -83,9 +83,9 @@ function create_message_bubble(message_area, message_positivity, message_text, l
     {
         lifespan = 8000;
     }
-    var message = document.createElement("div");
+    let message = document.createElement("div");
     message.className = "message_bubble " + message_positivity;
-    var span = document.createElement("span");
+    let span = document.createElement("span");
     span.innerHTML = message_text;
     message.appendChild(span);
     message_area.appendChild(message);
@@ -105,7 +105,7 @@ common.entry_with_history_hook =
 function entry_with_history_hook(event)
 {
     //console.log(event);
-    var box = event.target;
+    let box = event.target;
 
     if (box.entry_history === undefined)
         {box.entry_history = [];}
@@ -143,7 +143,7 @@ function entry_with_history_hook(event)
 common.html_to_element =
 function html_to_element(html)
 {
-    var template = document.createElement("template");
+    let template = document.createElement("template");
     template.innerHTML = html;
     return template.content.firstChild;
 }
@@ -163,11 +163,11 @@ function init_atag_merge_params()
         Result: "?filter=hello&orderby=date"
     */
     page_params = new URLSearchParams(window.location.search);
-    var as = Array.from(document.getElementsByClassName("merge_params"));
+    let as = Array.from(document.getElementsByClassName("merge_params"));
     for (let a of as)
     {
-        var a_params = new URLSearchParams(a.search);
-        var new_params = new URLSearchParams();
+        let a_params = new URLSearchParams(a.search);
+        let new_params = new URLSearchParams();
         page_params.forEach(function(value, key) {new_params.set(key, value); });
         a_params.forEach(function(value, key) {new_params.set(key, value); });
         a.search = new_params.toString();
@@ -205,29 +205,29 @@ function init_button_with_confirm()
 
         data-holder-class: CSS class for the new span that holds the menu.
     */
-    var buttons = Array.from(document.getElementsByClassName("button_with_confirm"));
+    let buttons = Array.from(document.getElementsByClassName("button_with_confirm"));
     for (let button of buttons)
     {
         button.classList.remove("button_with_confirm");
 
-        var holder = document.createElement("span");
+        let holder = document.createElement("span");
         holder.classList.add("confirm_holder");
         holder.classList.add(button.dataset.holderClass || "confirm_holder");
         button.parentElement.insertBefore(holder, button);
         button.parentElement.removeChild(button);
 
-        var holder_stage1 = document.createElement("span");
+        let holder_stage1 = document.createElement("span");
         holder_stage1.classList.add("confirm_holder_stage1");
         holder_stage1.appendChild(button);
         holder.appendChild(holder_stage1);
 
-        var holder_stage2 = document.createElement("span");
+        let holder_stage2 = document.createElement("span");
         holder_stage2.classList.add("confirm_holder_stage2");
         holder_stage2.classList.add("hidden");
         holder.appendChild(holder_stage2);
 
-        var prompt;
-        var input_source;
+        let prompt;
+        let input_source;
         if (button.dataset.isInput)
         {
             prompt = document.createElement("input");
@@ -245,7 +245,7 @@ function init_button_with_confirm()
         delete button.dataset.prompt;
         delete button.dataset.promptClass;
 
-        var button_confirm = document.createElement("button");
+        let button_confirm = document.createElement("button");
         button_confirm.innerText = (button.dataset.confirm || button.innerText).trim();
         if (button.dataset.confirmClass === undefined)
         {
@@ -267,7 +267,7 @@ function init_button_with_confirm()
         delete button.dataset.confirmClass;
         delete button.dataset.isInput;
 
-        var button_cancel = document.createElement("button");
+        let button_cancel = document.createElement("button");
         button_cancel.innerText = button.dataset.cancel || "Cancel";
         button_cancel.className = button.dataset.cancelClass || "";
         holder_stage2.appendChild(button_cancel);
@@ -275,9 +275,9 @@ function init_button_with_confirm()
         delete button.dataset.cancelClass;
 
         // If this is stupid, let me know.
-        var confirm_onclick = button.dataset.onclick + `
+        let confirm_onclick = button.dataset.onclick + `
             ;
-            var holder = event.target.parentElement.parentElement;
+            let holder = event.target.parentElement.parentElement;
             holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
             holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
         `
@@ -285,10 +285,10 @@ function init_button_with_confirm()
         button.removeAttribute("onclick");
         button.onclick = function(event)
         {
-            var holder = event.target.parentElement.parentElement;
+            let holder = event.target.parentElement.parentElement;
             holder.getElementsByClassName("confirm_holder_stage1")[0].classList.add("hidden");
             holder.getElementsByClassName("confirm_holder_stage2")[0].classList.remove("hidden");
-            var input = holder.getElementsByTagName("input")[0];
+            let input = holder.getElementsByTagName("input")[0];
             if (input)
             {
                 input.focus();
@@ -297,7 +297,7 @@ function init_button_with_confirm()
 
         button_cancel.onclick = function(event)
         {
-            var holder = event.target.parentElement.parentElement;
+            let holder = event.target.parentElement.parentElement;
             holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
             holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
         }
@@ -313,7 +313,7 @@ function init_enable_on_pageload()
     the DOM has completed loading, give it the disabled attribute and the
     class "enable_on_pageload".
     */
-    var elements = Array.from(document.getElementsByClassName("enable_on_pageload"));
+    let elements = Array.from(document.getElementsByClassName("enable_on_pageload"));
     for (let element of elements)
     {
         element.disabled = false;
@@ -324,16 +324,16 @@ function init_enable_on_pageload()
 common.init_tabbed_container =
 function init_tabbed_container()
 {
-    var switch_tab =
+    let switch_tab =
     function switch_tab(event)
     {
-        var tab_button = event.target;
+        let tab_button = event.target;
         if (tab_button.classList.contains("tab_button_active"))
             { return; }
 
-        var tab_id = tab_button.dataset.tabId;
-        var tab_buttons = tab_button.parentElement.getElementsByClassName("tab_button");
-        var tabs = tab_button.parentElement.parentElement.getElementsByClassName("tab");
+        let tab_id = tab_button.dataset.tabId;
+        let tab_buttons = tab_button.parentElement.getElementsByClassName("tab_button");
+        let tabs = tab_button.parentElement.parentElement.getElementsByClassName("tab");
         for (let tab_button of tab_buttons)
         {
             if (tab_button.dataset.tabId === tab_id)
@@ -356,21 +356,21 @@ function init_tabbed_container()
         }
     }
 
-    var tabbed_containers = Array.from(document.getElementsByClassName("tabbed_container"));
+    let tabbed_containers = Array.from(document.getElementsByClassName("tabbed_container"));
     for (let tabbed_container of tabbed_containers)
     {
-        var button_container = document.createElement("div");
+        let button_container = document.createElement("div");
         button_container.className = "tab_buttons";
         tabbed_container.prepend(button_container);
-        var tabs = Array.from(tabbed_container.getElementsByClassName("tab"));
+        let tabs = Array.from(tabbed_container.getElementsByClassName("tab"));
         for (let tab of tabs)
         {
             tab.classList.add("hidden");
-            var tab_id = tab.dataset.tabId || tab.dataset.tabTitle;
+            let tab_id = tab.dataset.tabId || tab.dataset.tabTitle;
             tab.dataset.tabId = tab_id;
             tab.style.borderTopColor = "transparent";
 
-            var button = document.createElement("button");
+            let button = document.createElement("button");
             button.className = "tab_button tab_button_inactive";
             button.onclick = switch_tab;
             button.innerText = tab.dataset.tabTitle;
