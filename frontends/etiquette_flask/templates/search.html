@@ -521,20 +521,20 @@ function submit_search()
 
     let has_tag_params = false;
     let musts = simplify_tagnames(inputted_musts).join(",");
-    if (musts) {parameters.push("tag_musts=" + musts); has_tag_params=true;}
+    if (musts) {parameters.push("tag_musts=" + musts); has_tag_params = true;}
 
     let mays = simplify_tagnames(inputted_mays).join(",");
-    if (mays) {parameters.push("tag_mays=" + mays); has_tag_params=true;}
+    if (mays) {parameters.push("tag_mays=" + mays); has_tag_params = true;}
 
     let forbids = simplify_tagnames(inputted_forbids).join(",");
-    if (forbids) {parameters.push("tag_forbids=" + forbids); has_tag_params=true;}
+    if (forbids) {parameters.push("tag_forbids=" + forbids); has_tag_params = true;}
 
     let expression = document.getElementsByName("tag_expression")[0].value;
     if (expression)
     {
         //expression = expression.replace(new RegExp(" ", 'g'), "-");
         parameters.push("tag_expression=" + expression);
-        has_tag_params=true;
+        has_tag_params = true;
     }
 
     let basic_inputs = document.getElementsByClassName("basic_param");
