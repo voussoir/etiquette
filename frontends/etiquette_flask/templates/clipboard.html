@@ -154,6 +154,15 @@ common.bind_box_to_button(remove_box, remove_button);
 
 function recalculate_needed()
 {
+    /*
+    Populate the global `needed` set with all photo ids which are on the
+    clipboard but not on the page yet. When this page is first loaded, that
+    will be all ids. If the user adds more photos to their clipboard in a
+    different tab and returns to this tab, then the new ids will be needed.
+
+    This function only calculates which ids are needed. The actual fetching of
+    divs is in `request_more_divs`.
+    */
     needed = new Set();
     photo_clipboard.clipboard.forEach(function(photo_id)
     {
@@ -166,6 +175,10 @@ function recalculate_needed()
 
 function refresh_divs()
 {
+    /*
+    Add new divs to the page, and remove divs which the user has removed from
+    their clipboard.
+    */
     for (var photo_id in divs)
     {
         var photo_div = divs[photo_id];
@@ -184,6 +197,10 @@ function refresh_divs()
 
 function request_more_divs()
 {
+    /*
+    Using the ids in `needed`, download more photo card divs and place them
+    into `divs`, so that `refresh_divs` can then add them to the page.
+    */
     if (needed.size == 0)
     {
         return;
@@ -206,6 +223,7 @@ function request_more_divs()
             holder.appendChild(photo_div);
         }
         photo_clipboard.apply_check_all();
+        console.log("Needed but not received: " + Array.from(needed));
     }
     common.post(url, data, callback);
 }

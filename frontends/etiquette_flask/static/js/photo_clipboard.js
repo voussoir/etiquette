@@ -16,7 +16,7 @@ function clear_clipboard()
 photo_clipboard.load_clipboard =
 function load_clipboard(event)
 {
-    console.log("Loading photo clipboard.");
+    console.log("Loading photo clipboard from localstorage.");
     var stored = localStorage.getItem("photo_clipboard");
     if (stored === null)
     {
@@ -41,7 +41,7 @@ function load_clipboard(event)
 photo_clipboard.save_clipboard =
 function save_clipboard()
 {
-    console.log("Saving photo clipboard.");
+    console.log("Saving photo clipboard to localstorage.");
     var serialized = JSON.stringify(Array.from(photo_clipboard.clipboard));
     localStorage.setItem("photo_clipboard", serialized);
     photo_clipboard.update_pagestate();
@@ -312,6 +312,9 @@ function on_storage_event()
 photo_clipboard.update_pagestate =
 function update_pagestate()
 {
+    /*
+    Update all relevant DOM elements to match internal state.
+    */
     photo_clipboard.update_clipboard_count();
     photo_clipboard.update_clipboard_tray();
     photo_clipboard.apply_check_all();

@@ -307,6 +307,11 @@ function init_button_with_confirm()
 common.init_enable_on_pageload =
 function init_enable_on_pageload()
 {
+    /*
+    To create an input element which is disabled at first, and is enabled when
+    the DOM has completed loading, give it the disabled attribute and the
+    class "enable_on_pageload".
+    */
     var elements = Array.from(document.getElementsByClassName("enable_on_pageload"));
     elements.forEach(function(element)
     {
