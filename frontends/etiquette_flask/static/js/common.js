@@ -157,19 +157,48 @@ function init_atag_merge_params()
     "merge_params". If the URL and href contain the same parameter, the href
     takes priority.
 
+    Optional:
+        data-merge-params: A whitelist of parameter names, separated by commas
+            or spaces. Only these parameters will be merged from the page URL.
+
+        data-merge-params-except: A blacklist of parameter names, separated by
+            commas or spaces. All parameters except these will be merged from
+            the page URL.
+
     Example:
         URL: ?filter=hello&orderby=score
         href: "?orderby=date"
         Result: "?filter=hello&orderby=date"
     */
-    page_params = new URLSearchParams(window.location.search);
+    function ingest(params, new_params)
+    {
+        for (const [key, value] of params) { new_params.set(key, value); }
+    }
+    const page_params = Array.from(new URLSearchParams(window.location.search));
     let as = Array.from(document.getElementsByClassName("merge_params"));
     for (const a of as)
     {
-        let a_params = new URLSearchParams(a.search);
-        let new_params = new URLSearchParams();
-        page_params.forEach(function(value, key) {new_params.set(key, value); });
-        a_params.forEach(function(value, key) {new_params.set(key, value); });
+        const a_params = new URLSearchParams(a.search);
+        const new_params = new URLSearchParams();
+
+        if (a.dataset.mergeParams)
+        {
+            let keep = new Set(a.dataset.mergeParams.split(/[\s,]+/));
+            ingest(page_params.filter(key_value => keep.has(key_value[0])), new_params);
+            delete a.dataset.mergeParams;
+        }
+        else if (a.dataset.mergeParamsExcept)
+        {
+            let remove = new Set(a.dataset.mergeParamsExcept.split(/[\s,]+/));
+            ingest(page_params.filter(key_value => (! remove.has(key_value[0]))), new_params);
+            delete a.dataset.mergeParamsExcept;
+        }
+        else
+        {
+            ingest(page_params, new_params);
+        }
+
+        ingest(a_params, new_params);
         a.search = new_params.toString();
         a.classList.remove("merge_params");
     }
