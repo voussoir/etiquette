@@ -6,10 +6,10 @@
 id="{{id}}"
 class="album_card album_card_{{view}}"
 data-id="{{album.id}}"
-ondragstart="on_album_drag_start(event)"
-ondragend="on_album_drag_end(event)"
-ondragover="on_album_drag_over(event)"
-ondrop="on_album_drag_drop(event)"
+ondragstart="on_album_drag_start(event);"
+ondragend="on_album_drag_end(event);"
+ondragover="on_album_drag_over(event);"
+ondrop="on_album_drag_drop(event);"
 {% if album != "root" and draggable %}
 draggable=true
 {% endif %}
@@ -26,7 +26,7 @@ draggable=true
         {% if unlink_parent is not none %}
         <button
         class="remove_child_button button_with_confirm red_button"
-        data-onclick="api.albums.remove_child('{{unlink_parent.id}}', '{{album.id}}', common.refresh)"
+        data-onclick="return api.albums.remove_child('{{unlink_parent.id}}', '{{album.id}}', common.refresh);"
         data-prompt="Remove child?"
         data-holder-class="remove_child_button"
         data-confirm-class="red_button"

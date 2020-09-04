@@ -154,7 +154,7 @@
 
 {% macro create_orderby_li(selected_column, selected_sorter) %}
 <li class="search_builder_orderby_li">
-    <select onchange="orderby_hide_direction_hook(event)">
+    <select onchange="orderby_hide_direction_hook(event);">
         <option value="created"   {{"selected" if selected_column=="created" else ""}}   >Creation date</option>
         <option value="area"      {{"selected" if selected_column=="area" else ""}}      >Area</option>
         <option value="width"     {{"selected" if selected_column=="width" else ""}}     >Width</option>
@@ -169,7 +169,7 @@
         <option value="desc" {{"selected" if selected_sorter=="desc" else ""}} >Descending</option>
         <option value="asc"  {{"selected" if selected_sorter=="asc" else ""}}  >Ascending</option>
     </select>
-    <button class="remove_tag_button_perm red_button" onclick="orderby_remove_hook(this);"></button>
+    <button class="remove_tag_button_perm red_button" onclick="return orderby_remove_hook(this);"></button>
 </li>
 {% endmacro %}
 </head>
@@ -189,7 +189,7 @@
                         <li class="search_builder_{{tagtype}}_inputted">
                             <span class="tag_object">{{tagname}}</span>{{-''-}}
                             <button class="remove_tag_button red_button"
-                            onclick="remove_searchtag(ul_{{tagtype}}, '{{tagname}}', inputted_{{tagtype}});"></button>
+                            onclick="return remove_searchtag(ul_{{tagtype}}, '{{tagname}}', inputted_{{tagtype}});"></button>
                         </li>
                     {% endfor %}
                 {% endif %}
@@ -216,7 +216,7 @@
                 {% else %}
                     {{ create_orderby_li(selected_column=0, selected_sorter=0) }}
                 {% endif %}
-                <li id="search_builder_orderby_newrow"><button class="green_button" onclick="add_new_orderby()">+</button></li>
+                <li id="search_builder_orderby_newrow"><button class="green_button" onclick="return add_new_orderby();">+</button></li>
             </ul>
         </div>
         <br>
@@ -310,21 +310,21 @@
                 {{tag_object.tag_object(
                     tag,
                     link=None,
-                    onclick="tags_on_this_page_add_must(event, '" + tag.name + "');",
+                    onclick="return tags_on_this_page_add_must(event, '" + tag.name + "');",
                     innertext="(+)",
                 )}}
 
                 {{tag_object.tag_object(
                     tag,
                     link=None,
-                    onclick="tags_on_this_page_add_may(event, '" + tag.name + "');",
+                    onclick="return tags_on_this_page_add_may(event, '" + tag.name + "');",
                     innertext="(~)",
                 )}}
 
                 {{tag_object.tag_object(
                     tag,
                     link=None,
-                    onclick="tags_on_this_page_add_forbid(event, '" + tag.name + "');",
+                    onclick="return tags_on_this_page_add_forbid(event, '" + tag.name + "');",
                     innertext="(x)",
                 )}}
 

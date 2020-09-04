@@ -77,7 +77,7 @@
 
                 <button
                 class="red_button button_with_confirm"
-                data-onclick="api.bookmarks.delete('{{bookmark.id}}', common.refresh)"
+                data-onclick="return api.bookmarks.delete('{{bookmark.id}}', common.refresh);"
                 data-prompt="Delete Bookmark?"
                 data-cancel-class="gray_button"
                 >
@@ -89,7 +89,7 @@
             <div class="new_bookmark_card">
                 <input id="new_bookmark_title" type="text" placeholder="title (optional)">
                 <input id="new_bookmark_url" type="text" placeholder="url">
-                <button id="new_bookmark_button" class="green_button" onclick="create_bookmark_form()">Create</button>
+                <button id="new_bookmark_button" class="green_button" onclick="return create_bookmark_form();">Create</button>
             </div>
         </div>
     </div>

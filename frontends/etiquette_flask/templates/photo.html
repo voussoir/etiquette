@@ -160,7 +160,7 @@
         <ul id="this_tags">
             <li>
                 <input id="add_tag_textbox" type="text" list="tag_autocomplete_datalist" autofocus>
-                <button id="add_tag_button" class="green_button" onclick="add_photo_tag_form();">add</button>
+                <button id="add_tag_button" class="green_button" onclick="return add_photo_tag_form();">add</button>
             </li>
             {% set tags = photo.get_tags()|sort_tags %}
             {% for tag in tags %}
@@ -168,7 +168,7 @@
                 {{tag_object.tag_object(tag, with_alt_description=True)}}<!--
                 --><button
                 class="remove_tag_button red_button"
-                onclick="remove_photo_tag_form('{{photo.id}}', '{{tag.name}}');">
+                onclick="return remove_photo_tag_form('{{photo.id}}', '{{tag.name}}');">
                 </button>
             </li>
             {% endfor %}
@@ -194,8 +194,8 @@
             {% endif %}
             <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as original filename</a></li>
             <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
-            <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="refresh_metadata_form();">refresh</button></li>
-            <li><label class="photo_card" data-id="{{photo.id}}"><input type="checkbox" class="photo_card_selector_checkbox" onclick="photo_clipboard.on_photo_select(event)"/>Clipboard</label></li>
+            <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="return refresh_metadata_form();">refresh</button></li>
+            <li><label class="photo_card" data-id="{{photo.id}}"><input type="checkbox" class="photo_card_selector_checkbox" onclick="return photo_clipboard.on_photo_select(event);"/>Clipboard</label></li>
         </ul>
 
 
@@ -223,7 +223,7 @@
 
 <div id="right">
     <!-- THE PHOTO ITSELF -->
-    <div id="photo_viewer" class="photo_viewer_{{photo.simple_mimetype}}" {%if photo.simple_mimetype == "image"%}onclick="toggle_hoverzoom(event)"{%endif%}>
+    <div id="photo_viewer" class="photo_viewer_{{photo.simple_mimetype}}" {%if photo.simple_mimetype == "image"%}onclick="return toggle_hoverzoom(event);"{%endif%}>
         {% if photo.simple_mimetype == "image" %}
         <img src="{{photo|file_link}}" alt="{{photo.basename}}" onload="this.style.opacity=0.99">
 
@@ -245,11 +245,11 @@
     </div>
     <div id="hovering_tools">
         {% if photo.simple_mimetype == "video" %}
-        <button id="generate_thumbnail_button" class="green_button button_with_spinner" onclick="generate_thumbnail_for_video(event)">Capture thumbnail</button>
+        <button id="generate_thumbnail_button" class="green_button button_with_spinner" onclick="return generate_thumbnail_for_video(event);">Capture thumbnail</button>
         {% endif %}
         <button
         class="red_button button_with_confirm"
-        data-onclick="api.photos.delete(PHOTO_ID, false, api.photos.callback_go_to_search)"
+        data-onclick="return api.photos.delete(PHOTO_ID, false, api.photos.callback_go_to_search);"
         data-prompt="Delete photo, keep file?"
         data-cancel-class="gray_button"
         >
@@ -258,7 +258,7 @@
 
         <button
         class="red_button button_with_confirm"
-        data-onclick="api.photos.delete(PHOTO_ID, true, api.photos.callback_go_to_search)"
+        data-onclick="return api.photos.delete(PHOTO_ID, true, api.photos.callback_go_to_search);"
         data-prompt="Delete file on disk?"
         data-cancel-class="gray_button"
         >

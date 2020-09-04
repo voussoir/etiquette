@@ -70,7 +70,7 @@ form h2
             <h2>Log in</h2>
             <input type="text" id="login_input_username" name="username" placeholder="username" autofocus>
             <input type="password" id="login_input_password" name="password" placeholder="password">
-            <button type="submit" id="login_submit_button" class="green_button" onclick="login_form(event)">Log in</button>
+            <button type="submit" id="login_submit_button" class="green_button" onclick="return login_form(event);">Log in</button>
         </form>
         <form id="register_form" class="panel" action="/register" method="post">
             <h2>Register</h2>
@@ -78,7 +78,7 @@ form h2
             <input type="text" id="register_input_display_name" name="display_name" placeholder="display name (optional)">
             <input type="password" id="register_input_password_1" name="password_1" placeholder="password (at least {{min_password_length}})">
             <input type="password" id="register_input_password_2" name="password_2" placeholder="password again">
-            <button type="submit" id="register_input_button" class="green_button" onclick="register_form(event)">Register</button>
+            <button type="submit" id="register_input_button" class="green_button" onclick="return register_form(event);">Register</button>
         </form>
         <div id="message_area">
         </div>

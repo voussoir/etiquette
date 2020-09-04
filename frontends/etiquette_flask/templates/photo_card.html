@@ -26,7 +26,7 @@
 {% endif -%}
 
 <div class="photo_card photo_card_{{view}} photo_card_unselected" data-id="{{photo.id}}">
-    <input type="checkbox" class="photo_card_selector_checkbox" onclick="photo_clipboard.on_photo_select(event)"/>
+    <input type="checkbox" class="photo_card_selector_checkbox" onclick="return photo_clipboard.on_photo_select(event);"/>
     <div class="photo_card_filename"><a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a></div>
     <span class="photo_card_metadata">
         {{- metadata_inner|safe -}}

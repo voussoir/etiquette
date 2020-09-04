@@ -5,7 +5,7 @@
     <a class="header_element" href="/tags">Tags</a>
     {% if session.user %}
     <a class="header_element" href="/user/{{session.user.username}}">{{session.user.display_name}}</a>
-    <button class="header_element" onclick="api.users.logout(common.refresh);" style="flex:0">Logout</button>
+    <button class="header_element" onclick="return api.users.logout(common.refresh);" style="flex:0">Logout</button>
     {% else %}
     <a class="header_element" href="/login">Log in</a>
     {% endif %}

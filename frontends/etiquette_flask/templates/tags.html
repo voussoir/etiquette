@@ -98,7 +98,7 @@ h2, h3
     <div id="right">
         <div id="editor_area">
             <input type="text" id="add_tag_textbox" autofocus>
-            <button class="add_tag_button green_button" id="add_tag_button" onclick="easybake_form();">bake</button>
+            <button class="add_tag_button green_button" id="add_tag_button" onclick="return easybake_form();">bake</button>
         </div>
         <div id="message_area">
         </div>
@@ -130,7 +130,7 @@ h2, h3
 
             <button
             class="red_button button_with_confirm"
-            data-onclick="api.tags.delete('{{specific_tag.name}}', api.tags.callback_go_to_tags);"
+            data-onclick="return api.tags.delete('{{specific_tag.name}}', api.tags.callback_go_to_tags);"
             data-prompt="Delete Tag?"
             data-confirm="Delete"
             data-cancel-class="gray_button"
@@ -173,7 +173,7 @@ h2, h3
                     {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="api.tags.remove_child('{{qualified_name.split('.')[-2]}}', '{{tag.name}}', tag_action_callback);"
+                    data-onclick="return api.tags.remove_child('{{qualified_name.split('.')[-2]}}', '{{tag.name}}', tag_action_callback);"
                     data-prompt="Unlink Tags?"
                     data-confirm="Unlink"
                     data-confirm-class="remove_tag_button_perm red_button"
@@ -188,7 +188,7 @@ h2, h3
                     {{tag_object.tag_object(tag, link='search', innertext=qualified_name, with_alt_description=True)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="api.tags.delete('{{qualified_name}}', tag_action_callback);"
+                    data-onclick="return api.tags.delete('{{qualified_name}}', tag_action_callback);"
                     data-prompt="Delete Tag?"
                     data-confirm="Delete"
                     data-confirm-class="remove_tag_button_perm red_button"
@@ -206,7 +206,7 @@ h2, h3
                     {{tag_object.tag_object(tag, link='search', innertext=qualified_name + '+' + synonym)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="api.tags.remove_synonym('{{tag.name}}', '{{synonym}}', tag_action_callback);"
+                    data-onclick="return api.tags.remove_synonym('{{tag.name}}', '{{synonym}}', tag_action_callback);"
                     data-prompt="Remove Synonym?"
                     data-confirm="Remove"
                     data-confirm-class="remove_tag_button_perm red_button"

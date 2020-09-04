@@ -99,7 +99,7 @@
 <div id="content_body" class="sticky_side_right">
 <div id="left">
     <div class="panel">The clipboard contains <span class="clipboard_count">0</span> items.
-    <button id="clear_clipboard_button" class="red_button" onclick="photo_clipboard.clear_clipboard()">Clear it.</button>
+    <button id="clear_clipboard_button" class="red_button" onclick="return photo_clipboard.clear_clipboard();">Clear it.</button>
     </div>
 
     <div id="photo_card_holder">
@@ -109,25 +109,25 @@
     <div id="toolbox">
         <div id="add_tag_area">
             <input type="text" id="add_tag_textbox" list="tag_autocomplete_datalist">
-            <button class="add_tag_button green_button" id="add_tag_button" onclick="add_tag_form();">Add tag</button>
+            <button class="add_tag_button green_button" id="add_tag_button" onclick="return add_tag_form();">Add tag</button>
         </div>
 
         <div id="remove_tag_area">
             <input type="text" id="remove_tag_textbox" list="tag_autocomplete_datalist">
-            <button class="red_button" id="remove_tag_button" onclick="remove_tag_form();">Remove tag</button>
+            <button class="red_button" id="remove_tag_button" onclick="return remove_tag_form();">Remove tag</button>
         </div>
 
         <div id="refresh_metadata_area">
-            <button class="green_button button_with_spinner" id="refresh_metadata_button" data-spinner-delay="500" onclick="refresh_metadata_form();">Refresh metadata</button>
+            <button class="green_button button_with_spinner" id="refresh_metadata_button" data-spinner-delay="500" onclick="return refresh_metadata_form();">Refresh metadata</button>
         </div>
 
         <div id="searchhidden_area">
-            <button class="yellow_button" id="set_searchhidden_button" onclick="set_searchhidden_form()">Searchhide</button>
-            <button class="yellow_button" id="unset_searchhidden_button" onclick="unset_searchhidden_form()">Unhide</button>
+            <button class="yellow_button" id="set_searchhidden_button" onclick="return set_searchhidden_form();">Searchhide</button>
+            <button class="yellow_button" id="unset_searchhidden_button" onclick="return unset_searchhidden_form();">Unhide</button>
         </div>
 
         <div id="download_zip_area">
-            <button class="yellow_button" id="download_zip_button" onclick="download_zip_form()">Download .zip</button>
+            <button class="yellow_button" id="download_zip_button" onclick="return download_zip_form();">Download .zip</button>
         </div>
     </div>
 

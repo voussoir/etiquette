@@ -133,7 +133,7 @@ h2, h3
         data-is-input="1"
         data-prompt="Album title"
         data-cancel-class="gray_button"
-        data-onclick="create_child(event.target.input_source.value);"
+        data-onclick="return create_child(event.target.input_source.value);"
         >
             Create album
         </button>
@@ -184,7 +184,7 @@ ALBUM_ID = undefined;
 
         <button
         class="red_button button_with_confirm"
-        data-onclick="api.albums.delete(ALBUM_ID, api.albums.callback_go_to_albums)"
+        data-onclick="return api.albums.delete(ALBUM_ID, api.albums.callback_go_to_albums);"
         data-prompt="Delete Album?"
         data-cancel-class="gray_button"
         >
@@ -196,7 +196,7 @@ ALBUM_ID = undefined;
         data-is-input="1"
         data-prompt="Album title"
         data-cancel-class="gray_button"
-        data-onclick="create_child(event.target.input_source.value);"
+        data-onclick="return create_child(event.target.input_source.value);"
         >
             Create child
         </button>
@@ -206,14 +206,14 @@ ALBUM_ID = undefined;
         data-is-input="1"
         data-prompt="Child ID"
         data-cancel-class="gray_button"
-        data-onclick="add_child(event.target.input_source.value);"
+        data-onclick="return add_child(event.target.input_source.value);"
         >
             Add child
         </button>
 
         <button
         class="green_button button_with_spinner"
-        onclick="api.albums.refresh_directories(ALBUM_ID, common.refresh);"
+        onclick="return api.albums.refresh_directories(ALBUM_ID, common.refresh);"
         data-spinner-delay="500"
         {% if not album.get_associated_directories() %}
         title="No associated directories"
@@ -300,8 +300,8 @@ ALBUM_ID = undefined;
 
     {{clipboard_tray.clipboard_tray()}}
     <div class="my_clipboard_tray_toolbox">
-        <button class="green_button" onclick="paste_photo_clipboard()">Add to this album</button>
-        <button class="red_button" onclick="unpaste_photo_clipboard()">Remove from this album</button>
+        <button class="green_button" onclick="return paste_photo_clipboard();">Add to this album</button>
+        <button class="red_button" onclick="return unpaste_photo_clipboard();">Remove from this album</button>
     </div>
 </div>
 </body>
