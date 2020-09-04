@@ -64,6 +64,17 @@ function entry_with_tagname_replacements_hook(event)
     }
 }
 
+tag_autocomplete.init_entry_with_tagname_replacements =
+function init_entry_with_tagname_replacements()
+{
+    const inputs = Array.from(document.getElementsByClassName("entry_with_tagname_replacements"));
+    for (const input of inputs)
+    {
+        input.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
+        input.classList.remove("entry_with_tagname_replacements");
+    }
+}
+
 tag_autocomplete.resolve =
 function resolve(tagname)
 {
@@ -111,5 +122,6 @@ tag_autocomplete.on_pageload =
 function on_pageload()
 {
     tag_autocomplete.update_tagset();
+    tag_autocomplete.init_entry_with_tagname_replacements();
 }
 document.addEventListener("DOMContentLoaded", tag_autocomplete.on_pageload);

@@ -159,7 +159,7 @@
         <h4>Tags</h4>
         <ul id="this_tags">
             <li>
-                <input id="add_tag_textbox" type="text" list="tag_autocomplete_datalist" autofocus>
+                <input type="text" id="add_tag_textbox" class="entry_with_history entry_with_tagname_replacements" list="tag_autocomplete_datalist" autofocus>
                 <button id="add_tag_button" class="green_button" onclick="return add_photo_tag_form();">add</button>
             </li>
             {% set tags = photo.get_tags()|sort_tags %}
@@ -275,8 +275,6 @@ var PHOTO_ID = "{{photo.id}}";
 
 var add_tag_box = document.getElementById('add_tag_textbox');
 var add_tag_button = document.getElementById('add_tag_button');
-add_tag_box.addEventListener("keyup", common.entry_with_history_hook);
-add_tag_box.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
 common.bind_box_to_button(add_tag_box, add_tag_button, false);
 
 var message_area = document.getElementById('message_area');

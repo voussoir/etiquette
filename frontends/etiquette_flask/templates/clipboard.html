@@ -108,12 +108,12 @@
 <div id="right">
     <div id="toolbox">
         <div id="add_tag_area">
-            <input type="text" id="add_tag_textbox" list="tag_autocomplete_datalist">
+            <input type="text" id="add_tag_textbox" class="entry_with_history entry_with_tagname_replacements" list="tag_autocomplete_datalist">
             <button class="add_tag_button green_button" id="add_tag_button" onclick="return add_tag_form();">Add tag</button>
         </div>
 
         <div id="remove_tag_area">
-            <input type="text" id="remove_tag_textbox" list="tag_autocomplete_datalist">
+            <input type="text" id="remove_tag_textbox" class="entry_with_history entry_with_tagname_replacements" list="tag_autocomplete_datalist">
             <button class="red_button" id="remove_tag_button" onclick="return remove_tag_form();">Remove tag</button>
         </div>
 
@@ -145,12 +145,10 @@ var holder = document.getElementById("photo_card_holder");
 
 var add_box = document.getElementById("add_tag_textbox");
 var add_button = document.getElementById("add_tag_button");
-add_box.addEventListener("keyup", common.entry_with_history_hook);
 common.bind_box_to_button(add_box, add_button);
 
 var remove_box = document.getElementById("remove_tag_textbox");
 var remove_button = document.getElementById("remove_tag_button");
-remove_box.addEventListener("keyup", common.entry_with_history_hook);
 common.bind_box_to_button(remove_box, remove_button);
 
 function recalculate_needed()

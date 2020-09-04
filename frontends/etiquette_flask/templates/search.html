@@ -193,7 +193,7 @@
                         </li>
                     {% endfor %}
                 {% endif %}
-                <li><input id="search_builder_{{tagtype}}_input" type="text" list="tag_autocomplete_datalist"></li>
+                <li><input id="search_builder_{{tagtype}}_input" class="entry_with_tagname_replacements" type="text" list="tag_autocomplete_datalist"></li>
             </ul>
         </div>
         {% endfor %}
@@ -672,17 +672,13 @@ var inputted_forbids = [];
 
 document.getElementById("search_go_button");
 input_musts.addEventListener("keyup", tag_input_hook_musts);
-input_musts.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
 common.bind_box_to_button(input_musts, search_go_button, true);
 
 input_mays.addEventListener("keyup", tag_input_hook_mays);
-input_mays.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
 common.bind_box_to_button(input_mays, search_go_button, true);
 
 input_forbids.addEventListener("keyup", tag_input_hook_forbids);
-input_forbids.addEventListener("keyup", tag_autocomplete.entry_with_tagname_replacements_hook);
 common.bind_box_to_button(input_forbids, search_go_button, true);
-
 
 common.bind_box_to_button(input_expression, search_go_button);
 </script>

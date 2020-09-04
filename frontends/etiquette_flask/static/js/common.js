@@ -321,6 +321,17 @@ function init_enable_on_pageload()
     }
 }
 
+common.init_entry_with_history =
+function init_entry_with_history()
+{
+    const inputs = Array.from(document.getElementsByClassName("entry_with_history"));
+    for (const input of inputs)
+    {
+        input.addEventListener("keyup", common.entry_with_history_hook);
+        input.classList.remove("entry_with_history");
+    }
+}
+
 common.init_tabbed_container =
 function init_tabbed_container()
 {
@@ -395,6 +406,7 @@ function on_pageload()
     common.init_atag_merge_params();
     common.init_button_with_confirm();
     common.init_enable_on_pageload();
+    common.init_entry_with_history();
     common.init_tabbed_container();
 }
 document.addEventListener("DOMContentLoaded", common.on_pageload);
