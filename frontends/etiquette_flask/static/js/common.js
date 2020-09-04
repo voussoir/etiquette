@@ -192,16 +192,19 @@ function init_button_with_confirm()
     Optional:
         data-prompt: Text that appears next to the confirm button. Default is
             "Are you sure?".
-        data-prompt-class
+
+        data-prompt-class: CSS class for the prompt span.
 
         data-confirm: Text inside the confirm button. Default is to inherit the
             original button's text.
+
         data-confirm-class: CSS class for the confirm button. Default is to
             inheret all classes of the original button, except for
             "button_with_confirm" of course.
 
         data-cancel: Text inside the cancel button. Default is "Cancel".
-        data-cancel-class
+
+        data-cancel-class: CSS class for the cancel button.
 
         data-holder-class: CSS class for the new span that holds the menu.
     */
