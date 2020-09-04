@@ -330,8 +330,7 @@ function refresh_metadata_form()
 {
     if (photo_clipboard.clipboard.size == 0)
     {
-        window[refresh_metadata_button.dataset.spinnerCloser]();
-        return;
+        return spinner.BAIL;
     }
 
     let photo_ids = Array.from(photo_clipboard.clipboard);

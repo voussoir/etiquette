@@ -1,5 +1,17 @@
 var spinner = {};
 
+/*
+In general, spinners are used for functions that launch a callback, and the
+callback will close the spinner after it runs. But, if your initial function
+decides not to launch the callback (insufficient parameters, failed clientside
+checks, etc.), you can have it return spinner.BAIL and the spinners will close
+immediately. Of course, you're always welcome to use
+window[button.dataset.spinnerCloser](), but this return value means you don't
+need to pull the button into a variable, as long as you weren't using the
+return value anyway.
+*/
+spinner.BAIL = "spinner.BAIL";
+
 spinner.Spinner =
 function Spinner(element)
 {
@@ -32,10 +44,12 @@ function Spinner(element)
 
 spinner.spinner_button_index = 0;
 spinner.button_spinner_groups = {};
-// When a group member is closing, it will call the closer on all other members
-// in the group. Of course, this would recurse forever without some kind of
-// flagging, so this dict will hold group_id:true if a close is in progress,
-// and be empty otherwise.
+/*
+When a group member is closing, it will call the closer on all other members
+in the group. Of course, this would recurse forever without some kind of
+flagging, so this dict will hold group_id:true if a close is in progress,
+and be empty otherwise.
+*/
 spinner.spinner_group_closing = {};
 
 spinner.add_to_spinner_group =
@@ -161,7 +175,12 @@ function init_button_with_spinner()
             {
                 window[button.dataset.spinnerOpener]();
             }
-            return wrapped_onclick();
+            const ret = wrapped_onclick();
+            if (ret === spinner.BAIL)
+            {
+                window[button.dataset.spinnerCloser]();
+            }
+            return ret;
         }
 
         spinner.spinner_button_index += 1;
