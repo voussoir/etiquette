@@ -113,10 +113,7 @@ def comma_space_split(s):
     '''
     if s is None:
         return s
-    s = s.replace(' ', ',')
-    s = [x.strip() for x in s.split(',')]
-    s = [x for x in s if x]
-    return s
+    return re.split(r'[ ,]+', s.strip())
 
 def generate_image_thumbnail(filepath, width, height):
     if not os.path.isfile(filepath):
