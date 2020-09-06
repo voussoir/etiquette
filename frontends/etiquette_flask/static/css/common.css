@@ -66,6 +66,11 @@ pre
     white-space: pre-line;
 }
 
+.bold
+{
+    font-weight: bold;
+}
+
 #header
 {
     grid-area: header;
