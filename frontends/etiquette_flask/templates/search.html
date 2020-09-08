@@ -495,7 +495,7 @@ function orderby_hide_direction_hook(event)
 function simplify_tagnames(tags)
 {
     let new_tags = [];
-    for (const tag of tags)
+    for (let tag of tags)
     {
         tag = tag.split(".");
         tag = tag[tag.length - 1];
@@ -557,8 +557,8 @@ function submit_search()
         parameters.push(boxname + "=" + value);
     }
 
-    orderby_rows = document.getElementsByClassName("search_builder_orderby_li");
-    orderby_params = [];
+    let orderby_rows = document.getElementsByClassName("search_builder_orderby_li");
+    let orderby_params = [];
     for (const orderby_row of orderby_rows)
     {
         let column = orderby_row.children[0].value;
