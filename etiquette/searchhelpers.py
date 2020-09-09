@@ -334,6 +334,12 @@ def normalize_orderby(orderby, warning_bag=None):
         if column == 'random':
             column = 'RANDOM()'
 
+        elif column == 'area':
+            column = 'width * height'
+
+        elif column == 'ratio':
+            column = 'width / height'
+
         if direction not in ('asc', 'desc'):
             message = constants.WARNING_ORDERBY_BADDIRECTION.format(
                 column=column,
