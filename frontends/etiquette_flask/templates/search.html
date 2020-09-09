@@ -259,15 +259,15 @@
             name="filename" placeholder="Filename">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['mimetype']%} value="{{search_kwargs['mimetype']}}" {%endif%}
+            value="{{search_kwargs['mimetype']|comma_join}}"
             name="mimetype" placeholder="Mimetype(s)">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['extension']%} value="{{search_kwargs['extension']}}" {%endif%}
+            value="{{search_kwargs['extension']|comma_join}}"
             name="extension" placeholder="Extension(s)">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['extension_not']%} value="{{search_kwargs['extension_not']}}" {%endif%}
+            value="{{search_kwargs['extension_not']|comma_join}}"
             name="extension_not" placeholder="Forbid extension(s)">
 
             <input type="text" class="basic_param"

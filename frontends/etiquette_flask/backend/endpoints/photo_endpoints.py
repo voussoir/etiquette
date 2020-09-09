@@ -376,18 +376,14 @@ def get_search_core():
         'warning_bag': warning_bag,
         'give_back_parameters': True
     }
-    #print(search_kwargs)
+    # print(search_kwargs)
     search_generator = common.P.search(**search_kwargs)
     # Because of the giveback, first element is cleaned up kwargs
     search_kwargs = next(search_generator)
+    # print(search_kwargs)
 
     # The search has converted many arguments into sets or other types.
     # Convert them back into something that will display nicely on the search form.
-    join_helper = lambda x: ', '.join(x) if x else None
-    search_kwargs['extension'] = join_helper(search_kwargs['extension'])
-    search_kwargs['extension_not'] = join_helper(search_kwargs['extension_not'])
-    search_kwargs['mimetype'] = join_helper(search_kwargs['mimetype'])
-
     author_helper = lambda users: ', '.join(user.username for user in users) if users else None
     search_kwargs['author'] = author_helper(search_kwargs['author'])
 
@@ -469,6 +465,15 @@ def get_search_html():
 @session_manager.give_token
 def get_search_json():
     search_results = get_search_core()
+    search_kwargs = search_results['search_kwargs']
+
+    # The search has converted many arguments into sets or other types.
+    # Convert them back into something that will display nicely on the search form.
+    join_helper = lambda x: ', '.join(x) if x else None
+    search_kwargs['extension'] = join_helper(search_kwargs['extension'])
+    search_kwargs['extension_not'] = join_helper(search_kwargs['extension_not'])
+    search_kwargs['mimetype'] = join_helper(search_kwargs['mimetype'])
+
     search_results['results'] = [
         etiquette.jsonify.photo(result, include_albums=False)
         if isinstance(result, etiquette.objects.Photo) else

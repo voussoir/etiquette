@@ -10,6 +10,11 @@ def bytestring(x):
     except Exception as e:
         return '??? b'
 
+def comma_join(l):
+    if not l:
+        return ''
+    return ', '.join(l)
+
 def file_link(photo, short=False):
     if short:
         return f'/file/{photo.id}{photo.dot_extension}'
