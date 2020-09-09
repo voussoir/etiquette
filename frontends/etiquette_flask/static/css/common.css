@@ -8,8 +8,8 @@
 
     --color_transparency: rgba(0, 0, 0, 0.1);
     --color_dropshadow: rgba(0, 0, 0, 0.25);
-    --color_3d_shadow: rgba(0, 0, 0, 0.5);
-    --color_3d_highlight: rgba(255, 255, 255, 0.5);
+    --color_shadow: rgba(0, 0, 0, 0.5);
+    --color_highlight: rgba(255, 255, 255, 0.5);
 }
 
 .hidden
@@ -119,17 +119,17 @@ button:disabled
 }
 button
 {
-    border-top: 2px solid var(--color_3d_highlight);
-    border-left: 2px solid var(--color_3d_highlight);
-    border-right: 2px solid var(--color_3d_shadow);
-    border-bottom: 2px solid var(--color_3d_shadow);
+    border-top: 2px solid var(--color_highlight);
+    border-left: 2px solid var(--color_highlight);
+    border-right: 2px solid var(--color_shadow);
+    border-bottom: 2px solid var(--color_shadow);
 }
 button:active
 {
-    border-top: 2px solid var(--color_3d_shadow);
-    border-left: 2px solid var(--color_3d_shadow);
-    border-right: 2px solid var(--color_3d_highlight);
-    border-bottom: 2px solid var(--color_3d_highlight);
+    border-top: 2px solid var(--color_shadow);
+    border-left: 2px solid var(--color_shadow);
+    border-right: 2px solid var(--color_highlight);
+    border-bottom: 2px solid var(--color_highlight);
 }
 .gray_button
 {
