@@ -41,11 +41,13 @@ def easybake(tags, include_synonyms=True, with_objects=False):
     lines.sort()
     return lines
 
-def flat_dict(tags):
+def flat_dict(tags, include_synonyms=True):
     '''
     A dictionary where every tag is its own key, and the value is a list
     containing itself all of its nested children.
-    Synonyms not included.
+
+    If synonyms are included, their key is a string, and the value is the same
+    list as the children of the master tag.
 
     {
         people: [people, family, mother],
@@ -62,6 +64,8 @@ def flat_dict(tags):
         for child in tag.walk_children():
             children = list(child.walk_children())
             result[child] = children
+            if not include_synonyms:
+                continue
             for synonym in child.get_synonyms():
                 result[synonym] = children
     return result
