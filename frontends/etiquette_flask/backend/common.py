@@ -32,14 +32,7 @@ site.config.update(
 site.jinja_env.add_extension('jinja2.ext.do')
 site.jinja_env.trim_blocks = True
 site.jinja_env.lstrip_blocks = True
-site.jinja_env.filters['bytestring'] = jinja_filters.bytestring
-site.jinja_env.filters['comma_join'] = jinja_filters.comma_join
-site.jinja_env.filters['file_link'] = jinja_filters.file_link
-site.jinja_env.filters['sort_tags'] = jinja_filters.sort_tags
-site.jinja_env.filters['timestamp_to_8601'] = jinja_filters.timestamp_to_8601
-site.jinja_env.filters['timestamp_to_naturaldate'] = jinja_filters.timestamp_to_naturaldate
-site.jinja_env.filters['users_to_usernames'] = jinja_filters.users_to_usernames
-site.jinja_env.globals['make_attributes'] = jinja_filters.make_attributes
+jinja_filters.register_all(site)
 site.debug = True
 
 P = etiquette.photodb.PhotoDB()
