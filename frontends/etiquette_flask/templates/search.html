@@ -197,7 +197,7 @@
             </ul>
         </div>
         {% endfor %}
-        <div id="search_builder_expression" {% if not search_kwargs["tag_expression"]%}style="display:none"{%endif%}>
+        <div id="search_builder_expression" {% if not search_kwargs["tag_expression"]%}class="hidden"{%endif%}>
             <span>Tag Expression:</span>
             <input id="search_builder_expression_input" name="tag_expression" type="text"
             value="{{search_kwargs['tag_expression'] or ''}}"
