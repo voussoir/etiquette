@@ -382,13 +382,6 @@ def get_search_core():
     search_kwargs = next(search_generator)
     # print(search_kwargs)
 
-    # The search has converted many arguments into sets or other types.
-    # Convert them back into something that will display nicely on the search form.
-    tagname_helper = lambda tags: [tag.name for tag in tags] if tags else None
-    search_kwargs['tag_musts'] = tagname_helper(search_kwargs['tag_musts'])
-    search_kwargs['tag_mays'] = tagname_helper(search_kwargs['tag_mays'])
-    search_kwargs['tag_forbids'] = tagname_helper(search_kwargs['tag_forbids'])
-
     warnings = set()
     search_results = []
     for item in search_generator:
@@ -473,6 +466,11 @@ def get_search_json():
 
     author_helper = lambda users: ', '.join(user.username for user in users) if users else None
     search_kwargs['author'] = author_helper(search_kwargs['author'])
+
+    tagname_helper = lambda tags: [tag.name for tag in tags] if tags else None
+    search_kwargs['tag_musts'] = tagname_helper(search_kwargs['tag_musts'])
+    search_kwargs['tag_mays'] = tagname_helper(search_kwargs['tag_mays'])
+    search_kwargs['tag_forbids'] = tagname_helper(search_kwargs['tag_forbids'])
 
     search_results['results'] = [
         etiquette.jsonify.photo(result, include_albums=False)

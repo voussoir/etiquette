@@ -185,11 +185,11 @@
             <ul class="search_builder_tagger">
                 {% set key="tag_" + tagtype %}
                 {% if search_kwargs[key] %}
-                    {% for tagname in search_kwargs[key] %}
+                    {% for tag in search_kwargs[key] %}
                         <li class="search_builder_{{tagtype}}_inputted">
-                            <span class="tag_object">{{tagname}}</span>{{-''-}}
-                            <button class="remove_tag_button red_button"
-                            onclick="return remove_searchtag(ul_{{tagtype}}, '{{tagname}}', inputted_{{tagtype}});"></button>
+                            {{tag_object.tag_object(tag, link='info', with_alt_description=True)}}<!--
+                            --><button class="remove_tag_button red_button"
+                            onclick="return remove_searchtag(ul_{{tagtype}}, '{{tag.name}}', inputted_{{tagtype}});"></button>
                         </li>
                     {% endfor %}
                 {% endif %}
@@ -664,8 +664,8 @@ var inputted_forbids = [];
 {% for tagtype in ["musts", "mays", "forbids"] %}
     {% set key="tag_" + tagtype %}
     {% if search_kwargs[key] %}
-    {% for tagname in search_kwargs[key] %}
-        inputted_{{tagtype}}.push("{{tagname}}");
+    {% for tag in search_kwargs[key] %}
+        inputted_{{tagtype}}.push("{{tag.name}}");
     {% endfor %}
     {% endif %}
 {% endfor %}
