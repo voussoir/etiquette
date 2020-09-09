@@ -422,8 +422,7 @@ def get_search_core():
     else:
         prev_page_url = None
 
-    view = request.args.get('view', 'grid')
-    search_kwargs['view'] = view
+    search_kwargs['view'] = request.args.get('view', 'grid')
 
     final_results = {
         'next_page_url': next_page_url,
