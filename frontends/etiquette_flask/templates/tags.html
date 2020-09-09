@@ -224,6 +224,36 @@ h2, h3
             </ul>
         </div> <!-- hierarchy_tags -->
         {% endif %} <!-- if tags or not specific tag -->
+
+        {% if specific_tag and include_synonyms %}
+        {% set synonyms = specific_tag.get_synonyms() %}
+        {% if synonyms %}
+        <div id="hierarchy_synonyms">
+            <h3>{{synonyms|length}} Synonyms</h3>
+            <ul>
+            {% for synonym in synonyms %}
+            <li>
+                {{tag_object.tag_object(specific_tag, link="search_musts", innertext="(+)")}}
+
+                {{tag_object.tag_object(specific_tag, link="search_forbids", innertext="(x)")}}
+
+                {{tag_object.tag_object(specific_tag, link=none, innertext=synonym)-}}
+                <button
+                class="remove_tag_button red_button button_with_confirm"
+                data-onclick="return api.tags.remove_synonym('{{specific_tag.name}}', '{{synonym}}', tag_action_callback);"
+                data-prompt="Remove Synonym?"
+                data-confirm="Remove"
+                data-confirm-class="remove_tag_button_perm red_button"
+                data-cancel-class="remove_tag_button_perm gray_button"
+                >
+                Remove
+                </button>
+            </li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %} <!-- if synonyms -->
+        {% endif %} <!-- if specific tag and include synonyms -->
     </div>
 </div>
 </body>
