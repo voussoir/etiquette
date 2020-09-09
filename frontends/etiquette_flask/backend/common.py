@@ -38,6 +38,7 @@ site.jinja_env.filters['file_link'] = jinja_filters.file_link
 site.jinja_env.filters['sort_tags'] = jinja_filters.sort_tags
 site.jinja_env.filters['timestamp_to_8601'] = jinja_filters.timestamp_to_8601
 site.jinja_env.filters['timestamp_to_naturaldate'] = jinja_filters.timestamp_to_naturaldate
+site.jinja_env.filters['users_to_usernames'] = jinja_filters.users_to_usernames
 site.jinja_env.globals['make_attributes'] = jinja_filters.make_attributes
 site.debug = True
 

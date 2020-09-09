@@ -271,7 +271,7 @@
             name="extension_not" placeholder="Forbid extension(s)">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['author']%} value="{{search_kwargs['author']}}" {%endif%}
+            value="{{search_kwargs['author']|users_to_usernames|comma_join}}"
             name="author" placeholder="Author">
 
             <select name="limit" class="basic_param">

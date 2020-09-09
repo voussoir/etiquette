@@ -41,3 +41,8 @@ def timestamp_to_string(timestamp, format):
 
 def timestamp_to_naturaldate(timestamp):
     return timestamp_to_string(timestamp, '%B %d, %Y')
+
+def users_to_usernames(users):
+    if not users:
+        return []
+    return [user.username for user in users]
