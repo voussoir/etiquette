@@ -200,9 +200,7 @@
         <div id="search_builder_expression" {% if not search_kwargs["tag_expression"]%}style="display:none"{%endif%}>
             <span>Tag Expression:</span>
             <input id="search_builder_expression_input" name="tag_expression" type="text"
-            {% if search_kwargs["tag_expression"] %}
-            value="{{search_kwargs["tag_expression"]}}"
-            {% endif %}
+            value="{{search_kwargs['tag_expression'] or ''}}"
             >
         </div>
         <div id="search_builder_orderby">
@@ -255,7 +253,7 @@
 
             <span>Other filters</span>
             <input type="text" class="basic_param"
-            {%if search_kwargs['filename']%} value="{{search_kwargs['filename']}}" {%endif%}
+            value="{{search_kwargs['filename'] or ''}}"
             name="filename" placeholder="Filename">
 
             <input type="text" class="basic_param"
