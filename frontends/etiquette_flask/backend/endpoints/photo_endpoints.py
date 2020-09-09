@@ -453,14 +453,13 @@ def get_search_core():
 @session_manager.give_token
 def get_search_html():
     search_results = get_search_core()
-    search_kwargs = search_results['search_kwargs']
     response = common.render_template(
         request,
         'search.html',
         next_page_url=search_results['next_page_url'],
         prev_page_url=search_results['prev_page_url'],
         results=search_results['results'],
-        search_kwargs=search_kwargs,
+        search_kwargs=search_results['search_kwargs'],
         total_tags=search_results['total_tags'],
         warnings=search_results['warnings'],
     )
