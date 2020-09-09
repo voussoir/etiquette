@@ -704,7 +704,7 @@ class PDBPhotoMixin:
                 'tag_expression': giveback_tag_expression or None,
                 'limit': limit,
                 'offset': offset or None,
-                'orderby': giveback_orderby,
+                'orderby': giveback_orderby or None,
             }
             yield parameters
 
