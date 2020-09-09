@@ -180,7 +180,7 @@
 <div id="content_body">
     <div id="left">
         {% for tagtype in ["musts", "mays", "forbids"] %}
-        <div id="search_builder_{{tagtype}}" {% if search_kwargs["tag_expression"]%}style="display:none"{%endif%}>
+        <div id="search_builder_{{tagtype}}" {% if search_kwargs["tag_expression"]%}class="hidden"{%endif%}>
             <span>Tag {{tagtype}}:</span>
             <ul class="search_builder_tagger">
                 {% set key="tag_" + tagtype %}
