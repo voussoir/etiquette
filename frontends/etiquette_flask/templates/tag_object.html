@@ -8,6 +8,9 @@
     link:
         None = no link, just a <span>
         'search' = link to /search?tag_musts=tagname
+        'search_musts' = link to /search?tag_musts=tagname
+        'search_mays' = link to /search?tag_mays=tagname
+        'search_forbids' = link to /search?tag_forbids=tagname
         'info' = link to /tags/tagname
     with_alt_description:
         True: Include the description in the alt text
@@ -23,6 +26,9 @@
 
 {% set href = {
         "search": "/search?tag_musts=" + tag.name,
+        "search_musts": "/search?tag_musts=" + tag.name,
+        "search_mays": "/search?tag_mays=" + tag.name,
+        "search_forbids": "/search?tag_forbids=" + tag.name,
         "info": "/tag/" + tag.name,
         None: None,
     }.get(link, link)
