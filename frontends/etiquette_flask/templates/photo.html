@@ -195,7 +195,12 @@
             <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as original filename</a></li>
             <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
             <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="return refresh_metadata_form();">refresh</button></li>
-            <li><label class="photo_card" data-id="{{photo.id}}"><input type="checkbox" class="photo_card_selector_checkbox" onclick="return photo_clipboard.on_photo_select(event);"/>Clipboard</label></li>
+            <li>
+                <label>
+                <input type="checkbox" class="photo_card_selector_checkbox" data-photo-id="{{photo.id}}" onchange="return photo_clipboard.on_photo_select(event);"
+                />Clipboard
+                </label>
+            </li>
         </ul>
 
 

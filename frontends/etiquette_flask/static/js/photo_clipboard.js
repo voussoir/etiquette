@@ -55,14 +55,37 @@ function save_clipboard()
 // Card management /////////////////////////////////////////////////////////////////////////////////
 
 photo_clipboard.apply_check =
-function apply_check(photo_card)
+function apply_check(checkbox)
 {
     /*
-    Given a photo card div, set its checkbox to the correct value based on
-    whether the clipboard contains this card's ID.
+    Check the checkbox if this photo ID is on the clipboard.
+
+    There are two valid scenarios:
+    1. The checkbox is a child of a photo_card div, and that div has data-id
+       containing the photo id. That div will receive the CSS class
+       photo_card_selected or photo_card_unselected.
+       This is the most common usage.
+    2. The checkbox has its own data-photo-id, and the parent element will be
+       ignored. This is used only if the checkbox needs to be displayed outside
+       of a photo card, such as on the /photo/id page where it makes no sense
+       to put a photo card of the photo you're already looking at.
     */
-    let checkbox = photo_card.getElementsByClassName("photo_card_selector_checkbox")[0];
-    checkbox.checked = photo_clipboard.clipboard.has(photo_card.dataset.id);
+    let photo_id;
+    let photo_card;
+    if (checkbox.dataset.photoId)
+    {
+        photo_id = checkbox.dataset.photoId;
+    }
+    else
+    {
+        photo_card = checkbox.parentElement;
+        photo_id = photo_card.dataset.id;
+    }
+    checkbox.checked = photo_clipboard.clipboard.has(photo_id);
+    if (! photo_card)
+    {
+        return;
+    }
     if (checkbox.checked)
     {
         photo_card.classList.remove("photo_card_unselected");
@@ -82,8 +105,11 @@ function apply_check_all()
     Run through all the photo cards on the page and set their checkbox to the
     correct value.
     */
-    let photo_divs = Array.from(document.getElementsByClassName("photo_card"));
-    photo_divs.forEach(photo_clipboard.apply_check);
+    let checkboxes = document.getElementsByClassName("photo_card_selector_checkbox");
+    for (let checkbox of checkboxes)
+    {
+        photo_clipboard.apply_check(checkbox);
+    }
 }
 
 photo_clipboard._action_select =
