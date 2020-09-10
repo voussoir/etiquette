@@ -112,12 +112,6 @@ function apply_check_all()
     }
 }
 
-photo_clipboard._action_select =
-function(photo_div){photo_clipboard.clipboard.add(photo_div.dataset.id)}
-
-photo_clipboard._action_unselect =
-function(photo_div){photo_clipboard.clipboard.delete(photo_div.dataset.id)}
-
 photo_clipboard.previous_photo_select = null;
 
 photo_clipboard.on_photo_select =
@@ -130,20 +124,26 @@ function on_photo_select(event)
     Those middle items will be set to the same state as the new state of the
     clicked item.
     */
-    if (event.target.checked)
+    const checkbox = event.target;
+    let action;
+    if (checkbox.checked)
     {
-        action = photo_clipboard._action_select;
+        action = photo_clipboard.clipboard.add.bind(photo_clipboard.clipboard);
     }
     else
     {
-        action = photo_clipboard._action_unselect;
+        action = photo_clipboard.clipboard.delete.bind(photo_clipboard.clipboard);
     }
 
-    if (event.shiftKey && photo_clipboard.previous_photo_select)
+    if (! checkbox.parentElement.classList.contains("photo_card"))
     {
-        let current_photo_div = event.target.parentElement;
-        let previous_photo_div = photo_clipboard.previous_photo_select.target.parentElement;
-        let photo_divs = Array.from(current_photo_div.parentElement.children);
+        action(checkbox.dataset.photoId);
+    }
+    else if (event.shiftKey && photo_clipboard.previous_photo_select)
+    {
+        let current_photo_div = checkbox.parentElement;
+        let previous_photo_div = photo_clipboard.previous_photo_select;
+        let photo_divs = Array.from(current_photo_div.parentElement.getElementsByClassName("photo_card"));
 
         let current_index = photo_divs.indexOf(current_photo_div);
         let previous_index = photo_divs.indexOf(previous_photo_div);
@@ -160,14 +160,18 @@ function on_photo_select(event)
             slice = photo_divs.slice(left, right + 1);
         }
 
-        slice.forEach(action);
+        for (let photo_div of slice)
+        {
+            action(photo_div.dataset.id);
+        }
+        photo_clipboard.previous_photo_select = current_photo_div;
     }
     else
     {
-        let photo_div = event.target.parentElement;
-        action(photo_div);
+        let photo_div = checkbox.parentElement;
+        action(photo_div.dataset.id);
+        photo_clipboard.previous_photo_select = photo_div;
     }
-    photo_clipboard.previous_photo_select = event;
     photo_clipboard.save_clipboard();
 }
 
@@ -175,7 +179,10 @@ photo_clipboard.select_all_photos =
 function select_all_photos()
 {
     let photo_divs = Array.from(document.getElementsByClassName("photo_card"));
-    photo_divs.forEach(photo_clipboard._action_select);
+    for (let photo_div of photo_divs)
+    {
+        photo_clipboard.clipboard.add(photo_div.dataset.id);
+    }
     photo_clipboard.apply_check_all();
     photo_clipboard.save_clipboard();
 }
@@ -184,7 +191,10 @@ photo_clipboard.unselect_all_photos =
 function unselect_all_photos()
 {
     let photo_divs = Array.from(document.getElementsByClassName("photo_card"));
-    photo_divs.forEach(photo_clipboard._action_unselect);
+    for (let photo_div of photo_divs)
+    {
+        photo_clipboard.clipboard.delete(photo_div.dataset.id);
+    }
     photo_clipboard.apply_check_all()
     photo_clipboard.previous_photo_select = null;
     photo_clipboard.save_clipboard();
