@@ -93,6 +93,7 @@ class SessionManager:
                     'etiquette_session',
                     value=session.token,
                     max_age=SESSION_MAX_AGE,
+                    httponly=True,
                 )
 
             return response
