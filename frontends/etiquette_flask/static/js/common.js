@@ -104,39 +104,64 @@ function delete_all_children(element)
 common.entry_with_history_hook =
 function entry_with_history_hook(event)
 {
-    //console.log(event);
-    let box = event.target;
+    const box = event.target;
 
     if (box.entry_history === undefined)
         {box.entry_history = [];}
 
     if (box.entry_history_pos === undefined)
-        {box.entry_history_pos = -1;}
+        {box.entry_history_pos = null;}
 
     if (event.key === "Enter")
     {
+        if (box.value === "")
+            {return;}
         box.entry_history.push(box.value);
-    }
-    else if (event.key === "ArrowUp")
-    {
-        if (box.entry_history.length == 0)
-            {return}
-
-        if (box.entry_history_pos == -1)
-            {box.entry_history_pos = box.entry_history.length - 1;}
-        else if (box.entry_history_pos > 0)
-            {box.entry_history_pos -= 1;}
-
-        box.value = box.entry_history[box.entry_history_pos];
-        setTimeout(function(){box.selectionStart = box.value.length;}, 0);
+        box.entry_history_pos = null;
     }
     else if (event.key === "Escape")
     {
+        box.entry_history_pos = null;
         box.value = "";
     }
-    else
+
+    if (box.entry_history.length == 0)
+        {return}
+
+    if (box.entry_history_pos !== null && box.value !== box.entry_history[box.entry_history_pos])
+        {return;}
+
+    if (event.key === "ArrowUp")
     {
-        box.entry_history_pos = -1;
+        if (box.entry_history_pos === null)
+            {box.entry_history_pos = box.entry_history.length - 1;}
+        else if (box.entry_history_pos == 0)
+            {;}
+        else
+            {box.entry_history_pos -= 1;}
+
+        if (box.entry_history_pos === null)
+            {box.value = "";}
+        else
+            {box.value = box.entry_history[box.entry_history_pos];}
+
+        setTimeout(function(){box.selectionStart = box.value.length;}, 0);
+    }
+    else if (event.key === "ArrowDown")
+    {
+        if (box.entry_history_pos === null)
+            {;}
+        else if (box.entry_history_pos == box.entry_history.length-1)
+            {box.entry_history_pos = null;}
+        else
+            {box.entry_history_pos += 1;}
+
+        if (box.entry_history_pos === null)
+            {box.value = "";}
+        else
+            {box.value = box.entry_history[box.entry_history_pos];}
+
+        setTimeout(function(){box.selectionStart = box.value.length;}, 0);
     }
 }
 
@@ -359,7 +384,7 @@ function init_entry_with_history()
     const inputs = Array.from(document.getElementsByClassName("entry_with_history"));
     for (const input of inputs)
     {
-        input.addEventListener("keyup", common.entry_with_history_hook);
+        input.addEventListener("keydown", common.entry_with_history_hook);
         input.classList.remove("entry_with_history");
     }
 }
