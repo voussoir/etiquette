@@ -194,7 +194,7 @@ def post_batch_photos_refresh_metadata():
     return response
 
 @decorators.catch_etiquette_exception
-def post_photo_searchhidden_core(photo_ids, searchhidden):
+def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
     if isinstance(photo_ids, str):
         photo_ids = etiquette.helpers.comma_space_split(photo_ids)
 
@@ -210,13 +210,13 @@ def post_photo_searchhidden_core(photo_ids, searchhidden):
 @site.route('/batch/photos/set_searchhidden', methods=['POST'])
 @decorators.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_set_searchhidden():
-    response = post_photo_searchhidden_core(photo_ids=request.form['photo_ids'], searchhidden=True)
+    response = post_batch_photos_searchhidden_core(photo_ids=request.form['photo_ids'], searchhidden=True)
     return response
 
 @site.route('/batch/photos/unset_searchhidden', methods=['POST'])
 @decorators.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_unset_searchhidden():
-    response = post_photo_searchhidden_core(photo_ids=request.form['photo_ids'], searchhidden=False)
+    response = post_batch_photos_searchhidden_core(photo_ids=request.form['photo_ids'], searchhidden=False)
     return response
 
 # Clipboard ########################################################################################
