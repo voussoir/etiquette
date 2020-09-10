@@ -205,6 +205,11 @@
     font-size: 11px;
 }
 
+.photo_card_searchhidden
+{
+    border: 1px dashed var(--color_shadow);
+}
+
 .photo_card_selected::after
 {
     content: "";

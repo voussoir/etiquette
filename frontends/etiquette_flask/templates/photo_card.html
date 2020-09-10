@@ -25,7 +25,10 @@
     {% set metadata_inner = "{m}{d}, ".format(m=metadata_inner, d=photo.duration_string) %}
 {% endif -%}
 
-<div class="photo_card photo_card_{{view}} photo_card_unselected" data-id="{{photo.id}}">
+<div
+    data-id="{{photo.id}}"
+    class="photo_card photo_card_{{view}} photo_card_unselected {%if photo.searchhidden%}photo_card_searchhidden{%endif%}"
+>
     <input type="checkbox" class="photo_card_selector_checkbox" onclick="return photo_clipboard.on_photo_select(event);"/>
     <div class="photo_card_filename"><a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a></div>
     <span class="photo_card_metadata">
