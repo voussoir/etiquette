@@ -1,6 +1,7 @@
 import flask; from flask import request
 import functools
 import werkzeug.wrappers
+import werkzeug.datastructures
 
 from voussoirkit import cacheclass
 
@@ -62,7 +63,13 @@ class SessionManager:
             token = request.cookies.get('etiquette_session', None)
             if not token or token not in self.sessions:
                 token = _generate_token()
-                request.cookies = dict(request.cookies)
+                # cookies is currently an ImmutableMultiDict, but in order to
+                # trick the wrapped function I'm gonna have to mutate it.
+                # It is important to use a werkzeug MultiDict and not a plain
+                # Python dict, because werkzeug puts cookies into lists like
+                # {name: [value]} and then cookies.get pulls the first item out
+                # of that list. A plain dict wouldn't have this .get behavior.
+                request.cookies = werkzeug.datastructures.MultiDict(request.cookies)
                 request.cookies['etiquette_session'] = token
 
             try:
