@@ -12,7 +12,6 @@ from . import jinja_filters
 from . import jsonify
 from . import sessions
 
-
 root_dir = pathclass.Path(__file__).parent.parent
 
 TEMPLATE_DIR = root_dir.with_child('templates')
@@ -108,13 +107,30 @@ def P_user_id(user_id):
 
 def render_template(request, *args, **kwargs):
     session = session_manager.get(request)
-    ret = flask.render_template(
+
+    old_theme = request.cookies.get('etiquette_theme', None)
+    new_theme = request.args.get('theme', None)
+    theme = '' if new_theme == '' else new_theme or old_theme
+
+    response = flask.render_template(
         session=session,
-        theme=request.args.get('theme'),
+        theme=theme,
         *args,
         **kwargs,
     )
-    return ret
+
+    if not isinstance(response, sessions.RESPONSE_TYPES):
+        response = flask.Response(response)
+
+    if new_theme is None:
+        pass
+    elif new_theme == '':
+        print('Deleting theme cookie.')
+        response.set_cookie('etiquette_theme', value='', expires=0)
+    elif new_theme != old_theme:
+        response.set_cookie('etiquette_theme', value=new_theme, expires=2147483647)
+
+    return response
 
 def back_url():
     return request.args.get('goto') or request.referrer or '/'
