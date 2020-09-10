@@ -194,6 +194,20 @@ def post_batch_photos_refresh_metadata():
     return response
 
 @decorators.catch_etiquette_exception
+@site.route('/photo/<photo_id>/set_searchhidden', methods=['POST'])
+def post_photo_set_searchhidden(photo_id):
+    photo = common.P_photo(photo_id, response_type='json')
+    photo.set_searchhidden(True)
+    return jsonify.make_json_response({})
+
+@decorators.catch_etiquette_exception
+@site.route('/photo/<photo_id>/unset_searchhidden', methods=['POST'])
+def post_photo_unset_searchhidden(photo_id):
+    photo = common.P_photo(photo_id, response_type='json')
+    photo.set_searchhidden(False)
+    return jsonify.make_json_response({})
+
+@decorators.catch_etiquette_exception
 def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
     if isinstance(photo_ids, str):
         photo_ids = etiquette.helpers.comma_space_split(photo_ids)

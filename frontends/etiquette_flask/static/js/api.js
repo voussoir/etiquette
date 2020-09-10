@@ -272,6 +272,20 @@ function remove_tag(photo_id, tagname, callback)
     common.post(url, data, callback);
 }
 
+api.photos.set_searchhidden =
+function set_searchhidden(photo_id, callback)
+{
+    const url = `/photo/${photo_id}/set_searchhidden`;
+    common.post(url, null, callback);
+}
+
+api.photos.unset_searchhidden =
+function unset_searchhidden(photo_id, callback)
+{
+    const url = `/photo/${photo_id}/unset_searchhidden`;
+    common.post(url, null, callback);
+}
+
 api.photos.callback_go_to_search =
 function callback_go_to_albums(response)
 {

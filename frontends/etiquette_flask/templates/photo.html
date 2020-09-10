@@ -197,6 +197,12 @@
             <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="return refresh_metadata_form();">refresh</button></li>
             <li>
                 <label>
+                <input type="checkbox" {%if photo.searchhidden%}checked{%endif%} onchange="return set_searchhidden_form(event);"
+                />Hidden from search
+                </label>
+            </li>
+            <li>
+                <label>
                 <input type="checkbox" class="photo_card_selector_checkbox" data-photo-id="{{photo.id}}" onchange="return photo_clipboard.on_photo_select(event);"
                 />Clipboard
                 </label>
@@ -354,6 +360,19 @@ function generate_thumbnail_for_video(event)
 function refresh_metadata_form()
 {
     api.photos.refresh_metadata(PHOTO_ID, common.refresh);
+}
+
+function set_searchhidden_form(event)
+{
+    let checkbox = event.target;
+    if (checkbox.checked)
+    {
+        api.photos.set_searchhidden(PHOTO_ID);
+    }
+    else
+    {
+        api.photos.unset_searchhidden(PHOTO_ID);
+    }
 }
 
 var ZOOM_BG_URL = "url('{{photo|file_link}}')";
