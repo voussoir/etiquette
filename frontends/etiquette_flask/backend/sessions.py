@@ -10,6 +10,7 @@ import etiquette
 
 SESSION_MAX_AGE = 86400
 REQUEST_TYPES = (flask.Request, werkzeug.wrappers.Request, werkzeug.local.LocalProxy)
+RESPONSE_TYPES = (flask.Response, werkzeug.wrappers.Response)
 
 def _generate_token(length=32):
     return etiquette.helpers.random_hex(length=length)
@@ -81,7 +82,7 @@ class SessionManager:
                 session.maintain()
 
             response = function(*args, **kwargs)
-            if not isinstance(response, (flask.Response, werkzeug.wrappers.Response)):
+            if not isinstance(response, RESPONSE_TYPES):
                 response = flask.Response(response)
 
             # Send the token back to the client
