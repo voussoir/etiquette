@@ -6,10 +6,10 @@
 id="{{id}}"
 class="album_card album_card_{{view}}"
 data-id="{{album.id}}"
-ondragstart="on_album_drag_start(event);"
-ondragend="on_album_drag_end(event);"
-ondragover="on_album_drag_over(event);"
-ondrop="on_album_drag_drop(event);"
+ondragstart="return on_album_drag_start(event);"
+ondragend="return on_album_drag_end(event);"
+ondragover="return on_album_drag_over(event);"
+ondrop="return on_album_drag_drop(event);"
 {% if album != "root" and draggable %}
 draggable=true
 {% endif %}

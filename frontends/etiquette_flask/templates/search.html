@@ -154,7 +154,7 @@
 
 {% macro create_orderby_li(selected_column, selected_sorter) %}
 <li class="search_builder_orderby_li">
-    <select onchange="orderby_hide_direction_hook(event);">
+    <select onchange="return orderby_hide_direction_hook(event);">
         <option value="created"   {{"selected" if selected_column=="created" else ""}}   >Creation date</option>
         <option value="area"      {{"selected" if selected_column=="area" else ""}}      >Area</option>
         <option value="width"     {{"selected" if selected_column=="width" else ""}}     >Width</option>
