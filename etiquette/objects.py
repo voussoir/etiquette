@@ -285,14 +285,7 @@ class Album(ObjectBase, GroupableMixin):
     def add_children(self, *args, **kwargs):
         return super().add_children(*args, **kwargs)
 
-    @decorators.required_feature('album.edit')
-    @decorators.transaction
-    def add_associated_directory(self, path):
-        '''
-        Add a directory from which this album will pull files during rescans.
-        These relationships are not unique and multiple albums
-        can associate with the same directory if desired.
-        '''
+    def _add_associated_directory(self, path):
         path = pathclass.Path(path)
 
         if not path.is_dir:
@@ -304,6 +297,22 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.log.debug('Adding directory %s to %s.', path, self)
         data = {'albumid': self.id, 'directory': path.absolute_path}
         self.photodb.sql_insert(table='album_associated_directories', data=data)
+
+    @decorators.required_feature('album.edit')
+    @decorators.transaction
+    def add_associated_directory(self, path):
+        '''
+        Add a directory from which this album will pull files during rescans.
+        These relationships are not unique and multiple albums can associate
+        with the same directory if desired.
+        '''
+        self._add_associated_directory(path)
+
+    @decorators.required_feature('album.edit')
+    @decorators.transaction
+    def add_associated_directories(self, paths):
+        for path in paths:
+            self._add_associated_directory(path)
 
     def _add_photo(self, photo):
         self.photodb.log.debug('Adding photo %s to %s', photo, self)
