@@ -79,7 +79,7 @@ class PDBAlbumMixin:
             title=None,
             description=None,
             *,
-            associated_directory=None,
+            associated_directories=None,
             author=None,
             photos=None,
         ):
@@ -106,8 +106,10 @@ class PDBAlbumMixin:
 
         album = self.get_cached_instance('album', data)
 
-        if associated_directory is not None:
-            album.add_associated_directory(associated_directory)
+        associated_directories = associated_directories or ()
+        if isinstance(associated_directories, str):
+            associated_directories = [associated_directories]
+        album.add_associated_directories(associated_directories)
 
         if photos is not None:
             photos = [self.get_photo(photo) for photo in photos]
