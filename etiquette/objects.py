@@ -275,16 +275,6 @@ class Album(ObjectBase, GroupableMixin):
     def _uncache(self):
         self.photodb.caches['album'].remove(self.id)
 
-    @decorators.required_feature('album.edit')
-    @decorators.transaction
-    def add_child(self, *args, **kwargs):
-        return super().add_child(*args, **kwargs)
-
-    @decorators.required_feature('album.edit')
-    @decorators.transaction
-    def add_children(self, *args, **kwargs):
-        return super().add_children(*args, **kwargs)
-
     def _add_associated_directory(self, path):
         path = pathclass.Path(path)
 
@@ -313,6 +303,16 @@ class Album(ObjectBase, GroupableMixin):
     def add_associated_directories(self, paths):
         for path in paths:
             self._add_associated_directory(path)
+
+    @decorators.required_feature('album.edit')
+    @decorators.transaction
+    def add_child(self, *args, **kwargs):
+        return super().add_child(*args, **kwargs)
+
+    @decorators.required_feature('album.edit')
+    @decorators.transaction
+    def add_children(self, *args, **kwargs):
+        return super().add_children(*args, **kwargs)
 
     def _add_photo(self, photo):
         self.photodb.log.debug('Adding photo %s to %s', photo, self)
