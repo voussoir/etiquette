@@ -297,13 +297,60 @@ function add_photo_tag_form()
     {
         return;
     }
-    api.photos.add_tag(PHOTO_ID, tagname, add_remove_photo_tag_callback);
+    api.photos.add_tag(PHOTO_ID, tagname, add_photo_tag_callback);
     add_tag_box.value = "";
 }
 
 function remove_photo_tag_form(photo_id, tagname)
 {
-    api.photos.remove_tag(photo_id, tagname, add_remove_photo_tag_callback);
+    api.photos.remove_tag(photo_id, tagname, remove_photo_tag_callback);
+}
+
+function add_photo_tag_callback(response)
+{
+    add_remove_photo_tag_callback(response);
+    if (response.meta.status !== 200)
+    {
+        return;
+    }
+    const this_tags = document.getElementById("this_tags");
+    let tag_objects = this_tags.getElementsByClassName("tag_object");
+    for (const tag_object of tag_objects)
+    {
+        if (tag_object.innerText === response.data.tagname)
+        {
+            return;
+        }
+    }
+    const li = document.createElement("li");
+    const tag_object = document.createElement("a");
+    tag_object.className = "tag_object"
+    tag_object.href = "/search?tag_musts=" + response.data.tagname;
+    tag_object.innerText = response.data.tagname;
+    const remove_button = document.createElement("button");
+    remove_button.className = "remove_tag_button red_button"
+    remove_button.onclick = () => remove_photo_tag_form(PHOTO_ID, response.data.tagname);
+    li.appendChild(tag_object);
+    li.appendChild(remove_button);
+    this_tags.appendChild(li);
+}
+
+function remove_photo_tag_callback(response)
+{
+    add_remove_photo_tag_callback(response);
+    if (response.meta.status !== 200)
+    {
+        return;
+    }
+    let tag_objects = document.getElementById("this_tags").getElementsByClassName("tag_object");
+    for (const tag_object of tag_objects)
+    {
+        if (tag_object.innerText === response.data.tagname)
+        {
+            let li = tag_object.parentElement;
+            li.parentElement.removeChild(li);
+        }
+    }
 }
 
 function add_remove_photo_tag_callback(response)
