@@ -76,8 +76,8 @@ def upgrade_5_to_6(photodb):
     cur.execute('INSERT INTO id_numbers VALUES("albums", ?)', [last_id])
 
     # 2. Now's a good chance to rename 'index_grouprel' to 'index_taggroup'.
-    cur.execute('DROP INDEX index_grouprel_parentid')
-    cur.execute('DROP INDEX index_grouprel_memberid')
+    cur.execute('DROP INDEX IF EXISTS index_grouprel_parentid')
+    cur.execute('DROP INDEX IF EXISTS index_grouprel_memberid')
     cur.execute('CREATE INDEX index_taggroup_parentid ON tag_group_rel(parentid)')
     cur.execute('CREATE INDEX index_taggroup_memberid ON tag_group_rel(memberid)')
 
