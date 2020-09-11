@@ -1300,10 +1300,58 @@ class PDBUtilMixin:
             recurse=True,
         ):
         '''
-        Create an album, and add the directory's contents to it recursively.
+        Walk the directory and create Photos for every file.
 
         If a Photo object already exists for a file, it will be added to the
         correct album.
+
+        exclude_directories:
+            A list of basenames or absolute paths of directories to ignore.
+            This list works in addition to, not instead of, the
+            digest_exclude_dirs config value.
+
+        exclude_filenames:
+            A list of basenames or absolute paths of filenames to ignore.
+            This list works in addition to, not instead of, the
+            digest_exclude_files config value.
+
+        make_albums:
+            If True, every directory that is digested will be turned into an
+            Album, and the directory path will be added to the Album's
+            associated_directories list. Child directories will become child
+            albums.
+            If there already exists an Album associated with the directory,
+            the newly digested photos will be added to that album.
+            Because album/directory relationships are not unique, there might
+            be multiple albums associated with a directory, in which case they
+            will all get the photos.
+
+        natural_sort:
+            If True, the list of files will be natural sorted before digest.
+            This way, the `created` timestamps on every Photo correspond to the
+            same order that the files are listed when natural sorted. This is
+            essentially an aesthetic preference, that when you are viewing the
+            photos sorted by timestamp they are also natural sorted.
+            See helpers.natural_sorter.
+
+        new_photo_kwargs:
+            A dict of kwargs to pass into every call of new_photo.
+
+        new_photo_ratelimit:
+            A ratelimiter.Ratelimiter object, or an int/float number of seconds
+            to wait between every photo digest.
+            It is worth noting that timestamp resolution / accuracy varies by
+            system. If you digest photos very quickly, you might have many with
+            the exact same created timestamp. This doesn't cause any technical
+            problems, but it is another somewhat aesthetic choice. If you start
+            with with a reference photo and then query
+            `SELECT FROM photos WHERE created > reference`, you could miss
+            several photos with the exact same timestamp, unless you use >= and
+            then ignore the reference photo.
+
+        recurse:
+            If True, walk the whole directory tree. If False, only digest the
+            photos from the given directory and not its subdirectories.
         '''
         def _normalize_directory(directory):
             directory = pathclass.Path(directory)
