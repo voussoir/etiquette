@@ -46,25 +46,25 @@ class PDBAlbumMixin:
     def get_album_by_id(self, id):
         return self.get_thing_by_id('album', id)
 
-    def get_album_by_path(self, filepath):
-        '''
-        Return the album with the `associated_directory` of this value,
-        NOT case-sensitive.
-        '''
-        filepath = pathclass.Path(filepath).absolute_path
-        query = 'SELECT albumid FROM album_associated_directories WHERE directory == ?'
-        bindings = [filepath]
-        album_row = self.sql_select_one(query, bindings)
-        if album_row is None:
-            raise exceptions.NoSuchAlbum(filepath)
-        album_id = album_row[0]
-        return self.get_album(album_id)
-
     def get_albums(self):
         yield from self.get_things(thing_type='album')
 
     def get_albums_by_id(self, ids):
         return self.get_things_by_id('album', ids)
+
+    def get_albums_by_path(self, directory):
+        '''
+        Yield Albums with the `associated_directory` of this value,
+        NOT case-sensitive.
+        '''
+        directory = pathclass.Path(directory)
+        query = 'SELECT albumid FROM album_associated_directories WHERE directory == ?'
+        bindings = [directory.absolute_path]
+        album_rows = self.sql_select(query, bindings)
+
+        for album_row in album_rows:
+            album_id = album_row[0]
+            yield self.get_album(album_id)
 
     def get_root_albums(self):
         '''
