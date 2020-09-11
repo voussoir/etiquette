@@ -1355,30 +1355,36 @@ class PDBUtilMixin:
                 photos.append(photo)
             return photos
 
-        def create_or_fetch_current_album(albums_by_path, current_directory):
-            current_album = albums_by_path.get(current_directory.absolute_path, None)
-            if current_album is not None:
-                return current_album
+        def create_or_fetch_current_albums(albums_by_path, current_directory):
+            current_albums = albums_by_path.get(current_directory.absolute_path, None)
+            if current_albums is not None:
+                return current_albums
 
-            try:
-                current_album = self.get_album_by_path(current_directory.absolute_path)
-            except exceptions.NoSuchAlbum:
-                current_album = self.new_album(
-                    associated_directory=current_directory.absolute_path,
+            current_albums = list(self.get_albums_by_path(current_directory.absolute_path))
+            if not current_albums:
+                current_albums = [self.new_album(
+                    associated_directories=current_directory.absolute_path,
                     title=current_directory.basename,
-                )
-            albums_by_path[current_directory.absolute_path] = current_album
-            return current_album
+                )]
 
-        def orphan_join_parent_album(albums_by_path, current_album, current_directory):
+            albums_by_path[current_directory.absolute_path] = current_albums
+            return current_albums
+
+        def orphan_join_parent_albums(albums_by_path, current_albums, current_directory):
             '''
             If the current album is an orphan, let's check if there exists an
             album for the parent directory. If so, add the current album to it.
             '''
-            if not current_album.has_any_parent():
-                parent = albums_by_path.get(current_directory.parent.absolute_path, None)
-                if parent is not None:
-                    parent.add_child(current_album)
+            orphans = [album for album in current_albums if not album.has_any_parent()]
+            if not orphans:
+                return
+
+            parents = albums_by_path.get(current_directory.parent.absolute_path, None)
+            if not parents:
+                return
+
+            for parent in parents:
+                parent.add_children(orphans)
 
         directory = _normalize_directory(directory)
         exclude_directories = _normalize_exclude_directories(exclude_directories)
@@ -1388,7 +1394,7 @@ class PDBUtilMixin:
 
         if make_albums:
             albums_by_path = {}
-            main_album = create_or_fetch_current_album(albums_by_path, directory)
+            main_album = create_or_fetch_current_albums(albums_by_path, directory)
 
         walk_generator = spinal.walk_generator(
             directory,
@@ -1407,10 +1413,11 @@ class PDBUtilMixin:
             if not make_albums:
                 continue
 
-            current_album = create_or_fetch_current_album(albums_by_path, current_directory)
-            orphan_join_parent_album(albums_by_path, current_album, current_directory)
+            current_albums = create_or_fetch_current_albums(albums_by_path, current_directory)
+            orphan_join_parent_albums(albums_by_path, current_albums, current_directory)
 
-            current_album.add_photos(photos)
+            for album in current_albums:
+                album.add_photos(photos)
 
         if make_albums:
             return main_album
