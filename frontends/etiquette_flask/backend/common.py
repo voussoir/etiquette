@@ -138,7 +138,7 @@ def P_user(username):
 def P_user_id(user_id):
     return P.get_user(id=user_id)
 
-def render_template(request, *args, **kwargs):
+def render_template(request, template_name, **kwargs):
     session = session_manager.get(request)
 
     old_theme = request.cookies.get('etiquette_theme', None)
@@ -146,9 +146,9 @@ def render_template(request, *args, **kwargs):
     theme = '' if new_theme == '' else new_theme or old_theme
 
     response = flask.render_template(
+        template_name,
         session=session,
         theme=theme,
-        *args,
         **kwargs,
     )
 
