@@ -10,6 +10,7 @@ import traceback
 
 from voussoirkit import bytestring
 from voussoirkit import pathclass
+from voussoirkit import sentinel
 from voussoirkit import spinal
 from voussoirkit import sqlhelpers
 
@@ -18,6 +19,8 @@ from . import decorators
 from . import exceptions
 from . import helpers
 
+
+BAIL = sentinel.Sentinel('BAIL')
 
 def normalize_db_row(db_row, table):
     if isinstance(db_row, (list, tuple)):
@@ -98,7 +101,7 @@ class GroupableMixin:
             raise exceptions.CantGroupSelf(self)
 
         if self.has_child(member):
-            return
+            return BAIL
 
         self.photodb.log.debug('Adding child %s to %s.', member, self)
 
@@ -112,14 +115,12 @@ class GroupableMixin:
         }
         self.photodb.sql_insert(table=self.group_table, data=data)
 
-        self.photodb._cached_tag_flat_dict = None
-
     def add_child(self, member):
         return self._add_child(member)
 
     def add_children(self, members):
-        for member in members:
-            self._add_child(member)
+        if all(self._add_child(member) is BAIL for member in members):
+            return BAIL
 
     def assert_same_type(self, other):
         if not isinstance(other, type(self)):
@@ -140,7 +141,6 @@ class GroupableMixin:
             If True, all children will be deleted.
             Otherwise they'll just be raised up one level.
         '''
-        self.photodb._cached_tag_flat_dict = None
         if delete_children:
             for child in self.get_children():
                 child.delete(delete_children=True)
@@ -191,7 +191,7 @@ class GroupableMixin:
 
     def remove_child(self, member):
         if not self.has_child(member):
-            return
+            return BAIL
 
         self.photodb.log.debug('Removing child %s from %s.', member, self)
 
@@ -200,7 +200,6 @@ class GroupableMixin:
             'memberid': member.id,
         }
         self.photodb.sql_delete(table=self.group_table, pairs=pairs)
-        self.photodb._cached_tag_flat_dict = None
 
     def walk_children(self):
         '''
@@ -1203,12 +1202,20 @@ class Tag(ObjectBase, GroupableMixin):
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def add_child(self, *args, **kwargs):
-        return super().add_child(*args, **kwargs)
+        ret = super().add_child(*args, **kwargs)
+        if ret is BAIL:
+            return
+        self.photodb._cached_tag_flat_dict = None
+        return ret
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def add_children(self, *args, **kwargs):
-        return super().add_children(*args, **kwargs)
+        ret = super().add_children(*args, **kwargs)
+        if ret is BAIL:
+            return
+        self.photodb._cached_tag_flat_dict = None
+        return ret
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
@@ -1299,10 +1306,11 @@ class Tag(ObjectBase, GroupableMixin):
     def delete(self, *, delete_children=False):
         self.photodb.log.debug('Deleting %s', self)
         self.photodb._cached_tag_flat_dict = None
-        GroupableMixin.delete(self, delete_children=delete_children)
+        super().delete(delete_children=delete_children)
         self.photodb.sql_delete(table='photo_tag_rel', pairs={'tagid': self.id})
         self.photodb.sql_delete(table='tag_synonyms', pairs={'mastername': self.name})
         self.photodb.sql_delete(table='tags', pairs={'id': self.id})
+        self.photodb._cached_tag_flat_dict = None
         self._uncache()
 
     @decorators.required_feature('tag.edit')
@@ -1335,7 +1343,11 @@ class Tag(ObjectBase, GroupableMixin):
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def remove_child(self, *args, **kwargs):
-        return super().remove_child(*args, **kwargs)
+        ret = super().remove_child(*args, **kwargs)
+        if ret is BAIL:
+            return
+        self.photodb._cached_tag_flat_dict = None
+        return ret
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
