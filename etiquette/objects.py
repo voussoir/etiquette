@@ -78,7 +78,8 @@ class GroupableMixin:
     def _lift_children(self):
         '''
         If this object has parents, the parents adopt all of its children.
-        Otherwise the parental relationship is simply deleted.
+        Otherwise, this object is at the root level, so the parental
+        relationship is simply deleted and the children become root level.
         '''
         children = self.get_children()
         if not children:
