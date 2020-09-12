@@ -131,7 +131,7 @@ h2, h3
 
             <button
             class="red_button button_with_confirm"
-            data-onclick="return api.tags.delete('{{specific_tag.name}}', api.tags.callback_go_to_tags);"
+            data-onclick="return delete_specific_tag_form(event);"
             data-prompt="Delete Tag?"
             data-confirm="Delete"
             data-cancel-class="gray_button"
@@ -178,7 +178,7 @@ h2, h3
                     {%- if "." in qualified_name -%}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="return api.tags.remove_child('{{qualified_name.split('.')[-2]}}', '{{tag.name}}', tag_action_callback);"
+                    data-onclick="return remove_child_form(event);"
                     data-prompt="Unlink Tags?"
                     data-confirm="Unlink"
                     data-confirm-class="remove_tag_button_perm red_button"
@@ -189,7 +189,7 @@ h2, h3
                     {%- else -%}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="return api.tags.delete('{{qualified_name}}', tag_action_callback);"
+                    data-onclick="return delete_tag_form(event);"
                     data-prompt="Delete Tag?"
                     data-confirm="Delete"
                     data-confirm-class="remove_tag_button_perm red_button"
@@ -210,7 +210,7 @@ h2, h3
                     {{tag_object.tag_object(tag, link='info', innertext=qualified_name + '+' + synonym)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="return api.tags.remove_synonym('{{tag.name}}', '{{synonym}}', tag_action_callback);"
+                    data-onclick="return remove_synonym_form(event);"
                     data-prompt="Remove Synonym?"
                     data-confirm="Remove"
                     data-confirm-class="remove_tag_button_perm red_button"
@@ -276,6 +276,46 @@ function easybake_form()
     }
     api.tags.easybake(easybake_string, tag_action_callback);
     add_tag_textbox.value = "";
+}
+
+function delete_specific_tag_form(event)
+{
+    const delete_button = event.target;
+    const hierarchy_self = delete_button.closest("#hierarchy_self");
+    const tag_object = hierarchy_self.querySelector(".tag_object:last-of-type");
+    const tag_name = tag_object.innerText;
+    return api.tags.delete(tag_name, api.tags.callback_go_to_tags);
+}
+
+function delete_tag_form(event)
+{
+    const delete_button = event.target;
+    const li = delete_button.closest("li");
+    const tag_object = li.querySelector(".tag_object:last-of-type");
+    const tag_name = tag_object.innerText.split(".").pop();
+    return api.tags.delete(tag_name, tag_action_callback);
+}
+
+function remove_child_form(event)
+{
+    const delete_button = event.target;
+    const li = delete_button.closest("li");
+    const tag_object = li.querySelector(".tag_object:last-of-type");
+    const parts = tag_object.innerText.split(".");
+    const tag_name = parts.pop();
+    const parent_name = parts.pop();
+    return api.tags.remove_child(parent_name, tag_name, tag_action_callback)
+}
+
+function remove_synonym_form(event)
+{
+    const delete_button = event.target;
+    const li = delete_button.closest("li");
+    const tag_object = li.querySelector(".tag_object:last-of-type");
+    const parts = tag_object.innerText.split(".").pop().split("+");
+    const synonym = parts.pop();
+    const tag_name = parts.pop();
+    return api.tags.remove_synonym(tag_name, synonym, tag_action_callback);
 }
 
 function tag_action_callback(response)
