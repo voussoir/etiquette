@@ -163,9 +163,9 @@ h2, h3
         {% if tags or not specific_tag %}
         <div id="hierarchy_tags">
             {% if specific_tag %}
-            <h3>{{tags|length}} Descendants</h3>
+            <h3>{{tag_count}} Descendants</h3>
             {% else %}
-            <h2>{{tags|length}} Tags</h2>
+            <h2>{{tag_count}} Tags</h2>
             {% endif %}
             <ul id="tag_list">
             {% for (qualified_name, tag) in tags %}

@@ -95,8 +95,11 @@ def get_tags_html(specific_tag_name=None):
 
     if specific_tag is None:
         tags = common.P.get_root_tags()
+        tag_count = common.P.get_tag_count()
     else:
         tags = [specific_tag]
+        tag_count = sum(1 for child in specific_tag.walk_children())
+
     tags = etiquette.tag_export.easybake(tags, include_synonyms=False, with_objects=True)
 
     response = common.render_template(
@@ -105,6 +108,7 @@ def get_tags_html(specific_tag_name=None):
         include_synonyms=include_synonyms,
         specific_tag=specific_tag,
         tags=tags,
+        tag_count=tag_count,
     )
     return response
 
