@@ -44,7 +44,7 @@ def easybake(tags, include_synonyms=True, with_objects=False):
 def flat_dict(tags, include_synonyms=True):
     '''
     A dictionary where every tag is its own key, and the value is a list
-    containing itself all of its nested children.
+    containing itself and all of its descendants.
 
     If synonyms are included, their key is a string, and the value is the same
     list as the children of the master tag.
@@ -60,14 +60,28 @@ def flat_dict(tags, include_synonyms=True):
     for equaling the main tag versus existing in the rest of the subtree.
     '''
     result = {}
+    def recur(tag):
+        try:
+            return result[tag]
+        except KeyError:
+            pass
+
+        my_result = set()
+        my_result.add(tag)
+
+        for child in tag.get_children():
+            my_result.update(recur(child))
+
+        result[tag] = my_result
+
+        if include_synonyms:
+            for synonym in tag.get_synonyms():
+                result[synonym] = my_result
+        return my_result
+
     for tag in tags:
-        for child in tag.walk_children():
-            children = list(child.walk_children())
-            result[child] = children
-            if not include_synonyms:
-                continue
-            for synonym in child.get_synonyms():
-                result[synonym] = children
+        recur(tag)
+
     return result
 
 def nested_dict(tags):
