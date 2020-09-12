@@ -256,7 +256,7 @@
     </div>
     <div id="hovering_tools">
         {% if photo.simple_mimetype == "video" %}
-        <button id="generate_thumbnail_button" class="green_button button_with_spinner" onclick="return generate_thumbnail_for_video(event);">Capture thumbnail</button>
+        <button id="generate_thumbnail_button" class="green_button button_with_spinner" onclick="return generate_thumbnail_for_video_form(event);">Capture thumbnail</button>
         {% endif %}
         <button
         class="red_button button_with_confirm"
@@ -393,11 +393,11 @@ function generate_thumbnail_callback(response)
     {
         common.create_message_bubble(message_area, "message_negative", response.data.error_message, 8000);
     }
-    generate_thumbnail_button = document.getElementById("generate_thumbnail_button");
+    const generate_thumbnail_button = document.getElementById("generate_thumbnail_button");
     window[generate_thumbnail_button.dataset.spinnerCloser]();
 }
 
-function generate_thumbnail_for_video(event)
+function generate_thumbnail_for_video_form(event)
 {
     let timestamp = document.querySelector("#right video").currentTime;
     let special = {"timestamp": timestamp};
