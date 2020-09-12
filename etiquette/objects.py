@@ -119,7 +119,10 @@ class GroupableMixin:
         return self._add_child(member)
 
     def add_children(self, members):
-        if all(self._add_child(member) is BAIL for member in members):
+        bail = True
+        for member in members:
+            bail = bail and (self._add_child(member) is BAIL)
+        if bail:
             return BAIL
 
     def assert_same_type(self, other):
