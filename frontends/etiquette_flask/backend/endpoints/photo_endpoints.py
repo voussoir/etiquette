@@ -398,11 +398,14 @@ def get_search_core():
 
     warnings = set()
     search_results = []
+    search_results_photo_count = 0
     for item in search_generator:
         if isinstance(item, etiquette.objects.WarningBag):
             warnings.update(item.warnings)
-        else:
-            search_results.append(item)
+            continue
+        search_results.append(item)
+        if isinstance(item, etiquette.objects.Photo):
+            search_results_photo_count += 1
 
     # TAGS ON THIS PAGE
     total_tags = set()
@@ -416,7 +419,7 @@ def get_search_core():
     original_params = request.args.to_dict()
     original_params['limit'] = limit
 
-    if limit and len(search_results) >= limit:
+    if limit and search_results_photo_count >= limit:
         next_params = original_params.copy()
         next_params['offset'] = offset + limit
         next_params = helpers.dict_to_params(next_params)
