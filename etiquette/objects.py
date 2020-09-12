@@ -91,7 +91,7 @@ class GroupableMixin:
         for parent in parents:
             parent.add_children(children)
 
-    def add_child(self, member):
+    def _add_child(self, member):
         self.assert_same_type(member)
 
         if member == self:
@@ -114,9 +114,12 @@ class GroupableMixin:
 
         self.photodb._cached_tag_flat_dict = None
 
+    def add_child(self, member):
+        return self._add_child(member)
+
     def add_children(self, members):
         for member in members:
-            self.add_child(member)
+            self._add_child(member)
 
     def assert_same_type(self, other):
         if not isinstance(other, type(self)):
