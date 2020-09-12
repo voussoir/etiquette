@@ -657,7 +657,6 @@ class PDBPhotoMixin:
         (tag_musts, tag_mays, tag_forbids, tag_expression) = tags_fixed
 
         if tag_expression:
-            frozen_children = self.get_cached_frozen_children()
             tag_expression_tree = searchhelpers.tag_expression_tree_builder(
                 tag_expression=tag_expression,
                 photodb=self,
@@ -668,6 +667,7 @@ class PDBPhotoMixin:
                 tag_expression = None
             else:
                 giveback_tag_expression = str(tag_expression_tree)
+                frozen_children = self.get_cached_tag_flat_dict()
                 tag_match_function = searchhelpers.tag_expression_matcher_builder(frozen_children)
         else:
             giveback_tag_expression = None
@@ -1121,7 +1121,7 @@ class PDBTagMixin:
 
         author_id = self.get_user_id_or_none(author)
 
-        self._uncache()
+        self._cached_tag_flat_dict = None
 
         data = {
             'id': tag_id,
@@ -1636,7 +1636,7 @@ class PhotoDB(
         self.log.setLevel(self.config['log_level'])
 
         # OTHER
-        self._cached_frozen_children = None
+        self._cached_tag_flat_dict = None
 
         self.caches = {
             'album': cacheclass.Cache(maxlen=self.config['cache_size']['album']),
@@ -1677,9 +1677,6 @@ class PhotoDB(
             return 'PhotoDB(ephemeral=True)'
         else:
             return f'PhotoDB(data_directory={self.data_directory})'
-
-    def _uncache(self):
-        self._cached_frozen_children = None
 
     def close(self):
         # Wrapped in hasattr because if the object fails __init__, Python will
@@ -1724,10 +1721,11 @@ class PhotoDB(
             self.sql_update(table='id_numbers', pairs=pairs, where_key='tab')
         return new_id
 
-    def get_cached_frozen_children(self):
-        if self._cached_frozen_children is None:
-            self._cached_frozen_children = tag_export.flat_dict(self.get_tags())
-        return self._cached_frozen_children
+    def get_cached_tag_flat_dict(self):
+        if self._cached_tag_flat_dict is None:
+            self._cached_tag_flat_dict = tag_export.flat_dict(self.get_root_tags())
+            print(len(self._cached_tag_flat_dict))
+        return self._cached_tag_flat_dict
 
     def load_config(self):
         (config, needs_rewrite) = configlayers.load_file(

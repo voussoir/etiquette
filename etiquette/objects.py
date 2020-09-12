@@ -112,7 +112,7 @@ class GroupableMixin:
         }
         self.photodb.sql_insert(table=self.group_table, data=data)
 
-        self.photodb._cached_frozen_children = None
+        self.photodb._cached_tag_flat_dict = None
 
     def add_children(self, members):
         for member in members:
@@ -137,7 +137,7 @@ class GroupableMixin:
             If True, all children will be deleted.
             Otherwise they'll just be raised up one level.
         '''
-        self.photodb._cached_frozen_children = None
+        self.photodb._cached_tag_flat_dict = None
         if delete_children:
             for child in self.get_children():
                 child.delete(delete_children=True)
@@ -197,7 +197,7 @@ class GroupableMixin:
             'memberid': member.id,
         }
         self.photodb.sql_delete(table=self.group_table, pairs=pairs)
-        self.photodb._cached_frozen_children = None
+        self.photodb._cached_tag_flat_dict = None
 
     def walk_children(self):
         '''
@@ -1219,7 +1219,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.photodb.log.debug('New synonym %s of %s', synname, self.name)
 
-        self.photodb._cached_frozen_children = None
+        self.photodb._cached_tag_flat_dict = None
 
         data = {
             'name': synname,
@@ -1242,7 +1242,7 @@ class Tag(ObjectBase, GroupableMixin):
         '''
         mastertag = self.photodb.get_tag(name=mastertag)
 
-        self.photodb._cached_frozen_children = None
+        self.photodb._cached_tag_flat_dict = None
 
         # Migrate the old tag's synonyms to the new one
         # UPDATE is safe for this operation because there is no chance of duplicates.
@@ -1295,7 +1295,7 @@ class Tag(ObjectBase, GroupableMixin):
     @decorators.transaction
     def delete(self, *, delete_children=False):
         self.photodb.log.debug('Deleting %s', self)
-        self.photodb._cached_frozen_children = None
+        self.photodb._cached_tag_flat_dict = None
         GroupableMixin.delete(self, delete_children=delete_children)
         self.photodb.sql_delete(table='photo_tag_rel', pairs={'tagid': self.id})
         self.photodb.sql_delete(table='tag_synonyms', pairs={'mastername': self.name})
@@ -1354,7 +1354,7 @@ class Tag(ObjectBase, GroupableMixin):
         if syn_exists is None:
             raise exceptions.NoSuchSynonym(synname)
 
-        self.photodb._cached_frozen_children = None
+        self.photodb._cached_tag_flat_dict = None
         self.photodb.sql_delete(table='tag_synonyms', pairs={'name': synname})
 
     @decorators.required_feature('tag.edit')
@@ -1375,7 +1375,7 @@ class Tag(ObjectBase, GroupableMixin):
         else:
             raise exceptions.TagExists(new_name)
 
-        self.photodb._cached_frozen_children = None
+        self.photodb._cached_tag_flat_dict = None
 
         data = {
             'id': self.id,
