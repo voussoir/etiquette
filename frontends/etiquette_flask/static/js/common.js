@@ -268,8 +268,8 @@ function init_button_with_confirm()
         button.classList.remove("button_with_confirm");
 
         let holder = document.createElement("span");
+        holder.className = button.dataset.holderClass || "";
         holder.classList.add("confirm_holder");
-        holder.classList.add(button.dataset.holderClass || "confirm_holder");
         button.parentElement.insertBefore(holder, button);
         button.parentElement.removeChild(button);
 
