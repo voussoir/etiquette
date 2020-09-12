@@ -300,13 +300,6 @@ function add_photo_tag_form()
     api.photos.add_tag(PHOTO_ID, tagname, add_photo_tag_callback);
     add_tag_box.value = "";
 }
-
-function remove_photo_tag_form(photo_id, tagname)
-{
-    api.photos.remove_tag(photo_id, tagname, remove_photo_tag_callback);
-    add_tag_box.focus();
-}
-
 function add_photo_tag_callback(response)
 {
     add_remove_photo_tag_callback(response);
@@ -336,6 +329,11 @@ function add_photo_tag_callback(response)
     this_tags.appendChild(li);
 }
 
+function remove_photo_tag_form(photo_id, tagname)
+{
+    api.photos.remove_tag(photo_id, tagname, remove_photo_tag_callback);
+    add_tag_box.focus();
+}
 function remove_photo_tag_callback(response)
 {
     add_remove_photo_tag_callback(response);
