@@ -292,6 +292,10 @@ class PDBCacheManagerMixin:
         and which ones need to be selected from the db.
         This is better than calling get_thing_by_id in a loop because we can
         use a single SQL select to get batches of up to 999 items.
+
+        Note: The order of the output will most likely not match the order of
+        the input, because we first pull items from the cache before requesting
+        the rest from the database.
         '''
         thing_map = self._THING_CLASSES[thing_type]
         thing_class = thing_map['class']
