@@ -46,6 +46,9 @@ class PDBAlbumMixin:
     def get_album_by_id(self, id):
         return self.get_thing_by_id('album', id)
 
+    def get_album_count(self):
+        return self.sql_select_one('SELECT COUNT(id) FROM albums')[0]
+
     def get_albums(self):
         yield from self.get_things(thing_type='album')
 
@@ -124,6 +127,9 @@ class PDBBookmarkMixin:
 
     def get_bookmark(self, id):
         return self.get_thing_by_id('bookmark', id)
+
+    def get_bookmark_count(self):
+        return self.sql_select_one('SELECT COUNT(id) FROM bookmarks')[0]
 
     def get_bookmarks(self):
         yield from self.get_things(thing_type='bookmark')
@@ -354,6 +360,9 @@ class PDBPhotoMixin:
             raise exceptions.NoSuchPhoto(filepath)
         photo = self.get_cached_instance('photo', photo_row)
         return photo
+
+    def get_photo_count(self):
+        return self.sql_select_one('SELECT COUNT(id) FROM photos')[0]
 
     def get_photos_by_id(self, ids):
         return self.get_things_by_id('photo', ids)
@@ -1082,6 +1091,9 @@ class PDBTagMixin:
         tag = self.get_cached_instance('tag', tag_row)
         return tag
 
+    def get_tag_count(self):
+        return self.sql_select_one('SELECT COUNT(id) FROM tags')[0]
+
     def get_tags(self):
         '''
         Yield all Tags in the database.
@@ -1197,6 +1209,9 @@ class PDBUserMixin:
             return self.get_cached_instance('user', user_row)
         else:
             raise exceptions.NoSuchUser(username or id)
+
+    def get_user_count(self):
+        return self.sql_select_one('SELECT COUNT(id) FROM users')[0]
 
     def get_user_id_or_none(self, user_obj_or_id):
         '''
