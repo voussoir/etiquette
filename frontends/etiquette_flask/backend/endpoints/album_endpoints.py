@@ -14,7 +14,6 @@ session_manager = common.session_manager
 # Individual albums ################################################################################
 
 @site.route('/album/<album_id>')
-@session_manager.give_token
 def get_album_html(album_id):
     album = common.P_album(album_id, response_type='html')
     response = common.render_template(
@@ -26,7 +25,6 @@ def get_album_html(album_id):
     return response
 
 @site.route('/album/<album_id>.json')
-@session_manager.give_token
 def get_album_json(album_id):
     album = common.P_album(album_id, response_type='json')
     album = etiquette.jsonify.album(album)
@@ -56,7 +54,6 @@ def get_album_zip(album_id):
     return flask.Response(streamed_zip, headers=outgoing_headers)
 
 @site.route('/album/<album_id>/add_child', methods=['POST'])
-@decorators.catch_etiquette_exception
 @decorators.required_fields(['child_id'], forbid_whitespace=True)
 def post_album_add_child(album_id):
     album = common.P_album(album_id, response_type='json')
@@ -66,7 +63,6 @@ def post_album_add_child(album_id):
     return jsonify.make_json_response(response)
 
 @site.route('/album/<album_id>/remove_child', methods=['POST'])
-@decorators.catch_etiquette_exception
 @decorators.required_fields(['child_id'], forbid_whitespace=True)
 def post_album_remove_child(album_id):
     album = common.P_album(album_id, response_type='json')
@@ -76,7 +72,6 @@ def post_album_remove_child(album_id):
     return jsonify.make_json_response(response)
 
 @site.route('/album/<album_id>/refresh_directories', methods=['POST'])
-@decorators.catch_etiquette_exception
 def post_album_refresh_directories(album_id):
     album = common.P_album(album_id, response_type='json')
     for directory in album.get_associated_directories():
@@ -87,8 +82,6 @@ def post_album_refresh_directories(album_id):
 # Album photo operations ###########################################################################
 
 @site.route('/album/<album_id>/add_photo', methods=['POST'])
-@session_manager.give_token
-@decorators.catch_etiquette_exception
 @decorators.required_fields(['photo_id'], forbid_whitespace=True)
 def post_album_add_photo(album_id):
     '''
@@ -103,8 +96,6 @@ def post_album_add_photo(album_id):
     return jsonify.make_json_response(response)
 
 @site.route('/album/<album_id>/remove_photo', methods=['POST'])
-@session_manager.give_token
-@decorators.catch_etiquette_exception
 @decorators.required_fields(['photo_id'], forbid_whitespace=True)
 def post_album_remove_photo(album_id):
     '''
@@ -121,8 +112,6 @@ def post_album_remove_photo(album_id):
 # Album tag operations #############################################################################
 
 @site.route('/album/<album_id>/add_tag', methods=['POST'])
-@decorators.catch_etiquette_exception
-@session_manager.give_token
 def post_album_add_tag(album_id):
     '''
     Apply a tag to every photo in the album.
@@ -146,8 +135,6 @@ def post_album_add_tag(album_id):
 # Album metadata operations ########################################################################
 
 @site.route('/album/<album_id>/edit', methods=['POST'])
-@session_manager.give_token
-@decorators.catch_etiquette_exception
 def post_album_edit(album_id):
     '''
     Edit the title / description.
@@ -168,7 +155,6 @@ def get_albums_core():
     return albums
 
 @site.route('/albums')
-@session_manager.give_token
 def get_albums_html():
     albums = get_albums_core()
     response = common.render_template(
@@ -180,7 +166,6 @@ def get_albums_html():
     return response
 
 @site.route('/albums.json')
-@session_manager.give_token
 def get_albums_json():
     albums = get_albums_core()
     albums = [etiquette.jsonify.album(album, minimal=True) for album in albums]
@@ -189,8 +174,6 @@ def get_albums_json():
 # Album create and delete ##########################################################################
 
 @site.route('/albums/create_album', methods=['POST'])
-@session_manager.give_token
-@decorators.catch_etiquette_exception
 def post_albums_create():
     title = request.form.get('title', None)
     description = request.form.get('description', None)
@@ -209,8 +192,6 @@ def post_albums_create():
     return jsonify.make_json_response(response)
 
 @site.route('/album/<album_id>/delete', methods=['POST'])
-@session_manager.give_token
-@decorators.catch_etiquette_exception
 def post_album_delete(album_id):
     album = common.P_album(album_id, response_type='json')
     album.delete(commit=True)

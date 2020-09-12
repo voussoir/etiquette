@@ -13,15 +13,12 @@ session_manager = common.session_manager
 # Individual bookmarks #############################################################################
 
 @site.route('/bookmark/<bookmark_id>.json')
-@session_manager.give_token
 def get_bookmark_json(bookmark_id):
     bookmark = common.P_bookmark(bookmark_id, response_type='json')
     response = etiquette.jsonify.bookmark(bookmark)
     return jsonify.make_json_response(response)
 
 @site.route('/bookmark/<bookmark_id>/edit', methods=['POST'])
-@session_manager.give_token
-@decorators.catch_etiquette_exception
 def post_bookmark_edit(bookmark_id):
     bookmark = common.P_bookmark(bookmark_id, response_type='json')
     # Emptystring is okay for titles, but not for URL.
@@ -36,13 +33,11 @@ def post_bookmark_edit(bookmark_id):
 # Bookmark listings ################################################################################
 
 @site.route('/bookmarks')
-@session_manager.give_token
 def get_bookmarks_html():
     bookmarks = list(common.P.get_bookmarks())
     return common.render_template(request, 'bookmarks.html', bookmarks=bookmarks)
 
 @site.route('/bookmarks.json')
-@session_manager.give_token
 def get_bookmarks_json():
     bookmarks = [etiquette.jsonify.bookmark(b) for b in common.P.get_bookmarks()]
     return jsonify.make_json_response(bookmarks)
@@ -50,7 +45,6 @@ def get_bookmarks_json():
 # Bookmark create and delete #######################################################################
 
 @site.route('/bookmarks/create_bookmark', methods=['POST'])
-@decorators.catch_etiquette_exception
 @decorators.required_fields(['url'], forbid_whitespace=True)
 def post_bookmark_create():
     url = request.form['url']
@@ -62,7 +56,6 @@ def post_bookmark_create():
     return response
 
 @site.route('/bookmark/<bookmark_id>/delete', methods=['POST'])
-@decorators.catch_etiquette_exception
 def post_bookmark_delete(bookmark_id):
     bookmark = common.P_bookmark(bookmark_id, response_type='json')
     bookmark.delete(commit=True)

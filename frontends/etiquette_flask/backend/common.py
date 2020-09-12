@@ -10,6 +10,7 @@ from voussoirkit import pathclass
 import etiquette
 
 from . import caching
+from . import decorators
 from . import jinja_filters
 from . import jsonify
 from . import sessions
@@ -44,6 +45,27 @@ file_cache_manager = caching.FileCacheManager(
     max_filesize=5 * bytestring.MIBIBYTE,
     max_age=BROWSER_CACHE_DURATION,
 )
+
+# Flask provides decorators for before_request and after_request, but not for
+# wrapping the whole request. The decorators I am using need to wrap the whole
+# request, either to catch exceptions (which don't get passed through
+# after_request) or to maintain some state before running the function and
+# adding it to the response after.
+# Instead of copy-pasting my decorators onto every single function and
+# forgetting to keep up with them in the future, let's just hijack the
+# decorator I know every endpoint will have: site.route.
+_original_route = site.route
+def decorate_and_route(*route_args, **route_kwargs):
+    def wrapper(endpoint):
+        if not hasattr(endpoint, '_fully_decorated'):
+            endpoint = decorators.catch_etiquette_exception(endpoint)
+            endpoint = session_manager.give_token(endpoint)
+
+        endpoint = _original_route(*route_args, **route_kwargs)(endpoint)
+        endpoint._fully_decorated = True
+        return endpoint
+    return wrapper
+site.route = decorate_and_route
 
 gzip_minimum_size = 500
 gzip_level = 3

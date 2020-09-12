@@ -14,13 +14,11 @@ session_manager = common.session_manager
 # Individual users #################################################################################
 
 @site.route('/user/<username>')
-@session_manager.give_token
 def get_user_html(username):
     user = common.P_user(username, response_type='html')
     return common.render_template(request, 'user.html', user=user)
 
 @site.route('/user/<username>.json')
-@session_manager.give_token
 def get_user_json(username):
     user = common.P_user(username, response_type='json')
     user = etiquette.jsonify.user(user)
@@ -41,7 +39,6 @@ def get_user_id_redirect(user_id):
 # Login and logout #################################################################################
 
 @site.route('/login', methods=['GET'])
-@session_manager.give_token
 def get_login():
     response = common.render_template(
         request,
@@ -52,7 +49,6 @@ def get_login():
     return response
 
 @site.route('/login', methods=['POST'])
-@session_manager.give_token
 @decorators.required_fields(['username', 'password'])
 def post_login():
     session = session_manager.get(request)
@@ -82,7 +78,6 @@ def post_login():
     return jsonify.make_json_response({})
 
 @site.route('/logout', methods=['POST'])
-@session_manager.give_token
 def logout():
     session_manager.remove(request)
     response = jsonify.make_json_response({})
@@ -95,8 +90,6 @@ def get_register():
     return flask.redirect('/login')
 
 @site.route('/register', methods=['POST'])
-@session_manager.give_token
-@decorators.catch_etiquette_exception
 @decorators.required_fields(['username', 'password_1', 'password_2'])
 def post_register():
     session = session_manager.get(request)

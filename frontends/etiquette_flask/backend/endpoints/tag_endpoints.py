@@ -31,7 +31,6 @@ def get_tag_id_redirect(tag_id):
     return flask.redirect(url)
 
 @site.route('/tag/<specific_tag>/edit', methods=['POST'])
-@decorators.catch_etiquette_exception
 def post_tag_edit(specific_tag):
     tag = common.P_tag(specific_tag, response_type='json')
     name = request.form.get('name', '').strip()
@@ -46,8 +45,6 @@ def post_tag_edit(specific_tag):
     return response
 
 @site.route('/tag/<tagname>/add_child', methods=['POST'])
-@decorators.catch_etiquette_exception
-@session_manager.give_token
 @decorators.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_add_child(tagname):
     parent = common.P_tag(tagname, response_type='json')
@@ -57,8 +54,6 @@ def post_tag_add_child(tagname):
     return jsonify.make_json_response(response)
 
 @site.route('/tag/<tagname>/remove_child', methods=['POST'])
-@decorators.catch_etiquette_exception
-@session_manager.give_token
 @decorators.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_remove_child(tagname):
     parent = common.P_tag(tagname, response_type='json')
@@ -79,7 +74,6 @@ def get_all_tag_names():
 
 @site.route('/tag/<specific_tag_name>')
 @site.route('/tags')
-@session_manager.give_token
 def get_tags_html(specific_tag_name=None):
     if specific_tag_name is None:
         specific_tag = None
@@ -114,7 +108,6 @@ def get_tags_html(specific_tag_name=None):
 
 @site.route('/tag/<specific_tag_name>.json')
 @site.route('/tags.json')
-@session_manager.give_token
 def get_tags_json(specific_tag_name=None):
     if specific_tag_name is None:
         specific_tag = None
@@ -137,8 +130,6 @@ def get_tags_json(specific_tag_name=None):
 # Tag create and delete ############################################################################
 
 @site.route('/tags/create_tag', methods=['POST'])
-@decorators.catch_etiquette_exception
-@session_manager.give_token
 @decorators.required_fields(['name'], forbid_whitespace=True)
 def post_tag_create():
     name = request.form['name']
@@ -149,8 +140,6 @@ def post_tag_create():
     return jsonify.make_json_response(response)
 
 @site.route('/tags/easybake', methods=['POST'])
-@decorators.catch_etiquette_exception
-@session_manager.give_token
 @decorators.required_fields(['easybake_string'], forbid_whitespace=True)
 def post_tag_easybake():
     easybake_string = request.form['easybake_string']
@@ -160,8 +149,6 @@ def post_tag_easybake():
     return jsonify.make_json_response(notes)
 
 @site.route('/tag/<tagname>/delete', methods=['POST'])
-@decorators.catch_etiquette_exception
-@session_manager.give_token
 def post_tag_delete(tagname):
     tag = common.P_tag(tagname, response_type='json')
     tag.delete(commit=True)
@@ -169,8 +156,6 @@ def post_tag_delete(tagname):
     return jsonify.make_json_response(response)
 
 @site.route('/tag/<tagname>/remove_synonym', methods=['POST'])
-@decorators.catch_etiquette_exception
-@session_manager.give_token
 @decorators.required_fields(['syn_name'], forbid_whitespace=True)
 def post_tag_remove_synonym(tagname):
     syn_name = request.form['syn_name']

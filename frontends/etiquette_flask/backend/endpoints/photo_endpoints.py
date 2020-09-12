@@ -19,13 +19,11 @@ photo_download_zip_tokens = cacheclass.Cache(maxlen=100)
 # Individual photos ################################################################################
 
 @site.route('/photo/<photo_id>')
-@session_manager.give_token
 def get_photo_html(photo_id):
     photo = common.P_photo(photo_id, response_type='html')
     return common.render_template(request, 'photo.html', photo=photo)
 
 @site.route('/photo/<photo_id>.json')
-@session_manager.give_token
 def get_photo_json(photo_id):
     photo = common.P_photo(photo_id, response_type='json')
     photo = etiquette.jsonify.photo(photo)
@@ -71,8 +69,6 @@ def get_thumbnail(photo_id):
 # Photo create and delete ##########################################################################
 
 @site.route('/photo/<photo_id>/delete', methods=['POST'])
-@decorators.catch_etiquette_exception
-@session_manager.give_token
 def post_photo_delete(photo_id):
     print(photo_id)
     photo = common.P_photo(photo_id, response_type='json')
@@ -83,7 +79,6 @@ def post_photo_delete(photo_id):
 
 # Photo tag operations #############################################################################
 
-@decorators.catch_etiquette_exception
 def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
     if isinstance(photo_ids, str):
         photo_ids = etiquette.helpers.comma_space_split(photo_ids)
@@ -149,7 +144,6 @@ def post_batch_photos_remove_tag():
 
 # Photo metadata operations ########################################################################
 
-@decorators.catch_etiquette_exception
 @site.route('/photo/<photo_id>/generate_thumbnail', methods=['POST'])
 def post_photo_generate_thumbnail(photo_id):
     special = request.form.to_dict()
@@ -161,7 +155,6 @@ def post_photo_generate_thumbnail(photo_id):
     response = jsonify.make_json_response({})
     return response
 
-@decorators.catch_etiquette_exception
 def post_photo_refresh_metadata_core(photo_ids):
     if isinstance(photo_ids, str):
         photo_ids = etiquette.helpers.comma_space_split(photo_ids)
@@ -193,21 +186,18 @@ def post_batch_photos_refresh_metadata():
     response = post_photo_refresh_metadata_core(photo_ids=request.form['photo_ids'])
     return response
 
-@decorators.catch_etiquette_exception
 @site.route('/photo/<photo_id>/set_searchhidden', methods=['POST'])
 def post_photo_set_searchhidden(photo_id):
     photo = common.P_photo(photo_id, response_type='json')
     photo.set_searchhidden(True)
     return jsonify.make_json_response({})
 
-@decorators.catch_etiquette_exception
 @site.route('/photo/<photo_id>/unset_searchhidden', methods=['POST'])
 def post_photo_unset_searchhidden(photo_id):
     photo = common.P_photo(photo_id, response_type='json')
     photo.set_searchhidden(False)
     return jsonify.make_json_response({})
 
-@decorators.catch_etiquette_exception
 def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
     if isinstance(photo_ids, str):
         photo_ids = etiquette.helpers.comma_space_split(photo_ids)
@@ -236,7 +226,6 @@ def post_batch_photos_unset_searchhidden():
 # Clipboard ########################################################################################
 
 @site.route('/clipboard')
-@session_manager.give_token
 def get_clipboard_page():
     return common.render_template(request, 'clipboard.html')
 
@@ -452,7 +441,6 @@ def get_search_core():
     return final_results
 
 @site.route('/search')
-@session_manager.give_token
 def get_search_html():
     search_results = get_search_core()
     response = common.render_template(
@@ -468,7 +456,6 @@ def get_search_html():
     return response
 
 @site.route('/search.json')
-@session_manager.give_token
 def get_search_json():
     search_results = get_search_core()
     search_kwargs = search_results['search_kwargs']
