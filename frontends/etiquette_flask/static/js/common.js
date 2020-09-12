@@ -332,12 +332,11 @@ function init_button_with_confirm()
         delete button.dataset.cancelClass;
 
         // If this is stupid, let me know.
-        let confirm_onclick = button.dataset.onclick + `
-            ;
+        let confirm_onclick = `
             let holder = event.target.parentElement.parentElement;
             holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
             holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
-        `
+        ` + button.dataset.onclick;
         button_confirm.onclick = Function(confirm_onclick);
         button.removeAttribute("onclick");
         button.onclick = function(event)
