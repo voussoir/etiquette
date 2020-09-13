@@ -169,8 +169,8 @@ common.html_to_element =
 function html_to_element(html)
 {
     let template = document.createElement("template");
-    template.innerHTML = html;
-    return template.content.firstChild;
+    template.innerHTML = html.trim();
+    return template.content.firstElementChild;
 }
 
 common.init_atag_merge_params =
