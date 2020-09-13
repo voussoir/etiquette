@@ -21,8 +21,7 @@ def easybake(tags, include_synonyms=True, with_objects=False):
         lines.append(my_line)
 
         if include_synonyms:
-            syn_lines = tag.get_synonyms()
-            syn_lines = [f'{tag.name}+{syn}' for syn in syn_lines]
+            syn_lines = [f'{tag.name}+{syn}' for syn in tag.get_synonyms()]
             if with_objects:
                 syn_lines = [(line, tag) for line in syn_lines]
             lines.extend(syn_lines)
