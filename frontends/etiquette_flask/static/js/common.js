@@ -174,7 +174,7 @@ function html_to_element(html)
 }
 
 common.init_atag_merge_params =
-function init_atag_merge_params()
+function init_atag_merge_params(a)
 {
     /*
     To create an <a> tag where the ?parameters written on the href are merged
@@ -195,42 +195,47 @@ function init_atag_merge_params()
         href: "?orderby=date"
         Result: "?filter=hello&orderby=date"
     */
-    function ingest(params, new_params)
+    const page_params = Array.from(new URLSearchParams(window.location.search));
+    let to_merge;
+
+    if (a.dataset.mergeParams)
     {
-        for (const [key, value] of params) { new_params.set(key, value); }
+        let keep = new Set(a.dataset.mergeParams.split(/[\s,]+/));
+        to_merge = page_params.filter(key_value => keep.has(key_value[0]));
+        delete a.dataset.mergeParams;
     }
+    else if (a.dataset.mergeParamsExcept)
+    {
+        let remove = new Set(a.dataset.mergeParamsExcept.split(/[\s,]+/));
+        to_merge = page_params.filter(key_value => (! remove.has(key_value[0])));
+        delete a.dataset.mergeParamsExcept;
+    }
+    else
+    {
+        to_merge = page_params;
+    }
+
+    to_merge = to_merge.concat(Array.from(new URLSearchParams(a.search)));
+    const new_params = new URLSearchParams();
+    for (const [key, value] of to_merge)
+        { new_params.set(key, value); }
+    a.search = new_params.toString();
+    a.classList.remove("merge_params");
+}
+
+common.init_all_atag_merge_params =
+function init_all_atag_merge_params()
+{
     const page_params = Array.from(new URLSearchParams(window.location.search));
     let as = Array.from(document.getElementsByClassName("merge_params"));
     for (const a of as)
     {
-        const a_params = new URLSearchParams(a.search);
-        const new_params = new URLSearchParams();
-
-        if (a.dataset.mergeParams)
-        {
-            let keep = new Set(a.dataset.mergeParams.split(/[\s,]+/));
-            ingest(page_params.filter(key_value => keep.has(key_value[0])), new_params);
-            delete a.dataset.mergeParams;
-        }
-        else if (a.dataset.mergeParamsExcept)
-        {
-            let remove = new Set(a.dataset.mergeParamsExcept.split(/[\s,]+/));
-            ingest(page_params.filter(key_value => (! remove.has(key_value[0]))), new_params);
-            delete a.dataset.mergeParamsExcept;
-        }
-        else
-        {
-            ingest(page_params, new_params);
-        }
-
-        ingest(a_params, new_params);
-        a.search = new_params.toString();
-        a.classList.remove("merge_params");
+        common.init_atag_merge_params(a);
     }
 }
 
 common.init_button_with_confirm =
-function init_button_with_confirm()
+function init_button_with_confirm(button)
 {
     /*
     To create a button that requires a second confirmation step, assign it the
@@ -262,191 +267,215 @@ function init_button_with_confirm()
 
         data-holder-class: CSS class for the new span that holds the menu.
     */
+    button.classList.remove("button_with_confirm");
+
+    let holder = document.createElement("span");
+    holder.className = button.dataset.holderClass || "";
+    holder.classList.add("confirm_holder");
+    button.parentElement.insertBefore(holder, button);
+    button.parentElement.removeChild(button);
+
+    let holder_stage1 = document.createElement("span");
+    holder_stage1.classList.add("confirm_holder_stage1");
+    holder_stage1.appendChild(button);
+    holder.appendChild(holder_stage1);
+
+    let holder_stage2 = document.createElement("span");
+    holder_stage2.classList.add("confirm_holder_stage2");
+    holder_stage2.classList.add("hidden");
+    holder.appendChild(holder_stage2);
+
+    let prompt;
+    let input_source;
+    if (button.dataset.isInput)
+    {
+        prompt = document.createElement("input");
+        prompt.placeholder = button.dataset.prompt || "";
+        input_source = prompt;
+    }
+    else
+    {
+        prompt = document.createElement("span");
+        prompt.innerText = (button.dataset.prompt || "Are you sure?") + " ";
+        input_source = undefined;
+    }
+    prompt.className = button.dataset.promptClass || "";
+    holder_stage2.appendChild(prompt)
+    delete button.dataset.prompt;
+    delete button.dataset.promptClass;
+
+    let button_confirm = document.createElement("button");
+    button_confirm.innerText = (button.dataset.confirm || button.innerText).trim();
+    if (button.dataset.confirmClass === undefined)
+    {
+        button_confirm.className = button.className;
+        button_confirm.classList.remove("button_with_confirm");
+    }
+    else
+    {
+        button_confirm.className = button.dataset.confirmClass;
+    }
+    button_confirm.input_source = input_source;
+    holder_stage2.appendChild(button_confirm);
+    holder_stage2.appendChild(document.createTextNode(" "));
+    if (button.dataset.isInput)
+    {
+        common.bind_box_to_button(prompt, button_confirm);
+    }
+    delete button.dataset.confirm;
+    delete button.dataset.confirmClass;
+    delete button.dataset.isInput;
+
+    let button_cancel = document.createElement("button");
+    button_cancel.innerText = button.dataset.cancel || "Cancel";
+    button_cancel.className = button.dataset.cancelClass || "";
+    holder_stage2.appendChild(button_cancel);
+    delete button.dataset.cancel;
+    delete button.dataset.cancelClass;
+
+    // If this is stupid, let me know.
+    let confirm_onclick = `
+        let holder = event.target.parentElement.parentElement;
+        holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
+        holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
+    ` + button.dataset.onclick;
+    button_confirm.onclick = Function(confirm_onclick);
+    button.removeAttribute("onclick");
+    button.onclick = function(event)
+    {
+        let holder = event.target.parentElement.parentElement;
+        holder.getElementsByClassName("confirm_holder_stage1")[0].classList.add("hidden");
+        holder.getElementsByClassName("confirm_holder_stage2")[0].classList.remove("hidden");
+        let input = holder.getElementsByTagName("input")[0];
+        if (input)
+        {
+            input.focus();
+        }
+    }
+
+    button_cancel.onclick = function(event)
+    {
+        let holder = event.target.parentElement.parentElement;
+        holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
+        holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
+    }
+    delete button.dataset.onclick;
+}
+
+common.init_all_button_with_confirm =
+function init_all_button_with_confirm()
+{
     let buttons = Array.from(document.getElementsByClassName("button_with_confirm"));
     for (const button of buttons)
     {
-        button.classList.remove("button_with_confirm");
-
-        let holder = document.createElement("span");
-        holder.className = button.dataset.holderClass || "";
-        holder.classList.add("confirm_holder");
-        button.parentElement.insertBefore(holder, button);
-        button.parentElement.removeChild(button);
-
-        let holder_stage1 = document.createElement("span");
-        holder_stage1.classList.add("confirm_holder_stage1");
-        holder_stage1.appendChild(button);
-        holder.appendChild(holder_stage1);
-
-        let holder_stage2 = document.createElement("span");
-        holder_stage2.classList.add("confirm_holder_stage2");
-        holder_stage2.classList.add("hidden");
-        holder.appendChild(holder_stage2);
-
-        let prompt;
-        let input_source;
-        if (button.dataset.isInput)
-        {
-            prompt = document.createElement("input");
-            prompt.placeholder = button.dataset.prompt || "";
-            input_source = prompt;
-        }
-        else
-        {
-            prompt = document.createElement("span");
-            prompt.innerText = (button.dataset.prompt || "Are you sure?") + " ";
-            input_source = undefined;
-        }
-        prompt.className = button.dataset.promptClass || "";
-        holder_stage2.appendChild(prompt)
-        delete button.dataset.prompt;
-        delete button.dataset.promptClass;
-
-        let button_confirm = document.createElement("button");
-        button_confirm.innerText = (button.dataset.confirm || button.innerText).trim();
-        if (button.dataset.confirmClass === undefined)
-        {
-            button_confirm.className = button.className;
-            button_confirm.classList.remove("button_with_confirm");
-        }
-        else
-        {
-            button_confirm.className = button.dataset.confirmClass;
-        }
-        button_confirm.input_source = input_source;
-        holder_stage2.appendChild(button_confirm);
-        holder_stage2.appendChild(document.createTextNode(" "));
-        if (button.dataset.isInput)
-        {
-            common.bind_box_to_button(prompt, button_confirm);
-        }
-        delete button.dataset.confirm;
-        delete button.dataset.confirmClass;
-        delete button.dataset.isInput;
-
-        let button_cancel = document.createElement("button");
-        button_cancel.innerText = button.dataset.cancel || "Cancel";
-        button_cancel.className = button.dataset.cancelClass || "";
-        holder_stage2.appendChild(button_cancel);
-        delete button.dataset.cancel;
-        delete button.dataset.cancelClass;
-
-        // If this is stupid, let me know.
-        let confirm_onclick = `
-            let holder = event.target.parentElement.parentElement;
-            holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
-            holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
-        ` + button.dataset.onclick;
-        button_confirm.onclick = Function(confirm_onclick);
-        button.removeAttribute("onclick");
-        button.onclick = function(event)
-        {
-            let holder = event.target.parentElement.parentElement;
-            holder.getElementsByClassName("confirm_holder_stage1")[0].classList.add("hidden");
-            holder.getElementsByClassName("confirm_holder_stage2")[0].classList.remove("hidden");
-            let input = holder.getElementsByTagName("input")[0];
-            if (input)
-            {
-                input.focus();
-            }
-        }
-
-        button_cancel.onclick = function(event)
-        {
-            let holder = event.target.parentElement.parentElement;
-            holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
-            holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
-        }
-        delete button.dataset.onclick;
+        common.init_button_with_confirm(button);
     }
 }
 
 common.init_enable_on_pageload =
-function init_enable_on_pageload()
+function init_enable_on_pageload(element)
 {
     /*
     To create an input element which is disabled at first, and is enabled when
     the DOM has completed loading, give it the disabled attribute and the
     class "enable_on_pageload".
     */
+    element.disabled = false;
+    element.classList.remove("enable_on_pageload");
+}
+
+common.init_all_enable_on_pageload =
+function init_all_enable_on_pageload()
+{
     let elements = Array.from(document.getElementsByClassName("enable_on_pageload"));
     for (const element of elements)
     {
-        element.disabled = false;
-        element.classList.remove("enable_on_pageload");
+        common.init_enable_on_pageload(element);
     }
 }
 
 common.init_entry_with_history =
-function init_entry_with_history()
+function init_entry_with_history(input)
+{
+    input.addEventListener("keydown", common.entry_with_history_hook);
+    input.classList.remove("entry_with_history");
+}
+
+common.init_all_entry_with_history =
+function init_all_entry_with_history()
 {
     const inputs = Array.from(document.getElementsByClassName("entry_with_history"));
     for (const input of inputs)
     {
-        input.addEventListener("keydown", common.entry_with_history_hook);
-        input.classList.remove("entry_with_history");
+        common.init_entry_with_history(input);
     }
 }
 
 common.init_tabbed_container =
-function init_tabbed_container()
+function init_tabbed_container(tabbed_container)
 {
-    let switch_tab =
-    function switch_tab(event)
+    let button_container = document.createElement("div");
+    button_container.className = "tab_buttons";
+    tabbed_container.prepend(button_container);
+    let tabs = Array.from(tabbed_container.getElementsByClassName("tab"));
+    for (const tab of tabs)
     {
-        let tab_button = event.target;
-        if (tab_button.classList.contains("tab_button_active"))
-            { return; }
+        tab.classList.add("hidden");
+        let tab_id = tab.dataset.tabId || tab.dataset.tabTitle;
+        tab.dataset.tabId = tab_id;
+        tab.style.borderTopColor = "transparent";
 
-        let tab_id = tab_button.dataset.tabId;
-        let tab_buttons = tab_button.parentElement.getElementsByClassName("tab_button");
-        let tabs = tab_button.parentElement.parentElement.getElementsByClassName("tab");
-        for (const tab_button of tab_buttons)
-        {
-            if (tab_button.dataset.tabId === tab_id)
-            {
-                tab_button.classList.remove("tab_button_inactive");
-                tab_button.classList.add("tab_button_active");
-            }
-            else
-            {
-                tab_button.classList.remove("tab_button_active");
-                tab_button.classList.add("tab_button_inactive");
-            }
-        }
-        for (const tab of tabs)
-        {
-            if (tab.dataset.tabId === tab_id)
-                { tab.classList.remove("hidden"); }
-            else
-                { tab.classList.add("hidden"); }
-        }
+        let button = document.createElement("button");
+        button.className = "tab_button tab_button_inactive";
+        button.onclick = common.tabbed_container_switcher;
+        button.innerText = tab.dataset.tabTitle;
+        button.dataset.tabId = tab_id;
+        button_container.append(button);
     }
+    tabs[0].classList.remove("hidden");
+    button_container.firstElementChild.classList.remove("tab_button_inactive");
+    button_container.firstElementChild.classList.add("tab_button_active");
+}
 
+common.init_all_tabbed_container =
+function init_all_tabbed_container()
+{
     let tabbed_containers = Array.from(document.getElementsByClassName("tabbed_container"));
     for (const tabbed_container of tabbed_containers)
     {
-        let button_container = document.createElement("div");
-        button_container.className = "tab_buttons";
-        tabbed_container.prepend(button_container);
-        let tabs = Array.from(tabbed_container.getElementsByClassName("tab"));
-        for (const tab of tabs)
-        {
-            tab.classList.add("hidden");
-            let tab_id = tab.dataset.tabId || tab.dataset.tabTitle;
-            tab.dataset.tabId = tab_id;
-            tab.style.borderTopColor = "transparent";
+        common.init_tabbed_container(tabbed_container);
+    }
+}
 
-            let button = document.createElement("button");
-            button.className = "tab_button tab_button_inactive";
-            button.onclick = switch_tab;
-            button.innerText = tab.dataset.tabTitle;
-            button.dataset.tabId = tab_id;
-            button_container.append(button);
+common.tabbed_container_switcher =
+function tabbed_container_switcher(event)
+{
+    let tab_button = event.target;
+    if (tab_button.classList.contains("tab_button_active"))
+        { return; }
+
+    let tab_id = tab_button.dataset.tabId;
+    let tab_buttons = tab_button.parentElement.getElementsByClassName("tab_button");
+    let tabs = tab_button.parentElement.parentElement.getElementsByClassName("tab");
+    for (const tab_button of tab_buttons)
+    {
+        if (tab_button.dataset.tabId === tab_id)
+        {
+            tab_button.classList.remove("tab_button_inactive");
+            tab_button.classList.add("tab_button_active");
         }
-        tabs[0].classList.remove("hidden");
-        button_container.firstElementChild.classList.remove("tab_button_inactive");
-        button_container.firstElementChild.classList.add("tab_button_active");
+        else
+        {
+            tab_button.classList.remove("tab_button_active");
+            tab_button.classList.add("tab_button_inactive");
+        }
+    }
+    for (const tab of tabs)
+    {
+        if (tab.dataset.tabId === tab_id)
+            { tab.classList.remove("hidden"); }
+        else
+            { tab.classList.add("hidden"); }
     }
 }
 
@@ -459,10 +488,10 @@ function refresh()
 common.on_pageload =
 function on_pageload()
 {
-    common.init_atag_merge_params();
-    common.init_button_with_confirm();
-    common.init_enable_on_pageload();
-    common.init_entry_with_history();
-    common.init_tabbed_container();
+    common.init_all_atag_merge_params();
+    common.init_all_button_with_confirm();
+    common.init_all_enable_on_pageload();
+    common.init_all_entry_with_history();
+    common.init_all_tabbed_container();
 }
 document.addEventListener("DOMContentLoaded", common.on_pageload);
