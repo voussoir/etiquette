@@ -1217,6 +1217,28 @@ class Tag(ObjectBase, GroupableMixin):
     def _uncache(self):
         self.photodb.caches['tag'].remove(self.id)
 
+    def _add_child(self, member):
+        ret = super()._add_child(member)
+        if ret is BAIL:
+            return BAIL
+
+        # Suppose a photo has tags A and B. Then, B is added as a child of A.
+        # We should remove A from the photo leaving only the more specific B.
+        # We must walk all ancestors, not just the immediate parent, because
+        # the same situation could apply to a photo that has tag A, where A
+        # already has children B.C.D, and then E is added as a child of D,
+        # obsoleting A.
+        # I expect that this method, which calls `search`, will be inefficient
+        # when used in a large `add_children` loop. I would consider batching
+        # up all the ancestors and doing it all at once. Just need to make sure
+        # I don't cause any collateral damage e.g. removing A from a photo that
+        # only has A because some other photo with A and B thinks A is obsolete.
+        # This technique is nice and simple to understand for now.
+        ancestors = list(member.walk_parents())
+        photos = self.photodb.search(tag_musts=[member], is_searchhidden=None, yield_albums=False)
+        for photo in photos:
+            photo.remove_tags(ancestors)
+
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def add_child(self, *args, **kwargs):
