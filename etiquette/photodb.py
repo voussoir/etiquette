@@ -519,6 +519,8 @@ class PDBPhotoMixin:
             orderby=None,
             warning_bag=None,
             give_back_parameters=False,
+
+            yield_albums=True,
         ):
         '''
         PHOTO PROPERTIES
@@ -611,6 +613,10 @@ class PDBPhotoMixin:
             If True, the generator's first yield will be a dictionary of all the
             cleaned up, normalized parameters. The user may have given us loads
             of trash, so we should show them the formatting we want.
+
+        yield_albums:
+            If True, albums which contain photos matching the search will also
+            be returned.
         '''
         start_time = time.time()
 
@@ -837,10 +843,10 @@ class PDBPhotoMixin:
             if limit is not None and photos_received >= limit:
                 break
 
-            for album in photo.get_containing_albums():
-                if album not in seen_albums:
-                    seen_albums.add(album)
-                    yield album
+            if yield_albums:
+                new_albums = photo.get_containing_albums().difference(seen_albums)
+                yield from new_albums
+                seen_albums.update(new_albums)
 
             photos_received += 1
             yield photo

@@ -835,7 +835,7 @@ class Photo(ObjectBase):
             [self.id]
         )
         album_ids = [row[0] for row in album_ids]
-        albums = list(self.photodb.get_albums_by_id(album_ids))
+        albums = set(self.photodb.get_albums_by_id(album_ids))
         return albums
 
     def get_tags(self):
