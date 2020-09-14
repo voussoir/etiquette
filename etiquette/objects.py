@@ -1245,7 +1245,7 @@ class Tag(ObjectBase, GroupableMixin):
         ret = super().add_child(*args, **kwargs)
         if ret is BAIL:
             return
-        self.photodb._cached_tag_flat_dict = None
+        self.photodb.caches['tag_exports'].clear()
         return ret
 
     @decorators.required_feature('tag.edit')
@@ -1254,7 +1254,7 @@ class Tag(ObjectBase, GroupableMixin):
         ret = super().add_children(*args, **kwargs)
         if ret is BAIL:
             return
-        self.photodb._cached_tag_flat_dict = None
+        self.photodb.caches['tag_exports'].clear()
         return ret
 
     @decorators.required_feature('tag.edit')
@@ -1269,7 +1269,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.photodb.log.debug('New synonym %s of %s', synname, self.name)
 
-        self.photodb._cached_tag_flat_dict = None
+        self.photodb.caches['tag_exports'].clear()
 
         data = {
             'name': synname,
@@ -1292,7 +1292,7 @@ class Tag(ObjectBase, GroupableMixin):
         '''
         mastertag = self.photodb.get_tag(name=mastertag)
 
-        self.photodb._cached_tag_flat_dict = None
+        self.photodb.caches['tag_exports'].clear()
 
         # Migrate the old tag's synonyms to the new one
         # UPDATE is safe for this operation because there is no chance of duplicates.
@@ -1345,12 +1345,11 @@ class Tag(ObjectBase, GroupableMixin):
     @decorators.transaction
     def delete(self, *, delete_children=False):
         self.photodb.log.debug('Deleting %s', self)
-        self.photodb._cached_tag_flat_dict = None
         super().delete(delete_children=delete_children)
         self.photodb.sql_delete(table='photo_tag_rel', pairs={'tagid': self.id})
         self.photodb.sql_delete(table='tag_synonyms', pairs={'mastername': self.name})
         self.photodb.sql_delete(table='tags', pairs={'id': self.id})
-        self.photodb._cached_tag_flat_dict = None
+        self.photodb.caches['tag_exports'].clear()
         self._uncache()
 
     @decorators.required_feature('tag.edit')
@@ -1386,7 +1385,7 @@ class Tag(ObjectBase, GroupableMixin):
         ret = super().remove_child(*args, **kwargs)
         if ret is BAIL:
             return
-        self.photodb._cached_tag_flat_dict = None
+        self.photodb.caches['tag_exports'].clear()
         return ret
 
     @decorators.required_feature('tag.edit')
@@ -1409,7 +1408,7 @@ class Tag(ObjectBase, GroupableMixin):
         if syn_exists is None:
             raise exceptions.NoSuchSynonym(synname)
 
-        self.photodb._cached_tag_flat_dict = None
+        self.photodb.caches['tag_exports'].clear()
         self.photodb.sql_delete(table='tag_synonyms', pairs={'name': synname})
 
     @decorators.required_feature('tag.edit')
@@ -1430,7 +1429,7 @@ class Tag(ObjectBase, GroupableMixin):
         else:
             raise exceptions.TagExists(new_name)
 
-        self.photodb._cached_tag_flat_dict = None
+        self.photodb.caches['tag_exports'].clear()
 
         data = {
             'id': self.id,

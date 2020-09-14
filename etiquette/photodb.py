@@ -224,6 +224,22 @@ class PDBCacheManagerMixin:
             thing_cache[thing_id] = thing
         return thing
 
+    def get_cached_tag_export(self, function, **kwargs):
+        if isinstance(function, str):
+            function = getattr(tag_export, function)
+        kwargs['tags'] = tuple(kwargs['tags'])
+        key = (function.__name__,) + helpers.dict_to_tuple(kwargs)
+        print(key, key in self.caches['tag_exports'])
+        try:
+            exp = self.caches['tag_exports'][key]
+            print('Export was cached')
+            return exp
+        except KeyError:
+            print('Export was not cached')
+            exp = function(**kwargs)
+            self.caches['tag_exports'][key] = exp
+            return exp
+
     def get_root_things(self, thing_type):
         '''
         For Groupable types, yield things which have no parent.
@@ -673,7 +689,7 @@ class PDBPhotoMixin:
                 tag_expression = None
             else:
                 giveback_tag_expression = str(tag_expression_tree)
-                frozen_children = self.get_cached_tag_flat_dict()
+                frozen_children = self.get_cached_tag_export('flat_dict', tags=self.get_root_tags())
                 tag_match_function = searchhelpers.tag_expression_matcher_builder(frozen_children)
         else:
             giveback_tag_expression = None
@@ -1127,7 +1143,7 @@ class PDBTagMixin:
 
         author_id = self.get_user_id_or_none(author)
 
-        self._cached_tag_flat_dict = None
+        self.caches['tag_exports'].clear()
 
         data = {
             'id': tag_id,
@@ -1641,14 +1657,12 @@ class PhotoDB(
         self.load_config()
         self.log.setLevel(self.config['log_level'])
 
-        # OTHER
-        self._cached_tag_flat_dict = None
-
         self.caches = {
             'album': cacheclass.Cache(maxlen=self.config['cache_size']['album']),
             'bookmark': cacheclass.Cache(maxlen=self.config['cache_size']['bookmark']),
             'photo': cacheclass.Cache(maxlen=self.config['cache_size']['photo']),
             'tag': cacheclass.Cache(maxlen=self.config['cache_size']['tag']),
+            'tag_exports': cacheclass.Cache(maxlen=100),
             'user': cacheclass.Cache(maxlen=self.config['cache_size']['user']),
         }
 
@@ -1726,12 +1740,6 @@ class PhotoDB(
         else:
             self.sql_update(table='id_numbers', pairs=pairs, where_key='tab')
         return new_id
-
-    def get_cached_tag_flat_dict(self):
-        if self._cached_tag_flat_dict is None:
-            self._cached_tag_flat_dict = tag_export.flat_dict(self.get_root_tags())
-            print(len(self._cached_tag_flat_dict))
-        return self._cached_tag_flat_dict
 
     def load_config(self):
         (config, needs_rewrite) = configlayers.load_file(

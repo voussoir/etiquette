@@ -115,6 +115,9 @@ def comma_space_split(s):
         return s
     return re.split(r'[ ,]+', s.strip())
 
+def dict_to_tuple(d):
+    return tuple(sorted(d.items()))
+
 def generate_image_thumbnail(filepath, width, height):
     if not os.path.isfile(filepath):
         raise FileNotFoundError(filepath)
