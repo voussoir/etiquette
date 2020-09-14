@@ -15,7 +15,7 @@
     with_alt_description:
         True: Include the description in the alt text
 -->
-{% macro tag_object(
+{%- macro tag_object(
     tag,
     extra_classes="",
     innertext=None,
@@ -24,7 +24,7 @@
     with_alt_description=False
 ) -%}
 
-{% set href = {
+{%- set href = {
         "search": "/search?tag_musts=" + tag.name,
         "search_musts": "/search?tag_musts=" + tag.name,
         "search_mays": "/search?tag_mays=" + tag.name,
@@ -32,12 +32,12 @@
         "info": "/tag/" + tag.name,
         None: None,
     }.get(link, link)
-%}
-{% set class = ("tag_object" + " " + extra_classes).strip() %}
-{% set title = (with_alt_description and tag.description) or None %}
-{% set innertext = innertext or tag.name %}
-{% set element = "a" if (link or onclick) else "span" %}
+-%}
+{%- set class = ("tag_object" + " " + extra_classes).strip() -%}
+{%- set title = (with_alt_description and tag.description) or None -%}
+{%- set innertext = innertext or tag.name -%}
+{%- set element = "a" if (link or onclick) else "span" -%}
 
 <{{element}} {{make_attributes(class=class, title=title, href=href, onclick=onclick)|safe}}>{{innertext}}</{{element}}>
 {{-''-}}
-{% endmacro %}
+{%- endmacro -%}
