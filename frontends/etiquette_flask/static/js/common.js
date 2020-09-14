@@ -230,7 +230,7 @@ function init_all_atag_merge_params()
     let as = Array.from(document.getElementsByClassName("merge_params"));
     for (const a of as)
     {
-        common.init_atag_merge_params(a);
+        setTimeout(() => common.init_atag_merge_params(a), 0);
     }
 }
 
@@ -368,7 +368,7 @@ function init_all_button_with_confirm()
     let buttons = Array.from(document.getElementsByClassName("button_with_confirm"));
     for (const button of buttons)
     {
-        common.init_button_with_confirm(button);
+        setTimeout(() => common.init_button_with_confirm(button), 0);
     }
 }
 
@@ -390,7 +390,7 @@ function init_all_enable_on_pageload()
     let elements = Array.from(document.getElementsByClassName("enable_on_pageload"));
     for (const element of elements)
     {
-        common.init_enable_on_pageload(element);
+        setTimeout(() => common.init_enable_on_pageload(element), 0);
     }
 }
 
@@ -407,7 +407,7 @@ function init_all_entry_with_history()
     const inputs = Array.from(document.getElementsByClassName("entry_with_history"));
     for (const input of inputs)
     {
-        common.init_entry_with_history(input);
+        setTimeout(() => common.init_entry_with_history(input), 0);
     }
 }
 
@@ -443,7 +443,7 @@ function init_all_tabbed_container()
     let tabbed_containers = Array.from(document.getElementsByClassName("tabbed_container"));
     for (const tabbed_container of tabbed_containers)
     {
-        common.init_tabbed_container(tabbed_container);
+        setTimeout(() => common.init_tabbed_container(tabbed_container), 0);
     }
 }
 
