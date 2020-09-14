@@ -1034,6 +1034,24 @@ class Photo(ObjectBase):
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 
+    @decorators.required_feature('photo.add_remove_tag')
+    @decorators.transaction
+    def remove_tags(self, tags):
+        tags = [self.photodb.get_tag(name=tag) for tag in tags]
+
+        self.photodb.log.debug('Removing %s from %s', tags, self)
+        query = f'''
+        DELETE FROM photo_tag_rel
+        WHERE tagid IN {sqlhelpers.listify(tag.id for tag in tags)}
+        '''
+        self.photodb.sql_execute(query)
+
+        data = {
+            'id': self.id,
+            'tagged_at': helpers.now(),
+        }
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+
     @decorators.required_feature('photo.edit')
     @decorators.transaction
     def rename_file(self, new_filename, *, move=False):
