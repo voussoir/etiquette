@@ -1083,7 +1083,7 @@ class PDBTagMixin:
         if isinstance(tagname, objects.Tag):
             if tagname.photodb == self:
                 return tagname
-            tagname = tagname.tagname
+            tagname = tagname.name
 
         try:
             # TODO: this logic is flawed because tags that were created in
