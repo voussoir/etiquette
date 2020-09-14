@@ -261,6 +261,8 @@ h2, h3
 
 
 <script type="text/javascript">
+let SPECIFIC_TAG = "{{specific_tag.name}}";
+
 var add_tag_textbox = document.getElementById('add_tag_textbox');
 var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
@@ -386,6 +388,7 @@ function on_save(ed, edit_element_map, display_element_map)
             let new_name = response.data.name;
             let new_description = response.data.description;
             document.title = new_name + " | Tags";
+            SPECIFIC_TAG = new_name;
             window.history.replaceState(null, null, "/tag/" + new_name);
             name_editor.value = new_name;
             name_display.href = "/search?tag_musts=" + new_name;
