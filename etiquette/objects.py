@@ -1025,11 +1025,8 @@ class Photo(ObjectBase):
         tag = self.photodb.get_tag(name=tag)
 
         self.photodb.log.debug('Removing %s from %s', tag, self)
-        tags = list(tag.walk_children())
-
-        for tag in tags:
-            pairs = {'photoid': self.id, 'tagid': tag.id}
-            self.photodb.sql_delete(table='photo_tag_rel', pairs=pairs)
+        pairs = {'photoid': self.id, 'tagid': tag.id}
+        self.photodb.sql_delete(table='photo_tag_rel', pairs=pairs)
 
         data = {
             'id': self.id,
