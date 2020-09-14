@@ -276,13 +276,12 @@ function init_button_with_confirm(button)
     button.parentElement.removeChild(button);
 
     let holder_stage1 = document.createElement("span");
-    holder_stage1.classList.add("confirm_holder_stage1");
+    holder_stage1.className = "confirm_holder_stage1";
     holder_stage1.appendChild(button);
     holder.appendChild(holder_stage1);
 
     let holder_stage2 = document.createElement("span");
-    holder_stage2.classList.add("confirm_holder_stage2");
-    holder_stage2.classList.add("hidden");
+    holder_stage2.className = "confirm_holder_stage2 hidden";
     holder.appendChild(holder_stage2);
 
     let prompt;
@@ -340,6 +339,7 @@ function init_button_with_confirm(button)
         holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
     ` + button.dataset.onclick;
     button_confirm.onclick = Function(confirm_onclick);
+
     button.removeAttribute("onclick");
     button.onclick = function(event)
     {
