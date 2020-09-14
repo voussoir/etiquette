@@ -229,13 +229,10 @@ class PDBCacheManagerMixin:
             function = getattr(tag_export, function)
         kwargs['tags'] = tuple(kwargs['tags'])
         key = (function.__name__,) + helpers.dict_to_tuple(kwargs)
-        print(key, key in self.caches['tag_exports'])
         try:
             exp = self.caches['tag_exports'][key]
-            print('Export was cached')
             return exp
         except KeyError:
-            print('Export was not cached')
             exp = function(**kwargs)
             self.caches['tag_exports'][key] = exp
             return exp
