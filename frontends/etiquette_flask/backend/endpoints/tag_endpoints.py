@@ -83,7 +83,7 @@ def get_tags_html(specific_tag_name=None):
             new_url = request.url.replace('/tag/' + specific_tag_name, '/tag/' + specific_tag.name)
             return flask.redirect(new_url)
 
-    include_synonyms = request.args.get('synonyms')
+    include_synonyms = request.args.get('include_synonyms')
     include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
 
     if specific_tag is None:
