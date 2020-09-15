@@ -11,3 +11,8 @@
     --color_tag_object_bg: #e6e6e6;
     --color_tag_object_fg: black;
 }
+
+button
+{
+    color: black;
+}
