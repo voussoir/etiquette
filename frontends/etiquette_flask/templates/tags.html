@@ -268,6 +268,12 @@ var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
 common.bind_box_to_button(add_tag_textbox, add_tag_button, false);
 
+function tag_object_from_li(li)
+{
+    const tag_objects = li.getElementsByClassName("tag_object");
+    return tag_objects[tag_objects.length - 1];
+}
+
 function easybake_form()
 {
     let easybake_string = add_tag_textbox.value;
@@ -284,7 +290,7 @@ function delete_specific_tag_form(event)
 {
     const delete_button = event.target;
     const hierarchy_self = delete_button.closest("#hierarchy_self");
-    const tag_object = hierarchy_self.querySelector(".tag_object:last-of-type");
+    const tag_object = tag_object_from_li(hierarchy_self);
     const tag_name = tag_object.innerText;
     return api.tags.delete(tag_name, api.tags.callback_go_to_tags);
 }
@@ -293,7 +299,7 @@ function delete_tag_form(event)
 {
     const delete_button = event.target;
     const li = delete_button.closest("li");
-    const tag_object = li.querySelector(".tag_object:last-of-type");
+    const tag_object = tag_object_from_li(li);
     const tag_name = tag_object.innerText.split(".").pop();
     return api.tags.delete(tag_name, tag_action_callback);
 }
@@ -302,18 +308,20 @@ function remove_child_form(event)
 {
     const delete_button = event.target;
     const li = delete_button.closest("li");
-    const tag_object = li.querySelector(".tag_object:last-of-type");
+    const tag_object = tag_object_from_li(li);
     const parts = tag_object.innerText.split(".");
     const tag_name = parts.pop();
     const parent_name = parts.pop();
-    return api.tags.remove_child(parent_name, tag_name, tag_action_callback)
+    return api.tags.remove_child(parent_name, tag_name, tag_action_callback);
+}
+
 }
 
 function remove_synonym_form(event)
 {
     const delete_button = event.target;
     const li = delete_button.closest("li");
-    const tag_object = li.querySelector(".tag_object:last-of-type");
+    const tag_object = tag_object_from_li(li);
     const parts = tag_object.innerText.split(".").pop().split("+");
     const synonym = parts.pop();
     const tag_name = parts.pop();
