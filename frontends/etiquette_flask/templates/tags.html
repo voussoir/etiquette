@@ -259,9 +259,9 @@ h2, h3
 <script type="text/javascript">
 let SPECIFIC_TAG = "{{specific_tag.name}}";
 
-var add_tag_textbox = document.getElementById('add_tag_textbox');
-var add_tag_button = document.getElementById('add_tag_button');
-var message_area = document.getElementById('message_area');
+const add_tag_textbox = document.getElementById('add_tag_textbox');
+const add_tag_button = document.getElementById('add_tag_button');
+const message_area = document.getElementById('message_area');
 common.bind_box_to_button(add_tag_textbox, add_tag_button, false);
 
 function tag_object_from_li(li)
@@ -395,8 +395,8 @@ function on_save(ed, edit_element_map, display_element_map)
         ed.hide_spinner();
         if (response.meta.status == 200)
         {
-            let new_name = response.data.name;
-            let new_description = response.data.description;
+            const new_name = response.data.name;
+            const new_description = response.data.description;
             document.title = new_name + " | Tags";
             SPECIFIC_TAG = new_name;
             window.history.replaceState(null, null, "/tag/" + new_name);
@@ -411,17 +411,17 @@ function on_save(ed, edit_element_map, display_element_map)
         }
     }
 
-    let name_display = display_element_map["name"];
-    let name_editor = edit_element_map["name"];
-    let description_display = display_element_map["description"];
-    let description_editor = edit_element_map["description"];
+    const name_display = display_element_map["name"];
+    const name_editor = edit_element_map["name"];
+    const description_display = display_element_map["description"];
+    const description_editor = edit_element_map["description"];
 
-    let tag_name = name_display.innerText;
-    let name = name_editor.value;
-    let description = description_editor.value;
+    const tag_name = name_display.innerText;
+    const new_name = name_editor.value;
+    const new_description = description_editor.value;
 
     ed.show_spinner();
-    api.tags.edit(tag_name, name, description, callback)
+    api.tags.edit(tag_name, new_name, new_description, callback)
 }
 
 function on_cancel(ed, edit_element_map, display_element_map)
@@ -433,9 +433,9 @@ function on_cancel(ed, edit_element_map, display_element_map)
     }
 }
 
-var name_text = document.getElementById("name_text");
-var description_text = document.getElementById("description_text");
-var ed = new editor.Editor([name_text, description_text], on_open, on_save, on_cancel);
+const name_text = document.getElementById("name_text");
+const description_text = document.getElementById("description_text");
+const ed = new editor.Editor([name_text, description_text], on_open, on_save, on_cancel);
 {% endif %}
 </script>
 </html>

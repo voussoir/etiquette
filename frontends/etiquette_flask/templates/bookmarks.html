@@ -99,8 +99,8 @@
 <script type="text/javascript">
 function create_bookmark_form()
 {
-    let url = document.getElementById("new_bookmark_url").value.trim();
-    let title = document.getElementById("new_bookmark_title").value.trim();
+    const url = document.getElementById("new_bookmark_url").value.trim();
+    const title = document.getElementById("new_bookmark_title").value.trim();
     if (!url)
     {
         return;
@@ -135,9 +135,9 @@ function on_save(ed, edit_element_map, display_element_map)
         return;
     }
 
-    let bookmark_id = ed.misc_data["bookmark_id"];
-    let title = edit_element_map["title"].value;
-    let url = edit_element_map["url"].value;
+    const bookmark_id = ed.misc_data["bookmark_id"];
+    const title = edit_element_map["title"].value;
+    const url = edit_element_map["url"].value;
 
     ed.show_spinner();
     api.bookmarks.edit(bookmark_id, title, url, callback);
@@ -147,11 +147,11 @@ on_cancel = undefined;
 
 function create_editors()
 {
-    let cards = document.getElementsByClassName("bookmark_card");
+    const cards = document.getElementsByClassName("bookmark_card");
     for (const card of cards)
     {
-        let title_div = card.getElementsByClassName("bookmark_title")[0];
-        let url_div = card.getElementsByClassName("bookmark_url")[0];
+        const title_div = card.getElementsByClassName("bookmark_title")[0];
+        const url_div = card.getElementsByClassName("bookmark_url")[0];
         ed = new editor.Editor([title_div, url_div], on_open, on_save, on_cancel);
         ed.misc_data["bookmark_id"] = card.dataset.bookmarkId;
     }

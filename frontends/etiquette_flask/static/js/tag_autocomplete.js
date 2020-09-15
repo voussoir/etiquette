@@ -1,4 +1,4 @@
-var tag_autocomplete = {};
+const tag_autocomplete = {};
 
 tag_autocomplete.tagset = {"tags": [], "synonyms": {}};
 
@@ -19,13 +19,13 @@ function init_datalist()
     common.delete_all_children(datalist);
     for (const tag_name of tag_autocomplete.tagset["tags"])
     {
-        let option = document.createElement("option");
+        const option = document.createElement("option");
         option.value = tag_name;
         datalist.appendChild(option);
     }
     for (const synonym in tag_autocomplete.tagset["synonyms"])
     {
-        let option = document.createElement("option");
+        const option = document.createElement("option");
         option.value = tag_autocomplete.tagset["synonyms"][synonym] + "+" + synonym;
         datalist.appendChild(option);
     }
@@ -54,8 +54,8 @@ function tagname_replacements(tagname)
 tag_autocomplete.entry_with_tagname_replacements_hook =
 function entry_with_tagname_replacements_hook(event)
 {
-    let cursor_position = event.target.selectionStart;
-    let new_value = tag_autocomplete.tagname_replacements(event.target.value);
+    const cursor_position = event.target.selectionStart;
+    const new_value = tag_autocomplete.tagname_replacements(event.target.value);
     if (new_value != event.target.value)
     {
         event.target.value = new_value;
@@ -114,7 +114,7 @@ tag_autocomplete.update_tagset =
 function update_tagset()
 {
     console.log("Updating known tagset.");
-    let url = "/all_tags.json";
+    const url = "/all_tags.json";
     common.get(url, tag_autocomplete.update_tagset_callback);
 }
 

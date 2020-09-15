@@ -1,12 +1,12 @@
-var common = {};
+const common = {};
 
 common.INPUT_TYPES = new Set(["INPUT", "TEXTAREA"]);
 
 common._request =
 function _request(method, url, callback)
 {
-    let request = new XMLHttpRequest();
-    let response = {
+    const request = new XMLHttpRequest();
+    const response = {
         "completed": false,
     };
 
@@ -29,7 +29,7 @@ function _request(method, url, callback)
         }
         callback(response);
     };
-    let asynchronous = true;
+    const asynchronous = true;
     request.open(method, url, asynchronous);
     return request;
 }
@@ -61,7 +61,7 @@ function bind_box_to_button(box, button, ctrl_enter)
     Thanks Yaroslav Yakovlev
     http://stackoverflow.com/a/9343095
     */
-    let bound_box_hook = function(event)
+    const bound_box_hook = function(event)
     {
         if (event.key !== "Enter")
             {return;}
@@ -83,9 +83,9 @@ function create_message_bubble(message_area, message_positivity, message_text, l
     {
         lifespan = 8000;
     }
-    let message = document.createElement("div");
+    const message = document.createElement("div");
     message.className = "message_bubble " + message_positivity;
-    let span = document.createElement("span");
+    const span = document.createElement("span");
     span.innerHTML = message_text;
     message.appendChild(span);
     message_area.appendChild(message);
@@ -168,7 +168,7 @@ function entry_with_history_hook(event)
 common.html_to_element =
 function html_to_element(html)
 {
-    let template = document.createElement("template");
+    const template = document.createElement("template");
     template.innerHTML = html.trim();
     return template.content.firstElementChild;
 }
@@ -200,13 +200,13 @@ function init_atag_merge_params(a)
 
     if (a.dataset.mergeParams)
     {
-        let keep = new Set(a.dataset.mergeParams.split(/[\s,]+/));
+        const keep = new Set(a.dataset.mergeParams.split(/[\s,]+/));
         to_merge = page_params.filter(key_value => keep.has(key_value[0]));
         delete a.dataset.mergeParams;
     }
     else if (a.dataset.mergeParamsExcept)
     {
-        let remove = new Set(a.dataset.mergeParamsExcept.split(/[\s,]+/));
+        const remove = new Set(a.dataset.mergeParamsExcept.split(/[\s,]+/));
         to_merge = page_params.filter(key_value => (! remove.has(key_value[0])));
         delete a.dataset.mergeParamsExcept;
     }
@@ -227,7 +227,7 @@ common.init_all_atag_merge_params =
 function init_all_atag_merge_params()
 {
     const page_params = Array.from(new URLSearchParams(window.location.search));
-    let as = Array.from(document.getElementsByClassName("merge_params"));
+    const as = Array.from(document.getElementsByClassName("merge_params"));
     for (const a of as)
     {
         setTimeout(() => common.init_atag_merge_params(a), 0);
@@ -269,16 +269,16 @@ function init_button_with_confirm(button)
     */
     button.classList.remove("button_with_confirm");
 
-    let holder = document.createElement("span");
+    const holder = document.createElement("span");
     holder.className = "confirm_holder " + (button.dataset.holderClass || "");
     button.parentElement.insertBefore(holder, button);
 
-    let holder_stage1 = document.createElement("span");
+    const holder_stage1 = document.createElement("span");
     holder_stage1.className = "confirm_holder_stage1";
     holder_stage1.appendChild(button);
     holder.appendChild(holder_stage1);
 
-    let holder_stage2 = document.createElement("span");
+    const holder_stage2 = document.createElement("span");
     holder_stage2.className = "confirm_holder_stage2 hidden";
     holder.appendChild(holder_stage2);
 
@@ -301,7 +301,7 @@ function init_button_with_confirm(button)
     delete button.dataset.prompt;
     delete button.dataset.promptClass;
 
-    let button_confirm = document.createElement("button");
+    const button_confirm = document.createElement("button");
     button_confirm.innerText = (button.dataset.confirm || button.innerText).trim();
     if (button.dataset.confirmClass === undefined)
     {
@@ -323,7 +323,7 @@ function init_button_with_confirm(button)
     delete button.dataset.confirmClass;
     delete button.dataset.isInput;
 
-    let button_cancel = document.createElement("button");
+    const button_cancel = document.createElement("button");
     button_cancel.innerText = button.dataset.cancel || "Cancel";
     button_cancel.className = button.dataset.cancelClass || "";
     holder_stage2.appendChild(button_cancel);
@@ -331,7 +331,7 @@ function init_button_with_confirm(button)
     delete button.dataset.cancelClass;
 
     // If this is stupid, let me know.
-    let confirm_onclick = `
+    const confirm_onclick = `
         let holder = event.target.parentElement.parentElement;
         holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
         holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
@@ -341,10 +341,10 @@ function init_button_with_confirm(button)
     button.removeAttribute("onclick");
     button.onclick = function(event)
     {
-        let holder = event.target.parentElement.parentElement;
+        const holder = event.target.parentElement.parentElement;
         holder.getElementsByClassName("confirm_holder_stage1")[0].classList.add("hidden");
         holder.getElementsByClassName("confirm_holder_stage2")[0].classList.remove("hidden");
-        let input = holder.getElementsByTagName("input")[0];
+        const input = holder.getElementsByTagName("input")[0];
         if (input)
         {
             input.focus();
@@ -353,7 +353,7 @@ function init_button_with_confirm(button)
 
     button_cancel.onclick = function(event)
     {
-        let holder = event.target.parentElement.parentElement;
+        const holder = event.target.parentElement.parentElement;
         holder.getElementsByClassName("confirm_holder_stage1")[0].classList.remove("hidden");
         holder.getElementsByClassName("confirm_holder_stage2")[0].classList.add("hidden");
     }
@@ -363,7 +363,7 @@ function init_button_with_confirm(button)
 common.init_all_button_with_confirm =
 function init_all_button_with_confirm()
 {
-    let buttons = Array.from(document.getElementsByClassName("button_with_confirm"));
+    const buttons = Array.from(document.getElementsByClassName("button_with_confirm"));
     for (const button of buttons)
     {
         setTimeout(() => common.init_button_with_confirm(button), 0);
@@ -385,7 +385,7 @@ function init_enable_on_pageload(element)
 common.init_all_enable_on_pageload =
 function init_all_enable_on_pageload()
 {
-    let elements = Array.from(document.getElementsByClassName("enable_on_pageload"));
+    const elements = Array.from(document.getElementsByClassName("enable_on_pageload"));
     for (const element of elements)
     {
         setTimeout(() => common.init_enable_on_pageload(element), 0);
@@ -412,18 +412,18 @@ function init_all_entry_with_history()
 common.init_tabbed_container =
 function init_tabbed_container(tabbed_container)
 {
-    let button_container = document.createElement("div");
+    const button_container = document.createElement("div");
     button_container.className = "tab_buttons";
     tabbed_container.prepend(button_container);
-    let tabs = Array.from(tabbed_container.getElementsByClassName("tab"));
+    const tabs = Array.from(tabbed_container.getElementsByClassName("tab"));
     for (const tab of tabs)
     {
         tab.classList.add("hidden");
-        let tab_id = tab.dataset.tabId || tab.dataset.tabTitle;
+        const tab_id = tab.dataset.tabId || tab.dataset.tabTitle;
         tab.dataset.tabId = tab_id;
         tab.style.borderTopColor = "transparent";
 
-        let button = document.createElement("button");
+        const button = document.createElement("button");
         button.className = "tab_button tab_button_inactive";
         button.onclick = common.tabbed_container_switcher;
         button.innerText = tab.dataset.tabTitle;
@@ -438,7 +438,7 @@ function init_tabbed_container(tabbed_container)
 common.init_all_tabbed_container =
 function init_all_tabbed_container()
 {
-    let tabbed_containers = Array.from(document.getElementsByClassName("tabbed_container"));
+    const tabbed_containers = Array.from(document.getElementsByClassName("tabbed_container"));
     for (const tabbed_container of tabbed_containers)
     {
         setTimeout(() => common.init_tabbed_container(tabbed_container), 0);
@@ -448,13 +448,13 @@ function init_all_tabbed_container()
 common.tabbed_container_switcher =
 function tabbed_container_switcher(event)
 {
-    let tab_button = event.target;
+    const tab_button = event.target;
     if (tab_button.classList.contains("tab_button_active"))
         { return; }
 
-    let tab_id = tab_button.dataset.tabId;
-    let tab_buttons = tab_button.parentElement.getElementsByClassName("tab_button");
-    let tabs = tab_button.parentElement.parentElement.getElementsByClassName("tab");
+    const tab_id = tab_button.dataset.tabId;
+    const tab_buttons = tab_button.parentElement.getElementsByClassName("tab_button");
+    const tabs = tab_button.parentElement.parentElement.getElementsByClassName("tab");
     for (const tab_button of tab_buttons)
     {
         if (tab_button.dataset.tabId === tab_id)

@@ -143,7 +143,7 @@ h2, h3
 
 
 <script id="album_listing_script" type="text/javascript">
-ALBUM_ID = undefined;
+const ALBUM_ID = undefined;
 </script>
 
 {% else %} {## Individual album ###################################################################}
@@ -308,7 +308,7 @@ ALBUM_ID = undefined;
 
 
 <script id="album_individual_script" type="text/javascript">
-var ALBUM_ID = "{{album.id}}";
+const ALBUM_ID = "{{album.id}}";
 
 function add_child(child_id)
 {
@@ -321,12 +321,12 @@ function add_child(child_id)
 
 function paste_photo_clipboard()
 {
-    let photo_ids = Array.from(photo_clipboard.clipboard);
+    const photo_ids = Array.from(photo_clipboard.clipboard);
     api.albums.add_photos(ALBUM_ID, photo_ids, common.refresh);
 }
 function unpaste_photo_clipboard()
 {
-    let photo_ids = Array.from(photo_clipboard.clipboard);
+    const photo_ids = Array.from(photo_clipboard.clipboard);
     api.albums.remove_photos(ALBUM_ID, photo_ids, common.refresh);
 }
 
@@ -348,8 +348,8 @@ function on_save(ed, edit_element_map, display_element_map)
 
         ed.save();
 
-        let title_display = display_element_map["title"];
-        let description_display = display_element_map["description"];
+        const title_display = display_element_map["title"];
+        const description_display = display_element_map["description"];
 
         document.title = title_display.innerText + " | Albums";
 
@@ -360,8 +360,8 @@ function on_save(ed, edit_element_map, display_element_map)
     }
 
     edit_element_map["title"].value = edit_element_map["title"].value.trim();
-    let title = edit_element_map["title"].value;
-    let description = edit_element_map["description"].value;
+    const title = edit_element_map["title"].value;
+    const description = edit_element_map["description"].value;
 
     ed.show_spinner();
     api.albums.edit(ALBUM_ID, title, description, callback);
@@ -376,9 +376,9 @@ function on_cancel(ed, edit_element_map, display_element_map)
     }
 }
 
-var title_text = document.getElementById("title_text");
-var description_text = document.getElementById("description_text");
-var ed = new editor.Editor([title_text, description_text], on_open, on_save, on_cancel);
+const title_text = document.getElementById("title_text");
+const description_text = document.getElementById("description_text");
+const ed = new editor.Editor([title_text, description_text], on_open, on_save, on_cancel);
 </script>
 
 {% endif %} {## Shared ############################################################################}
@@ -391,7 +391,7 @@ function create_child(title)
     {
         title = undefined;
     }
-    let parent_id = ALBUM_ID;
+    const parent_id = ALBUM_ID;
     api.albums.create(title, parent_id, api.albums.callback_follow);
 }
 
@@ -412,7 +412,7 @@ function get_album_card_from_child(element)
 
 function on_album_drag_start(event)
 {
-    let album_card = get_album_card_from_child(event.target);
+    const album_card = get_album_card_from_child(event.target);
     event.dataTransfer.setData("text/plain", album_card.id);
 }
 function on_album_drag_end(event)
@@ -424,11 +424,10 @@ function on_album_drag_over(event)
 }
 function on_album_drag_drop(event)
 {
-    let child_id = event.dataTransfer.getData("text");
-    let child = document.getElementById(child_id);
-    child_id = child.dataset.id;
-    let parent = event.currentTarget;
-    let parent_id = parent.dataset.id;
+    const child = document.getElementById(event.dataTransfer.getData("text"));
+    const child_id = child.dataset.id;
+    const parent = event.currentTarget;
+    const parent_id = parent.dataset.id;
     event.dataTransfer.clearData();
 
     if (child_id == parent_id)
@@ -436,8 +435,8 @@ function on_album_drag_drop(event)
         return;
     }
 
-    let child_title = child.querySelector('.album_card_title').textContent.trim();
-    let parent_title = parent.querySelector('.album_card_title').textContent.trim();
+    const child_title = child.querySelector('.album_card_title').textContent.trim();
+    const parent_title = parent.querySelector('.album_card_title').textContent.trim();
     if (confirm(`Move\n${child_title}\ninto\n${parent_title}?`))
     {
         if (ALBUM_ID)

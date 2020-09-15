@@ -1,4 +1,4 @@
-var spinner = {};
+const spinner = {};
 
 /*
 In general, spinners are used for functions that launch a callback, and the

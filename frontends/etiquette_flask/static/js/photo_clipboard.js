@@ -1,4 +1,4 @@
-var photo_clipboard = {};
+const photo_clipboard = {};
 
 photo_clipboard.clipboard = new Set();
 photo_clipboard.on_load_hooks = [];
@@ -17,7 +17,7 @@ photo_clipboard.load_clipboard =
 function load_clipboard(event)
 {
     console.log("Loading photo clipboard from localstorage.");
-    let stored = localStorage.getItem("photo_clipboard");
+    const stored = localStorage.getItem("photo_clipboard");
     if (stored === null)
     {
         if (photo_clipboard.clipboard.size != 0)
@@ -42,7 +42,7 @@ photo_clipboard.save_clipboard =
 function save_clipboard()
 {
     console.log("Saving photo clipboard to localstorage.");
-    let serialized = JSON.stringify(Array.from(photo_clipboard.clipboard));
+    const serialized = JSON.stringify(Array.from(photo_clipboard.clipboard));
     localStorage.setItem("photo_clipboard", serialized);
     photo_clipboard.update_pagestate();
 
@@ -105,8 +105,8 @@ function apply_check_all()
     Run through all the photo cards on the page and set their checkbox to the
     correct value.
     */
-    let checkboxes = document.getElementsByClassName("photo_card_selector_checkbox");
-    for (let checkbox of checkboxes)
+    const checkboxes = document.getElementsByClassName("photo_card_selector_checkbox");
+    for (const checkbox of checkboxes)
     {
         photo_clipboard.apply_check(checkbox);
     }
@@ -141,12 +141,12 @@ function on_photo_select(event)
     }
     else if (event.shiftKey && photo_clipboard.previous_photo_select)
     {
-        let current_photo_div = checkbox.parentElement;
-        let previous_photo_div = photo_clipboard.previous_photo_select;
-        let photo_divs = Array.from(current_photo_div.parentElement.getElementsByClassName("photo_card"));
+        const current_photo_div = checkbox.parentElement;
+        const previous_photo_div = photo_clipboard.previous_photo_select;
+        const photo_divs = Array.from(current_photo_div.parentElement.getElementsByClassName("photo_card"));
 
-        let current_index = photo_divs.indexOf(current_photo_div);
-        let previous_index = photo_divs.indexOf(previous_photo_div);
+        const current_index = photo_divs.indexOf(current_photo_div);
+        const previous_index = photo_divs.indexOf(previous_photo_div);
 
         let slice;
         if (current_index == previous_index)
@@ -155,12 +155,12 @@ function on_photo_select(event)
         }
         else
         {
-            let left = Math.min(previous_index, current_index);
-            let right = Math.max(previous_index, current_index);
+            const left = Math.min(previous_index, current_index);
+            const right = Math.max(previous_index, current_index);
             slice = photo_divs.slice(left, right + 1);
         }
 
-        for (let photo_div of slice)
+        for (const photo_div of slice)
         {
             action(photo_div.dataset.id);
         }
@@ -168,7 +168,7 @@ function on_photo_select(event)
     }
     else
     {
-        let photo_div = checkbox.parentElement;
+        const photo_div = checkbox.parentElement;
         action(photo_div.dataset.id);
         photo_clipboard.previous_photo_select = photo_div;
     }
@@ -178,8 +178,8 @@ function on_photo_select(event)
 photo_clipboard.select_all_photos =
 function select_all_photos()
 {
-    let photo_divs = Array.from(document.getElementsByClassName("photo_card"));
-    for (let photo_div of photo_divs)
+    const photo_divs = Array.from(document.getElementsByClassName("photo_card"));
+    for (const photo_div of photo_divs)
     {
         photo_clipboard.clipboard.add(photo_div.dataset.id);
     }
@@ -190,8 +190,8 @@ function select_all_photos()
 photo_clipboard.unselect_all_photos =
 function unselect_all_photos()
 {
-    let photo_divs = Array.from(document.getElementsByClassName("photo_card"));
-    for (let photo_div of photo_divs)
+    const photo_divs = Array.from(document.getElementsByClassName("photo_card"));
+    for (const photo_div of photo_divs)
     {
         photo_clipboard.clipboard.delete(photo_div.dataset.id);
     }
@@ -205,14 +205,14 @@ function unselect_all_photos()
 photo_clipboard.clipboard_tray_collapse =
 function clipboard_tray_collapse()
 {
-    let tray_body = document.getElementById("clipboard_tray_body");
+    const tray_body = document.getElementById("clipboard_tray_body");
     tray_body.classList.add("hidden");
 }
 
 photo_clipboard.clipboard_tray_uncollapse =
 function clipboard_tray_uncollapse()
 {
-    let tray_body = document.getElementById("clipboard_tray_body");
+    const tray_body = document.getElementById("clipboard_tray_body");
     tray_body.classList.remove("hidden");
     photo_clipboard.update_clipboard_tray();
 }
@@ -223,7 +223,7 @@ function clipboard_tray_collapse_toggle()
     /*
     Show or hide the clipboard.
     */
-    let tray_body = document.getElementById("clipboard_tray_body");
+    const tray_body = document.getElementById("clipboard_tray_body");
     if (!tray_body)
     {
         return;
@@ -246,8 +246,8 @@ function ingest_toolbox_items()
     The page may provide divs with the class "my_clipboard_tray_toolbox", and
     we will migrate all the elements into the real clipboard tray toolbox.
     */
-    let toolbox = document.getElementById("clipboard_tray_toolbox");
-    let moreboxes = document.getElementsByClassName("my_clipboard_tray_toolbox");
+    const toolbox = document.getElementById("clipboard_tray_toolbox");
+    const moreboxes = document.getElementsByClassName("my_clipboard_tray_toolbox");
 
     for (const morebox of moreboxes)
     {
@@ -265,8 +265,8 @@ function on_tray_delete_button(event)
     /*
     Remove the clicked row from the clipboard.
     */
-    let clipboard_line = event.target.parentElement;
-    let photo_id = clipboard_line.dataset.id;
+    const clipboard_line = event.target.parentElement;
+    const photo_id = clipboard_line.dataset.id;
     photo_clipboard.clipboard.delete(photo_id);
     photo_clipboard.save_clipboard();
 }
@@ -277,7 +277,7 @@ function update_clipboard_tray()
     /*
     Rebuild the rows if the tray is open.
     */
-    let clipboard_tray = document.getElementById("clipboard_tray");
+    const clipboard_tray = document.getElementById("clipboard_tray");
     if (clipboard_tray === null)
     {
         return;
@@ -288,24 +288,24 @@ function update_clipboard_tray()
         photo_clipboard.clipboard_tray_collapse();
     }
 
-    let tray_lines = document.getElementById("clipboard_tray_lines");
+    const tray_lines = document.getElementById("clipboard_tray_lines");
     if (!clipboard_tray.classList.contains("hidden"))
     {
         common.delete_all_children(tray_lines);
-        let photo_ids = Array.from(photo_clipboard.clipboard);
+        const photo_ids = Array.from(photo_clipboard.clipboard);
         photo_ids.sort();
         for (const photo_id of photo_ids)
         {
-            let clipboard_line = document.createElement("div");
+            const clipboard_line = document.createElement("div");
             clipboard_line.classList.add("clipboard_tray_line");
             clipboard_line.dataset.id = photo_id;
 
-            let clipboard_line_delete_button = document.createElement("button");
+            const clipboard_line_delete_button = document.createElement("button");
             clipboard_line_delete_button.classList.add("remove_tag_button_perm");
             clipboard_line_delete_button.classList.add("red_button");
             clipboard_line_delete_button.onclick = photo_clipboard.on_tray_delete_button;
 
-            let clipboard_line_link = document.createElement("a");
+            const clipboard_line_link = document.createElement("a");
             clipboard_line_link.target = "_blank";
             clipboard_line_link.href = "/photo/" + photo_id;
             clipboard_line_link.innerText = photo_id;
@@ -328,7 +328,7 @@ function open_full_clipboard_tab()
 photo_clipboard.update_clipboard_count =
 function update_clipboard_count()
 {
-    let elements = document.getElementsByClassName("clipboard_count");
+    const elements = document.getElementsByClassName("clipboard_count");
     for (const element of elements)
     {
         element.innerText = photo_clipboard.clipboard.size;

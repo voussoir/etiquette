@@ -282,17 +282,17 @@
 
 
 <script type="text/javascript">
-var PHOTO_ID = "{{photo.id}}";
+const PHOTO_ID = "{{photo.id}}";
 
-var add_tag_box = document.getElementById('add_tag_textbox');
-var add_tag_button = document.getElementById('add_tag_button');
+const add_tag_box = document.getElementById('add_tag_textbox');
+const add_tag_button = document.getElementById('add_tag_button');
 common.bind_box_to_button(add_tag_box, add_tag_button, false);
 
-var message_area = document.getElementById('message_area');
+const message_area = document.getElementById('message_area');
 
 function add_photo_tag_form()
 {
-    let tagname = document.getElementById("add_tag_textbox").value;
+    const tagname = document.getElementById("add_tag_textbox").value;
     if (tagname == "")
     {
         return;
@@ -308,7 +308,7 @@ function add_photo_tag_callback(response)
         return;
     }
     const this_tags = document.getElementById("this_tags");
-    let tag_objects = this_tags.getElementsByClassName("tag_object");
+    const tag_objects = this_tags.getElementsByClassName("tag_object");
     for (const tag_object of tag_objects)
     {
         if (tag_object.innerText === response.data.tagname)
@@ -342,12 +342,12 @@ function remove_photo_tag_callback(response)
     {
         return;
     }
-    let tag_objects = document.getElementById("this_tags").getElementsByClassName("tag_object");
+    const tag_objects = document.getElementById("this_tags").getElementsByClassName("tag_object");
     for (const tag_object of tag_objects)
     {
         if (tag_object.innerText === response.data.tagname)
         {
-            let li = tag_object.parentElement;
+            const li = tag_object.parentElement;
             li.parentElement.removeChild(li);
         }
     }
@@ -416,8 +416,8 @@ function generate_thumbnail_callback(response)
 
 function generate_thumbnail_for_video_form(event)
 {
-    let timestamp = document.querySelector("#right video").currentTime;
-    let special = {"timestamp": timestamp};
+    const timestamp = document.querySelector("#right video").currentTime;
+    const special = {"timestamp": timestamp};
     api.photos.generate_thumbnail(PHOTO_ID, special, generate_thumbnail_callback)
 }
 
@@ -428,7 +428,7 @@ function refresh_metadata_form()
 
 function set_searchhidden_form(event)
 {
-    let checkbox = event.target;
+    const checkbox = event.target;
     if (checkbox.checked)
     {
         api.photos.set_searchhidden(PHOTO_ID);
@@ -439,12 +439,12 @@ function set_searchhidden_form(event)
     }
 }
 
-var ZOOM_BG_URL = "url('{{photo|file_link}}')";
+const ZOOM_BG_URL = "url('{{photo|file_link}}')";
 function enable_hoverzoom(event)
 {
     //console.log("enable zoom");
-    let photo_viewer = document.getElementById("photo_viewer");
-    let photo_img = photo_viewer.children[0];
+    const photo_viewer = document.getElementById("photo_viewer");
+    const photo_img = photo_viewer.children[0];
     if (
         photo_img.naturalWidth < photo_viewer.offsetWidth &&
         photo_img.naturalHeight < photo_viewer.offsetHeight
@@ -463,8 +463,8 @@ function enable_hoverzoom(event)
 function disable_hoverzoom()
 {
     //console.log("disable zoom");
-    let photo_viewer = document.getElementById("photo_viewer");
-    let photo_img = photo_viewer.children[0];
+    const photo_viewer = document.getElementById("photo_viewer");
+    const photo_img = photo_viewer.children[0];
 
     photo_img.style.opacity = "100";
     photo_viewer.style.cursor = "";
@@ -474,7 +474,7 @@ function disable_hoverzoom()
 }
 function toggle_hoverzoom(event)
 {
-    let photo_img = document.getElementById("photo_viewer").children[0];
+    const photo_img = document.getElementById("photo_viewer").children[0];
     if (photo_img.style.opacity === "0")
     {
         disable_hoverzoom();
@@ -483,7 +483,7 @@ function toggle_hoverzoom(event)
     {
         enable_hoverzoom(event);
     }
-    let content_body = document.getElementById('content_body');
+    const content_body = document.getElementById('content_body');
     if (getComputedStyle(content_body).getPropertyValue("--narrow") == 0)
     {
         add_tag_box.focus();
@@ -492,8 +492,8 @@ function toggle_hoverzoom(event)
 
 function move_hoverzoom(event)
 {
-    let photo_viewer = document.getElementById("photo_viewer");
-    let photo_img = photo_viewer.children[0];
+    const photo_viewer = document.getElementById("photo_viewer");
+    const photo_img = photo_viewer.children[0];
     let x;
     let y;
 
@@ -563,7 +563,7 @@ setTimeout(
     */
     function()
     {
-        let content_body = document.getElementById("content_body");
+        const content_body = document.getElementById("content_body");
         if (getComputedStyle(content_body).getPropertyValue("--narrow") == 1)
         {
             add_tag_box.autofocus = false;

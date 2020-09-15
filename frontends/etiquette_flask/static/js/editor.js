@@ -1,4 +1,4 @@
-var editor = {};
+const editor = {};
 
 editor.PARAGRAPH_TYPES = new Set(["P", "PRE"]);
 
@@ -67,13 +67,13 @@ function Editor(elements, on_open, on_save, on_cancel)
     {
         for (let index = 0; index < this.display_elements.length; index += 1)
         {
-            let display_element = this.display_elements[index];
-            let edit_element = this.edit_elements[index];
+            const display_element = this.display_elements[index];
+            const edit_element = this.edit_elements[index];
 
             display_element.classList.add("hidden");
             edit_element.classList.remove("hidden");
 
-            let empty_text = display_element.dataset.editorEmptyText;
+            const empty_text = display_element.dataset.editorEmptyText;
             if (empty_text !== undefined && display_element.innerText == empty_text)
             {
                 edit_element.value = "";
@@ -92,8 +92,8 @@ function Editor(elements, on_open, on_save, on_cancel)
     {
         for (let index = 0; index < this.display_elements.length; index += 1)
         {
-            let display_element = this.display_elements[index];
-            let edit_element = this.edit_elements[index];
+            const display_element = this.display_elements[index];
+            const edit_element = this.edit_elements[index];
 
             if (display_element.dataset.editorEmptyText !== undefined && edit_element.value == "")
             {
@@ -187,7 +187,7 @@ function Editor(elements, on_open, on_save, on_cancel)
             return fallback.bind(this);
         }
 
-        let bindable = function()
+        const bindable = function()
         {
             if (this.can_use_element_map)
             {
@@ -201,14 +201,14 @@ function Editor(elements, on_open, on_save, on_cancel)
         return bindable.bind(this);
     }
 
-    let placeholders = document.getElementsByClassName("editor_toolbox_placeholder");
+    const placeholders = document.getElementsByClassName("editor_toolbox_placeholder");
     for (const placeholder of placeholders)
     {
         placeholder.parentElement.removeChild(placeholder);
     }
 
-    let last_element = this.edit_elements[this.edit_elements.length - 1];
-    let toolbox = document.createElement("div");
+    const last_element = this.edit_elements[this.edit_elements.length - 1];
+    const toolbox = document.createElement("div");
     toolbox.classList.add("editor_toolbox");
     last_element.parentElement.insertBefore(toolbox, last_element.nextSibling);
 

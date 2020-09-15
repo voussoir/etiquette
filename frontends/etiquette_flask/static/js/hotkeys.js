@@ -1,4 +1,4 @@
-var hotkeys = {};
+const hotkeys = {};
 
 hotkeys.HOTKEYS = {};
 
@@ -30,14 +30,14 @@ function register_hotkey(hotkey, action, description)
         hotkey = hotkey.split(/\s+/g);
     }
 
-    let key = hotkey.pop();
+    const key = hotkey.pop();
     modifiers = hotkey.map(word => word.toLocaleLowerCase());
-    let ctrlKey = modifiers.includes("control") || modifiers.includes("ctrl");
-    let shiftKey = modifiers.includes("shift");
-    let altKey = modifiers.includes("alt");
+    const ctrlKey = modifiers.includes("control") || modifiers.includes("ctrl");
+    const shiftKey = modifiers.includes("shift");
+    const altKey = modifiers.includes("alt");
 
-    let identifier = hotkeys.hotkey_identifier(key, ctrlKey, shiftKey, altKey);
-    let human = hotkeys.hotkey_human(key, ctrlKey, shiftKey, altKey);
+    const identifier = hotkeys.hotkey_identifier(key, ctrlKey, shiftKey, altKey);
+    const human = hotkeys.hotkey_human(key, ctrlKey, shiftKey, altKey);
     hotkeys.HOTKEYS[identifier] = {"action": action, "human": human, "description": description}
 }
 
@@ -61,7 +61,7 @@ function show_all_hotkeys()
     let lines = [];
     for (const identifier in hotkeys.HOTKEYS)
     {
-        let line = hotkeys.HOTKEYS[identifier]["human"] + " :  " + hotkeys.HOTKEYS[identifier]["description"];
+        const line = hotkeys.HOTKEYS[identifier]["human"] + " :  " + hotkeys.HOTKEYS[identifier]["description"];
         lines.push(line);
     }
     lines = lines.join("\n");

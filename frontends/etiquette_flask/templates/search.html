@@ -369,26 +369,26 @@ These values should match those of the server itself. The purpose of this dict
 is to know that we DON'T need to include these parameters in the url if the
 selected form values are these.
 */
-PARAM_DEFAULTS = {
+const PARAM_DEFAULTS = {
     'limit': 50,
     'view': 'grid',
 }
 function add_searchtag(ul, value, inputted_list, li_class)
 {
     console.log("adding " + value);
-    let already_have = inputted_list.indexOf(value) !== -1;
+    const already_have = inputted_list.indexOf(value) !== -1;
     if (already_have)
     {return;}
 
     inputted_list.push(value);
-    let new_li = document.createElement("li");
+    const new_li = document.createElement("li");
     new_li.className = li_class;
 
-    let new_span = document.createElement("span");
+    const new_span = document.createElement("span");
     new_span.className = "tag_object";
     new_span.innerHTML = value;
 
-    let new_delbutton = document.createElement("button")
+    const new_delbutton = document.createElement("button")
     new_delbutton.classList.add("remove_tag_button");
     new_delbutton.classList.add("red_button");
     new_delbutton.onclick = function(){remove_searchtag(ul, value, inputted_list)};
@@ -429,15 +429,15 @@ function add_searchtag_from_box(box, inputted_list, li_class)
 function remove_searchtag(ul, value, inputted_list)
 {
     console.log("removing " + value);
-    let lis = ul.children;
+    const lis = ul.children;
     //console.log(lis);
     for (const li of lis)
     {
-        let tag_object = li.children[0];
+        const tag_object = li.children[0];
         if (! tag_object.classList.contains("tag_object"))
         {continue}
 
-        let tagname = tag_object.innerHTML;
+        const tagname = tag_object.innerHTML;
         if (tagname != value)
         {continue}
 
@@ -453,23 +453,23 @@ function remove_searchtag(ul, value, inputted_list)
 function add_new_orderby()
 {
     /* Called by the green + button */
-    let ul = document.getElementById("search_builder_orderby_ul");
-    let lis = ul.children;
+    const ul = document.getElementById("search_builder_orderby_ul");
+    const lis = ul.children;
     if (lis.length >= 9)
     {
         /* 9 because there are only 9 sortable properties */
         return;
     }
     prev_li = lis[lis.length - 2];
-    let new_li = prev_li.cloneNode(true);
+    const new_li = prev_li.cloneNode(true);
     ul.insertBefore(new_li, prev_li.nextSibling);
 }
 
 function orderby_remove_hook(button)
 {
     /* Called by the red button next to orderby dropdowns */
-    let li = button.parentElement;
-    let ul = li.parentElement;
+    const li = button.parentElement;
+    const ul = li.parentElement;
     // 2 because keep 1 row and the adder button
     if (ul.children.length>2)
     {
@@ -492,7 +492,7 @@ function orderby_hide_direction_hook(event)
 
 function simplify_tagnames(tags)
 {
-    let new_tags = [];
+    const new_tags = [];
     for (let tag of tags)
     {
         tag = tag.split(".");
@@ -518,16 +518,16 @@ function submit_search()
     add_searchtag_from_box(input_forbids, inputted_forbids, "search_builder_forbids_inputted");
 
     let has_tag_params = false;
-    let musts = simplify_tagnames(inputted_musts).join(",");
+    const musts = simplify_tagnames(inputted_musts).join(",");
     if (musts) {parameters.push("tag_musts=" + musts); has_tag_params = true;}
 
-    let mays = simplify_tagnames(inputted_mays).join(",");
+    const mays = simplify_tagnames(inputted_mays).join(",");
     if (mays) {parameters.push("tag_mays=" + mays); has_tag_params = true;}
 
-    let forbids = simplify_tagnames(inputted_forbids).join(",");
+    const forbids = simplify_tagnames(inputted_forbids).join(",");
     if (forbids) {parameters.push("tag_forbids=" + forbids); has_tag_params = true;}
 
-    let expression = document.getElementsByName("tag_expression")[0].value;
+    const expression = document.getElementsByName("tag_expression")[0].value;
     if (expression)
     {
         //expression = expression.replace(new RegExp(" ", 'g'), "-");
@@ -535,11 +535,11 @@ function submit_search()
         has_tag_params = true;
     }
 
-    let basic_inputs = document.getElementsByClassName("basic_param");
+    const basic_inputs = document.getElementsByClassName("basic_param");
     for (const basic_input of basic_inputs)
     {
-        let boxname = basic_input.name;
-        let box = document.getElementsByName(boxname)[0];
+        const boxname = basic_input.name;
+        const box = document.getElementsByName(boxname)[0];
         let value = box.value;
         value = value.split("&").join("%26");
         console.log(value);
@@ -555,18 +555,18 @@ function submit_search()
         parameters.push(boxname + "=" + value);
     }
 
-    let orderby_rows = document.getElementsByClassName("search_builder_orderby_li");
+    const orderby_rows = document.getElementsByClassName("search_builder_orderby_li");
     let orderby_params = [];
     for (const orderby_row of orderby_rows)
     {
-        let column = orderby_row.children[0].value;
+        const column = orderby_row.children[0].value;
         if (column == "random")
         {
             orderby_params.push(column);
         }
         else
         {
-            let sorter = orderby_row.children[1].value;
+            const sorter = orderby_row.children[1].value;
             orderby_params.push(column + "-" + sorter);
         }
     }
@@ -647,18 +647,18 @@ function tag_input_hook_forbids()
 }
 
 tag_autocomplete.init_datalist();
-var input_musts = document.getElementById("search_builder_musts_input");
-var ul_musts = input_musts.parentElement.parentElement;
-var input_mays = document.getElementById("search_builder_mays_input");
-var ul_mays = input_mays.parentElement.parentElement;
-var input_forbids = document.getElementById("search_builder_forbids_input");
-var ul_forbids = input_forbids.parentElement.parentElement;
-var input_expression = document.getElementById("search_builder_expression_input");
+const input_musts = document.getElementById("search_builder_musts_input");
+const ul_musts = input_musts.parentElement.parentElement;
+const input_mays = document.getElementById("search_builder_mays_input");
+const ul_mays = input_mays.parentElement.parentElement;
+const input_forbids = document.getElementById("search_builder_forbids_input");
+const ul_forbids = input_forbids.parentElement.parentElement;
+const input_expression = document.getElementById("search_builder_expression_input");
 
 /* Prefix the form with the parameters from last search */
-var inputted_musts = [];
-var inputted_mays = [];
-var inputted_forbids = [];
+const inputted_musts = [];
+const inputted_mays = [];
+const inputted_forbids = [];
 {% for tagtype in ["musts", "mays", "forbids"] %}
     {% set key="tag_" + tagtype %}
     {% if search_kwargs[key] %}
