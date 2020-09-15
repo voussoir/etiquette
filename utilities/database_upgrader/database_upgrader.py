@@ -10,6 +10,7 @@ def upgrade_1_to_2(photodb):
     In this version, a column `tagged_at` was added to the Photos table, to keep
     track of the last time the photo's tags were edited (added or removed).
     '''
+    photodb.sql_execute('BEGIN')
     cur = photodb.sql.cursor()
     cur.execute('ALTER TABLE photos ADD COLUMN tagged_at INT')
 
@@ -19,6 +20,7 @@ def upgrade_2_to_3(photodb):
     with id, username, password hash, and a timestamp.
     Plus some indices.
     '''
+    photodb.sql_execute('BEGIN')
     cur = photodb.sql.cursor()
     cur.execute('''
     CREATE TABLE IF NOT EXISTS users(
@@ -35,6 +37,7 @@ def upgrade_3_to_4(photodb):
     '''
     Add an `author_id` column to Photos.
     '''
+    photodb.sql_execute('BEGIN')
     cur = photodb.sql.cursor()
     cur.execute('ALTER TABLE photos ADD COLUMN author_id TEXT')
     cur.execute('CREATE INDEX IF NOT EXISTS index_photo_author ON photos(author_id)')
@@ -43,6 +46,7 @@ def upgrade_4_to_5(photodb):
     '''
     Add table `bookmarks` and its indices.
     '''
+    photodb.sql_execute('BEGIN')
     cur = photodb.sql.cursor()
     cur.execute('''
     CREATE TABLE IF NOT EXISTS bookmarks(
@@ -67,6 +71,7 @@ def upgrade_5_to_6(photodb):
       into `album_group_rel`
     - Gives albums their own last_id value, starting with the current tag value.
     '''
+    photodb.sql_execute('BEGIN')
     # 1. Start the id_numbers.albums value at the tags value so that the number
     # can continue to increment safely and separately, instead of starting at
     # zero and bumping into existing albums.
@@ -112,6 +117,7 @@ def upgrade_6_to_7(photodb):
     separate table `album_associated_directories`, so that we can have albums
     which load from multiple directories.
     '''
+    photodb.sql_execute('BEGIN')
     cur = photodb.sql.cursor()
     cur.execute('SELECT name FROM sqlite_master WHERE type == "index"')
     indices = [x[0] for x in cur.fetchall()]
@@ -143,6 +149,7 @@ def upgrade_7_to_8(photodb):
     '''
     Give the Tags table a description field.
     '''
+    photodb.sql_execute('BEGIN')
     cur = photodb.sql.cursor()
     cur.execute('ALTER TABLE tags ADD COLUMN description TEXT')
 
@@ -150,6 +157,7 @@ def upgrade_8_to_9(photodb):
     '''
     Give the Photos table a searchhidden field.
     '''
+    photodb.sql_execute('BEGIN')
     cur = photodb.sql.cursor()
     cur.execute('ALTER TABLE photos ADD COLUMN searchhidden INT')
     cur.execute('UPDATE photos SET searchhidden = 0')
@@ -162,6 +170,7 @@ def upgrade_9_to_10(photodb):
     Previously, the stored path was unnecessarily high and contained the PDB's
     data_directory, reducing portability.
     '''
+    photodb.sql_execute('BEGIN')
     cur = photodb.sql.cursor()
     photos = list(photodb.search(has_thumbnail=True, is_searchhidden=None))
 
@@ -179,6 +188,9 @@ def upgrade_10_to_11(photodb):
     Added Primary keys, Foreign keys, and NOT NULL constraints.
     Added author_id column to Album and Tag tables.
     '''
+    photodb.sql_execute('PRAGMA foreign_keys = OFF')
+    photodb.sql_execute('BEGIN')
+
     tables_to_copy = {
         'users': '*',
         'albums': '*, NULL',
@@ -193,9 +205,6 @@ def upgrade_10_to_11(photodb):
         'tag_group_rel': '*',
         'tag_synonyms': '*',
     }
-    cur = photodb.sql.cursor()
-    cur.execute('PRAGMA foreign_keys = OFF')
-
     print('Renaming existing tables.')
     for table in tables_to_copy:
         statement = 'ALTER TABLE %s RENAME TO %s_old' % (table, table)
@@ -223,7 +232,6 @@ def upgrade_10_to_11(photodb):
     for statement in create_indices:
         cur.execute(statement)
 
-    cur.execute('PRAGMA foreign_keys = ON')
 
 def upgrade_11_to_12(photodb):
     '''
@@ -231,6 +239,7 @@ def upgrade_11_to_12(photodb):
     improve the speed of individual relation searching, important for the
     new intersection-based search.
     '''
+    photodb.sql_execute('BEGIN')
     query = '''
     CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid_tagid on photo_tag_rel(photoid, tagid)
     '''
@@ -241,9 +250,10 @@ def upgrade_12_to_13(photodb):
     Added display_name column to the User table.
     '''
     cur = photodb.sql.cursor()
-    cur.execute('PRAGMA foreign_keys = OFF')
-    cur.execute('ALTER TABLE users RENAME TO users_old')
-    cur.execute('''
+    photodb.sql_execute('PRAGMA foreign_keys = OFF')
+    photodb.sql_execute('BEGIN')
+    photodb.sql_execute('ALTER TABLE users RENAME TO users_old')
+    photodb.sql_execute('''
     CREATE TABLE users(
         id TEXT PRIMARY KEY NOT NULL,
         username TEXT NOT NULL COLLATE NOCASE,
@@ -253,12 +263,12 @@ def upgrade_12_to_13(photodb):
     )''')
     cur.execute('INSERT INTO users SELECT id, username, password, NULL, created FROM users_old')
     cur.execute('DROP TABLE users_old')
-    cur.execute('PRAGMA foreign_keys = ON')
 
 def upgrade_13_to_14(photodb):
     '''
     Rename user.min_length to min_username_length.
     '''
+    photodb.sql_execute('BEGIN')
     photodb.config['user']['min_username_length'] = photodb.config['user'].pop('min_length')
     photodb.config['user']['max_username_length'] = photodb.config['user'].pop('max_length')
     photodb.save_config()
@@ -286,7 +296,7 @@ def upgrade_all(data_directory):
         upgrade_function = eval(upgrade_function)
 
         try:
-            photodb.sql.execute('BEGIN')
+            photodb.sql_execute('PRAGMA foreign_keys = ON')
             upgrade_function(photodb)
         except Exception as exc:
             photodb.rollback()
