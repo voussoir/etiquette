@@ -12,7 +12,13 @@
     --color_tag_object_fg: black;
 }
 
-button
+button,
+button *
+{
+    color: black;
+}
+.message_bubble,
+.message_bubble *
 {
     color: black;
 }
