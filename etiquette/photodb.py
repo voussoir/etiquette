@@ -212,6 +212,14 @@ class PDBCacheManagerMixin:
     def __init__(self):
         super().__init__()
 
+    def clear_all_caches(self):
+        self.caches['album'].clear()
+        self.caches['bookmark'].clear()
+        self.caches['photo'].clear()
+        self.caches['tag'].clear()
+        self.caches['tag_exports'].clear()
+        self.caches['user'].clear()
+
     def get_cached_instance(self, thing_type, db_row):
         '''
         Check if there is already an instance in the cache and return that.
