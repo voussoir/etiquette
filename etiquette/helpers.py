@@ -367,6 +367,10 @@ def remove_path_badchars(filepath, allowed=''):
     filepath = filepath.replace('\\', os.sep)
     return filepath
 
+def run_generator(g):
+    for x in g:
+        pass
+
 def seconds_to_hms(seconds):
     '''
     Convert integer number of seconds to an hh:mm:ss string.

@@ -75,7 +75,8 @@ def post_album_remove_child(album_id):
 def post_album_refresh_directories(album_id):
     album = common.P_album(album_id, response_type='json')
     for directory in album.get_associated_directories():
-        common.P.digest_directory(directory, new_photo_ratelimit=0.1)
+        digest = common.P.digest_directory(directory, new_photo_ratelimit=0.1)
+        etiquette.helpers.run_generator(digest)
     common.P.commit(message='refresh album directories endpoint')
     return jsonify.make_json_response({})
 

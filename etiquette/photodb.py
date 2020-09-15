@@ -1344,6 +1344,8 @@ class PDBUtilMixin:
             new_photo_kwargs={},
             new_photo_ratelimit=None,
             recurse=True,
+            yield_albums=True,
+            yield_photos=True,
         ):
         '''
         Walk the directory and create Photos for every file.
@@ -1398,6 +1400,12 @@ class PDBUtilMixin:
         recurse:
             If True, walk the whole directory tree. If False, only digest the
             photos from the given directory and not its subdirectories.
+
+        yield_albums:
+            If True, yield Albums as they are processed, new or not.
+
+        yield_photos:
+            If True, yield Photos as they are processed, new or not.
         '''
         def _normalize_directory(directory):
             directory = pathclass.Path(directory)
@@ -1486,9 +1494,7 @@ class PDBUtilMixin:
         new_photo_kwargs = _normalize_new_photo_kwargs(new_photo_kwargs)
         new_photo_ratelimit = _normalize_new_photo_ratelimit(new_photo_ratelimit)
 
-        if make_albums:
-            albums_by_path = {}
-            main_album = create_or_fetch_current_albums(albums_by_path, directory)
+        albums_by_path = {}
 
         walk_generator = spinal.walk_generator(
             directory,
@@ -1504,6 +1510,9 @@ class PDBUtilMixin:
 
             photos = create_or_fetch_photos(files, new_photo_kwargs=new_photo_kwargs)
 
+            if yield_photos:
+                yield from photos
+
             if not make_albums:
                 continue
 
@@ -1513,10 +1522,8 @@ class PDBUtilMixin:
             for album in current_albums:
                 album.add_photos(photos)
 
-        if make_albums:
-            return main_album
-        else:
-            return None
+            if yield_albums:
+                yield from current_albums
 
     @decorators.transaction
     def easybake(self, ebstring, author=None):
