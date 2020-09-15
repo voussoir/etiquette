@@ -1451,6 +1451,23 @@ class PDBUtilMixin:
                 raise TypeError(new_photo_ratelimit)
             return new_photo_ratelimit
 
+        def check_renamed_inode(filepath):
+            stat = filepath.stat
+            (dev, ino) = (stat.st_dev, stat.st_ino)
+            if dev == 0 or ino == 0:
+                return
+
+            try:
+                photo = self.get_photo_by_inode(dev, ino)
+            except exceptions.NoSuchPhoto:
+                return
+
+            if photo.bytes != stat.st_size:
+                return
+
+            photo.relocate(filepath.absolute_path)
+            return photo
+
         def create_or_fetch_photos(filepaths, new_photo_kwargs):
             '''
             Given an iterable of filepaths, find the corresponding Photo object
@@ -1461,6 +1478,10 @@ class PDBUtilMixin:
                 try:
                     photo = self.get_photo_by_path(filepath)
                 except exceptions.NoSuchPhoto:
+                    photo = None
+                if not photo:
+                    photo = check_renamed_inode(filepath)
+                if not photo:
                     photo = self.new_photo(filepath.absolute_path, **new_photo_kwargs)
                     if new_photo_ratelimit is not None:
                         new_photo_ratelimit.limit()
