@@ -290,7 +290,7 @@ class Album(ObjectBase, GroupableMixin):
         if self.has_associated_directory(path):
             return
 
-        self.photodb.log.debug('Adding directory %s to %s.', path, self)
+        self.photodb.log.debug('Adding directory "%s" to %s.', path.absolute_path, self)
         data = {'albumid': self.id, 'directory': path.absolute_path}
         self.photodb.sql_insert(table='album_associated_directories', data=data)
 
