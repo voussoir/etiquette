@@ -120,6 +120,23 @@ class PDBAlbumMixin:
 
         return album
 
+    @decorators.transaction
+    def purge_empty_albums(self, albums=None):
+        if albums is None:
+            to_check = set(self.get_albums())
+        else:
+            to_check = set()
+            for album in albums:
+                to_check.update(album.walk_children())
+
+        while to_check:
+            album = to_check.pop()
+            if album.get_children() or album.get_photos():
+                continue
+            # This may have been the last child of an otherwise empty parent.
+            to_check.update(album.get_parents())
+            album.delete()
+
 
 class PDBBookmarkMixin:
     def __init__(self):
@@ -485,23 +502,6 @@ class PDBPhotoMixin:
             if photo.real_path.exists:
                 continue
             photo.delete()
-
-    @decorators.transaction
-    def purge_empty_albums(self, albums=None):
-        if albums is None:
-            to_check = set(self.get_albums())
-        else:
-            to_check = set()
-            for album in albums:
-                to_check.update(album.walk_children())
-
-        while to_check:
-            album = to_check.pop()
-            if album.get_children() or album.get_photos():
-                continue
-            # This may have been the last child of an otherwise empty parent.
-            to_check.update(album.get_parents())
-            album.delete()
 
     def search(
             self,
