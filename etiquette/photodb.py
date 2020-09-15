@@ -1013,7 +1013,7 @@ class PDBSQLMixin:
         else:
             self.log.log(5, 'Savepoint %s.', savepoint_id)
         query = f'SAVEPOINT "{savepoint_id}"'
-        self.sql.execute(query)
+        self.sql_execute(query)
         self.savepoints.append(savepoint_id)
         self.on_commit_queue.append(savepoint_id)
         self.on_rollback_queue.append(savepoint_id)
