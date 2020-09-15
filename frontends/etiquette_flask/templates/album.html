@@ -211,11 +211,14 @@ const ALBUM_ID = undefined;
             Add child
         </button>
 
+        {% set associated_directories = album.get_associated_directories() %}
         <button
         class="green_button button_with_spinner"
         onclick="return api.albums.refresh_directories(ALBUM_ID, common.refresh);"
         data-spinner-delay="500"
-        {% if not album.get_associated_directories() %}
+        {% if associated_directories %}
+        title="Pull from {{associated_directories|length}} directories"
+        {% else %}
         title="No associated directories"
         disabled
         {% endif %}
