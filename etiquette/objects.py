@@ -173,7 +173,7 @@ class GroupableMixin:
         query = f'SELECT parentid FROM {self.group_table} WHERE memberid == ?'
         parent_rows = self.photodb.sql_select(query, [self.id])
         parent_ids = [row[0] for row in parent_rows]
-        parents = list(self.group_getter_many(parent_ids))
+        parents = set(self.group_getter_many(parent_ids))
         return parents
 
     def has_any_child(self):
@@ -847,7 +847,7 @@ class Photo(ObjectBase):
             [self.id]
         )
         tag_ids = [row[0] for row in tag_ids]
-        tags = list(self.photodb.get_tags_by_id(tag_ids))
+        tags = set(self.photodb.get_tags_by_id(tag_ids))
         return tags
 
     def has_tag(self, tag, *, check_children=True):
