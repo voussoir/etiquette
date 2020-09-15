@@ -1011,6 +1011,7 @@ class Photo(ObjectBase):
         if not allow_duplicates:
             self.photodb.assert_no_such_photo_by_path(filepath=new_filepath)
 
+        self.photodb.log.debug('Relocating %s to "%s"', self, new_filepath.absolute_path)
         data = {
             'id': self.id,
             'filepath': new_filepath.absolute_path,
