@@ -261,6 +261,66 @@ def upgrade_13_to_14(photodb):
     photodb.config['user']['max_username_length'] = photodb.config['user'].pop('max_length')
     photodb.save_config()
 
+def upgrade_14_to_15(photodb):
+    '''
+    Added the dev_ino column to photos.
+    '''
+    photodb.sql_execute('PRAGMA foreign_keys = OFF')
+    photodb.sql_execute('BEGIN')
+    photodb.sql_execute('ALTER TABLE photos RENAME TO photos_old')
+    photodb.sql_execute('''
+        CREATE TABLE photos(
+            id TEXT PRIMARY KEY NOT NULL,
+            filepath TEXT COLLATE NOCASE,
+            dev_ino TEXT,
+            override_filename TEXT COLLATE NOCASE,
+            extension TEXT,
+            width INT,
+            height INT,
+            ratio REAL,
+            area INT,
+            duration INT,
+            bytes INT,
+            created INT,
+            thumbnail TEXT,
+            tagged_at INT,
+            author_id TEXT,
+            searchhidden INT,
+            FOREIGN KEY(author_id) REFERENCES users(id)
+        );
+    ''')
+    photodb.sql_execute('''
+        INSERT INTO photos SELECT
+            id,
+            filepath,
+            NULL,
+            override_filename,
+            extension,
+            width,
+            height,
+            ratio,
+            area,
+            duration,
+            bytes,
+            created,
+            thumbnail,
+            tagged_at,
+            author_id,
+            searchhidden
+        FROM photos_old
+    ''')
+    photodb.sql_execute('DROP TABLE photos_old')
+    photodb.sql_execute('CREATE INDEX index_photos_dev_ino ON photos(dev_ino);')
+    for photo in photodb.get_photos_by_recent():
+        if not photo.real_path.is_file:
+            continue
+        stat = photo.real_path.stat
+        (dev, ino) = (stat.st_dev, stat.st_ino)
+        if dev == 0 or ino == 0:
+            continue
+        dev_ino = f'{dev},{ino}'
+        photodb.sql_execute('UPDATE photos SET dev_ino = ? WHERE id == ?', [dev_ino, photo.id])
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

@@ -42,7 +42,7 @@ ffmpeg = _load_ffmpeg()
 
 # Database #########################################################################################
 
-DATABASE_VERSION = 14
+DATABASE_VERSION = 15
 DB_VERSION_PRAGMA = f'''
 PRAGMA user_version = {DATABASE_VERSION};
 '''
@@ -91,6 +91,7 @@ CREATE INDEX IF NOT EXISTS index_bookmarks_author_id on bookmarks(author_id);
 CREATE TABLE IF NOT EXISTS photos(
     id TEXT PRIMARY KEY NOT NULL,
     filepath TEXT COLLATE NOCASE,
+    dev_ino TEXT,
     override_filename TEXT COLLATE NOCASE,
     extension TEXT,
     width INT,
@@ -108,6 +109,7 @@ CREATE TABLE IF NOT EXISTS photos(
 );
 CREATE INDEX IF NOT EXISTS index_photos_id on photos(id);
 CREATE INDEX IF NOT EXISTS index_photos_filepath on photos(filepath COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS index_photos_dev_ino on photos(dev_ino);
 CREATE INDEX IF NOT EXISTS index_photos_override_filename on
     photos(override_filename COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS index_photos_created on photos(created);

@@ -951,16 +951,19 @@ class Photo(ObjectBase):
         self.photodb.log.debug('Reloading metadata for %s', self)
 
         self.bytes = None
+        self.dev_ino = None
         self.width = None
         self.height = None
         self.area = None
         self.ratio = None
         self.duration = None
 
-        try:
-            self.bytes = self.real_path.size
-        except pathclass.NotExists:
-            pass
+        if self.real_path.is_file:
+            stat = self.real_path.stat
+            self.bytes = stat.st_size
+            (dev, ino) = (stat.st_dev, stat.st_ino)
+            if dev and ino:
+                self.dev_ino = f'{dev},{ino}'
 
         if self.bytes is None:
             pass
@@ -986,6 +989,7 @@ class Photo(ObjectBase):
             'ratio': self.ratio,
             'duration': self.duration,
             'bytes': self.bytes,
+            'dev_ino': self.dev_ino,
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 

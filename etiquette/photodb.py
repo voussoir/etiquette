@@ -389,6 +389,16 @@ class PDBPhotoMixin:
     def get_photo(self, id):
         return self.get_thing_by_id('photo', id)
 
+    def get_photo_by_inode(self, dev, ino):
+        dev_ino = f'{dev},{ino}'
+        query = 'SELECT * FROM photos WHERE dev_ino == ?'
+        bindings = [dev_ino]
+        photo_row = self.sql_select_one(query, bindings)
+        if photo_row is None:
+            raise exceptions.NoSuchPhoto(dev_ino)
+        photo = self.get_cached_instance('photo', photo_row)
+        return photo
+
     def get_photo_by_path(self, filepath):
         filepath = pathclass.Path(filepath)
         query = 'SELECT * FROM photos WHERE filepath == ?'
@@ -470,6 +480,7 @@ class PDBPhotoMixin:
             'author_id': author_id,
             'searchhidden': searchhidden,
             # These will be filled in during the metadata stage.
+            'dev_ino': None,
             'bytes': None,
             'width': None,
             'height': None,
