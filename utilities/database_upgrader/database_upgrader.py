@@ -11,8 +11,7 @@ def upgrade_1_to_2(photodb):
     track of the last time the photo's tags were edited (added or removed).
     '''
     photodb.sql_execute('BEGIN')
-    cur = photodb.sql.cursor()
-    cur.execute('ALTER TABLE photos ADD COLUMN tagged_at INT')
+    photodb.sql_execute('ALTER TABLE photos ADD COLUMN tagged_at INT')
 
 def upgrade_2_to_3(photodb):
     '''
@@ -21,8 +20,7 @@ def upgrade_2_to_3(photodb):
     Plus some indices.
     '''
     photodb.sql_execute('BEGIN')
-    cur = photodb.sql.cursor()
-    cur.execute('''
+    photodb.sql_execute('''
     CREATE TABLE IF NOT EXISTS users(
         id TEXT,
         username TEXT COLLATE NOCASE,
@@ -30,25 +28,23 @@ def upgrade_2_to_3(photodb):
         created INT
     )
     ''')
-    cur.execute('CREATE INDEX IF NOT EXISTS index_user_id ON users(id)')
-    cur.execute('CREATE INDEX IF NOT EXISTS index_user_username ON users(username COLLATE NOCASE)')
+    photodb.sql_execute('CREATE INDEX IF NOT EXISTS index_user_id ON users(id)')
+    photodb.sql_execute('CREATE INDEX IF NOT EXISTS index_user_username ON users(username COLLATE NOCASE)')
 
 def upgrade_3_to_4(photodb):
     '''
     Add an `author_id` column to Photos.
     '''
     photodb.sql_execute('BEGIN')
-    cur = photodb.sql.cursor()
-    cur.execute('ALTER TABLE photos ADD COLUMN author_id TEXT')
-    cur.execute('CREATE INDEX IF NOT EXISTS index_photo_author ON photos(author_id)')
+    photodb.sql_execute('ALTER TABLE photos ADD COLUMN author_id TEXT')
+    photodb.sql_execute('CREATE INDEX IF NOT EXISTS index_photo_author ON photos(author_id)')
 
 def upgrade_4_to_5(photodb):
     '''
     Add table `bookmarks` and its indices.
     '''
     photodb.sql_execute('BEGIN')
-    cur = photodb.sql.cursor()
-    cur.execute('''
+    photodb.sql_execute('''
     CREATE TABLE IF NOT EXISTS bookmarks(
         id TEXT,
         title TEXT,
@@ -56,8 +52,8 @@ def upgrade_4_to_5(photodb):
         author_id TEXT
     )
     ''')
-    cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_id ON bookmarks(id)')
-    cur.execute('CREATE INDEX IF NOT EXISTS index_bookmark_author ON bookmarks(author_id)')
+    photodb.sql_execute('CREATE INDEX IF NOT EXISTS index_bookmark_id ON bookmarks(id)')
+    photodb.sql_execute('CREATE INDEX IF NOT EXISTS index_bookmark_author ON bookmarks(author_id)')
 
 def upgrade_5_to_6(photodb):
     '''
@@ -75,38 +71,36 @@ def upgrade_5_to_6(photodb):
     # 1. Start the id_numbers.albums value at the tags value so that the number
     # can continue to increment safely and separately, instead of starting at
     # zero and bumping into existing albums.
-    cur = photodb.sql.cursor()
-    cur.execute('SELECT * FROM id_numbers WHERE tab == "tags"')
-    last_id = cur.fetchone()[1]
-    cur.execute('INSERT INTO id_numbers VALUES("albums", ?)', [last_id])
+    last_id = photodb.sql_select_one('SELECT last_id FROM id_numbers WHERE tab == "tags"')[0]
+    photodb.sql_execute('INSERT INTO id_numbers VALUES("albums", ?)', [last_id])
 
     # 2. Now's a good chance to rename 'index_grouprel' to 'index_taggroup'.
-    cur.execute('DROP INDEX IF EXISTS index_grouprel_parentid')
-    cur.execute('DROP INDEX IF EXISTS index_grouprel_memberid')
-    cur.execute('CREATE INDEX index_taggroup_parentid ON tag_group_rel(parentid)')
-    cur.execute('CREATE INDEX index_taggroup_memberid ON tag_group_rel(memberid)')
+    photodb.sql_execute('DROP INDEX IF EXISTS index_grouprel_parentid')
+    photodb.sql_execute('DROP INDEX IF EXISTS index_grouprel_memberid')
+    photodb.sql_execute('CREATE INDEX index_taggroup_parentid ON tag_group_rel(parentid)')
+    photodb.sql_execute('CREATE INDEX index_taggroup_memberid ON tag_group_rel(memberid)')
 
     # 3. All of the album group relationships need to be moved into their
     # own table, out of tag_group_rel
-    cur.execute('CREATE TABLE album_group_rel(parentid TEXT, memberid TEXT)')
-    cur.execute('CREATE INDEX index_albumgroup_parentid ON album_group_rel(parentid)')
-    cur.execute('CREATE INDEX index_albumgroup_memberid ON album_group_rel(memberid)')
-    cur.execute('SELECT id FROM albums')
-    album_ids = [f[0] for f in cur.fetchall()]
+    photodb.sql_execute('CREATE TABLE album_group_rel(parentid TEXT, memberid TEXT)')
+    photodb.sql_execute('CREATE INDEX index_albumgroup_parentid ON album_group_rel(parentid)')
+    photodb.sql_execute('CREATE INDEX index_albumgroup_memberid ON album_group_rel(memberid)')
+
+    album_ids = [row[0] for row in photodb.sql_select('SELECT id FROM albums')]
     for album_id in album_ids:
-        cur.execute(
-            'SELECT * FROM tag_group_rel WHERE parentid == ? OR memberid == ?',
-            [album_id, album_id]
-        )
-        f = cur.fetchall()
-        if f == []:
+        query = 'SELECT * FROM tag_group_rel WHERE parentid == ? OR memberid == ?'
+        bindings = [album_id, album_id]
+        grouprels = list(photodb.sql_select(query, bindings))
+
+        if not grouprels:
             continue
-        for grouprel in f:
-            cur.execute('INSERT INTO album_group_rel VALUES(?, ?)', grouprel)
-        cur.execute(
-            'DELETE FROM tag_group_rel WHERE parentid == ? OR memberid == ?',
-            [album_id, album_id]
-        )
+
+        for grouprel in grouprels:
+            photodb.sql_execute('INSERT INTO album_group_rel VALUES(?, ?)', grouprel)
+
+        query = 'DELETE FROM tag_group_rel WHERE parentid == ? OR memberid == ?'
+        bindings = [album_id, album_id]
+        photodb.sql_execute(query, bindings)
 
 def upgrade_6_to_7(photodb):
     '''
@@ -118,50 +112,47 @@ def upgrade_6_to_7(photodb):
     which load from multiple directories.
     '''
     photodb.sql_execute('BEGIN')
-    cur = photodb.sql.cursor()
-    cur.execute('SELECT name FROM sqlite_master WHERE type == "index"')
-    indices = [x[0] for x in cur.fetchall()]
+    indices = photodb.sql_select('SELECT name FROM sqlite_master WHERE type == "index"')
+    indices = [x[0] for x in indices]
     for index in indices:
-        cur.execute('DROP INDEX %s' % index)
+        photodb.sql_execute('DROP INDEX %s' % index)
 
-    cur.execute('''
+    photodb.sql_execute('''
     CREATE TABLE album_associated_directories(
         albumid TEXT,
         directory TEXT COLLATE NOCASE
     )''')
-    cur.execute('ALTER TABLE albums RENAME TO deleting_albums')
-    cur.execute('''
+    photodb.sql_execute('ALTER TABLE albums RENAME TO deleting_albums')
+    photodb.sql_execute('''
     CREATE TABLE albums(
         id TEXT,
         title TEXT,
         description TEXT
     )''')
-    cur.execute('INSERT INTO albums SELECT id, title, description FROM deleting_albums')
-    cur.execute('''
+    photodb.sql_execute('INSERT INTO albums SELECT id, title, description FROM deleting_albums')
+    photodb.sql_execute('''
     INSERT INTO album_associated_directories
     SELECT id, associated_directory
     FROM deleting_albums
     WHERE associated_directory IS NOT NULL
     ''')
-    cur.execute('DROP TABLE deleting_albums')
+    photodb.sql_execute('DROP TABLE deleting_albums')
 
 def upgrade_7_to_8(photodb):
     '''
     Give the Tags table a description field.
     '''
     photodb.sql_execute('BEGIN')
-    cur = photodb.sql.cursor()
-    cur.execute('ALTER TABLE tags ADD COLUMN description TEXT')
+    photodb.sql_execute('ALTER TABLE tags ADD COLUMN description TEXT')
 
 def upgrade_8_to_9(photodb):
     '''
     Give the Photos table a searchhidden field.
     '''
     photodb.sql_execute('BEGIN')
-    cur = photodb.sql.cursor()
-    cur.execute('ALTER TABLE photos ADD COLUMN searchhidden INT')
-    cur.execute('UPDATE photos SET searchhidden = 0')
-    cur.execute('CREATE INDEX index_photos_searchhidden on photos(searchhidden)')
+    photodb.sql_execute('ALTER TABLE photos ADD COLUMN searchhidden INT')
+    photodb.sql_execute('UPDATE photos SET searchhidden = 0')
+    photodb.sql_execute('CREATE INDEX index_photos_searchhidden on photos(searchhidden)')
 
 def upgrade_9_to_10(photodb):
     '''
@@ -171,7 +162,6 @@ def upgrade_9_to_10(photodb):
     data_directory, reducing portability.
     '''
     photodb.sql_execute('BEGIN')
-    cur = photodb.sql.cursor()
     photos = list(photodb.search(has_thumbnail=True, is_searchhidden=None))
 
     # Since we're doing it all at once, I'm going to cheat and skip the
@@ -181,7 +171,7 @@ def upgrade_9_to_10(photodb):
         new_thumbnail_path = photo.make_thumbnail_filepath()
         new_thumbnail_path = new_thumbnail_path.absolute_path
         new_thumbnail_path = '.' + new_thumbnail_path.replace(thumbnail_dir, '')
-        cur.execute('UPDATE photos SET thumbnail = ? WHERE id == ?', [new_thumbnail_path, photo.id])
+        photodb.sql_execute('UPDATE photos SET thumbnail = ? WHERE id == ?', [new_thumbnail_path, photo.id])
 
 def upgrade_10_to_11(photodb):
     '''
@@ -208,7 +198,7 @@ def upgrade_10_to_11(photodb):
     print('Renaming existing tables.')
     for table in tables_to_copy:
         statement = 'ALTER TABLE %s RENAME TO %s_old' % (table, table)
-        cur.execute(statement)
+        photodb.sql_execute(statement)
 
     lines = [line.strip() for line in old_inits.V11.splitlines()]
     lines = [line for line in lines if not line.startswith('--')]
@@ -219,19 +209,18 @@ def upgrade_10_to_11(photodb):
 
     print('Recreating tables.')
     for statement in create_tables:
-        cur.execute(statement)
+        photodb.sql_execute(statement)
 
     print('Migrating table data.')
     for (table, select_columns) in tables_to_copy.items():
         statement = 'INSERT INTO %s SELECT %s FROM %s_old' % (table, select_columns, table)
-        cur.execute(statement)
+        photodb.sql_execute(statement)
         statement = 'DROP TABLE %s_old' % table
-        cur.execute(statement)
+        photodb.sql_execute(statement)
 
     print('Recreating indices.')
     for statement in create_indices:
-        cur.execute(statement)
-
+        photodb.sql_execute(statement)
 
 def upgrade_11_to_12(photodb):
     '''
@@ -243,13 +232,12 @@ def upgrade_11_to_12(photodb):
     query = '''
     CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid_tagid on photo_tag_rel(photoid, tagid)
     '''
-    photodb.sql.cursor().execute(query)
+    photodb.sql_execute(query)
 
 def upgrade_12_to_13(photodb):
     '''
     Added display_name column to the User table.
     '''
-    cur = photodb.sql.cursor()
     photodb.sql_execute('PRAGMA foreign_keys = OFF')
     photodb.sql_execute('BEGIN')
     photodb.sql_execute('ALTER TABLE users RENAME TO users_old')
@@ -261,8 +249,8 @@ def upgrade_12_to_13(photodb):
         display_name TEXT,
         created INT
     )''')
-    cur.execute('INSERT INTO users SELECT id, username, password, NULL, created FROM users_old')
-    cur.execute('DROP TABLE users_old')
+    photodb.sql_execute('INSERT INTO users SELECT id, username, password, NULL, created FROM users_old')
+    photodb.sql_execute('DROP TABLE users_old')
 
 def upgrade_13_to_14(photodb):
     '''
@@ -280,10 +268,7 @@ def upgrade_all(data_directory):
     '''
     photodb = etiquette.photodb.PhotoDB(data_directory, create=False, skip_version_check=True)
 
-    cur = photodb.sql.cursor()
-
-    cur.execute('PRAGMA user_version')
-    current_version = cur.fetchone()[0]
+    current_version = photodb.sql_execute('PRAGMA user_version').fetchone()[0]
     needed_version = etiquette.constants.DATABASE_VERSION
 
     if current_version == needed_version:
