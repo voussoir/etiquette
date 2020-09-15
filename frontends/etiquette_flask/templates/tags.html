@@ -149,9 +149,7 @@ h2, h3
             {% for ancestor in specific_tag.get_parents() %}
             <li>
                 {{tag_object.tag_object(ancestor, link="search_musts", innertext="(+)")}}
-
                 {{tag_object.tag_object(ancestor, link="search_forbids", innertext="(x)")}}
-
                 {{tag_object.tag_object(ancestor, link="info", innertext=ancestor.name, with_alt_description=True)}}
             </li>
             {% endfor %}
@@ -171,53 +169,45 @@ h2, h3
             {% for (qualified_name, tag) in tags %}
                 <li>
                     {{tag_object.tag_object(tag, link="search_musts", innertext="(+)")}}
-
                     {{tag_object.tag_object(tag, link="search_forbids", innertext="(x)")}}
-
-                    {{tag_object.tag_object(tag, link="info", innertext=qualified_name, with_alt_description=True)}}
-                    {%- if "." in qualified_name -%}
+                    {{tag_object.tag_object(tag, link="info", innertext=qualified_name, with_alt_description=True)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
-                    data-onclick="return remove_child_form(event);"
-                    data-prompt="Unlink Tags?"
-                    data-confirm="Unlink"
-                    data-confirm-class="remove_tag_button_perm red_button"
-                    data-cancel-class="remove_tag_button_perm gray_button"
-                    >
-                    Unlink
-                    </button>
-                    {%- else -%}
-                    <button
-                    class="remove_tag_button red_button button_with_confirm"
+                    data-holder-class="confirm_holder_delete_tag{{' hidden' if tag.name!=qualified_name else ''}}"
                     data-onclick="return delete_tag_form(event);"
                     data-prompt="Delete Tag?"
                     data-confirm="Delete"
                     data-confirm-class="remove_tag_button_perm red_button"
                     data-cancel-class="remove_tag_button_perm gray_button"
-                    >
-                    Delete
-                    </button>
-                    {% endif %}
+                    >Delete</button>
+                    {{-''-}}
+                    <button
+                    class="remove_tag_button red_button button_with_confirm"
+                    data-holder-class="confirm_holder_remove_child{{' hidden' if tag.name==qualified_name else ''}}"
+                    data-onclick="return remove_child_form(event);"
+                    data-prompt="Unlink Tags?"
+                    data-confirm="Unlink"
+                    data-confirm-class="remove_tag_button_perm red_button"
+                    data-cancel-class="remove_tag_button_perm gray_button"
+                    >Unlink</button>
+
                 </li>
 
                 {% if include_synonyms %}
-                {% for synonym in tag.get_synonyms() %}
+                {% for synonym in tag.get_synonyms()|sort %}
                 <li>
-                    {{tag_object.tag_object(tag, link="search_musts", innertext="(+)")}}
-
+                    {{-tag_object.tag_object(tag, link="search_musts", innertext="(+)")}}
                     {{tag_object.tag_object(tag, link="search_forbids", innertext="(x)")}}
-
                     {{tag_object.tag_object(tag, link='info', innertext=qualified_name + '+' + synonym)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
+                    data-holder-class="confirm_holder_remove_synonym"
                     data-onclick="return remove_synonym_form(event);"
                     data-prompt="Remove Synonym?"
                     data-confirm="Remove"
                     data-confirm-class="remove_tag_button_perm red_button"
                     data-cancel-class="remove_tag_button_perm gray_button"
-                    >
-                    Remove
-                    </button>
+                    >Remove</button>
                 </li>
                 {% endfor %}
                 {% endif %}
@@ -268,15 +258,144 @@ var add_tag_button = document.getElementById('add_tag_button');
 var message_area = document.getElementById('message_area');
 common.bind_box_to_button(add_tag_textbox, add_tag_button, false);
 
+TEMPLATE_BUTTON_DELETE_TAG = `<button
+class="remove_tag_button red_button button_with_confirm"
+data-holder-class="confirm_holder_delete_tag hidden"
+data-onclick="return delete_tag_form(event);"
+data-prompt="Delete Tag?"
+data-confirm="Delete"
+data-confirm-class="remove_tag_button_perm red_button"
+data-cancel-class="remove_tag_button_perm gray_button"
+>Delete</button>`;
+
+TEMPLATE_BUTTON_REMOVE_CHILD = `<button
+class="remove_tag_button red_button button_with_confirm"
+data-holder-class="confirm_holder_remove_child hidden"
+data-onclick="return remove_child_form(event);"
+data-prompt="Unlink Tags?"
+data-confirm="Unlink"
+data-confirm-class="remove_tag_button_perm red_button"
+data-cancel-class="remove_tag_button_perm gray_button"
+>Unlink</button>`;
+
+TEMPLATE_BUTTON_REMOVE_SYNONYM = `<button
+class="remove_tag_button red_button button_with_confirm"
+data-holder-class="confirm_holder_remove_synonym"
+data-onclick="return remove_synonym_form(event);"
+data-prompt="Remove Synonym?"
+data-confirm="Remove"
+data-confirm-class="remove_tag_button_perm red_button"
+data-cancel-class="remove_tag_button_perm gray_button"
+>Remove</button>`;
+
+TEMPLATE_TAG_LI = `<li><a class="tag_object" href="/search?tag_musts={tag_name}">(+)</a>
+<a class="tag_object" href="/search?tag_forbids={tag_name}">(x)</a>
+<a class="tag_object" href="/tag/{tag_name}">{tag_name}</a></li>`;
+
+function get_all_tag_objects()
+{ return Array.from(document.querySelectorAll(".tag_object[href^='/tag/']")); }
+
+function get_tag_objects_for_descendant(tag_name, child_name)
+{ return get_tag_objects_matching(`(^|\\.)${re_escape(tag_name)}\\.${re_escape(child_name)}($|\\.|\\+)`); }
+
+function get_tag_objects_for_descendants(tag_name)
+{ return get_tag_objects_matching(`(^|\\.)${re_escape(tag_name)}\\.`); }
+
+function get_tag_objects_for_synonym(synonym)
+{ return get_tag_objects_matching(`\\+${re_escape(synonym)}$`); }
+
+function get_tag_objects_for_non_root_tag(tag_name)
+{ return get_tag_objects_matching(`\\.${re_escape(tag_name)}($|\\+)`); }
+
+function get_tag_objects_for_non_root_tag_and_descendants(tag_name)
+{ return get_tag_objects_matching(`\\.${re_escape(tag_name)}($|\\.|\\+)`); }
+
+function get_tag_objects_for_root_tag(tag_name)
+{ return get_tag_objects_matching(`^${re_escape(tag_name)}($|\\+)`); }
+
+function get_tag_objects_for_root_tag_and_descendants(tag_name)
+{ return get_tag_objects_matching(`^${re_escape(tag_name)}($|\\.|\\+)`); }
+
+function get_tag_objects_for_tag(tag_name)
+{ return get_tag_objects_matching(`(^|\\.)${re_escape(tag_name)}$`); }
+
+function get_tag_objects_for_tag_and_descendants(tag_name)
+{ return get_tag_objects_matching(`(^|\\.)${re_escape(tag_name)}($|\\.|\\+)`); }
+
+function get_tag_objects_for_tag_and_synonyms(tag_name)
+{ return get_tag_objects_matching(`(^|\\.)${re_escape(tag_name)}($|\\+)`); }
+
+function get_tag_objects_matching(regex)
+{
+    regex = new RegExp(regex);
+    const ret = get_all_tag_objects().filter(tag_object => tag_object.innerText.match(regex));
+    return ret;
+}
+
+function split_exclusive(text, tag_name)
+{
+    /*
+    Given text="a.b.c.d.e", tag_name"c", return "d.e".
+    */
+    const regex = `(?:^|\\.)${re_escape(tag_name)}(?:$|\\.)`;
+    const splitted = text.split(new RegExp(regex));
+    if (splitted.length == 1)
+        { return null; }
+    const descendantry = splitted.pop();
+    return descendantry;
+}
+
+function split_inclusive(text, tag_name)
+{
+    /*
+    Given text="a.b.c.d.e", tag_name"c", return "c.d.e".
+    */
+    const descendantry = split_exclusive(text, tag_name);
+    if (descendantry === null)
+        { return null; }
+    if (descendantry === "")
+        { return tag_name; }
+    return tag_name + "." + descendantry;
+}
+
 function tag_object_from_li(li)
 {
     const tag_objects = li.getElementsByClassName("tag_object");
     return tag_objects[tag_objects.length - 1];
 }
 
+function lift_tag_object(tag_object, from_parent)
+{
+    const descendantry = split_exclusive(tag_object.innerText, from_parent);
+    const regex = `(^|\\.)${re_escape(from_parent)}\\.`;
+    tag_object.innerText = tag_object.innerText.replace(new RegExp(regex), "$1");
+    const is_now_root = tag_object.innerText.indexOf(descendantry) == 0;
+    if (! is_now_root)
+    {
+        return;
+    }
+    const other_parents = get_tag_objects_matching(`\\.${re_escape(descendantry)}$`)
+    if (other_parents.length == 0)
+    {
+        return;
+    }
+    const li = tag_object.closest("li");
+    li.parentElement.removeChild(li);
+}
+
+function re_escape(s)
+{
+    // Thank you Pi Marillion.
+    // https://stackoverflow.com/a/30851002
+    return s.replace(/[^A-Za-z0-9_]/g, '\\$&');
+}
+
+
+// FORM FUNCTIONS //////////////////////////////////////////////////////////////
+
 function easybake_form()
 {
-    let easybake_string = add_tag_textbox.value;
+    const easybake_string = add_tag_textbox.value;
     if (easybake_string === "")
     {
         add_tag_textbox.focus();
@@ -335,16 +454,79 @@ function remove_synonym_form(event)
     return api.tags.remove_synonym(tag_name, synonym, tag_action_callback);
 }
 
+// CALLBACKS ///////////////////////////////////////////////////////////////////
+
+function easybake_callback(response)
+{
+    tag_action_callback(response);
+    if (response.meta.status !== 200)
+        {return;}
+    for (const data of response.data)
+    {
+        if (!("action" in data))
+            {continue;}
+        const action = data.action;
+        if (action == "new_tag")
+        {
+            const tag_name = data.tagname;
+            new_tag(tag_name);
+        }
+        else if (action == "new_synonym")
+        {
+            const [tag_name, synonym] = data.tagname.split("+");
+            new_synonym(tag_name, synonym);
+        }
+        else if (action == "join_group")
+        {
+            const [parent_name, child_name] = data.tagname.split(".");
+            join_group(parent_name, child_name);
+        }
+        else if (action == "rename_tag")
+        {
+            const [rename_from, rename_to] = data.tagname.split("=");
+            rename_tag(rename_from, rename_to);
+        }
+    }
+}
+
+function delete_tag_callback(response)
+{
+    tag_action_callback(response);
+    if (response.meta.status !== 200)
+        {return;}
+    const tag_name = response.data.tagname;
+    delete_tag(tag_name);
+}
+
+function remove_child_callback(response)
+{
+    tag_action_callback(response);
+    if (response.meta.status !== 200)
+        {return;}
+    const [parent_name, tag_name] = response.data.tagname.split(".");
+    remove_child(parent_name, tag_name);
+}
+
+function remove_synonym_callback(response)
+{
+    tag_action_callback(response);
+    if (response.meta.status !== 200)
+        {return;}
+
+    const synonym = response.data.synonym;
+    remove_synonym(synonym);
+}
+
 function tag_action_callback(response)
 {
-    datas = response.data;
+    let datas = response.data;
     if (!Array.isArray(datas))
     {
         datas = [datas];
     }
     for (const data of datas)
     {
-        let tagname = data.tagname;
+        const tagname = data.tagname;
         let message_positivity;
         let message_text;
         if ("error_type" in data)
@@ -354,7 +536,7 @@ function tag_action_callback(response)
         }
         else if ("action" in data)
         {
-            let action = data.action;
+            const action = data.action;
             message_positivity = "message_positive";
             if (action == "new_tag")
             {message_text = `Created tag ${tagname}`;}
@@ -379,10 +561,219 @@ function tag_action_callback(response)
 
             else if (action == "remove_child")
             {message_text = `Unlinked tags ${tagname}`;}
-
         }
         common.create_message_bubble(message_area, message_positivity, message_text, 8000);
     }
+}
+
+// UI UPDATERS /////////////////////////////////////////////////////////////////
+
+function new_tag(tag_name)
+{
+    const template = TEMPLATE_TAG_LI.replace(/\{tag_name\}/g, tag_name);
+    const new_li = common.html_to_element(template);
+    add_buttons_to_li(new_li);
+    document.getElementById("tag_list").appendChild(new_li);
+    sort_tag_objects();
+}
+
+function new_synonym(tag_name, synonym)
+{
+    for (const tag_object of get_tag_objects_for_tag(tag_name))
+    {
+        const li = tag_object.closest("li");
+        const new_li = li.cloneNode(true);
+        tag_object_from_li(new_li).innerText += `+${synonym}`;
+        li.parentElement.appendChild(new_li);
+        add_buttons_to_li(new_li);
+    }
+    sort_tag_objects();
+}
+
+function join_group(parent_name, child_name)
+{
+    console.log(parent_name + " " + SPECIFIC_TAG);
+    if (parent_name === SPECIFIC_TAG)
+    {
+        console.log("GO!");
+        return new_tag(`${parent_name}.${child_name}`);
+    }
+    const parent_tags = get_tag_objects_for_tag(parent_name);
+    const seen_names = new Set();
+    for (child_tag of get_tag_objects_for_tag_and_descendants(child_name))
+    {
+        const descendantry = split_inclusive(child_tag.innerText, child_name);
+        if (seen_names.has(descendantry))
+            { break; }
+        seen_names.add(descendantry);
+        const child_li = child_tag.closest("li");
+        for (const parent_tag of parent_tags)
+        {
+            const parent_li = parent_tag.closest("li");
+            const new_li = child_li.cloneNode(true);
+            tag_object_from_li(new_li).innerText = parent_tag.innerText + "." + descendantry;
+            parent_li.parentElement.appendChild(new_li);
+            add_buttons_to_li(new_li);
+        }
+    }
+
+    for (const tag_object of get_tag_objects_for_root_tag_and_descendants(child_name))
+    {
+        const li = tag_object.closest("li");
+        li.parentElement.removeChild(li);
+    }
+    sort_tag_objects();
+}
+
+function rename_tag(rename_from, rename_to)
+{
+    if (rename_from == rename_to)
+        { return; }
+    for (const tag_object of get_all_tag_objects())
+    {
+        tag_object.innerText = tag_object.innerText.replace(new RegExp(`(^|\\.)${re_escape(rename_from)}($|\\.|\\+)`), `$1${rename_to}$2`);
+    }
+    sort_tag_objects();
+}
+
+function delete_tag(tag_name)
+{
+    const tag_objects = get_tag_objects_for_tag_and_synonyms(tag_name);
+    for (const tag_object of tag_objects)
+    {
+        const li = tag_object.closest("li");
+        li.parentElement.removeChild(li);
+    }
+    const child_tags = get_tag_objects_for_descendants(tag_name);
+    for (const child_tag of child_tags)
+    {
+        lift_tag_object(child_tag, tag_name);
+    }
+    update_all_li_buttons();
+    sort_tag_objects();
+}
+
+function remove_child(parent_name, child_name)
+{
+    const tag_objects = get_tag_objects_for_descendant(parent_name, child_name);
+    const seen_names = new Set();
+    for (const tag_object of tag_objects)
+    {
+        const descendantry = split_exclusive(tag_object.innerText, parent_name);
+        if (descendantry === null)
+        {
+            continue;
+        }
+        const tag_li = tag_object.closest("li");
+        if (seen_names.has(descendantry))
+        {
+            tag_li.parentElement.removeChild(tag_li);
+            continue;
+        }
+        tag_object.innerText = descendantry;
+        update_li_buttons(tag_li);
+        seen_names.add(descendantry);
+    }
+
+    const child_as_root = get_tag_objects_for_root_tag_and_descendants(child_name);
+    const child_as_non_root = get_tag_objects_for_non_root_tag(child_name)
+    if (child_as_non_root.length > 0)
+    {
+        for (const tag_object of child_as_root)
+        {
+            const tag_li = tag_object.closest("li");
+            tag_li.parentElement.removeChild(tag_li);
+        }
+    }
+    sort_tag_objects();
+}
+
+function remove_synonym(synonym)
+{
+    for (const tag_object of get_tag_objects_for_synonym(synonym))
+    {
+        const li = tag_object.closest("li");
+        li.parentElement.removeChild(li);
+    }
+}
+
+function add_buttons_to_li(li)
+{
+    for (const existing of Array.from(li.getElementsByClassName("confirm_holder")))
+    {
+        li.removeChild(existing);
+    }
+    li.appendChild(common.html_to_element(TEMPLATE_BUTTON_DELETE_TAG));
+    li.appendChild(common.html_to_element(TEMPLATE_BUTTON_REMOVE_CHILD));
+    li.appendChild(common.html_to_element(TEMPLATE_BUTTON_REMOVE_SYNONYM));
+    for (const button of Array.from(li.getElementsByClassName("button_with_confirm")))
+    {
+        common.init_button_with_confirm(button);
+    }
+    update_li_buttons(li);
+}
+
+function add_buttons_to_all_lis()
+{
+    const lis = document.getElementById("tag_list").children;
+    for (const li of lis)
+    {
+        add_buttons_to_li(li);
+    }
+}
+
+function update_li_buttons(li)
+{
+    const tag_object = tag_object_from_li(li);
+    const delete_button = li.querySelector(".confirm_holder_delete_tag");
+    const unlink_button = li.querySelector(".confirm_holder_remove_child");
+    const synonym_button = li.querySelector(".confirm_holder_remove_synonym");
+    if (tag_object.innerText.includes("+"))
+    {
+        synonym_button.classList.remove("hidden");
+        delete_button.classList.add("hidden");
+        unlink_button.classList.add("hidden");
+    }
+    else if (tag_object.innerText.includes("."))
+    {
+        unlink_button.classList.remove("hidden");
+        delete_button.classList.add("hidden");
+        synonym_button.classList.add("hidden");
+    }
+    else
+    {
+        delete_button.classList.remove("hidden");
+        unlink_button.classList.add("hidden");
+        synonym_button.classList.add("hidden");
+    }
+}
+
+function update_all_li_buttons()
+{
+    const lis = document.getElementById("tag_list").children;
+    for (const li of lis)
+    {
+        update_li_buttons(li);
+    }
+}
+
+function sort_tag_objects()
+{
+    const start = performance.now();
+    function compare(li1, li2)
+    {
+        const tag1 = tag_object_from_li(li1).innerText;
+        const tag2 = tag_object_from_li(li2).innerText;
+        return tag1 < tag2 ? -1 : 1;
+    }
+    const tag_list = document.getElementById("tag_list");
+    const lis = Array.from(tag_list.children);
+    lis.sort(compare);
+    for (const li of lis)
+    {
+        tag_list.appendChild(li);
+    }
+    const end = performance.now();
 }
 
 {% if specific_tag is not none %}
@@ -442,5 +833,11 @@ var name_text = document.getElementById("name_text");
 var description_text = document.getElementById("description_text");
 var ed = new editor.Editor([name_text, description_text], on_open, on_save, on_cancel);
 {% endif %}
+
+function on_pageload()
+{
+    // window.setTimeout(add_buttons_to_all_lis, 0);
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
 </html>

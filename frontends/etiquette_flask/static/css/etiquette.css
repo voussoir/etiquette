@@ -124,8 +124,8 @@ is hovered over.
 {
     display: none;
 }
-.tag_object:hover + * .remove_tag_button,
-.tag_object:hover + .remove_tag_button,
+.tag_object:hover ~ * .remove_tag_button,
+.tag_object:hover ~ .remove_tag_button,
 .remove_tag_button:hover,
 .remove_tag_button_perm:hover
 {
