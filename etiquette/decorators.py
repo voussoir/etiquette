@@ -87,6 +87,7 @@ def transaction(method):
         try:
             result = method(self, *args, **kwargs)
         except Exception as e:
+            photodb.log.debug(e)
             photodb.rollback(savepoint=savepoint_id)
             raise
 
