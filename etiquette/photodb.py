@@ -1,5 +1,4 @@
 import bcrypt
-import copy
 import json
 import logging
 import os
@@ -1029,6 +1028,7 @@ class PDBSQLMixin:
         if bindings is None:
             bindings = []
         cur = self.sql.cursor()
+        # self.log.debug(f'{query} {bindings}')
         cur.execute(query, bindings)
         return cur
 

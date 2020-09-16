@@ -25,7 +25,7 @@ def register_all(site):
 def bytestring(x):
     try:
         return voussoirkit.bytestring.bytestring(x)
-    except Exception as e:
+    except Exception as exc:
         return '??? b'
 
 @filter_function

@@ -29,7 +29,9 @@ def upgrade_2_to_3(photodb):
     )
     ''')
     photodb.sql_execute('CREATE INDEX IF NOT EXISTS index_user_id ON users(id)')
-    photodb.sql_execute('CREATE INDEX IF NOT EXISTS index_user_username ON users(username COLLATE NOCASE)')
+    photodb.sql_execute('''
+    CREATE INDEX IF NOT EXISTS index_user_username ON users(username COLLATE NOCASE)
+    ''')
 
 def upgrade_3_to_4(photodb):
     '''
@@ -171,7 +173,9 @@ def upgrade_9_to_10(photodb):
         new_thumbnail_path = photo.make_thumbnail_filepath()
         new_thumbnail_path = new_thumbnail_path.absolute_path
         new_thumbnail_path = '.' + new_thumbnail_path.replace(thumbnail_dir, '')
-        photodb.sql_execute('UPDATE photos SET thumbnail = ? WHERE id == ?', [new_thumbnail_path, photo.id])
+        query = 'UPDATE photos SET thumbnail = ? WHERE id == ?'
+        bindings = [new_thumbnail_path, photo.id]
+        photodb.sql_execute(query, bindings)
 
 def upgrade_10_to_11(photodb):
     '''
@@ -249,7 +253,9 @@ def upgrade_12_to_13(photodb):
         display_name TEXT,
         created INT
     )''')
-    photodb.sql_execute('INSERT INTO users SELECT id, username, password, NULL, created FROM users_old')
+    photodb.sql_execute('''
+    INSERT INTO users SELECT id, username, password, NULL, created FROM users_old
+    ''')
     photodb.sql_execute('DROP TABLE users_old')
 
 def upgrade_13_to_14(photodb):

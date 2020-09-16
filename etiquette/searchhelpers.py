@@ -97,14 +97,14 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
     try:
         (low, high) = helpers.hyphen_range(value)
 
-    except ValueError as e:
+    except ValueError as exc:
         if warning_bag:
             warning_bag.add(constants.WARNING_MINMAX_INVALID.format(field=key, value=value))
             return
         else:
             raise
 
-    except exceptions.OutOfOrder as e:
+    except exceptions.OutOfOrder as exc:
         if warning_bag:
             warning_bag.add(e.error_message)
             return

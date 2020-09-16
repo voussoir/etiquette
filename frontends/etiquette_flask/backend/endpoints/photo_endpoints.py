@@ -214,13 +214,15 @@ def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
 @site.route('/batch/photos/set_searchhidden', methods=['POST'])
 @decorators.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_set_searchhidden():
-    response = post_batch_photos_searchhidden_core(photo_ids=request.form['photo_ids'], searchhidden=True)
+    photo_ids = request.form['photo_ids']
+    response = post_batch_photos_searchhidden_core(photo_ids=photo_ids, searchhidden=True)
     return response
 
 @site.route('/batch/photos/unset_searchhidden', methods=['POST'])
 @decorators.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_unset_searchhidden():
-    response = post_batch_photos_searchhidden_core(photo_ids=request.form['photo_ids'], searchhidden=False)
+    photo_ids = request.form['photo_ids']
+    response = post_batch_photos_searchhidden_core(photo_ids=photo_ids, searchhidden=False)
     return response
 
 # Clipboard ########################################################################################
