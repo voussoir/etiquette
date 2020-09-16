@@ -18,14 +18,22 @@ function _request(method, url, callback)
         if (callback == null)
             {return;}
 
-        if (request.status != 0)
-        {
-            response.completed = true;
-            response.data = JSON.parse(request.responseText);
-        }
         response.meta = {
             "request_url": url,
             "status": request.status
+        }
+        if (request.status != 0)
+        {
+            response.completed = true;
+            try
+            {
+                response.data = JSON.parse(request.responseText);
+                response.meta.json_ok = true;
+            }
+            catch (exc)
+            {
+                response.meta.json_ok = false;
+            }
         }
         callback(response);
     };
