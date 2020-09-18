@@ -19,7 +19,7 @@
 <style>
 #content_body
 {
-    --narrow:0;
+    --narrow: 0;
     flex: 1;
     grid-template:
         "left right" 1fr
@@ -116,18 +116,13 @@
 {
     #content_body
     {
-        --narrow:1;
+        --narrow: 1;
         grid-template:
             "right" 1fr
             "left" 1fr;
     }
     #left
     {
-        /*
-        Display: none will be returned back to flex as soon as the page detects
-        that the screen is in narrow mode and turns off the tag box's autofocus.
-        */
-        display: none;
         width: initial;
         max-width: none;
     }
@@ -157,7 +152,7 @@
         <h4>Tags</h4>
         <ul id="this_tags">
             <li>
-                <input type="text" id="add_tag_textbox" class="entry_with_history entry_with_tagname_replacements" list="tag_autocomplete_datalist" autofocus>
+                <input type="text" id="add_tag_textbox" class="entry_with_history entry_with_tagname_replacements" list="tag_autocomplete_datalist">
                 <button id="add_tag_button" class="green_button" onclick="return add_photo_tag_form();">add</button>
             </li>
             {% set tags = photo.get_tags()|sort_tags %}
@@ -563,22 +558,25 @@ function move_hoverzoom(event)
 
 tag_autocomplete.init_datalist();
 
-setTimeout(
+function autofocus_add_tag_box()
+{
     /*
-    When the screen is in column mode, the autofocusing of the tag box snaps the
-    screen down to it, which is annoying. By starting the #left hidden, we have
-    an opportunity to unset the autofocus before showing it.
+    If the add_tag_box has autofocus set by the HTML, then when the screen is
+    in narrow mode, the autofocusing of the tag box snaps the screen down to it,
+    which is annoying. So, this function focuses the box manually as long as
+    we're not narrow.
     */
-    function()
+    const content_body = document.getElementById("content_body");
+    if (getComputedStyle(content_body).getPropertyValue("--narrow") == 0)
     {
-        const content_body = document.getElementById("content_body");
-        if (getComputedStyle(content_body).getPropertyValue("--narrow") == 1)
-        {
-            add_tag_box.autofocus = false;
-        }
-        document.getElementById("left").style.display = "flex";
-    },
-    0
-);
+        add_tag_box.focus();
+    }
+}
+
+function on_pageload()
+{
+    autofocus_add_tag_box();
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
 </html>
