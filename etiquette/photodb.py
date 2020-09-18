@@ -1242,18 +1242,27 @@ class PDBUserMixin:
         return user_id
 
     def get_user(self, username=None, id=None):
+        '''
+        Redirect to get_user_by_id or get_user_by_username.
+        '''
         if not helpers.is_xor(id, username):
             raise exceptions.NotExclusive(['id', 'username'])
 
-        if username is not None:
-            user_row = self.sql_select_one('SELECT * FROM users WHERE username == ?', [username])
+        if id:
+            return self.get_user_by_id(id)
         else:
-            user_row = self.sql_select_one('SELECT * FROM users WHERE id == ?', [id])
+            return self.get_user_by_username(username)
 
-        if user_row is not None:
-            return self.get_cached_instance('user', user_row)
-        else:
-            raise exceptions.NoSuchUser(username or id)
+    def get_user_by_id(self, id):
+        return self.get_thing_by_id('user', id)
+
+    def get_user_by_username(self, username):
+        user_row = self.sql_select_one('SELECT * FROM users WHERE username == ?', [username])
+
+        if user_row is None:
+            raise exceptions.NoSuchUser(username)
+
+        return self.get_cached_instance('user', user_row)
 
     def get_user_count(self):
         return self.sql_select_one('SELECT COUNT(id) FROM users')[0]
