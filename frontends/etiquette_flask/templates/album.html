@@ -184,7 +184,7 @@ const ALBUM_ID = undefined;
 
         <button
         class="red_button button_with_confirm"
-        data-onclick="return api.albums.delete(ALBUM_ID, api.albums.callback_go_to_albums);"
+        data-onclick="return delete_album_form();"
         data-prompt="Delete Album?"
         data-cancel-class="gray_button"
         >
@@ -214,7 +214,7 @@ const ALBUM_ID = undefined;
         {% set associated_directories = album.get_associated_directories() %}
         <button
         class="green_button button_with_spinner"
-        onclick="return api.albums.refresh_directories(ALBUM_ID, common.refresh);"
+        onclick="return refresh_associated_directories_form();"
         data-spinner-delay="500"
         {% if associated_directories %}
         title="Pull from {{associated_directories|length}} directories"
@@ -320,6 +320,16 @@ function add_child(child_id)
         return;
     }
     api.albums.add_child(ALBUM_ID, child_id, common.refresh);
+}
+
+function delete_album_form()
+{
+    api.albums.delete(ALBUM_ID, api.albums.callback_go_to_albums);
+}
+
+function refresh_associated_directories_form()
+{
+    api.albums.refresh_directories(ALBUM_ID, common.refresh);
 }
 
 function paste_photo_clipboard()

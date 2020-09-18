@@ -258,7 +258,7 @@
         {% endif %}
         <button
         class="red_button button_with_confirm"
-        data-onclick="return api.photos.delete(PHOTO_ID, false, api.photos.callback_go_to_search);"
+        data-onclick="return delete_photo_form();"
         data-prompt="Delete photo, keep file?"
         data-cancel-class="gray_button"
         >
@@ -267,7 +267,7 @@
 
         <button
         class="red_button button_with_confirm"
-        data-onclick="return api.photos.delete(PHOTO_ID, true, api.photos.callback_go_to_search);"
+        data-onclick="return delete_photo_from_disk_form();"
         data-prompt="Delete file on disk?"
         data-cancel-class="gray_button"
         >
@@ -379,6 +379,16 @@ function add_remove_photo_tag_callback(response)
         }
     }
     common.create_message_bubble(message_area, message_positivity, message_text, 8000);
+}
+
+function delete_photo_form()
+{
+    api.photos.delete(PHOTO_ID, false, api.photos.callback_go_to_search);
+}
+
+function delete_photo_from_disk_form()
+{
+    api.photos.delete(PHOTO_ID, true, api.photos.callback_go_to_search);
 }
 
 function sort_tag_objects()
