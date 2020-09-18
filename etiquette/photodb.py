@@ -33,16 +33,7 @@ class PDBAlbumMixin:
     def __init__(self):
         super().__init__()
 
-    def get_album(self, id=None, path=None):
-        if not helpers.is_xor(id, path):
-            raise exceptions.NotExclusive(['id', 'path'])
-
-        if id is not None:
-            return self.get_album_by_id(id)
-        else:
-            return self.get_album_by_path(path)
-
-    def get_album_by_id(self, id):
+    def get_album(self, id):
         return self.get_thing_by_id('album', id)
 
     def get_album_count(self):
