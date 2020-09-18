@@ -1146,16 +1146,6 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def set_searchhidden(self, searchhidden):
-        data = {
-            'id': self.id,
-            'searchhidden': bool(searchhidden),
-        }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
-        self.searchhidden = searchhidden
-
-    @decorators.required_feature('photo.edit')
-    @decorators.transaction
     def set_override_filename(self, new_filename):
         new_filename = self.normalize_override_filename(new_filename)
 
@@ -1167,6 +1157,16 @@ class Photo(ObjectBase):
         self.basename = override_filename
 
         self.__reinit__()
+
+    @decorators.required_feature('photo.edit')
+    @decorators.transaction
+    def set_searchhidden(self, searchhidden):
+        data = {
+            'id': self.id,
+            'searchhidden': bool(searchhidden),
+        }
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+        self.searchhidden = searchhidden
 
 
 class Tag(ObjectBase, GroupableMixin):
