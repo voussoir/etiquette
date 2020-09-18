@@ -1192,7 +1192,7 @@ class PDBTagMixin:
     def normalize_tagname(self, tagname):
         tagname = objects.Tag.normalize_name(
             tagname,
-            valid_chars=self.config['tag']['valid_chars'],
+            # valid_chars=self.config['tag']['valid_chars'],
             min_length=self.config['tag']['min_length'],
             max_length=self.config['tag']['max_length'],
         )

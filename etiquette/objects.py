@@ -1206,17 +1206,19 @@ class Tag(ObjectBase, GroupableMixin):
         return description
 
     @staticmethod
-    def normalize_name(name, valid_chars=None, min_length=None, max_length=None):
+    def normalize_name(name, min_length=None, max_length=None):
         original_name = name
-        if valid_chars is None:
-            valid_chars = constants.DEFAULT_CONFIGURATION['tag']['valid_chars']
+        # if valid_chars is None:
+        #     valid_chars = constants.DEFAULT_CONFIGURATION['tag']['valid_chars']
 
-        name = name.lower().strip()
-        name = name.strip('.+')
+        name = name.lower()
+        name = helpers.remove_control_characters(name)
+        name = name.strip(' .+')
         name = name.split('+')[0].split('.')[-1]
         name = name.replace('-', '_')
         name = name.replace(' ', '_')
-        name = ''.join(c for c in name if c in valid_chars)
+        name = name.replace('=', '')
+        # name = ''.join(c for c in name if c in valid_chars)
 
         if min_length is not None and len(name) < min_length:
             raise exceptions.TagTooShort(original_name)

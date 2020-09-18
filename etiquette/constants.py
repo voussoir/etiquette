@@ -291,7 +291,7 @@ DEFAULT_CONFIGURATION = {
     'tag': {
         'min_length': 1,
         'max_length': 32,
-        'valid_chars': string.ascii_lowercase + string.digits + '_()',
+        # 'valid_chars': string.ascii_lowercase + string.digits + '_()',
     },
 
     'user': {
