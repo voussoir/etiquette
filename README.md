@@ -114,7 +114,6 @@ Here is a brief overview of the project to help you learn your way around:
 - Add a new table to store permanent history of add/remove of tags on photos, so that accidents or trolling can be reversed.
 - Fix album size cache when photo reload metadata and generally improve that validation.
 - Better bookmark url validation.
-- Consider if the "did you commit too early" warning should actually be an exception.
 - Extension currently does not believe in the override filename. On one hand this is kind of good because if they override the name to have no extension, we can still provide a downloadable file with the correct extension by remembering it. But on the other hand it does break the illusion of override_filename.
 - When batch fetching objects, consider whether or not a NoSuch should be raised. Perhaps a warningbag should be used.
 - Find a way to batch the fetching of photo tags in a way that isn't super ugly (e.g. on an album page, the photos themselves are batched, but then the `photo.get_tags()` on each one is not. In order to batch this we would have to have a separate function that fetches a whole bunch of tags and assigns them to the photo object).
