@@ -25,7 +25,7 @@
     {{header.make_header(session=session)}}
     <div id="content_body">
         <h2>{{user.display_name}}</h2>
-        <p>ID: {{user.id}}</p>
+        <p>ID: <a href="/userid/{{user.id}}">{{user.id}}</a></p>
         <p>User since <span title="{{user.created|int|timestamp_to_8601}}">{{user.created|timestamp_to_naturaldate}}.</span></p>
         <p><a href="/search?author={{user.username}}">Photos by {{user.display_name}}</a></p>
     </div>
