@@ -390,17 +390,19 @@ class Album(ObjectBase, GroupableMixin):
             return
 
         if title is not None:
-            self.title = self.normalize_title(title)
+            title = self.normalize_title(title)
 
         if description is not None:
-            self.description = self.normalize_description(description)
+            description = self.normalize_description(description)
 
         data = {
             'id': self.id,
-            'title': self.title,
-            'description': self.description,
+            'title': title,
+            'description': description,
         }
         self.photodb.sql_update(table='albums', pairs=data, where_key='id')
+        self.title = title
+        self.description = description
 
     def get_associated_directories(self):
         directory_rows = self.photodb.sql_select(
@@ -608,18 +610,19 @@ class Bookmark(ObjectBase):
             return
 
         if title is not None:
-            self.title = self.normalize_title(title)
+            title = self.normalize_title(title)
 
         if url is not None:
-            self.url = self.normalize_url(url)
+            url = self.normalize_url(url)
 
         data = {
             'id': self.id,
-            'title': self.title,
-            'url': self.url,
+            'title': title,
+            'url': url,
         }
         self.photodb.sql_update(table='bookmarks', pairs=data, where_key='id')
-
+        self.title = title
+        self.url = url
 
 class Photo(ObjectBase):
     '''
@@ -1149,7 +1152,6 @@ class Photo(ObjectBase):
             'searchhidden': bool(searchhidden),
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
-
         self.searchhidden = searchhidden
 
     @decorators.required_feature('photo.edit')
@@ -1162,6 +1164,7 @@ class Photo(ObjectBase):
             'override_filename': new_filename,
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+        self.basename = override_filename
 
         self.__reinit__()
 
@@ -1376,13 +1379,14 @@ class Tag(ObjectBase, GroupableMixin):
         if description is None:
             return
 
-        self.description = self.normalize_description(description)
+        description = self.normalize_description(description)
 
         data = {
             'id': self.id,
-            'description': self.description
+            'description': description,
         }
         self.photodb.sql_update(table='tags', pairs=data, where_key='id')
+        self.description = description
 
         self._uncache()
 
@@ -1523,7 +1527,6 @@ class User(ObjectBase):
             'display_name': display_name,
         }
         self.photodb.sql_update(table='users', pairs=data, where_key='id')
-
         self._display_name = display_name
 
 
