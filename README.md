@@ -103,7 +103,6 @@ Here is a brief overview of the project to help you learn your way around:
 ### To do list
 - Make the wording between "new", "create", "add"; and "remove", "delete" more consistent.
 - User account system, permission levels, private pages.
-- Debate whether the `UserMixin.login` method should accept usernames or I should standardize the usage of IDs only internally.
 - Ability to access user photos by user's ID, not just username.
 - Replace columns like area, ratio, bitrate by using expression indices or views (`width * height` etc).
 - Add a `Photo.merge` to combine duplicate entries.

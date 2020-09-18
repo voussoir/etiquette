@@ -64,8 +64,7 @@ def post_login():
         # information (user exists) leak via response time?
         # Currently I think not, because they can check if the account
         # page 404s anyway.
-        user = common.P.get_user(username=username)
-        user = common.P.login(user.id, password)
+        user = common.P.login(username=username, password=password)
     except (etiquette.exceptions.NoSuchUser, etiquette.exceptions.WrongLogin):
         exc = etiquette.exceptions.WrongLogin()
         response = etiquette.jsonify.exception(exc)

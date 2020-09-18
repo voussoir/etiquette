@@ -1300,19 +1300,17 @@ class PDBUserMixin:
         yield from self.get_things('user')
 
     @decorators.required_feature('user.login')
-    def login(self, user_id, password):
+    def login(self, username=None, id=None, *, password):
         '''
         Return the User object for the user if the credentials are correct.
         '''
-        user_row = self.sql_select_one('SELECT * FROM users WHERE id == ?', [user_id])
-
-        if user_row is None:
+        try:
+            user = self.get_user(username=username, id=id)
+        except exceptions.NoSuchUser:
             raise exceptions.WrongLogin()
 
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
-
-        user = self.get_cached_instance('user', user_row)
 
         success = bcrypt.checkpw(password, user.password_hash)
         if not success:
