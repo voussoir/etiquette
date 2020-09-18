@@ -1033,7 +1033,7 @@ class Photo(ObjectBase):
             'filepath': new_filepath.absolute_path,
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
-
+        self.real_path = new_filepath
         self._uncache()
 
     @decorators.required_feature('photo.add_remove_tag')
@@ -1118,6 +1118,7 @@ class Photo(ObjectBase):
             'filepath': (old_path.absolute_path, new_path.absolute_path),
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='filepath')
+        self.real_path = new_path
 
         if new_path.normcase == old_path.normcase:
             # If they are equivalent but differently cased, just rename.
