@@ -258,7 +258,8 @@ class PDBCacheManagerMixin:
     def get_cached_tag_export(self, function, **kwargs):
         if isinstance(function, str):
             function = getattr(tag_export, function)
-        kwargs['tags'] = tuple(kwargs['tags'])
+        if 'tags' in kwargs:
+            kwargs['tags'] = tuple(kwargs['tags'])
         key = (function.__name__,) + helpers.dict_to_tuple(kwargs)
         try:
             exp = self.caches['tag_exports'][key]
@@ -1062,24 +1063,30 @@ class PDBTagMixin:
         else:
             raise exceptions.TagExists(existing_tag)
 
-    def get_all_tag_names(self):
-        '''
-        Return a list containing the names of all tags as strings.
-        Useful for when you don't want the overhead of actual Tag objects.
-        '''
+    def _get_all_tag_names(self):
         query = 'SELECT name FROM tags'
         rows = self.sql_select(query)
         names = [row[0] for row in rows]
         return names
 
-    def get_all_synonyms(self):
+    def get_all_tag_names(self):
         '''
-        Return a dict mapping {synonym: mastertag} as strings.
+        Return a list containing the names of all tags as strings.
+        Useful for when you don't want the overhead of actual Tag objects.
         '''
+        return self.get_cached_tag_export(self._get_all_tag_names)
+
+    def _get_all_synonyms(self):
         query = 'SELECT name, mastername FROM tag_synonyms'
         rows = self.sql_select(query)
         synonyms = {syn: tag for (syn, tag) in rows}
         return synonyms
+
+    def get_all_synonyms(self):
+        '''
+        Return a dict mapping {synonym: mastertag} as strings.
+        '''
+        return self.get_cached_tag_export(self._get_all_synonyms)
 
     def get_root_tags(self):
         '''
