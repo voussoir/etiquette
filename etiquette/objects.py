@@ -679,6 +679,18 @@ class Photo(ObjectBase):
     def __repr__(self):
         return f'Photo:{self.id}'
 
+    @staticmethod
+    def normalize_override_filename(override_filename):
+        if override_filename is None:
+            return None
+
+        cleaned = helpers.remove_path_badchars(override_filename)
+        cleaned = cleaned.strip()
+        if not cleaned:
+            raise ValueError(f'"{override_filename}" is not valid.')
+
+        return cleaned
+
     def _uncache(self):
         self.photodb.caches['photo'].remove(self.id)
 
@@ -1142,12 +1154,7 @@ class Photo(ObjectBase):
     @decorators.required_feature('photo.edit')
     @decorators.transaction
     def set_override_filename(self, new_filename):
-        if new_filename is not None:
-            cleaned = helpers.remove_path_badchars(new_filename)
-            cleaned = cleaned.strip()
-            if not cleaned:
-                raise ValueError(f'"{new_filename}" is not valid.')
-            new_filename = cleaned
+        new_filename = self.normalize_override_filename(new_filename)
 
         data = {
             'id': self.id,
