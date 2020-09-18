@@ -119,7 +119,6 @@ Here is a brief overview of the project to help you learn your way around:
 - Find a way to batch the fetching of photo tags in a way that isn't super ugly (e.g. on an album page, the photos themselves are batched, but then the `photo.get_tags()` on each one is not. In order to batch this we would have to have a separate function that fetches a whole bunch of tags and assigns them to the photo object).
 - Consider using executemany for some of the batch operations.
 - Check for embedded cover art when thumbnailing audio files.
-- A "card" representation of albums, like photos.
 - Similarly, rename all "tag_object" to tag card and unify that experience a bit.
 - Batch movement of Albums... but without winding up with a second clipboard system?
 - Overall, more dynamism with cards and tag objects and updating page without requiring refresh.
