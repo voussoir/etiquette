@@ -12,6 +12,22 @@
     --color_highlight: rgba(255, 255, 255, 0.5);
 }
 
+@media screen and (min-width: 800px)
+{
+    :root
+    {
+        --wide: 1;
+    }
+}
+
+@media screen and (max-width: 800px)
+{
+    :root
+    {
+        --narrow: 1;
+    }
+}
+
 .hidden
 {
     display: none !important;

@@ -453,6 +453,18 @@ function init_all_tabbed_container()
     }
 }
 
+common.is_narrow_mode =
+function is_narrow_mode()
+{
+    return getComputedStyle(document.documentElement).getPropertyValue("--narrow").trim() === "1";
+}
+
+common.is_wide_mode =
+function is_wide_mode()
+{
+    return getComputedStyle(document.documentElement).getPropertyValue("--wide").trim() === "1";
+}
+
 common.tabbed_container_switcher =
 function tabbed_container_switcher(event)
 {

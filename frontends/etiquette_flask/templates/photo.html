@@ -19,7 +19,6 @@
 <style>
 #content_body
 {
-    --narrow: 0;
     flex: 1;
     grid-template:
         "left right" 1fr
@@ -119,7 +118,6 @@
 {
     #content_body
     {
-        --narrow: 1;
         grid-template:
             "right" 100%
             "left" max-content
@@ -486,8 +484,7 @@ function toggle_hoverzoom(event)
     {
         enable_hoverzoom(event);
     }
-    const content_body = document.getElementById('content_body');
-    if (getComputedStyle(content_body).getPropertyValue("--narrow") == 0)
+    if (common.is_wide_mode())
     {
         add_tag_box.focus();
     }
@@ -566,8 +563,7 @@ function autofocus_add_tag_box()
     which is annoying. So, this function focuses the box manually as long as
     we're not narrow.
     */
-    const content_body = document.getElementById("content_body");
-    if (getComputedStyle(content_body).getPropertyValue("--narrow") == 0)
+    if (common.is_wide_mode())
     {
         add_tag_box.focus();
     }
