@@ -18,8 +18,3 @@ def root():
 @site.route('/favicon.png')
 def favicon():
     return flask.send_file(common.FAVICON_PATH.absolute_path)
-
-@site.route('/apitest')
-def apitest():
-    response = flask.Response('testing')
-    return response
