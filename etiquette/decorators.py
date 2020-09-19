@@ -42,7 +42,7 @@ def required_feature(features):
                     raise exceptions.FeatureDisabled(feature)
 
                 else:
-                    raise ValueError(f'Bad required_feature: "{feature}" led to {cfg}')
+                    raise ValueError(f'Bad required_feature: "{feature}" led to {cfg}.')
 
             return method(self, *args, **kwargs)
         return wrapped_required_feature
@@ -86,7 +86,7 @@ def transaction(method):
         try:
             result = method(self, *args, **kwargs)
         except Exception as exc:
-            photodb.log.debug(f'{method} raised {repr(exc)}')
+            photodb.log.debug(f'{method} raised {repr(exc)}.')
             photodb.rollback(savepoint=savepoint_id)
             raise
 

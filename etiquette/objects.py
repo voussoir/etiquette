@@ -254,7 +254,7 @@ class Album(ObjectBase, GroupableMixin):
             return ''
 
         if not isinstance(description, str):
-            raise TypeError(f'Description must be string, not {type(description)}')
+            raise TypeError(f'Description must be {str}, not {type(description)}.')
 
         description = description.strip()
 
@@ -266,7 +266,7 @@ class Album(ObjectBase, GroupableMixin):
             return ''
 
         if not isinstance(title, str):
-            raise TypeError(f'Title must be string, not {type(title)}')
+            raise TypeError(f'Title must be {str}, not {type(title)}.')
 
         title = title.strip()
         for whitespace in string.whitespace:
@@ -563,7 +563,7 @@ class Bookmark(ObjectBase):
             return ''
 
         if not isinstance(title, str):
-            raise TypeError(f'Title must be string, not {type(title)}')
+            raise TypeError(f'Title must be {str}, not {type(title)}.')
 
         title = title.strip()
         for whitespace in string.whitespace:
@@ -577,12 +577,12 @@ class Bookmark(ObjectBase):
             return ''
 
         if not isinstance(url, str):
-            raise TypeError(f'URL must be string, not {type(url)}')
+            raise TypeError(f'URL must be {str}, not {type(url)}.')
 
         url = url.strip()
 
         if not url:
-            raise ValueError(f'Invalid URL "{url}"')
+            raise ValueError(f'Invalid URL "{url}".')
 
         return url
 
@@ -1090,10 +1090,10 @@ class Photo(ObjectBase):
         self.photodb.log.debug(old_path)
         self.photodb.log.debug(new_path)
         if (new_path.parent != old_path.parent) and not move:
-            raise ValueError('Cannot move the file without param move=True')
+            raise ValueError('Cannot move the file without param move=True.')
 
         if new_path.absolute_path == old_path.absolute_path:
-            raise ValueError('The new and old names are the same')
+            raise ValueError('The new and old names are the same.')
 
         new_path.assert_not_exists()
 
@@ -1197,7 +1197,7 @@ class Tag(ObjectBase, GroupableMixin):
             return ''
 
         if not isinstance(description, str):
-            raise TypeError(f'Description must be string, not {type(description)}')
+            raise TypeError(f'Description must be {str}, not {type(description)}.')
 
         description = description.strip()
 

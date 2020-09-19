@@ -233,7 +233,7 @@ def hyphen_range(s):
     elif len(parts) == 2:
         (low, high) = parts
     else:
-        raise ValueError('Too many hyphens')
+        raise ValueError('Too many hyphens.')
 
     low = parse_unit_string(low)
     high = parse_unit_string(high)
@@ -406,14 +406,14 @@ def split_easybake_string(ebstring):
     ebstring = ebstring.strip('.+=')
 
     if ebstring == '':
-        raise exceptions.EasyBakeError('No tag supplied')
+        raise exceptions.EasyBakeError('No tag supplied.')
 
     if '=' in ebstring and '+' in ebstring:
-        raise exceptions.EasyBakeError('Cannot rename and assign snynonym at once')
+        raise exceptions.EasyBakeError('Cannot rename and assign snynonym at once.')
 
     rename_parts = ebstring.split('=')
     if len(rename_parts) > 2:
-        raise exceptions.EasyBakeError('Too many equals signs')
+        raise exceptions.EasyBakeError('Too many equals signs.')
 
     if len(rename_parts) == 2:
         (ebstring, rename_to) = rename_parts
@@ -423,7 +423,7 @@ def split_easybake_string(ebstring):
 
     synonym_parts = ebstring.split('+')
     if len(synonym_parts) > 2:
-        raise exceptions.EasyBakeError('Too many plus signs')
+        raise exceptions.EasyBakeError('Too many plus signs.')
 
     if len(synonym_parts) == 2:
         (tagname, synonym) = synonym_parts
@@ -432,7 +432,7 @@ def split_easybake_string(ebstring):
         (tagname, synonym) = (synonym_parts[0], None)
 
     if not tagname:
-        raise exceptions.EasyBakeError('No tag supplied')
+        raise exceptions.EasyBakeError('No tag supplied.')
 
     tagname = tagname.strip('.')
     return (tagname, synonym, rename_to)
@@ -451,7 +451,7 @@ def truthystring(s):
         return bool(s)
 
     if not isinstance(s, str):
-        raise TypeError(f'Unsupported type {type(s)}')
+        raise TypeError(f'String should be {bool}, {int}, {str}, or None, not {type(s)}.')
 
     s = s.lower()
     if s in constants.TRUTHYSTRING_TRUE:

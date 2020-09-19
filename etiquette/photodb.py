@@ -1291,7 +1291,7 @@ class PDBUserMixin:
 
         elif isinstance(user_obj_or_id, objects.User):
             if user_obj_or_id.photodb != self:
-                raise ValueError('That user does not belong to this photodb')
+                raise ValueError('That user does not belong to this photodb.')
             author_id = user_obj_or_id.id
 
         elif isinstance(user_obj_or_id, str):
@@ -1299,7 +1299,7 @@ class PDBUserMixin:
             author_id = self.get_user(id=user_obj_or_id).id
 
         else:
-            raise TypeError(f'Unworkable type {type(user_obj_or_id)}')
+            raise TypeError(f'Unworkable type {type(user_obj_or_id)}.')
 
         return author_id
 
