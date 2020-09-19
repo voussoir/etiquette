@@ -4,7 +4,6 @@ but are returned by the PDB accesses.
 '''
 import os
 import PIL.Image
-import string
 import send2trash
 import traceback
 

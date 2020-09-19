@@ -4,7 +4,6 @@ import logging
 import os
 import random
 import sqlite3
-import string
 import tempfile
 import time
 

@@ -105,7 +105,7 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
 
     except exceptions.OutOfOrder as exc:
         if warning_bag:
-            warning_bag.add(e.error_message)
+            warning_bag.add(exc.error_message)
             return
         else:
             raise
