@@ -52,9 +52,12 @@ h2, h3
 }
 #right
 {
+    display: grid;
     grid-template:
         "editor_area" 1fr
         "message_area" 1fr;
+    padding: 8px;
+    background-color: var(--color_transparency);
 }
 #editor_area
 {
@@ -67,22 +70,8 @@ h2, h3
 }
 @media screen and (max-width: 800px)
 {
-    #content_body
-    {
-        grid-template:
-            "left" 1fr
-            "right" 150px
-            / 1fr !important;
-    }
     #right
     {
-        top: unset !important;
-        width: unset !important;
-        left: 8px;
-        right: 8px;
-        bottom: 8px;
-        height: 150px;
-
         grid-template:
             "editor_area message_area" 1fr
             /1fr         minmax(50px, 200px);
@@ -94,7 +83,7 @@ h2, h3
 
 <body>
 {{header.make_header(session=session)}}
-<div id="content_body" class="sticky_side_right">
+<div id="content_body" class="sticky_side_right sticky_bottom_right">
     <div id="right">
         <div id="editor_area">
             <input type="text" id="add_tag_textbox" class="entry_with_history entry_with_tagname_replacements" autofocus>

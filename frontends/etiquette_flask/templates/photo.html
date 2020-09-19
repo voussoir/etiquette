@@ -29,8 +29,11 @@
 {
     grid-area: left;
 
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template:
+        "editor_area" auto
+        "message_area" 1fr
+        /1fr;
 
     min-height: min-content;
 
@@ -46,6 +49,7 @@
 }
 #editor_area
 {
+    grid-area: editor_area;
     padding: 8px;
     word-wrap: break-word;
 }
@@ -56,6 +60,7 @@
 }
 #message_area
 {
+    grid-area: message_area;
     min-height: 30px;
     max-height: none;
     margin: 8px;
@@ -108,8 +113,6 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-
-    /*background-color: var(--color_primary);*/
 }
 
 @media screen and (max-width: 800px)
@@ -118,17 +121,14 @@
     {
         --narrow: 1;
         grid-template:
-            "right" 1fr
-            "left" 1fr;
+            "right" 100%
+            "left" max-content
+            / 1fr;
     }
     #left
     {
         width: initial;
         max-width: none;
-    }
-    #right
-    {
-        height: calc(100vh - 40px);
     }
     #message_area
     {

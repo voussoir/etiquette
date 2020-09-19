@@ -25,11 +25,14 @@
 }
 #right
 {
+    display: grid;
     grid-row-gap: 8px;
     grid-template:
         "toolbox" auto
         "message_area" 1fr
         / 1fr;
+    padding: 8px;
+    background-color: var(--color_transparency);
 }
 #toolbox
 {
@@ -69,22 +72,8 @@
 
 @media screen and (max-width: 800px)
 {
-    #content_body
-    {
-        grid-template:
-            "left" 1fr
-            "right" 200px
-            / 1fr !important;
-    }
     #right
     {
-        top: unset !important;
-        width: unset !important;
-        left: 8px;
-        right: 8px;
-        bottom: 8px;
-        height: 200px;
-
         grid-template:
             "toolbox message_area" 1fr
             /1fr     minmax(50px, 200px);
@@ -96,7 +85,7 @@
 
 <body>
 {{header.make_header(session=session)}}
-<div id="content_body" class="sticky_side_right">
+<div id="content_body" class="sticky_side_right sticky_bottom_right">
 <div id="left">
     <div class="panel">The clipboard contains <span class="clipboard_count">0</span> items.
     <button id="clear_clipboard_button" class="red_button" onclick="return photo_clipboard.clear_clipboard();">Clear it.</button>

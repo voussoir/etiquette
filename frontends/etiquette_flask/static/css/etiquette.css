@@ -7,6 +7,7 @@
     --color_tag_object_fg: blue;
 
     --size_sticky_side: 300px;
+    --size_sticky_bottom: 150px;
 }
 
 input, select, textarea
@@ -34,51 +35,73 @@ input, select, textarea
     grid-area: right;
 }
 
-#content_body.sticky_side_left
+@media screen and (min-width: 800px)
 {
-    grid-template:
-        "left right"
-        /var(--size_sticky_side) 1fr;
-}
-#content_body.sticky_side_right
-{
-    grid-template:
-        "left right"
-        /1fr var(--size_sticky_side);
-}
+    #content_body.sticky_side_left
+    {
+        grid-template:
+            "left right"
+            /var(--size_sticky_side) 1fr;
+    }
+    #content_body.sticky_side_right
+    {
+        grid-template:
+            "left right"
+            /1fr var(--size_sticky_side);
+    }
 
-#content_body.sticky_side_left #left,
-#content_body.sticky_side_right #right
-{
-    display: grid;
-    grid-auto-rows: min-content;
-
-    z-index: 1;
-    position: fixed;
-    bottom: 8px;
-    top: 34px;
-    padding: 8px;
-    width: var(--size_sticky_side);
-    overflow-y: auto;
-    background-color: var(--color_transparency);
-}
-#content_body.sticky_side_left #left
-{
-    left: 8px;
-}
-#content_body.sticky_side_right #right
-{
-    right: 8px;
+    #content_body.sticky_side_left #left,
+    #content_body.sticky_side_right #right
+    {
+        z-index: 1;
+        position: fixed;
+        bottom: 8px;
+        top: 34px;
+        width: var(--size_sticky_side);
+        overflow-y: auto;
+    }
+    #content_body.sticky_side_left #left
+    {
+        left: 8px;
+    }
+    #content_body.sticky_side_right #right
+    {
+        right: 8px;
+    }
 }
 
 @media screen and (max-width: 800px)
 {
-    #content_body.sticky_side_right #right
+    #content_body.sticky_bottom_left
     {
-        outline: 8px solid var(--color_primary);
-        background-color: var(--color_primary) !important;
+        grid-template:
+            "right" 1fr
+            "left" var(--size_sticky_bottom)
+            / 1fr;
     }
-    #content_body.sticky_side_right #right:before
+    #content_body.sticky_bottom_right
+    {
+        grid-template:
+            "left" 1fr
+            "right" var(--size_sticky_bottom)
+            / 1fr;
+    }
+    #content_body.sticky_bottom_left #left,
+    #content_body.sticky_bottom_right #right
+    {
+        z-index: 1;
+        position: fixed;
+        background-color: var(--color_primary);
+        outline: 8px solid var(--color_primary);
+        top: unset;
+        width: unset;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        height: var(--size_sticky_bottom);
+    }
+    #content_body.sticky_bottom_left #left:before,
+    #content_body.sticky_bottom_right #right:before
     {
         content: "";
         position: absolute;
