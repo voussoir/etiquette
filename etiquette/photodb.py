@@ -79,12 +79,11 @@ class PDBAlbumMixin:
         # These might raise exceptions.
         title = objects.Album.normalize_title(title)
         description = objects.Album.normalize_description(description)
+        author_id = self.get_user_id_or_none(author)
 
         # Ok.
         album_id = self.generate_id(table='albums')
         self.log.debug('New Album: %s %s', album_id, title)
-
-        author_id = self.get_user_id_or_none(author)
 
         data = {
             'id': album_id,
@@ -164,12 +163,11 @@ class PDBBookmarkMixin:
         # These might raise exceptions.
         title = objects.Bookmark.normalize_title(title)
         url = objects.Bookmark.normalize_url(url)
+        author_id = self.get_user_id_or_none(author)
 
         # Ok.
         bookmark_id = self.generate_id(table='bookmarks')
         self.log.debug('New Bookmark: %s %s %s', bookmark_id, title, url)
-
-        author_id = self.get_user_id_or_none(author)
 
         data = {
             'id': bookmark_id,
@@ -471,11 +469,11 @@ class PDBPhotoMixin:
         if not allow_duplicates:
             self.assert_no_such_photo_by_path(filepath=filepath)
 
+        author_id = self.get_user_id_or_none(author)
+
         # Ok.
         photo_id = self.generate_id(table='photos')
         self.log.debug('New Photo: %s %s', photo_id, filepath.absolute_path)
-
-        author_id = self.get_user_id_or_none(author)
 
         data = {
             'id': photo_id,
@@ -1168,12 +1166,11 @@ class PDBTagMixin:
         self.assert_no_such_tag(name=tagname)
 
         description = objects.Tag.normalize_description(description)
+        author_id = self.get_user_id_or_none(author)
 
         # Ok.
         tag_id = self.generate_id(table='tags')
         self.log.debug('New Tag: %s %s', tag_id, tagname)
-
-        author_id = self.get_user_id_or_none(author)
 
         self.caches['tag_exports'].clear()
 
