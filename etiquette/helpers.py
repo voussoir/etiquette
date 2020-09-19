@@ -293,13 +293,18 @@ def now(timestamp=True):
 
 def parse_unit_string(s):
     '''
-    Try to parse the string as a float, or bytestring, or hms.
+    Try to parse the string as an int, float, or bytestring, or hms.
     '''
     if s is None:
         return None
 
+    s = s.strip()
+
     if ':' in s:
         return hms_to_seconds(s)
+
+    elif all(c in '0123456789' for c in s):
+        return int(s)
 
     elif all(c in '0123456789.' for c in s):
         return float(s)
