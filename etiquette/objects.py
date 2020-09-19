@@ -53,11 +53,14 @@ class ObjectBase:
             return None
 
         if not isinstance(author_id, str):
-            raise TypeError(f'Author ID must be string, not {type(author_id)}.')
+            raise TypeError(f'Author ID must be {str}, not {type(author_id)}.')
 
         author_id = author_id.strip()
         if author_id == '':
             return None
+
+        if not all(c in constants.USER_ID_CHARACTERS for c in author_id):
+            raise ValueError(f'Author ID must consist only of {constants.USER_ID_CHARACTERS}.')
 
         return author_id
 

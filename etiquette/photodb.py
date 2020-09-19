@@ -1235,9 +1235,9 @@ class PDBUserMixin:
         User IDs are randomized instead of integers like the other objects,
         so they get their own method.
         '''
-        possible = string.digits + string.ascii_uppercase
+        length = self.config['id_length']
         for retry in range(20):
-            user_id = [random.choice(possible) for x in range(self.config['id_length'])]
+            user_id = (random.choice(constants.USER_ID_CHARACTERS) for x in range(length))
             user_id = ''.join(user_id)
 
             user_exists = self.sql_select_one('SELECT 1 FROM users WHERE id == ?', [user_id])

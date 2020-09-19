@@ -222,6 +222,8 @@ FILENAME_BADCHARS = '\\/:*?<>|"'
 TRUTHYSTRING_TRUE = {s.lower() for s in ('1', 'true', 't', 'yes', 'y', 'on')}
 TRUTHYSTRING_NONE = {s.lower() for s in ('null', 'none')}
 
+USER_ID_CHARACTERS = string.digits + string.ascii_uppercase
+
 ADDITIONAL_MIMETYPES = {
     '7z': 'archive',
     'gz': 'archive',
