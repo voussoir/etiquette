@@ -20,9 +20,6 @@
 #content_body
 {
     flex: 1;
-    grid-template:
-        "left right" 1fr
-        / 310px 1fr;
 }
 #left
 {
@@ -57,7 +54,6 @@
 {
     grid-area: message_area;
     min-height: 30px;
-    max-height: none;
     margin: 8px;
 }
 #photo_viewer
@@ -110,6 +106,16 @@
     align-items: flex-end;
 }
 
+@media screen and (min-width: 800px)
+{
+    #content_body
+    {
+        grid-template:
+            "left right" 1fr
+            / 310px 1fr;
+    }
+}
+
 @media screen and (max-width: 800px)
 {
     #content_body
@@ -118,17 +124,6 @@
             "right" 100%
             "left" max-content
             / 1fr;
-    }
-    #left
-    {
-        width: initial;
-        max-width: none;
-    }
-    #message_area
-    {
-        flex: 2;
-        height: initial;
-        max-height: none;
     }
 }
 </style>

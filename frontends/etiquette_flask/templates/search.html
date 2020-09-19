@@ -28,14 +28,6 @@
     justify-content: center;
 }
 
-#content_body
-{
-    grid-template:
-        "left error_message_area" auto
-        "left happy_message_area" auto
-        "left right" 1fr
-        / 310px 1fr;
-}
 #error_message_area
 {
     grid-area: error_message_area;
@@ -85,21 +77,32 @@
     /* Keep the prev-next buttons from scraping the floor */
     padding-bottom: 30px;
 }
-@media screen and (max-width: 800px) {
+
+@media screen and (min-width: 800px)
+{
     #content_body
     {
         grid-template:
-            "error_message_area"
-            "happy_message_area"
-            "right"
-            "left";
-    }
-    #left
-    {
-        max-width: none;
-        width: initial;
+            "left error_message_area" auto
+            "left happy_message_area" auto
+            "left right" 1fr
+            / 310px 1fr;
     }
 }
+
+@media screen and (max-width: 800px)
+{
+    #content_body
+    {
+        grid-template:
+            "error_message_area" auto
+            "happy_message_area" auto
+            "right" auto
+            "left" auto
+            / auto;
+    }
+}
+
 .prev_next_holder
 {
     display: flex;

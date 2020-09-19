@@ -53,9 +53,6 @@ h2, h3
 #right
 {
     display: grid;
-    grid-template:
-        "editor_area" 1fr
-        "message_area" 1fr;
     padding: 8px;
     background-color: var(--color_transparency);
 }
@@ -68,6 +65,17 @@ h2, h3
 {
     grid-area: message_area;
 }
+
+@media screen and (min-width: 800px)
+{
+    #right
+    {
+        grid-template:
+            "editor_area" 1fr
+            "message_area" 1fr;
+    }
+}
+
 @media screen and (max-width: 800px)
 {
     #right

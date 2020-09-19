@@ -19,18 +19,10 @@
     <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
-#left
-{
-    word-break: break-word;
-}
 #right
 {
     display: grid;
     grid-row-gap: 8px;
-    grid-template:
-        "toolbox" auto
-        "message_area" 1fr
-        / 1fr;
     padding: 8px;
     background-color: var(--color_transparency);
 }
@@ -68,6 +60,17 @@
 #remove_tag_area button
 {
     flex: initial;
+}
+
+@media screen and (min-width: 800px)
+{
+    #right
+    {
+        grid-template:
+            "toolbox" auto
+            "message_area" 1fr
+            / 1fr;
+    }
 }
 
 @media screen and (max-width: 800px)
