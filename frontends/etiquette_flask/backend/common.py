@@ -180,7 +180,6 @@ def render_template(request, template_name, **kwargs):
     if new_theme is None:
         pass
     elif new_theme == '':
-        print('Deleting theme cookie.')
         response.set_cookie('etiquette_theme', value='', expires=0)
     elif new_theme != old_theme:
         response.set_cookie('etiquette_theme', value=new_theme, expires=2147483647)
