@@ -143,9 +143,9 @@ def normalize_author(authors, photodb, warning_bag=None):
 
         try:
             user = photodb.get_user(username=requested_author)
-        except exceptions.NoSuchUser as e:
+        except exceptions.NoSuchUser as exc:
             if warning_bag:
-                warning_bag.add(e.error_message)
+                warning_bag.add(exc.error_message)
             else:
                 raise
         else:

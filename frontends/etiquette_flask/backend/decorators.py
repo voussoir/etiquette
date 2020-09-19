@@ -16,12 +16,12 @@ def catch_etiquette_exception(function):
     def wrapped(*args, **kwargs):
         try:
             return function(*args, **kwargs)
-        except etiquette.exceptions.EtiquetteException as e:
-            if isinstance(e, etiquette.exceptions.NoSuch):
+        except etiquette.exceptions.EtiquetteException as exc:
+            if isinstance(exc, etiquette.exceptions.NoSuch):
                 status = 404
             else:
                 status = 400
-            response = etiquette.jsonify.exception(e)
+            response = etiquette.jsonify.exception(exc)
             response = jsonify.make_json_response(response, status=status)
             flask.abort(response)
     return wrapped
