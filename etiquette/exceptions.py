@@ -44,8 +44,8 @@ class EtiquetteException(Exception, metaclass=ErrorTypeAdder):
     def __str__(self):
         return self.error_type + '\n' + self.error_message
 
+# NO SUCH ##########################################################################################
 
-# NO SUCH
 class NoSuch(EtiquetteException):
     pass
 
@@ -70,8 +70,8 @@ class NoSuchTag(NoSuch):
 class NoSuchUser(NoSuch):
     error_message = 'User "{}" does not exist.'
 
+# EXISTS ###########################################################################################
 
-# EXISTS
 class Exists(EtiquetteException):
     pass
 
@@ -106,8 +106,8 @@ class UserExists(Exists):
         self.user = user
         EtiquetteException.__init__(self, user)
 
+# TAG ERRORS #######################################################################################
 
-# TAG ERRORS
 class CantGroupSelf(EtiquetteException):
     error_message = 'Cannot group {} into itself.'
 
@@ -126,8 +126,8 @@ class TagTooLong(EtiquetteException):
 class TagTooShort(EtiquetteException):
     error_message = 'Tag "{}" has too few valid characters.'
 
+# USER ERRORS ######################################################################################
 
-# USER ERRORS
 class AlreadySignedIn(EtiquetteException):
     error_message = 'You\'re already signed in.'
 
@@ -155,16 +155,16 @@ class DisplayNameTooLong(EtiquetteException):
 class WrongLogin(EtiquetteException):
     error_message = 'Wrong username-password combination.'
 
+# SQL ERRORS #######################################################################################
 
-# SQL ERRORS
 class BadSQL(EtiquetteException):
     pass
 
 class BadTable(BadSQL):
     error_message = 'Table "{}" does not exist.'
 
+# GENERAL ERRORS ###################################################################################
 
-# GENERAL ERRORS
 class BadDataDirectory(EtiquetteException):
     '''
     Raised by PhotoDB __init__ if the requested data_directory is invalid.

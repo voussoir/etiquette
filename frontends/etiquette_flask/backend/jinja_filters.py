@@ -21,6 +21,8 @@ def register_all(site):
     for function in global_functions:
         site.jinja_env.globals[function.__name__] = function
 
+####################################################################################################
+
 @filter_function
 def bytestring(x):
     try:
@@ -40,14 +42,6 @@ def file_link(photo, short=False):
         return f'/file/{photo.id}{photo.dot_extension}'
     basename = jinja2.filters.do_urlencode(photo.basename)
     return f'/file/{photo.id}/{basename}'
-
-@global_function
-def make_attributes(*booleans, **keyvalues):
-    keyvalues = {key: value for (key, value) in keyvalues.items() if value is not None}
-    attributes = [f'{key}="{jinja2.filters.escape(value)}"' for (key, value) in keyvalues.items()]
-    attributes.extend(booleans)
-    attributes = ' '.join(attributes)
-    return attributes
 
 @filter_function
 def sort_tags(tags):
@@ -72,3 +66,13 @@ def users_to_usernames(users):
     if not users:
         return []
     return [user.username for user in users]
+
+####################################################################################################
+
+@global_function
+def make_attributes(*booleans, **keyvalues):
+    keyvalues = {key: value for (key, value) in keyvalues.items() if value is not None}
+    attributes = [f'{key}="{jinja2.filters.escape(value)}"' for (key, value) in keyvalues.items()]
+    attributes.extend(booleans)
+    attributes = ' '.join(attributes)
+    return attributes

@@ -10,7 +10,6 @@ from .. import sessions
 site = common.site
 session_manager = common.session_manager
 
-
 # Individual users #################################################################################
 
 @site.route('/user/<username>')

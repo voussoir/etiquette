@@ -6,7 +6,6 @@ import etiquette
 
 from . import jsonify
 
-
 def catch_etiquette_exception(function):
     '''
     If an EtiquetteException is raised, automatically catch it and convert it

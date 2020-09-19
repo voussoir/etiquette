@@ -9,7 +9,6 @@ from .. import jsonify
 site = common.site
 session_manager = common.session_manager
 
-
 # Individual bookmarks #############################################################################
 
 @site.route('/bookmark/<bookmark_id>.json')

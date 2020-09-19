@@ -15,7 +15,6 @@ site = common.site
 session_manager = common.session_manager
 photo_download_zip_tokens = cacheclass.Cache(maxlen=100)
 
-
 # Individual photos ################################################################################
 
 @site.route('/photo/<photo_id>')

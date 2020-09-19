@@ -359,7 +359,6 @@ def upgrade_all(data_directory):
         current_version = version_number
     print('Upgrades finished.')
 
-
 def upgrade_all_argparse(args):
     return upgrade_all(data_directory=args.data_directory)
 

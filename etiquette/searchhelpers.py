@@ -11,7 +11,6 @@ from . import objects
 from voussoirkit import expressionmatch
 from voussoirkit import sqlhelpers
 
-
 def expand_mmf(tag_musts, tag_mays, tag_forbids):
     '''
     In order to generate SQL queries for `tagid IN (options)`, we need to

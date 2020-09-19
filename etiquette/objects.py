@@ -19,14 +19,12 @@ from . import decorators
 from . import exceptions
 from . import helpers
 
-
 BAIL = sentinel.Sentinel('BAIL')
 
 def normalize_db_row(db_row, table):
     if isinstance(db_row, (list, tuple)):
         db_row = dict(zip(constants.SQL_COLUMNS[table], db_row))
     return db_row
-
 
 class ObjectBase:
     def __init__(self, photodb):
@@ -70,7 +68,6 @@ class ObjectBase:
         if self.author_id is None:
             return None
         return self.photodb.get_user(id=self.author_id)
-
 
 class GroupableMixin:
     group_getter = None
@@ -226,7 +223,6 @@ class GroupableMixin:
             more_parents = set(parent.get_parents())
             more_parents = more_parents.difference(seen)
             todo.extend(more_parents)
-
 
 class Album(ObjectBase, GroupableMixin):
     table = 'albums'
@@ -545,7 +541,6 @@ class Album(ObjectBase, GroupableMixin):
         next(children)
         for child in children:
             yield from child.walk_photos()
-
 
 class Bookmark(ObjectBase):
     table = 'bookmarks'
@@ -1168,7 +1163,6 @@ class Photo(ObjectBase):
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
         self.searchhidden = searchhidden
 
-
 class Tag(ObjectBase, GroupableMixin):
     '''
     A Tag, which can be applied to Photos for organization.
@@ -1465,7 +1459,6 @@ class Tag(ObjectBase, GroupableMixin):
         self.name = new_name
         self._uncache()
 
-
 class User(ObjectBase):
     '''
     A dear friend of ours.
@@ -1528,7 +1521,6 @@ class User(ObjectBase):
         }
         self.photodb.sql_update(table='users', pairs=data, where_key='id')
         self._display_name = display_name
-
 
 class WarningBag:
     def __init__(self):

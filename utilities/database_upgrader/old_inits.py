@@ -73,7 +73,6 @@ CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
 CREATE INDEX IF NOT EXISTS index_tags_author_id on tags(author_id);
 ----------------------------------------------------------------------------------------------------
 
-
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS album_associated_directories(
     albumid TEXT NOT NULL,

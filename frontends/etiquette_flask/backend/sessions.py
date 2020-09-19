@@ -7,7 +7,6 @@ from voussoirkit import cacheclass
 
 import etiquette
 
-
 SESSION_MAX_AGE = 86400
 REQUEST_TYPES = (flask.Request, werkzeug.wrappers.Request, werkzeug.local.LocalProxy)
 RESPONSE_TYPES = (flask.Response, werkzeug.wrappers.Response)
@@ -30,7 +29,6 @@ def _normalize_token(token):
     else:
         raise TypeError('Unsupported token normalization', type(token))
     return token
-
 
 class SessionManager:
     def __init__(self, maxlen=None):
@@ -105,7 +103,6 @@ class SessionManager:
             self.sessions.remove(token)
         except KeyError:
             pass
-
 
 class Session:
     def __init__(self, request, user):

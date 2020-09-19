@@ -4,7 +4,6 @@ import warnings
 
 from . import exceptions
 
-
 def _get_relevant_photodb(instance):
     from . import objects
     if isinstance(instance, objects.ObjectBase):

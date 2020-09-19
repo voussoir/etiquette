@@ -15,6 +15,8 @@ from . import jinja_filters
 from . import jsonify
 from . import sessions
 
+# Runtime init #####################################################################################
+
 root_dir = pathclass.Path(__file__).parent.parent
 
 TEMPLATE_DIR = root_dir.with_child('templates')
@@ -45,6 +47,8 @@ file_cache_manager = caching.FileCacheManager(
     max_filesize=5 * bytestring.MIBIBYTE,
     max_age=BROWSER_CACHE_DURATION,
 )
+
+# Response wrappers ################################################################################
 
 # Flask provides decorators for before_request and after_request, but not for
 # wrapping the whole request. The decorators I am using need to wrap the whole
@@ -97,6 +101,8 @@ def after_request(response):
     response.headers['Content-Length'] = len(response.get_data())
 
     return response
+
+# P functions ######################################################################################
 
 def P_wrapper(function):
     def P_wrapped(thingid, response_type):
@@ -160,6 +166,11 @@ def P_user(username):
 def P_user_id(user_id):
     return P.get_user(id=user_id)
 
+# Other functions ##################################################################################
+
+def back_url():
+    return request.args.get('goto') or request.referrer or '/'
+
 def render_template(request, template_name, **kwargs):
     session = session_manager.get(request)
 
@@ -185,9 +196,6 @@ def render_template(request, template_name, **kwargs):
         response.set_cookie('etiquette_theme', value=new_theme, expires=2147483647)
 
     return response
-
-def back_url():
-    return request.args.get('goto') or request.referrer or '/'
 
 def send_file(filepath, override_mimetype=None):
     '''

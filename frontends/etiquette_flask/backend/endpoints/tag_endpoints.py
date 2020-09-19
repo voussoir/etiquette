@@ -10,7 +10,6 @@ from .. import jsonify
 site = common.site
 session_manager = common.session_manager
 
-
 # Individual tags ##################################################################################
 
 @site.route('/tags/<specific_tag>')

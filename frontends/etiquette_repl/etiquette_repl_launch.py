@@ -36,6 +36,7 @@ def photag(photo_id):
 get = P.get_tag
 
 ################################################################################
+
 def erepl_argparse(args):
     if args.exec_statement:
         exec(args.exec_statement)

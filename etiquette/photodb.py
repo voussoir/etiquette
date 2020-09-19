@@ -24,10 +24,7 @@ from . import objects
 from . import searchhelpers
 from . import tag_export
 
-
 ####################################################################################################
-####################################################################################################
-
 
 class PDBAlbumMixin:
     def __init__(self):
@@ -143,6 +140,7 @@ class PDBAlbumMixin:
             to_check.update(album.get_parents())
             album.delete()
 
+####################################################################################################
 
 class PDBBookmarkMixin:
     def __init__(self):
@@ -185,6 +183,7 @@ class PDBBookmarkMixin:
 
         return bookmark
 
+####################################################################################################
 
 class PDBCacheManagerMixin:
     _THING_CLASSES = {
@@ -380,6 +379,7 @@ class PDBCacheManagerMixin:
                 thing_cache[thing.id] = thing
                 yield thing
 
+####################################################################################################
 
 class PDBPhotoMixin:
     def __init__(self):
@@ -896,6 +896,7 @@ class PDBPhotoMixin:
         end_time = time.time()
         print('Search took:', end_time - start_time)
 
+####################################################################################################
 
 class PDBSQLMixin:
     def __init__(self):
@@ -1050,6 +1051,7 @@ class PDBSQLMixin:
         query = f'UPDATE {table} {qmarks}'
         self.sql_execute(query, bindings)
 
+####################################################################################################
 
 class PDBTagMixin:
     def __init__(self):
@@ -1196,6 +1198,7 @@ class PDBTagMixin:
         )
         return tagname
 
+####################################################################################################
 
 class PDBUserMixin:
     def __init__(self):
@@ -1359,6 +1362,7 @@ class PDBUserMixin:
 
         return self.get_cached_instance('user', data)
 
+####################################################################################################
 
 class PDBUtilMixin:
     def __init__(self):
@@ -1625,6 +1629,7 @@ class PDBUtilMixin:
 
         return output_notes
 
+####################################################################################################
 
 class PhotoDB(
         PDBAlbumMixin,
@@ -1819,7 +1824,6 @@ class PhotoDB(
     def save_config(self):
         with open(self.config_filepath.absolute_path, 'w', encoding='utf-8') as handle:
             handle.write(json.dumps(self.config, indent=4, sort_keys=True))
-
 
 if __name__ == '__main__':
     p = PhotoDB()

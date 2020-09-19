@@ -6,7 +6,6 @@ from voussoirkit import cacheclass
 
 import etiquette
 
-
 def cached_endpoint(max_age):
     '''
     The cached_endpoint decorator can be used on slow endpoints that don't need
@@ -63,7 +62,6 @@ def cached_endpoint(max_age):
         return wrapped
     return wrapper
 
-
 class FileCacheManager:
     '''
     The FileCacheManager serves ETag and Cache-Control headers for disk files.
@@ -115,7 +113,6 @@ class FileCacheManager:
             return False
 
         return server_value.get_headers()
-
 
 class CacheFile:
     def __init__(self, filepath, max_age):
