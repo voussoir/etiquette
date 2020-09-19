@@ -1330,12 +1330,12 @@ class PDBUserMixin:
     def new_user(self, username, password, *, display_name=None):
         # These might raise exceptions.
         self.assert_valid_username(username)
+        self.assert_no_such_user(username=username)
 
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
 
         self.assert_valid_password(password)
-        self.assert_no_such_user(username=username)
 
         display_name = objects.User.normalize_display_name(
             display_name,
