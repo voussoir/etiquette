@@ -22,9 +22,13 @@ from . import helpers
 BAIL = sentinel.Sentinel('BAIL')
 
 def normalize_db_row(db_row, table):
+    if isinstance(db_row, dict):
+        return db_row
+
     if isinstance(db_row, (list, tuple)):
-        db_row = dict(zip(constants.SQL_COLUMNS[table], db_row))
-    return db_row
+        return dict(zip(constants.SQL_COLUMNS[table], db_row))
+
+    raise TypeError(f'db_row should be {dict}, {list}, or {tuple}, not {type(db_row)}.')
 
 class ObjectBase:
     def __init__(self, photodb):
@@ -581,7 +585,7 @@ class Bookmark(ObjectBase):
         url = url.strip()
 
         if not url:
-            raise ValueError(f'Invalid URL "{url}".')
+            raise ValueError(f'URL can not be blank.')
 
         return url
 

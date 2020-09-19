@@ -1210,10 +1210,16 @@ class PDBUserMixin:
             raise exceptions.UserExists(existing_user)
 
     def assert_valid_password(self, password):
+        if not isinstance(password, bytes):
+            raise TypeError(f'Password must be {bytes}, not {type(password)}.')
+
         if len(password) < self.config['user']['min_password_length']:
             raise exceptions.PasswordTooShort(min_length=self.config['user']['min_password_length'])
 
     def assert_valid_username(self, username):
+        if not isinstance(username, str):
+            raise TypeError(f'Username must be {str}, not {type(username)}.')
+
         if len(username) < self.config['user']['min_username_length']:
             raise exceptions.UsernameTooShort(
                 username=username,
@@ -1287,7 +1293,7 @@ class PDBUserMixin:
         be workable but fails.
         '''
         if user_obj_or_id is None:
-            author_id = None
+            return None
 
         elif isinstance(user_obj_or_id, objects.User):
             if user_obj_or_id.photodb != self:
