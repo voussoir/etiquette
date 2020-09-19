@@ -268,9 +268,7 @@ class Album(ObjectBase, GroupableMixin):
         if not isinstance(title, str):
             raise TypeError(f'Title must be {str}, not {type(title)}.')
 
-        title = title.strip()
-        for whitespace in string.whitespace:
-            title = title.replace(whitespace, ' ')
+        title = helpers.collapse_whitespace(title)
 
         return title
 
@@ -565,9 +563,7 @@ class Bookmark(ObjectBase):
         if not isinstance(title, str):
             raise TypeError(f'Title must be {str}, not {type(title)}.')
 
-        title = title.strip()
-        for whitespace in string.whitespace:
-            title = title.replace(whitespace, ' ')
+        title = helpers.collapse_whitespace(title)
 
         return title
 
@@ -1490,7 +1486,7 @@ class User(ObjectBase):
         if not isinstance(display_name, str):
             raise TypeError(f'Display name must be string, not {type(display_name)}.')
 
-        display_name = display_name.strip()
+        display_name = helpers.collapse_whitespace(display_name)
 
         if display_name == '':
             return None

@@ -104,6 +104,11 @@ def chunk_sequence(sequence, chunk_length, allow_incomplete=True):
         if len(chunk) == chunk_length or allow_incomplete:
             yield chunk
 
+def collapse_whitespace(s):
+    s = s.strip()
+    s = re.sub(r'\s+', ' ', s)
+    return s
+
 def comma_space_split(s):
     '''
     Split the string apart by commas and spaces, discarding all extra
