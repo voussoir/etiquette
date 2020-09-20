@@ -81,9 +81,7 @@ class ObjectBase:
         return self.photodb.get_user(id=self.author_id)
 
 class GroupableMixin:
-    group_getter = None
     group_getter_many = None
-    group_sql_index = None
     group_table = None
 
     def _lift_children(self):
@@ -239,7 +237,6 @@ class GroupableMixin:
 class Album(ObjectBase, GroupableMixin):
     table = 'albums'
     group_table = 'album_group_rel'
-    group_sql_index = constants.SQL_INDEX[group_table]
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
@@ -250,7 +247,6 @@ class Album(ObjectBase, GroupableMixin):
         self.description = self.normalize_description(db_row['description'])
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
-        self.group_getter = self.photodb.get_album
         self.group_getter_many = self.photodb.get_albums_by_id
 
         self._sum_bytes_local = None
@@ -1180,7 +1176,6 @@ class Tag(ObjectBase, GroupableMixin):
     '''
     table = 'tags'
     group_table = 'tag_group_rel'
-    group_sql_index = constants.SQL_INDEX[group_table]
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
@@ -1193,7 +1188,6 @@ class Tag(ObjectBase, GroupableMixin):
         self.description = self.normalize_description(db_row['description'])
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
-        self.group_getter = self.photodb.get_tag
         self.group_getter_many = self.photodb.get_tags_by_id
 
     def __repr__(self):
