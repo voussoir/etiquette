@@ -426,17 +426,19 @@ function on_album_drag_drop(event)
 
     const child_title = child.querySelector('.album_card_title').textContent.trim();
     const parent_title = parent.querySelector('.album_card_title').textContent.trim();
-    if (confirm(`Move\n${child_title}\ninto\n${parent_title}?`))
+    const prompt = `Move\n${child_title}\ninto\n${parent_title}?`;
+    if (! confirm(prompt))
     {
-        if (ALBUM_ID)
-        {
-            api.albums.add_child(parent_id, child_id, null);
-            api.albums.remove_child(ALBUM_ID, child_id, common.refresh);
-        }
-        else
-        {
-            api.albums.add_child(parent_id, child_id, common.refresh);
-        }
+        return;
+    }
+    if (ALBUM_ID)
+    {
+        api.albums.add_child(parent_id, child_id, null);
+        api.albums.remove_child(ALBUM_ID, child_id, common.refresh);
+    }
+    else
+    {
+        api.albums.add_child(parent_id, child_id, common.refresh);
     }
 }
 </script>
