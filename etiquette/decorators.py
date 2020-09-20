@@ -75,6 +75,9 @@ def transaction(method):
     '''
     @functools.wraps(method)
     def wrapped_transaction(self, *args, **kwargs):
+        if isinstance(self, objects.ObjectBase):
+            self.assert_not_deleted()
+
         photodb = _get_relevant_photodb(self)
 
         commit = kwargs.pop('commit', False)
