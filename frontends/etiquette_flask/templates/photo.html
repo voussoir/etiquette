@@ -143,7 +143,7 @@
                 <input type="text" id="add_tag_textbox" class="entry_with_history entry_with_tagname_replacements" list="tag_autocomplete_datalist">
                 <button id="add_tag_button" class="green_button" onclick="return add_photo_tag_form();">add</button>
             </li>
-            {% set tags = photo.get_tags()|sort_tags %}
+            {% set tags = photo.get_tags()|sort(attribute='name') %}
             {% for tag in tags %}
             <li>
                 {{tag_object.tag_object(tag, with_alt_description=True)}}<!--

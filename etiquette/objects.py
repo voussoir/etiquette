@@ -172,12 +172,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
             [self.id]
         )
         child_ids = [row[0] for row in child_rows]
-        children = self.group_getter_many(child_ids)
-
-        if isinstance(self, Tag):
-            children = sorted(children, key=lambda x: x.name)
-        else:
-            children = sorted(children, key=lambda x: x.id)
+        children = set(self.group_getter_many(child_ids))
         return children
 
     def get_parents(self):
@@ -417,8 +412,8 @@ class Album(ObjectBase, GroupableMixin):
             'SELECT directory FROM album_associated_directories WHERE albumid == ?',
             [self.id]
         )
-        directories = [x[0] for x in directory_rows]
-        directories = [pathclass.Path(x) for x in directories]
+        directories = (x[0] for x in directory_rows)
+        directories = set(pathclass.Path(x) for x in directories)
         return directories
 
     def get_photos(self):
@@ -428,8 +423,7 @@ class Album(ObjectBase, GroupableMixin):
             [self.id]
         )
         photo_ids = [row[0] for row in generator]
-        photos = self.photodb.get_photos_by_id(photo_ids)
-        photos = sorted(photos, key=lambda x: x.basename.lower())
+        photos = set(self.photodb.get_photos_by_id(photo_ids))
         return photos
 
     def has_any_associated_directory(self):

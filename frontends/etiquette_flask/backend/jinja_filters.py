@@ -44,11 +44,6 @@ def file_link(photo, short=False):
     return f'/file/{photo.id}/{basename}'
 
 @filter_function
-def sort_tags(tags):
-    tags = sorted(tags, key=lambda x: x.name)
-    return tags
-
-@filter_function
 def timestamp_to_8601(timestamp):
     return datetime.datetime.utcfromtimestamp(timestamp).isoformat(' ') + ' UTC'
 
