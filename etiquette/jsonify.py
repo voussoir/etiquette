@@ -37,8 +37,6 @@ def exception(e):
     return j
 
 def photo(p, include_albums=True, include_tags=True):
-    tags = p.get_tags()
-    tags = sorted(tags, key=lambda x: x.name)
     j = {
         'type': 'photo',
         'id': p.id,
@@ -62,7 +60,7 @@ def photo(p, include_albums=True, include_tags=True):
         j['albums'] = [album(a, minimal=True) for a in p.get_containing_albums()]
 
     if include_tags:
-        j['tags'] = [tag(t, minimal=True) for t in tags]
+        j['tags'] = [tag(t, minimal=True) for t in p.get_tags()]
 
     return j
 
