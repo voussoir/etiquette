@@ -1153,7 +1153,7 @@ class Photo(ObjectBase):
             'override_filename': new_filename,
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
-        self.basename = override_filename
+        self.basename = new_filename
 
         self.__reinit__()
 
