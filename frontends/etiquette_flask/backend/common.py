@@ -72,6 +72,7 @@ def decorate_and_route(*route_args, **route_kwargs):
 site.route = decorate_and_route
 
 gzip_minimum_size = 500
+gzip_maximum_size = 5 * 2**20
 gzip_level = 3
 @site.after_request
 def after_request(response):
@@ -85,6 +86,7 @@ def after_request(response):
     bail = bail or response.status_code < 200
     bail = bail or response.status_code >= 300
     bail = bail or response.direct_passthrough
+    bail = bail or int(response.headers.get('Content-Length', gzip_minimum_size)) > gzip_maximum_size
     bail = bail or len(response.get_data()) < gzip_minimum_size
     bail = bail or 'gzip' not in accept_encoding.lower()
     bail = bail or 'Content-Encoding' in response.headers
