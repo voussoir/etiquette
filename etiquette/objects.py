@@ -33,6 +33,7 @@ class ObjectBase:
     def __init__(self, photodb):
         super().__init__()
         self.photodb = photodb
+        self.deleted = False
 
     def __eq__(self, other):
         return (
@@ -157,6 +158,7 @@ class GroupableMixin:
         # issues of recursion.
         self.photodb.sql_delete(table=self.group_table, pairs={'memberid': self.id})
         self._uncache()
+        self.deleted = True
 
     def get_children(self):
         child_rows = self.photodb.sql_select(
@@ -372,6 +374,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.sql_delete(table='album_photo_rel', pairs={'albumid': self.id})
         self.photodb.sql_delete(table='albums', pairs={'id': self.id})
         self._uncache()
+        self.deleted = True
 
     @property
     def display_name(self):
@@ -596,6 +599,7 @@ class Bookmark(ObjectBase):
     def delete(self):
         self.photodb.sql_delete(table='bookmarks', pairs={'id': self.id})
         self._uncache()
+        self.deleted = True
 
     @decorators.required_feature('bookmark.edit')
     @decorators.transaction
@@ -775,6 +779,7 @@ class Photo(ObjectBase):
             queue_action = {'action': action, 'args': [path]}
             self.photodb.on_commit_queue.append(queue_action)
         self._uncache()
+        self.deleted = True
 
     @property
     def duration_string(self):
@@ -1365,6 +1370,7 @@ class Tag(ObjectBase, GroupableMixin):
         self.photodb.sql_delete(table='tags', pairs={'id': self.id})
         self.photodb.caches['tag_exports'].clear()
         self._uncache()
+        self.deleted = True
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
