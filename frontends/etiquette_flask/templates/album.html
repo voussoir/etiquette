@@ -384,24 +384,9 @@ function create_child(title)
     api.albums.create(title, parent_id, api.albums.callback_follow);
 }
 
-function get_album_card_from_child(element)
-{
-    /*
-    Given an element which is known to be a child of an album card, navigate up
-    the parent tree until we find that album card.
-    This is used to make drag-and-drop work even when you start your drag by
-    clicking on the album's thumbnail, title, etc.
-    */
-    while (! element.classList.contains("album_card"))
-    {
-        element = element.parentElement;
-    }
-    return element;
-}
-
 function on_album_drag_start(event)
 {
-    const album_card = get_album_card_from_child(event.target);
+    const album_card = event.target.closest(".album_card");
     event.dataTransfer.setData("text/plain", album_card.id);
 }
 function on_album_drag_end(event)
