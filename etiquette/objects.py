@@ -1093,9 +1093,6 @@ class Photo(ObjectBase):
         else:
             new_path = pathclass.Path(new_filename)
         #new_path.correct_case()
-
-        self.photodb.log.debug(old_path)
-        self.photodb.log.debug(new_path)
         if (new_path.parent != old_path.parent) and not move:
             raise ValueError('Cannot move the file without param move=True.')
 
@@ -1103,6 +1100,8 @@ class Photo(ObjectBase):
             raise ValueError('The new and old names are the same.')
 
         new_path.assert_not_exists()
+
+        self.photodb.log.debug('Renaming file "%s" -> "%s"', old_path.absolute_path, new_path.absolute_path)
 
         os.makedirs(new_path.parent.absolute_path, exist_ok=True)
 
