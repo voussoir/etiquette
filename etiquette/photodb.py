@@ -517,6 +517,9 @@ class PDBPhotoMixin:
         photos:
             An iterable of Photo objects to check.
             If not provided, all photos are checked.
+
+        If you only want to delete photos that have not been tagged, consider
+        P.purge_deleted_files(P.search(has_tags=False, is_searchhidden=None)).
         '''
         if photos is None:
             photos = self.get_photos_by_recent()
