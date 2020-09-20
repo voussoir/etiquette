@@ -66,7 +66,7 @@ def post_tag_remove_child(tagname):
 @site.route('/all_tags.json')
 @caching.cached_endpoint(max_age=0)
 def get_all_tag_names():
-    all_tags = common.P.get_all_tag_names()
+    all_tags = list(common.P.get_all_tag_names())
     all_synonyms = common.P.get_all_synonyms()
     response = {'tags': all_tags, 'synonyms': all_synonyms}
     return jsonify.make_json_response(response)

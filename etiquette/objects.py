@@ -171,14 +171,14 @@ class GroupableMixin(metaclass=abc.ABCMeta):
             f'SELECT memberid FROM {self.group_table} WHERE parentid == ?',
             [self.id]
         )
-        child_ids = [row[0] for row in child_rows]
+        child_ids = (child_id for (child_id,) in child_rows)
         children = set(self.group_getter_many(child_ids))
         return children
 
     def get_parents(self):
         query = f'SELECT parentid FROM {self.group_table} WHERE memberid == ?'
         parent_rows = self.photodb.sql_select(query, [self.id])
-        parent_ids = [row[0] for row in parent_rows]
+        parent_ids = (parent_id for (parent_id,) in parent_rows)
         parents = set(self.group_getter_many(parent_ids))
         return parents
 
@@ -412,17 +412,16 @@ class Album(ObjectBase, GroupableMixin):
             'SELECT directory FROM album_associated_directories WHERE albumid == ?',
             [self.id]
         )
-        directories = (x[0] for x in directory_rows)
-        directories = set(pathclass.Path(x) for x in directories)
+        directories = set(pathclass.Path(directory) for (directory,) in directory_rows)
         return directories
 
     def get_photos(self):
         photos = []
-        generator = self.photodb.sql_select(
+        photo_rows = self.photodb.sql_select(
             'SELECT photoid FROM album_photo_rel WHERE albumid == ?',
             [self.id]
         )
-        photo_ids = [row[0] for row in generator]
+        photo_ids = (photo_id for (photo_id,) in photo_rows)
         photos = set(self.photodb.get_photos_by_id(photo_ids))
         return photos
 
@@ -846,11 +845,11 @@ class Photo(ObjectBase):
         '''
         Return the albums of which this photo is a member.
         '''
-        album_ids = self.photodb.sql_select(
+        album_rows = self.photodb.sql_select(
             'SELECT albumid FROM album_photo_rel WHERE photoid == ?',
             [self.id]
         )
-        album_ids = [row[0] for row in album_ids]
+        album_ids = (album_id for (album_id,) in album_rows)
         albums = set(self.photodb.get_albums_by_id(album_ids))
         return albums
 
@@ -858,11 +857,11 @@ class Photo(ObjectBase):
         '''
         Return the tags assigned to this Photo.
         '''
-        tag_ids = self.photodb.sql_select(
+        tag_rows = self.photodb.sql_select(
             'SELECT tagid FROM photo_tag_rel WHERE photoid == ?',
             [self.id]
         )
-        tag_ids = [row[0] for row in tag_ids]
+        tag_ids = (tag_id for (tag_id,) in tag_rows)
         tags = set(self.photodb.get_tags_by_id(tag_ids))
         return tags
 
@@ -1335,7 +1334,8 @@ class Tag(ObjectBase, GroupableMixin):
         )
         '''
         bindings = [self.id, mastertag.id]
-        replace_photoids = [row[0] for row in self.photodb.sql_execute(query, bindings)]
+        photo_rows = self.photodb.sql_execute(query, bindings)
+        replace_photoids = [photo_id for (photo_id,) in photo_rows]
 
         # For those photos that only had the syn, simply replace with master.
         if replace_photoids:
@@ -1393,7 +1393,7 @@ class Tag(ObjectBase, GroupableMixin):
             'SELECT name FROM tag_synonyms WHERE mastername == ?',
             [self.name]
         )
-        synonyms = set(row[0] for row in syn_rows)
+        synonyms = set(name for (name,) in syn_rows)
         return synonyms
 
     @decorators.required_feature('tag.edit')

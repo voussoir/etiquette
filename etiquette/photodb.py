@@ -50,10 +50,8 @@ class PDBAlbumMixin:
         query = 'SELECT albumid FROM album_associated_directories WHERE directory == ?'
         bindings = [directory.absolute_path]
         album_rows = self.sql_select(query, bindings)
-
-        for album_row in album_rows:
-            album_id = album_row[0]
-            yield self.get_album(album_id)
+        album_ids = (album_id for (album_id,) in album_rows)
+        return self.get_albums_by_id(album_ids)
 
     def get_root_albums(self):
         '''
@@ -108,8 +106,8 @@ class PDBAlbumMixin:
     @decorators.transaction
     def purge_deleted_associated_directories(self, albums=None):
         directories = self.sql_select('SELECT DISTINCT directory FROM album_associated_directories')
-        directories = (pathclass.Path(d[0]) for d in directories)
-        directories = [d.absolute_path for d in directories if not d.exists]
+        directories = (pathclass.Path(directory) for (directory,) in directories)
+        directories = [directory.absolute_path for directory in directories if not directory.exists]
         if not directories:
             return
         self.log.debug('Purging associated directories %s', directories)
@@ -930,8 +928,8 @@ class PDBSQLMixin:
 
     def get_sql_tables(self):
         query = 'SELECT name FROM sqlite_master WHERE type = "table"'
-        cur = self.sql_execute(query)
-        tables = set(row[0] for row in cur.fetchall())
+        table_rows = self.sql_select(query)
+        tables = set(name for (name,) in table_rows)
         return tables
 
     def release_savepoint(self, savepoint, allow_commit=False):
@@ -1067,8 +1065,8 @@ class PDBTagMixin:
 
     def _get_all_tag_names(self):
         query = 'SELECT name FROM tags'
-        rows = self.sql_select(query)
-        names = [row[0] for row in rows]
+        tag_rows = self.sql_select(query)
+        names = set(name for (name,) in tag_rows)
         return names
 
     def get_all_tag_names(self):
@@ -1080,8 +1078,8 @@ class PDBTagMixin:
 
     def _get_all_synonyms(self):
         query = 'SELECT name, mastername FROM tag_synonyms'
-        rows = self.sql_select(query)
-        synonyms = {syn: tag for (syn, tag) in rows}
+        syn_rows = self.sql_select(query)
+        synonyms = {syn: tag for (syn, tag) in syn_rows}
         return synonyms
 
     def get_all_synonyms(self):
