@@ -1555,6 +1555,7 @@ class PDBUtilMixin:
 
         albums_by_path = {}
 
+        self.log.debug('Digesting directory "%s".', directory.absolute_path)
         walk_generator = spinal.walk_generator(
             directory,
             exclude_directories=exclude_directories,
