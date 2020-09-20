@@ -181,6 +181,12 @@ class DatabaseOutOfDate(EtiquetteException):
     '''
     error_message = OUTOFDATE
 
+class DeletedObject(EtiquetteException):
+    '''
+    For when thing.deleted == True.
+    '''
+    error_message = '{} has already been deleted by another caller.'
+
 class FeatureDisabled(EtiquetteException):
     '''
     For when features of the system have been disabled by the configuration.

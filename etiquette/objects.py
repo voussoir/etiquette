@@ -68,6 +68,10 @@ class ObjectBase:
 
         return author_id
 
+    def assert_not_deleted(self):
+        if self.deleted:
+            raise exceptions.DeletedObject(self)
+
     def get_author(self):
         '''
         Return the User who created this object, or None if it is unassigned.
