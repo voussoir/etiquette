@@ -2,6 +2,7 @@
 This file provides the data objects that should not be instantiated directly,
 but are returned by the PDB accesses.
 '''
+import abc
 import os
 import PIL.Image
 import send2trash
@@ -80,11 +81,11 @@ class ObjectBase:
             return None
         return self.photodb.get_user(id=self.author_id)
 
-class GroupableMixin:
+class GroupableMixin(metaclass=abc.ABCMeta):
     group_getter_many = None
     group_table = None
 
-    def _lift_children(self):
+    def __lift_children(self):
         '''
         If this object has parents, the parents adopt all of its children.
         Otherwise, this object is at the root level, so the parental
@@ -100,7 +101,7 @@ class GroupableMixin:
         for parent in parents:
             parent.add_children(children)
 
-    def _add_child(self, member):
+    def __add_child(self, member):
         self.assert_same_type(member)
 
         if member == self:
@@ -121,13 +122,15 @@ class GroupableMixin:
         }
         self.photodb.sql_insert(table=self.group_table, data=data)
 
+    @abc.abstractmethod
     def add_child(self, member):
-        return self._add_child(member)
+        return self.__add_child(member)
 
+    @abc.abstractmethod
     def add_children(self, members):
         bail = True
         for member in members:
-            bail = bail and (self._add_child(member) is BAIL)
+            bail = bail and (self.__add_child(member) is BAIL)
         if bail:
             return BAIL
 
@@ -137,6 +140,7 @@ class GroupableMixin:
         if self.photodb != other.photodb:
             raise TypeError(f'Objects must belong to the same PhotoDB.')
 
+    @abc.abstractmethod
     def delete(self, *, delete_children=False):
         '''
         Delete this object's relationships to other groupables.
@@ -154,7 +158,7 @@ class GroupableMixin:
             for child in self.get_children():
                 child.delete(delete_children=True)
         else:
-            self._lift_children()
+            self.__lift_children()
 
         # Note that this part comes after the deletion of children to prevent
         # issues of recursion.
@@ -199,6 +203,7 @@ class GroupableMixin:
         row = self.photodb.sql_select_one(query, [self.id, member.id])
         return row is not None
 
+    @abc.abstractmethod
     def remove_child(self, member):
         if not self.has_child(member):
             return BAIL
