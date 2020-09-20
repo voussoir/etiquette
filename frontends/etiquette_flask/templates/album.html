@@ -424,14 +424,29 @@ function on_album_drag_drop(event)
         return;
     }
 
-    const child_title = child.querySelector('.album_card_title').textContent.trim();
-    const parent_title = parent.querySelector('.album_card_title').textContent.trim();
-    const prompt = `Move\n${child_title}\ninto\n${parent_title}?`;
+    let prompt;
+    if (parent_id === "root")
+    {
+        const child_title = child.querySelector('.album_card_title').textContent.trim();
+        prompt = `Remove child\n${child_title}?`;
+    }
+    else
+    {
+        const child_title = child.querySelector('.album_card_title').textContent.trim();
+        const parent_title = parent.querySelector('.album_card_title').textContent.trim();
+        prompt = `Move\n${child_title}\ninto\n${parent_title}?`;
+    }
+
     if (! confirm(prompt))
     {
         return;
     }
-    if (ALBUM_ID)
+
+    if (parent_id === "root")
+    {
+        api.albums.remove_child(ALBUM_ID, child_id, common.refresh);
+    }
+    else if (ALBUM_ID)
     {
         api.albums.add_child(parent_id, child_id, null);
         api.albums.remove_child(ALBUM_ID, child_id, common.refresh);

@@ -5,7 +5,7 @@
 <div
 id="{{id}}"
 class="album_card album_card_{{view}}"
-data-id="{{album.id}}"
+data-id="{{'root' if album == 'root' else album.id}}"
 ondragstart="return on_album_drag_start(event);"
 ondragend="return on_album_drag_end(event);"
 ondragover="return on_album_drag_over(event);"
