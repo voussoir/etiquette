@@ -5,7 +5,6 @@ import warnings
 from . import exceptions
 
 def _get_relevant_photodb(instance):
-    from . import objects
     if isinstance(instance, objects.ObjectBase):
         photodb = instance.photodb
     else:
@@ -97,3 +96,10 @@ def transaction(method):
         return result
 
     return wrapped_transaction
+
+# Circular dependency.
+# I would like to un-circularize this, but as long as objects and photodb are
+# using the same decorators, and the decorator needs to follow the photodb
+# instance of the object...
+# I'd rather not create separate decorators, or write hasattr-based decisions.
+from . import objects
