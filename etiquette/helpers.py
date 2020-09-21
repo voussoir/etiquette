@@ -329,7 +329,7 @@ def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=bytestring.
         range_max = filepath.size
     range_span = (range_max + 1) - range_min
 
-    f = open(filepath.absolute_path, 'rb')
+    f = filepath.open('rb')
     sent_amount = 0
     with f:
         f.seek(range_min)

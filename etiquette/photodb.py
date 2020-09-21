@@ -1826,7 +1826,7 @@ class PhotoDB(
             self.save_config()
 
     def save_config(self):
-        with open(self.config_filepath.absolute_path, 'w', encoding='utf-8') as handle:
+        with self.config_filepath.open('w', encoding='utf-8') as handle:
             handle.write(json.dumps(self.config, indent=4, sort_keys=True))
 
 if __name__ == '__main__':
