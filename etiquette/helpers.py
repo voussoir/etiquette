@@ -157,7 +157,8 @@ def generate_video_thumbnail(filepath, outfile, width, height, **special):
     if not os.path.isfile(filepath):
         raise FileNotFoundError(filepath)
     probe = constants.ffmpeg.probe(filepath)
-    if not probe.video:
+
+    if not probe or not probe.video:
         return False
 
     size = imagetools.fit_into_bounds(
