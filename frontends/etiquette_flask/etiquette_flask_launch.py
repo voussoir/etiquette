@@ -16,51 +16,55 @@ import argparse
 import gevent.pywsgi
 import sys
 
+from voussoirkit import pathclass
+
 import etiquette_flask_entrypoint
 
-site = etiquette_flask_entrypoint.site
+HTTPS_DIR = pathclass.Path(__file__).parent.with_child('https')
 
-def run(port=None, use_https=None):
-    if port is None:
-        port = 5000
-    else:
-        port = int(port)
-
+def etiquette_flask_launch(create, port, use_https):
     if use_https is None:
         use_https = port == 443
 
     if use_https:
         http = gevent.pywsgi.WSGIServer(
             listener=('0.0.0.0', port),
-            application=site,
-            keyfile='D:\\git\\etiquette\\frontends\\etiquette_flask\\https\\etiquette.key',
-            certfile='D:\\git\\etiquette\\frontends\\etiquette_flask\\https\\etiquette.crt',
+            application=etiquette_flask_entrypoint.site,
+            keyfile=HTTPS_DIR.with_child('etiquette.key').absolute_path,
+            certfile=HTTPS_DIR.with_child('etiquette.crt').absolute_path,
         )
     else:
         http = gevent.pywsgi.WSGIServer(
             listener=('0.0.0.0', port),
-            application=site,
+            application=etiquette_flask_entrypoint.site,
         )
+
+    etiquette_flask_entrypoint.backend.common.init_photodb(create=create)
 
     message = f'Starting server on port {port}'
     if use_https:
         message += ' (https)'
     print(message)
+
     try:
         http.serve_forever()
     except KeyboardInterrupt:
         pass
-    return 0
 
-def run_argparse(args):
-    return run(port=args.port, use_https=args.use_https)
+def etiquette_flask_launch_argparse(args):
+    return etiquette_flask_launch(
+        create=args.create,
+        port=args.port,
+        use_https=args.use_https,
+    )
 
 def main(argv):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(dest='port', nargs='?', default=None)
+    parser.add_argument('port', nargs='?', type=int, default=5000)
+    parser.add_argument('--dont_create', '--dont-create', '--no-create', dest='create', action='store_false', default=True)
     parser.add_argument('--https', dest='use_https', action='store_true', default=None)
-    parser.set_defaults(func=run_argparse)
+    parser.set_defaults(func=etiquette_flask_launch_argparse)
 
     args = parser.parse_args(argv)
     return args.func(args)

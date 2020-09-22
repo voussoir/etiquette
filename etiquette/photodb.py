@@ -1710,7 +1710,8 @@ class PhotoDB(
             existing_database = self.database_filepath.exists
 
             if not existing_database and not create:
-                raise FileNotFoundError(f'"{self.data_directory}" does not exist and create is off.')
+                msg = f'"{self.database_filepath.absolute_path}" does not exist and create is off.'
+                raise FileNotFoundError(msg)
 
             os.makedirs(self.data_directory.absolute_path, exist_ok=True)
             self.sql = sqlite3.connect(self.database_filepath.absolute_path)

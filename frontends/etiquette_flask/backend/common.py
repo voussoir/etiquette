@@ -1,3 +1,7 @@
+'''
+Do not execute this file directly.
+Use etiquette_flask_launch.py to start the server with gevent.
+'''
 import flask; from flask import request
 import gzip
 import io
@@ -15,7 +19,7 @@ from . import jinja_filters
 from . import jsonify
 from . import sessions
 
-# Runtime init #####################################################################################
+# Flask init #######################################################################################
 
 root_dir = pathclass.Path(__file__).parent.parent
 
@@ -38,8 +42,6 @@ site.jinja_env.trim_blocks = True
 site.jinja_env.lstrip_blocks = True
 jinja_filters.register_all(site)
 site.debug = True
-
-P = etiquette.photodb.PhotoDB()
 
 session_manager = sessions.SessionManager(maxlen=10000)
 file_cache_manager = caching.FileCacheManager(
@@ -86,7 +88,7 @@ def after_request(response):
     bail = bail or response.status_code < 200
     bail = bail or response.status_code >= 300
     bail = bail or response.direct_passthrough
-    bail = bail or int(response.headers.get('Content-Length', gzip_minimum_size)) > gzip_maximum_size
+    bail = bail or int(response.headers.get('Content-Length', 0)) > gzip_maximum_size
     bail = bail or len(response.get_data()) < gzip_minimum_size
     bail = bail or 'gzip' not in accept_encoding.lower()
     bail = bail or 'Content-Encoding' in response.headers
@@ -208,6 +210,8 @@ def send_file(filepath, override_mimetype=None):
     if not filepath.is_file:
         flask.abort(404)
 
+    file_size = filepath.size
+
     headers = file_cache_manager.matches(request=request, filepath=filepath)
     if headers:
         response = flask.Response(status=304, headers=headers)
@@ -240,21 +244,21 @@ def send_file(filepath, override_mimetype=None):
         if range_min is None:
             range_min = 0
         if range_max is None:
-            range_max = filepath.size
+            range_max = file_size
 
         # because ranges are 0-indexed
-        range_max = min(range_max, filepath.size - 1)
+        range_max = min(range_max, file_size - 1)
         range_min = max(range_min, 0)
 
         range_header = 'bytes {min}-{max}/{outof}'.format(
             min=range_min,
             max=range_max,
-            outof=filepath.size,
+            outof=file_size,
         )
         outgoing_headers['Content-Range'] = range_header
         status = 206
     else:
-        range_max = filepath.size - 1
+        range_max = file_size - 1
         range_min = 0
         status = 200
 
@@ -280,3 +284,9 @@ def send_file(filepath, override_mimetype=None):
         headers=outgoing_headers,
     )
     return response
+
+####################################################################################################
+
+def init_photodb(*args, **kwargs):
+    global P
+    P = etiquette.photodb.PhotoDB(*args, **kwargs)
