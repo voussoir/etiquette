@@ -335,7 +335,7 @@ def get_search_core():
     if limit is None:
         limit = 50
     else:
-        limit = min(limit, 200)
+        limit = min(limit, 1000)
 
     offset = request.args.get('offset')
 
