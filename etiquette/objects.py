@@ -901,7 +901,7 @@ class Photo(ObjectBase):
         folder = os.sep.join(folder)
         folder = self.photodb.thumbnail_directory.join(folder)
         if folder:
-            os.makedirs(folder.absolute_path, exist_ok=True)
+            folder.makedirs(exist_ok=True)
         hopeful_filepath = folder.with_child(basename + '.jpg')
         return hopeful_filepath
 
@@ -1101,7 +1101,7 @@ class Photo(ObjectBase):
 
         self.photodb.log.debug('Renaming file "%s" -> "%s"', old_path.absolute_path, new_path.absolute_path)
 
-        os.makedirs(new_path.parent.absolute_path, exist_ok=True)
+        new_path.parent.makedirs(exist_ok=True)
 
         # The plan is to make a hardlink now, then delete the original file
         # during commit. This only applies to normcase != normcase, because on
