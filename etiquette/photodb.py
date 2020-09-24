@@ -675,6 +675,7 @@ class PDBPhotoMixin:
         has_thumbnail = searchhelpers.normalize_has_thumbnail(has_thumbnail)
         is_searchhidden = searchhelpers.normalize_is_searchhidden(is_searchhidden)
         mimetype = searchhelpers.normalize_extension(mimetype)
+        yield_albums = searchhelpers.normalize_yield_albums(yield_albums)
 
         if has_tags is False:
             tag_musts = None
@@ -763,6 +764,7 @@ class PDBPhotoMixin:
                 'limit': limit,
                 'offset': offset or None,
                 'orderby': giveback_orderby or None,
+                'yield_albums': yield_albums,
             }
             yield parameters
 

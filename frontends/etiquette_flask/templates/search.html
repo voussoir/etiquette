@@ -294,6 +294,10 @@
                 <option value="yes" {{"selected" if search_kwargs['has_thumbnail']==True else ""}}>Has thumbnail</option>
                 <option value="no"  {{"selected" if search_kwargs['has_thumbnail']==False else ""}}>No thumbnail</option>
             </select>
+            <select name="yield_albums" class="basic_param">
+                <option value="yes" {{"selected" if search_kwargs['yield_albums']==True else ""}}>Include albums</option>
+                <option value="no" {{"selected" if search_kwargs['yield_albums']==False else ""}}>Don't include albums</option>
+            </select>
             <select name="view" class="basic_param">
                 <option value="grid"  {{"selected" if search_kwargs['view']=="grid" else ""}}>Grid</option>
                 <option value="list"  {{"selected" if search_kwargs['view']=="list" else ""}}>List</option>
@@ -371,6 +375,7 @@ selected form values are these.
 const PARAM_DEFAULTS = {
     'limit': 50,
     'view': 'grid',
+    'yield_albums': 'yes'
 }
 function add_searchtag(ul, value, inputted_list, li_class)
 {

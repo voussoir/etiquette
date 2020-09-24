@@ -325,6 +325,7 @@ def get_search_core():
     extension_not = request.args.get('extension_not')
     mimetype = request.args.get('mimetype')
     is_searchhidden = request.args.get('is_searchhidden', False)
+    yield_albums = request.args.get('yield_albums', True)
 
     limit = request.args.get('limit')
     # This is being pre-processed because the site enforces a maximum value
@@ -378,7 +379,9 @@ def get_search_core():
         'orderby': orderby,
 
         'warning_bag': warning_bag,
-        'give_back_parameters': True
+        'give_back_parameters': True,
+
+        'yield_albums': yield_albums,
     }
     # print(search_kwargs)
     search_generator = common.P.search(**search_kwargs)

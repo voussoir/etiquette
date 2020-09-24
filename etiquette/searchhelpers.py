@@ -385,6 +385,12 @@ def normalize_tag_expression(expression):
 
     return expression
 
+def normalize_yield_albums(yield_albums):
+    '''
+    See etiquette.helpers.truthystring.
+    '''
+    return helpers.truthystring(yield_albums)
+
 EXIST_FORMAT = '''
 {operator} (
     SELECT 1 FROM photo_tag_rel WHERE photos.id == photo_tag_rel.photoid
