@@ -1,17 +1,3 @@
-:root
-{
-    --color_text_normal: black;
-    --color_text_link: blue;
-
-    --color_textfields: white;
-    --color_text_placeholder: gray;
-
-    --color_transparency: rgba(0, 0, 0, 0.1);
-    --color_dropshadow: rgba(0, 0, 0, 0.25);
-    --color_shadow: rgba(0, 0, 0, 0.5);
-    --color_highlight: rgba(255, 255, 255, 0.5);
-}
-
 @media screen and (min-width: 800px)
 {
     :root
@@ -244,7 +230,7 @@ button:active
 }
 .message_bubble *
 {
-    color: var(--color_text_normal);
+    color: var(--color_text_bubble);
 }
 .message_positive
 {

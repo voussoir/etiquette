@@ -1,10 +1,10 @@
 :root
 {
-    --color_primary: #f6ffff;
-    --color_secondary: #aad7ff;
+    --color_primary: #00d8f4;
+    --color_secondary: #ffffd4;
 
-    --color_text_normal: #000;
-    --color_text_link: #00f;
+    --color_text_normal: black;
+    --color_text_link: blue;
     --color_text_bubble: black;
 
     --color_textfields: white;
@@ -16,5 +16,5 @@
     --color_highlight: rgba(255, 255, 255, 0.5);
 
     --color_tag_object_bg: #fff;
-    --color_tag_object_fg: black;
+    --color_tag_object_fg: blue;
 }
