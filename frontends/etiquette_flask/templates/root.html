@@ -13,23 +13,35 @@
 <style>
 body
 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     height: 100%;
     margin: 0;
 }
-body, .nice_link
+body > div,
+body > .nice_link
+{
+    width: 50%;
+}
+body > div
+{
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    grid-gap: 8px;
+}
+.nice_link, .plain_link
 {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-}
-.nice_link, .plain_link
-{
-    margin: 8px;
+    margin: 8px 0;
 }
 .nice_link
 {
-    width: 50%;
     height: 40px;
     background-color: var(--color_transparency);
 }
@@ -39,14 +51,13 @@ body, .nice_link
 }
 #motd
 {
-    width: 50%;
     text-align: center;
 }
 </style>
 </head>
 
 <body>
-    <span id="motd">{{motd}}</span>
+    <p id="motd">{{motd}}</p>
     <a class="nice_link" href="/search">Search</a>
     <a class="nice_link" href="/tags">Browse tags</a>
     <a class="nice_link" href="/albums">Browse albums</a>
@@ -56,6 +67,11 @@ body, .nice_link
     {% else %}
     <a class="nice_link" href="/login">Log in</a>
     {% endif %}
+    <div>
+        <a class="nice_link" href="/?theme=turquoise">Turquoise</a>
+        <a class="nice_link" href="/?theme=slate">Slate</a>
+        <a class="nice_link" href="/?theme=pearl">Pearl</a>
+    </div>
     <a class="plain_link" href="http://www.github.com/voussoir/etiquette">GitHub</a>
 </body>
 
