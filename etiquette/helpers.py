@@ -19,13 +19,14 @@ from voussoirkit import pathclass
 from . import constants
 from . import exceptions
 
-def album_as_directory_map(album, recursive=True):
+def album_as_directory_map(album, once_each=True, recursive=True):
     '''
     Given an album, produce a dictionary mapping Album objects to directory
     names as they will appear inside the zip archive.
     Sub-albums become subfolders.
 
-    If an album is a child of multiple albums, only one instance is used.
+    once_each:
+        If an album is a child of multiple albums, only one instance is used.
     '''
     directories = {}
     if album.title:
@@ -34,31 +35,45 @@ def album_as_directory_map(album, recursive=True):
     else:
         root_folder = f'album {album.id}'
 
-    directories[album] = root_folder
+    if once_each:
+        directories[album] = root_folder
+    else:
+        directories[album] = [root_folder]
+
     if recursive:
         for child_album in album.get_children():
-            child_directories = album_as_directory_map(child_album, recursive=True)
+            child_directories = album_as_directory_map(child_album, once_each=once_each, recursive=True)
             for (child_album, child_directory) in child_directories.items():
-                child_directory = os.path.join(root_folder, child_directory)
-                directories[child_album] = child_directory
+                if once_each:
+                    child_directory = os.path.join(root_folder, child_directory)
+                    directories[child_album] = child_directory
+                else:
+                    child_directory = [os.path.join(root_folder, d) for d in child_directory]
+                    directories.setdefault(child_album, []).extend(child_directory)
 
     return directories
 
-def album_photos_as_filename_map(album, recursive=True):
+def album_photos_as_filename_map(album, once_each=True, recursive=True):
     '''
     Given an album, produce a dictionary mapping Photo objects to the
     filenames that will appear inside the zip archive.
     This includes creating subfolders for sub albums.
 
-    If a photo appears in multiple albums, only one instance is used.
+    once_each:
+        If a photo appears in multiple albums, only one instance is used.
     '''
     arcnames = {}
-    directories = album_as_directory_map(album, recursive=recursive)
+    directories = album_as_directory_map(album, once_each=once_each, recursive=recursive)
     for (album, directory) in directories.items():
         photos = album.get_photos()
         for photo in photos:
             photo_name = f'{photo.id} - {photo.basename}'
-            arcnames[photo] = os.path.join(directory, photo_name)
+            if once_each:
+                arcname = os.path.join(directory, photo_name)
+                arcnames[photo] = arcname
+            else:
+                arcname = [os.path.join(d, photo_name) for d in directory]
+                arcnames.setdefault(photo, []).extend(arcname)
 
     return arcnames
 
@@ -484,12 +499,12 @@ def zip_album(album, recursive=True):
     zipfile = zipstream.ZipFile()
 
     # Add the photos.
-    arcnames = album_photos_as_filename_map(album, recursive=recursive)
+    arcnames = album_photos_as_filename_map(album, once_each=True, recursive=recursive)
     for (photo, arcname) in arcnames.items():
         zipfile.write(filename=photo.real_path.absolute_path, arcname=arcname)
 
     # Add the album metadata as an {id}.txt file within each directory.
-    directories = album_as_directory_map(album, recursive=recursive)
+    directories = album_as_directory_map(album, once_each=True, recursive=recursive)
     for (inner_album, directory) in directories.items():
         metafile_text = []
         if inner_album.title:
