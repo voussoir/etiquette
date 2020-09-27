@@ -40,16 +40,21 @@ def album_as_directory_map(album, once_each=True, recursive=True):
     else:
         directories[album] = [root_folder]
 
-    if recursive:
-        for child_album in album.get_children():
-            child_directories = album_as_directory_map(child_album, once_each=once_each, recursive=True)
-            for (child_album, child_directory) in child_directories.items():
-                if once_each:
-                    child_directory = os.path.join(root_folder, child_directory)
-                    directories[child_album] = child_directory
-                else:
-                    child_directory = [os.path.join(root_folder, d) for d in child_directory]
-                    directories.setdefault(child_album, []).extend(child_directory)
+    if not recursive:
+        return directories
+
+    descendants = (
+        pair
+        for child in album.get_children()
+        for pair in album_as_directory_map(child, once_each=once_each, recursive=True).items()
+    )
+    for (child_album, child_directory) in descendants:
+        if once_each:
+            child_directory = os.path.join(root_folder, child_directory)
+            directories[child_album] = child_directory
+        else:
+            child_directory = [os.path.join(root_folder, d) for d in child_directory]
+            directories.setdefault(child_album, []).extend(child_directory)
 
     return directories
 
@@ -63,17 +68,21 @@ def album_photos_as_filename_map(album, once_each=True, recursive=True):
         If a photo appears in multiple albums, only one instance is used.
     '''
     arcnames = {}
+
     directories = album_as_directory_map(album, once_each=once_each, recursive=recursive)
-    for (album, directory) in directories.items():
-        photos = album.get_photos()
-        for photo in photos:
-            photo_name = f'{photo.id} - {photo.basename}'
-            if once_each:
-                arcname = os.path.join(directory, photo_name)
-                arcnames[photo] = arcname
-            else:
-                arcname = [os.path.join(d, photo_name) for d in directory]
-                arcnames.setdefault(photo, []).extend(arcname)
+    photos = (
+        (photo, directory)
+        for (album, directory) in directories.items()
+        for photo in album.get_photos()
+    )
+    for (photo, directory) in photos:
+        photo_name = f'{photo.id} - {photo.basename}'
+        if once_each:
+            arcname = os.path.join(directory, photo_name)
+            arcnames[photo] = arcname
+        else:
+            arcname = [os.path.join(d, photo_name) for d in directory]
+            arcnames.setdefault(photo, []).extend(arcname)
 
     return arcnames
 
