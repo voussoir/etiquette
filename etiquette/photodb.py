@@ -550,6 +550,7 @@ class PDBPhotoMixin:
             tag_mays=None,
             tag_forbids=None,
             tag_expression=None,
+            within_directory=None,
 
             limit=None,
             offset=None,
@@ -628,6 +629,11 @@ class PDBPhotoMixin:
             'family AND (animals OR vacation)'
             'family vacation outdoors' (implicitly AND each term)
 
+        within_directory:
+            A string or list of strings or pathclass Paths of directories.
+            Photos MUST have a `filepath` that is a child of one of these
+            directories.
+
         QUERY OPTIONS
         limit:
             The maximum number of *successful* results to yield.
@@ -675,6 +681,7 @@ class PDBPhotoMixin:
         has_thumbnail = searchhelpers.normalize_has_thumbnail(has_thumbnail)
         is_searchhidden = searchhelpers.normalize_is_searchhidden(is_searchhidden)
         mimetype = searchhelpers.normalize_extension(mimetype)
+        within_directory = searchhelpers.normalize_within_directory(within_directory, warning_bag=warning_bag)
         yield_albums = searchhelpers.normalize_yield_albums(yield_albums)
 
         if has_tags is False:
@@ -761,6 +768,7 @@ class PDBPhotoMixin:
                 'tag_mays': tag_mays or None,
                 'tag_forbids': tag_forbids or None,
                 'tag_expression': giveback_tag_expression or None,
+                'within_directory': within_directory or None,
                 'limit': limit,
                 'offset': offset or None,
                 'orderby': giveback_orderby or None,
@@ -801,6 +809,17 @@ class PDBPhotoMixin:
 
         if mimetype:
             notnulls.add('extension')
+
+        if within_directory:
+            patterns = {f'{d.absolute_path}{os.sep}%' for d in within_directory}
+            clauses = ['filepath LIKE ?'] * len(patterns)
+            if len(clauses) > 1:
+                clauses = ' OR '.join(clauses)
+                clauses = f'({clauses})'
+            else:
+                clauses = clauses.pop()
+            wheres.append(clauses)
+            bindings.extend(patterns)
 
         if has_tags is True:
             wheres.append('EXISTS (SELECT 1 FROM photo_tag_rel WHERE photoid == photos.id)')

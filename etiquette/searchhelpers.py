@@ -9,6 +9,7 @@ from . import helpers
 from . import objects
 
 from voussoirkit import expressionmatch
+from voussoirkit import pathclass
 from voussoirkit import sqlhelpers
 
 def expand_mmf(tag_musts, tag_mays, tag_forbids):
@@ -384,6 +385,36 @@ def normalize_tag_expression(expression):
         return None
 
     return expression
+
+def normalize_within_directory(paths, warning_bag=None):
+    if paths is None:
+        return set()
+
+    if isinstance(paths, set):
+        pass
+    elif isinstance(paths, (str, pathclass.Path)):
+        paths = {paths}
+    elif isinstance(paths, (list, tuple)):
+        paths = set(paths)
+    else:
+        exc = TypeError(paths)
+        if warning_bag:
+            warning_bag.add(exc)
+            return set()
+        else:
+            raise exc
+
+    paths = {pathclass.Path(p) for p in paths}
+    directories = {p for p in paths if p.is_dir}
+    not_directories = paths.difference(directories)
+    if not_directories:
+        exc = pathclass.NotDirectory(not_directories)
+        if warning_bag:
+            warning_bag.add(exc)
+        else:
+            raise exc
+
+    return directories
 
 def normalize_yield_albums(yield_albums):
     '''

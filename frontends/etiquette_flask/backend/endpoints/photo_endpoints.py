@@ -387,6 +387,9 @@ def get_search_core():
     search_generator = common.P.search(**search_kwargs)
     # Because of the giveback, first element is cleaned up kwargs
     search_kwargs = next(search_generator)
+    # Web UI users aren't allowed to use within_directory anyway, so don't
+    # show it to them.
+    search_kwargs.pop('within_directory', None)
     # print(search_kwargs)
 
     warnings = set()
