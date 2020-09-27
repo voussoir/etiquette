@@ -97,6 +97,8 @@ Here is a brief overview of the project to help you learn your way around:
     This folder represents the flask server as somewhat of a black box, in the sense that you can move it around and just run the contained launch file. Subfolders contain the HTML templates, static files, and site's backend code.
     - `etiquette_repl`  
         Preloads a few variables into the interpreter so you can quickly test functions within the Python REPL itself.
+    - `etiquette_cli`  
+        To be run on the command line for fast and scriptable search and manipulation.
 - `utilities`  
     For other scripts that will be used with etiquette databases, but are not part of the library itself.
 
