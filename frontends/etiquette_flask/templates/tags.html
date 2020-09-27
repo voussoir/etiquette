@@ -104,15 +104,14 @@ h2, h3
         {% do tags.remove((specific_tag.name, specific_tag)) %}
         <div id="hierarchy_self">
             <div id="tag_metadata">
-                <h2><a
-                    href="/search?tag_musts={{specific_tag.name}}"
-                    id="name_text"
-                    class="tag_object"
-                    data-editor-id="name"
-                    data-editor-placeholder="name"
-                    >
-                        {{-specific_tag.name-}}
-                </a></h2>
+                <h2>{{tag_object.tag_object(
+                    specific_tag,
+                    link="search",
+                    id="name_text",
+                    data_editor_id="name",
+                    data_editor_placeholder="name",
+                    )}}
+                </h2>
 
                 <pre
                 id="description_text"
