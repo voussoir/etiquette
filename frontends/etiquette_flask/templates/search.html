@@ -522,20 +522,20 @@ function submit_search()
     add_searchtag_from_box(input_forbids, inputted_forbids, "search_builder_forbids_inputted");
 
     let has_tag_params = false;
-    const musts = simplify_tagnames(inputted_musts).join(",");
+    const musts = simplify_tagnames(inputted_musts).map(encodeURIComponent).join(",");
     if (musts) {parameters.push("tag_musts=" + musts); has_tag_params = true;}
 
-    const mays = simplify_tagnames(inputted_mays).join(",");
+    const mays = simplify_tagnames(inputted_mays).map(encodeURIComponent).join(",");
     if (mays) {parameters.push("tag_mays=" + mays); has_tag_params = true;}
 
-    const forbids = simplify_tagnames(inputted_forbids).join(",");
+    const forbids = simplify_tagnames(inputted_forbids).map(encodeURIComponent).join(",");
     if (forbids) {parameters.push("tag_forbids=" + forbids); has_tag_params = true;}
 
     const expression = document.getElementsByName("tag_expression")[0].value;
     if (expression)
     {
         //expression = expression.replace(new RegExp(" ", 'g'), "-");
-        parameters.push("tag_expression=" + expression);
+        parameters.push("tag_expression=" + encodeURIComponent(expression));
         has_tag_params = true;
     }
 
@@ -667,7 +667,7 @@ const inputted_forbids = [];
     {% set key="tag_" + tagtype %}
     {% if search_kwargs[key] %}
     {% for tag in search_kwargs[key] %}
-        inputted_{{tagtype}}.push("{{tag.name}}");
+        inputted_{{tagtype}}.push("{{tag.name|safe}}");
     {% endfor %}
     {% endif %}
 {% endfor %}

@@ -25,10 +25,10 @@
 ) -%}
 
 {%- set href = {
-        "search": "/search?tag_musts=" + tag.name,
-        "search_musts": "/search?tag_musts=" + tag.name,
-        "search_mays": "/search?tag_mays=" + tag.name,
-        "search_forbids": "/search?tag_forbids=" + tag.name,
+        "search": "/search?tag_musts=" + (tag.name|urlencode),
+        "search_musts": "/search?tag_musts=" + (tag.name|urlencode),
+        "search_mays": "/search?tag_mays=" + (tag.name|urlencode),
+        "search_forbids": "/search?tag_forbids=" + (tag.name|urlencode),
         "info": "/tag/" + tag.name,
         None: None,
     }.get(link, link)
