@@ -68,7 +68,11 @@ def users_to_usernames(users):
 
 @global_function
 def make_attributes(*booleans, **keyvalues):
-    keyvalues = {key: value for (key, value) in keyvalues.items() if value is not None}
+    keyvalues = {
+        key.replace('_', '-'): value
+        for (key, value) in keyvalues.items()
+        if value is not None
+    }
     attributes = [f'{key}="{jinja2.filters.escape(value)}"' for (key, value) in keyvalues.items()]
     attributes.extend(booleans)
     attributes = ' '.join(attributes)
