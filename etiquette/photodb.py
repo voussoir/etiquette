@@ -1693,7 +1693,8 @@ class PhotoDB(
         else:
             data_directory = constants.DEFAULT_DATADIR
 
-        data_directory = helpers.remove_path_badchars(data_directory, allowed=':/\\')
+        if isinstance(data_directory, str):
+            data_directory = helpers.remove_path_badchars(data_directory, allowed=':/\\')
         self.data_directory = pathclass.Path(data_directory)
 
         if self.data_directory.exists and not self.data_directory.is_dir:
