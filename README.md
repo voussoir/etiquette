@@ -92,9 +92,9 @@ Here is a brief overview of the project to help you learn your way around:
     - `photodb`  
         Definition of the PhotoDB class and its Mixins.
 - `frontends`  
-    Ideally, the backend should be frontend-agnostic. Even though the Flask interface is my primary interest, it should not feel like it must be the only one. Therefore I place it in this folder to indicate that other frontends are possible too. Every folder here is essentially a completely separate project.
+    The Etiquette library is designed to be usable through a variety of interfaces. The Flask interface is my primary focus and does, admittedly, have an influence on the design of the backend, but other interfaces should have no trouble integrating with Etiquette. Every folder here is essentially a completely separate project which imports etiquette just like any other dependency.
     - `etiquette_flask`  
-    This folder represents the flask server as somewhat of a black box, in the sense that you can move it around and just run the contained launch file. Subfolders contain the HTML templates, static files, and site's backend code.
+        Provides a web interface to browse, search, and manipulate the database.
     - `etiquette_repl`  
         Preloads a few variables into the interpreter so you can quickly test functions within the Python REPL itself.
     - `etiquette_cli`  
