@@ -1732,7 +1732,10 @@ class PhotoDB(
         # CONFIG
         self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
         self.load_config()
-        self.log.setLevel(self.config['log_level'])
+        if self.config['log_level'] is None:
+            self.log.setLevel(logging.NOTSET)
+        else:
+            self.log.setLevel(self.config['log_level'])
 
         self.caches = {
             'album': cacheclass.Cache(maxlen=self.config['cache_size']['album']),
