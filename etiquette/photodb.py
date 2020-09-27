@@ -851,7 +851,7 @@ class PDBPhotoMixin:
 
         query = f'{"-" * 80}\n{query}\n{"-" * 80}'
 
-        print(query, bindings)
+        self.log.debug('\n%s %s', query, bindings)
         #explain = self.sql_execute('EXPLAIN QUERY PLAN ' + query, bindings)
         #print('\n'.join(str(x) for x in explain.fetchall()))
         generator = self.sql_select(query, bindings)
@@ -894,7 +894,7 @@ class PDBPhotoMixin:
             yield warning_bag
 
         end_time = time.time()
-        print('Search took:', end_time - start_time)
+        self.log.debug('Search took %s.', end_time - start_time)
 
 ####################################################################################################
 
