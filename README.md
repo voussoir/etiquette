@@ -11,6 +11,7 @@ Etiquette is unique because *the tags themselves are hierarchical*. By tagging o
 
 ### Setting up
 
+<details><summary><strong>Click to view setup instructions</strong></summary>
 I have not made a setup.py yet. So I use a filesystem junction / symlink to make etiquette appear in my python lib folder.
 
 <details><summary><strong>Setting up via symlink</strong></summary>
@@ -27,8 +28,6 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
 
 </details>
 
----
-
 <details><summary><strong>Setting up via pythonpath</strong></summary>
 
 - The repository you're looking at right now is `D:\Git\Etiquette`. The toplevel `etiquette` folder is the main package.
@@ -44,10 +43,12 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
     To make it permanent, add the export to your bashrc.
 
 </details>
+</details>
 
 ### Running
 
-<details><summary><strong>Running locally</strong></summary>
+<details><summary><strong>Click to view run instructions</strong></summary>
+<details><summary><strong>Running Flask locally</strong></summary>
 
 - Run `python etiquette_flask_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
 - Run `python -i etiquette_repl_launch.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
@@ -61,9 +62,7 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
 
 </details>
 
----
-
-<details><summary><strong>Running with Gunicorn</strong></summary>
+<details><summary><strong>Running Flask with Gunicorn</strong></summary>
 
 1. Use the PYTHONPATH technique to make `etiquette` and the flask `backend` both importable. Symlinking into the lib is not as convenient here because the server relies on the static files and jinja templates relative to the code's location.
 
@@ -75,6 +74,7 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
 
         gunicorn etiquette_flask_entrypoint:site --bind "0.0.0.0:PORT" --access-logfile "-"
 
+</details>
 </details>
 
 ### Project stability
