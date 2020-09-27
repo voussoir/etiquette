@@ -38,6 +38,6 @@
 {%- set innertext = innertext or tag.name -%}
 {%- set element = "a" if (link or onclick) else "span" -%}
 
-<{{element}} {{make_attributes(class=class, title=title, href=href, onclick=onclick)|safe}}>{{innertext}}</{{element}}>
+<{{element}} {{make_attributes(class=class, title=title, href=href, onclick=onclick, **kwargs)|safe}}>{{innertext}}</{{element}}>
 {{-''-}}
 {%- endmacro -%}
