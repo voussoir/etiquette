@@ -182,6 +182,9 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         parents = set(self.group_getter_many(parent_ids))
         return parents
 
+    def has_ancestor(self, ancestor):
+        return ancestor in self.walk_parents()
+
     def has_any_child(self):
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? LIMIT 1'
         row = self.photodb.sql_select_one(query, [self.id])
@@ -196,6 +199,15 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         self.assert_same_type(member)
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? AND memberid == ?'
         row = self.photodb.sql_select_one(query, [self.id, member.id])
+        return row is not None
+
+    def has_descendant(self, descendant):
+        return self in descendant.walk_parents()
+
+    def has_parent(self, parent):
+        self.assert_same_type(parent)
+        query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? AND memberid == ?'
+        row = self.photodb.sql_select_one(query, [parent.id, self.id])
         return row is not None
 
     @abc.abstractmethod
