@@ -19,7 +19,13 @@ from voussoirkit import pathclass
 from . import constants
 from . import exceptions
 
-def album_as_directory_map(album, once_each=True, recursive=True):
+def album_as_directory_map(
+        album,
+        naming='simplified',
+        once_each=True,
+        recursive=True,
+        root_name=None,
+    ):
     '''
     Given an album, produce a dictionary mapping Album objects to directory
     names as they will appear inside the zip archive.
@@ -29,36 +35,61 @@ def album_as_directory_map(album, once_each=True, recursive=True):
         If an album is a child of multiple albums, only one instance is used.
     '''
     directories = {}
-    if album.title:
-        title = remove_path_badchars(album.title)
-        root_folder = f'album {album.id} - {title}'
+    if root_name is not None:
+        pass
+    elif naming == 'simplified':
+        root_name = album.display_name
+    elif naming == 'unambiguous':
+        root_name = album.full_name
     else:
-        root_folder = f'album {album.id}'
+        raise ValueError(naming)
+    root_name = remove_path_badchars(root_name)
 
     if once_each:
-        directories[album] = root_folder
+        directories[album] = root_name
     else:
-        directories[album] = [root_folder]
+        directories[album] = [root_name]
 
     if not recursive:
         return directories
 
+    children = album.get_children()
+    if naming == 'simplified':
+        child_names = decollide_names(children, lambda c: c.display_name)
+    elif naming == 'unambiguous':
+        child_names = {child: child.full_name for child in children}
+
+    child_maps = (
+        album_as_directory_map(
+            child,
+            once_each=once_each,
+            recursive=True,
+            root_name=child_names[child],
+        )
+        for child in children
+    )
     descendants = (
         pair
-        for child in album.get_children()
-        for pair in album_as_directory_map(child, once_each=once_each, recursive=True).items()
+        for child_map in child_maps
+        for pair in child_map.items()
     )
     for (child_album, child_directory) in descendants:
         if once_each:
-            child_directory = os.path.join(root_folder, child_directory)
+            child_directory = os.path.join(root_name, child_directory)
             directories[child_album] = child_directory
         else:
-            child_directory = [os.path.join(root_folder, d) for d in child_directory]
+            child_directory = [os.path.join(root_name, d) for d in child_directory]
             directories.setdefault(child_album, []).extend(child_directory)
 
     return directories
 
-def album_photos_as_filename_map(album, once_each=True, recursive=True):
+def album_photos_as_filename_map(
+        album,
+        naming='simplified',
+        once_each=True,
+        recursive=True,
+        root_name=None,
+    ):
     '''
     Given an album, produce a dictionary mapping Photo objects to the
     filenames that will appear inside the zip archive.
@@ -69,20 +100,27 @@ def album_photos_as_filename_map(album, once_each=True, recursive=True):
     '''
     arcnames = {}
 
-    directories = album_as_directory_map(album, once_each=once_each, recursive=recursive)
-    photos = (
-        (photo, directory)
-        for (album, directory) in directories.items()
-        for photo in album.get_photos()
+    directories = album_as_directory_map(
+        album,
+        once_each=once_each,
+        recursive=recursive,
+        root_name=root_name,
     )
-    for (photo, directory) in photos:
-        photo_name = f'{photo.id} - {photo.basename}'
-        if once_each:
-            arcname = os.path.join(directory, photo_name)
-            arcnames[photo] = arcname
-        else:
-            arcname = [os.path.join(d, photo_name) for d in directory]
-            arcnames.setdefault(photo, []).extend(arcname)
+
+    for (album, directory) in directories.items():
+        photos = album.get_photos()
+        if naming == 'simplified':
+            photo_names = decollide_names(photos, lambda p: p.basename)
+        elif naming == 'unambiguous':
+            photo_names = {photo: f'{photo.id} - {photo.basename}' for photo in photos}
+        for photo in photos:
+            photo_name = photo_names[photo]
+            if once_each:
+                arcname = os.path.join(directory, photo_name)
+                arcnames[photo] = arcname
+            else:
+                arcname = [os.path.join(d, photo_name) for d in directory]
+                arcnames.setdefault(photo, []).extend(arcname)
 
     return arcnames
 
@@ -143,6 +181,59 @@ def comma_space_split(s):
     if s is None:
         return s
     return re.split(r'[ ,]+', s.strip())
+
+def decollide_names(things, namer):
+    '''
+    When generating zip files, or otherwise exporting photos to disk, it is
+    aesthetically preferable to export them using just their basename. But,
+    since multiple photos might have the same basename, we occasionally need to
+    use their IDs to disambiguate them.
+    This function automates that by keeping the basename wherever possible, and
+    prefixing items with their ID in the case of a name collision.
+    This function takes `things`, which is a collection of either Albums or
+    Photos, and `namer` which is a callable that gives us the preferred name
+    of the thing (in practice, just a lambda returning Album title,
+    Photo basename), and returns a map of {thing: name}. If there are duplicate
+    names, they will be disambiguated by adding "id - " to the front.
+    '''
+    # The majority of this algorithm is dedicated to solving the case where some
+    # prankster has named their album such that it contains the ID of another
+    # album.
+    # For example, consider three Albums (1, "A"), (2, "A"), (3, "1 - A").
+    # So when 1 and 2 get disambiguated to (1, "1 - A"), (2, "2 - A"),
+    # then suddenly there is a new collision between (1, "1 - A") and
+    # (3, "1 - A"), and we need to disambiguate by renaming 3 to "3 - 1 - A".
+    # I'm not totally happy with how this function looks, but as long as I get
+    # it working I'll just stop looking at it and problem solved!
+    collisions = {}
+    final = {}
+    for thing in things:
+        name = namer(thing)
+        collisions.setdefault(name, []).append(thing)
+        final[thing] = name
+
+    # When the thing is disambiguated by adding its ID, it's done being
+    # decollided and can be locked. This ensures that if disambiguating one
+    # thing causes a new collision with a prank entry, only the prank needs to
+    # get renamed on the second pass. We don't need to keep prefixing the
+    # thing's ID onto the same thing over and over again.
+    locked = set()
+    while True:
+        collision = {
+            name: set(things).difference(locked)
+            for (name, things) in collisions.items()
+            if len(things) > 1
+        }
+        if not collision:
+            break
+        for (name, things) in collision.items():
+            for thing in things:
+                myname = f'{thing.id} - {name}'
+                locked.add(thing)
+                collisions[name].remove(thing)
+                collisions.setdefault(myname, []).append(thing)
+                final[thing] = myname
+    return final
 
 def dict_to_tuple(d):
     return tuple(sorted(d.items()))
