@@ -130,7 +130,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
     def add_children(self, members):
         bail = True
         for member in members:
-            bail = bail and (self.__add_child(member) is BAIL)
+            bail = (self.__add_child(member) is BAIL) and bail
         if bail:
             return BAIL
 
