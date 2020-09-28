@@ -456,7 +456,6 @@ class PDBPhotoMixin:
             self,
             filepath,
             *,
-            allow_duplicates=False,
             author=None,
             do_metadata=True,
             do_thumbnail=True,
@@ -467,9 +466,6 @@ class PDBPhotoMixin:
         Given a filepath, determine its attributes and create a new Photo object
         in the database. Tags may be applied now or later.
 
-        If `allow_duplicates` is False, we will first check the database for any
-        files with the same path and raise exceptions.PhotoExists if found.
-
         Returns the Photo object.
         '''
         # These might raise exceptions
@@ -477,8 +473,7 @@ class PDBPhotoMixin:
         if not filepath.is_file:
             raise FileNotFoundError(filepath.absolute_path)
 
-        if not allow_duplicates:
-            self.assert_no_such_photo_by_path(filepath=filepath)
+        self.assert_no_such_photo_by_path(filepath=filepath)
 
         author_id = self.get_user_id_or_none(author)
 

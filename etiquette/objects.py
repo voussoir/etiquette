@@ -1059,23 +1059,19 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def relocate(self, new_filepath, *, allow_duplicates=False):
+    def relocate(self, new_filepath):
         '''
         Point the Photo object to a different filepath.
 
         DOES NOT MOVE THE FILE, only acknowledges a move that was performed
         outside of the system.
         To rename or move the file, use `rename_file`.
-
-        allow_duplicates:
-            Allow even if there is another Photo for that path.
         '''
         new_filepath = pathclass.Path(new_filepath)
         if not new_filepath.is_file:
             raise FileNotFoundError(new_filepath.absolute_path)
 
-        if not allow_duplicates:
-            self.photodb.assert_no_such_photo_by_path(filepath=new_filepath)
+        self.photodb.assert_no_such_photo_by_path(filepath=new_filepath)
 
         self.photodb.log.debug('Relocating %s to "%s"', self, new_filepath.absolute_path)
         data = {
