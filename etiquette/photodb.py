@@ -36,7 +36,7 @@ class PDBAlbumMixin:
         return self.sql_select_one('SELECT COUNT(id) FROM albums')[0]
 
     def get_albums(self):
-        yield from self.get_things(thing_type='album')
+        return self.get_things(thing_type='album')
 
     def get_albums_by_id(self, ids):
         return self.get_things_by_id('album', ids)
@@ -57,7 +57,7 @@ class PDBAlbumMixin:
         '''
         Yield Albums that have no parent.
         '''
-        yield from self.get_root_things('album')
+        return self.get_root_things('album')
 
     @decorators.required_feature('album.new')
     @decorators.transaction
@@ -149,7 +149,7 @@ class PDBBookmarkMixin:
         return self.sql_select_one('SELECT COUNT(id) FROM bookmarks')[0]
 
     def get_bookmarks(self):
-        yield from self.get_things(thing_type='bookmark')
+        return self.get_things(thing_type='bookmark')
 
     def get_bookmarks_by_id(self, ids):
         return self.get_things_by_id('bookmark', ids)
@@ -1130,7 +1130,7 @@ class PDBTagMixin:
         '''
         Yield Tags that have no parent.
         '''
-        yield from self.get_root_things('tag')
+        return self.get_root_things('tag')
 
     def get_tag(self, name=None, id=None):
         '''
@@ -1188,7 +1188,7 @@ class PDBTagMixin:
         '''
         Yield all Tags in the database.
         '''
-        yield from self.get_things(thing_type='tag')
+        return self.get_things(thing_type='tag')
 
     def get_tags_by_id(self, ids):
         return self.get_things_by_id('tag', ids)
@@ -1348,7 +1348,7 @@ class PDBUserMixin:
         return author_id
 
     def get_users(self):
-        yield from self.get_things('user')
+        return self.get_things('user')
 
     @decorators.required_feature('user.login')
     def login(self, username=None, id=None, *, password):
