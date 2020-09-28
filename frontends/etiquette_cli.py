@@ -27,10 +27,12 @@ def find_photodb():
     photodbs[path] = photodb
     return photodb
 
-def search_argparse(args):
+####################################################################################################
+
+def search_by_argparse(args, yield_albums=False, yield_photos=False):
     photodb = find_photodb()
     cwd = pathclass.cwd()
-    photos = photodb.search(
+    results = photodb.search(
         area=args.area,
         width=args.width,
         height=args.height,
@@ -54,12 +56,15 @@ def search_argparse(args):
         limit=args.limit,
         offset=args.offset,
         orderby=args.orderby,
-        yield_albums=False,
+        yield_albums=yield_albums,
+        yield_photos=yield_photos,
     )
+    return results
+
+def search_argparse(args):
+    photos = search_by_argparse(args, yield_photos=True)
     photos = sorted(photos, key=lambda p: p.real_path)
     for photo in photos:
-        if photo.real_path not in cwd:
-            continue
         print(photo.real_path.absolute_path)
 
 def main(argv):
