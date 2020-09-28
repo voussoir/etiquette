@@ -210,8 +210,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         row = self.photodb.sql_select_one(query, [parent.id, self.id])
         return row is not None
 
-    @abc.abstractmethod
-    def remove_child(self, member):
+    def __remove_child(self, member):
         if not self.has_child(member):
             return BAIL
 
@@ -222,6 +221,17 @@ class GroupableMixin(metaclass=abc.ABCMeta):
             'memberid': member.id,
         }
         self.photodb.sql_delete(table=self.group_table, pairs=pairs)
+    @abc.abstractmethod
+    def remove_child(self, member):
+        return self.__remove_child(member)
+
+    @abc.abstractmethod
+    def remove_children(self, members):
+        bail = True
+        for member in members:
+            bail = (self.__remove_child(member) is BAIL) and bail
+        if bail:
+            return BAIL
 
     def walk_children(self):
         '''
@@ -491,6 +501,11 @@ class Album(ObjectBase, GroupableMixin):
     @decorators.transaction
     def remove_child(self, *args, **kwargs):
         return super().remove_child(*args, **kwargs)
+
+    @decorators.required_feature('album.edit')
+    @decorators.transaction
+    def remove_children(self, *args, **kwargs):
+        return super().remove_children(*args, **kwargs)
 
     def _remove_photo(self, photo):
         self.photodb.log.debug('Removing photo %s from %s', photo, self)
@@ -1412,6 +1427,15 @@ class Tag(ObjectBase, GroupableMixin):
     @decorators.transaction
     def remove_child(self, *args, **kwargs):
         ret = super().remove_child(*args, **kwargs)
+        if ret is BAIL:
+            return
+        self.photodb.caches['tag_exports'].clear()
+        return ret
+
+    @decorators.required_feature('tag.edit')
+    @decorators.transaction
+    def remove_children(self, *args, **kwargs):
+        ret = super().remove_children(*args, **kwargs)
         if ret is BAIL:
             return
         self.photodb.caches['tag_exports'].clear()
