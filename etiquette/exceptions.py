@@ -193,6 +193,13 @@ class FeatureDisabled(EtiquetteException):
     '''
     error_message = 'This feature has been disabled. Requires {}.'
 
+class NoYields(EtiquetteException):
+    '''
+    For when all of the yield_* arguments have been provided as False, and thus
+    there is nothing for the called function to yield.
+    '''
+    error_message = 'At least one of {} must be selected.'
+
 class NotExclusive(EtiquetteException):
     '''
     For when two or more mutually exclusive actions have been requested.

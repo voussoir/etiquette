@@ -559,6 +559,7 @@ class PDBPhotoMixin:
             give_back_parameters=False,
 
             yield_albums=True,
+            yield_photos=True,
         ):
         '''
         PHOTO PROPERTIES
@@ -683,6 +684,7 @@ class PDBPhotoMixin:
         mimetype = searchhelpers.normalize_extension(mimetype)
         within_directory = searchhelpers.normalize_within_directory(within_directory, warning_bag=warning_bag)
         yield_albums = searchhelpers.normalize_yield_albums(yield_albums)
+        yield_photos = searchhelpers.normalize_yield_photos(yield_photos)
 
         if has_tags is False:
             tag_musts = None
@@ -773,8 +775,18 @@ class PDBPhotoMixin:
                 'offset': offset or None,
                 'orderby': giveback_orderby or None,
                 'yield_albums': yield_albums,
+                'yield_photos': yield_photos,
             }
             yield parameters
+
+        if not yield_albums and not yield_photos:
+            exc = exceptions.NoYields(['yield_albums', 'yield_photos'])
+            if warning_bag:
+                warning_bag.add(exc)
+                yield warning_bag
+                return
+            else:
+                raise exceptions.NoYields(['yield_albums', 'yield_photos'])
 
         photo_tag_rel_exist_clauses = searchhelpers.photo_tag_rel_exist_clauses(
             tag_musts,
@@ -826,6 +838,9 @@ class PDBPhotoMixin:
         if has_tags is False:
             wheres.append('NOT EXISTS (SELECT 1 FROM photo_tag_rel WHERE photoid == photos.id)')
 
+        if yield_albums and not yield_photos:
+            wheres.append('EXISTS (SELECT 1 FROM album_photo_rel WHERE photoid == photos.id)')
+
         if has_thumbnail is True:
             notnulls.add('thumbnail')
         elif has_thumbnail is False:
@@ -875,7 +890,7 @@ class PDBPhotoMixin:
         #print('\n'.join(str(x) for x in explain.fetchall()))
         generator = self.sql_select(query, bindings)
         seen_albums = set()
-        photos_received = 0
+        results_received = 0
         for row in generator:
             photo = self.get_cached_instance('photo', row)
 
@@ -898,16 +913,18 @@ class PDBPhotoMixin:
                 offset -= 1
                 continue
 
-            if limit is not None and photos_received >= limit:
+            if limit is not None and results_received >= limit:
                 break
 
             if yield_albums:
                 new_albums = photo.get_containing_albums().difference(seen_albums)
                 yield from new_albums
+                results_received += len(new_albums)
                 seen_albums.update(new_albums)
 
-            photos_received += 1
-            yield photo
+            if yield_photos:
+                yield photo
+                results_received += 1
 
         if warning_bag and warning_bag.warnings:
             yield warning_bag

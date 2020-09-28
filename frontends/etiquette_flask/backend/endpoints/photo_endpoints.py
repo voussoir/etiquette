@@ -326,6 +326,7 @@ def get_search_core():
     mimetype = request.args.get('mimetype')
     is_searchhidden = request.args.get('is_searchhidden', False)
     yield_albums = request.args.get('yield_albums', True)
+    yield_photos = request.args.get('yield_photos', True)
 
     limit = request.args.get('limit')
     # This is being pre-processed because the site enforces a maximum value
@@ -382,6 +383,7 @@ def get_search_core():
         'give_back_parameters': True,
 
         'yield_albums': yield_albums,
+        'yield_photos': yield_photos,
     }
     # print(search_kwargs)
     search_generator = common.P.search(**search_kwargs)
@@ -394,14 +396,11 @@ def get_search_core():
 
     warnings = set()
     search_results = []
-    search_results_photo_count = 0
     for item in search_generator:
         if isinstance(item, etiquette.objects.WarningBag):
             warnings.update(item.warnings)
             continue
         search_results.append(item)
-        if isinstance(item, etiquette.objects.Photo):
-            search_results_photo_count += 1
 
     # TAGS ON THIS PAGE
     total_tags = set()
@@ -415,7 +414,7 @@ def get_search_core():
     original_params = request.args.to_dict()
     original_params['limit'] = limit
 
-    if limit and search_results_photo_count >= limit:
+    if limit and len(search_results) >= limit:
         next_params = original_params.copy()
         next_params['offset'] = offset + limit
         next_params = helpers.dict_to_params(next_params)
