@@ -92,12 +92,12 @@ def post_album_add_photo(album_id):
     '''
     Add a photo or photos to this album.
     '''
-    response = {}
     album = common.P_album(album_id, response_type='json')
 
     photo_ids = etiquette.helpers.comma_space_split(request.form['photo_id'])
     photos = list(common.P_photos(photo_ids, response_type='json'))
     album.add_photos(photos, commit=True)
+    response = etiquette.jsonify.album(album)
     return jsonify.make_json_response(response)
 
 @site.route('/album/<album_id>/remove_photo', methods=['POST'])
@@ -106,12 +106,12 @@ def post_album_remove_photo(album_id):
     '''
     Remove a photo or photos from this album.
     '''
-    response = {}
     album = common.P_album(album_id, response_type='json')
 
     photo_ids = etiquette.helpers.comma_space_split(request.form['photo_id'])
     photos = list(common.P_photos(photo_ids, response_type='json'))
     album.remove_photos(photos, commit=True)
+    response = etiquette.jsonify.album(album)
     return jsonify.make_json_response(response)
 
 # Album tag operations #############################################################################
