@@ -821,8 +821,17 @@ class Photo(ObjectBase):
             else:
                 self.photodb.log.debug('Deleting %s', path)
                 action = os.remove
-            queue_action = {'action': action, 'args': [path]}
-            self.photodb.on_commit_queue.append(queue_action)
+
+            self.photodb.on_commit_queue.append({
+                'action': action,
+                'args': [path],
+            })
+            if self.thumbnail and self.thumbnail.is_file:
+                self.photodb.on_commit_queue.append({
+                    'action': action,
+                    'args': [self.thumbnail.absolute_path],
+                })
+
         self._uncache()
         self.deleted = True
 
