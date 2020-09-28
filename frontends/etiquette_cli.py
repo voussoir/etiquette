@@ -8,15 +8,23 @@ import etiquette
 class CantFindPhotoDB(Exception):
     pass
 
+photodbs = {}
+
 def find_photodb():
     path = pathclass.cwd()
+
     while True:
+        try:
+            return photodbs[path]
+        except KeyError:
+            pass
         if path.with_child('_etiquette').is_dir:
             break
         if path == path.parent:
             raise CantFindPhotoDB()
         path = path.parent
     photodb = etiquette.photodb.PhotoDB(path.with_child('_etiquette'), create=False)
+    photodbs[path] = photodb
     return photodb
 
 def search_argparse(args):
