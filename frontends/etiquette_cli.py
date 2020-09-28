@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+from voussoirkit import getpermission
 from voussoirkit import pathclass
 
 import etiquette
@@ -28,6 +29,23 @@ def find_photodb():
     return photodb
 
 ####################################################################################################
+
+def digest_directory_argparse(args):
+    directory = pathclass.Path(args.directory)
+    photodb = find_photodb()
+    digest = photodb.digest_directory(
+        directory,
+        make_albums=args.make_albums,
+        recurse=args.recurse,
+        new_photo_ratelimit=args.ratelimit,
+        yield_albums=True,
+        yield_photos=True,
+    )
+    for result in digest:
+        print(result)
+
+    if args.autoyes or getpermission.getpermission('Commit?'):
+        photodb.commit()
 
 def search_by_argparse(args, yield_albums=False, yield_photos=False):
     photodb = find_photodb()
@@ -83,6 +101,14 @@ def main(argv):
             mode = album_search_args
             continue
         mode.append(arg)
+
+    p_digest = subparsers.add_parser('digest', aliases=['digest_directory', 'digest-directory'])
+    p_digest.add_argument('directory')
+    p_digest.add_argument('--no_albums', '--no-albums', dest='make_albums', action='store_false', default=True)
+    p_digest.add_argument('--ratelimit', dest='ratelimit', type=float, default=0.2)
+    p_digest.add_argument('--no_recurse', '--no-recurse', dest='recurse', action='store_false', default=True)
+    p_digest.add_argument('--yes', dest='autoyes', action='store_true')
+    p_digest.set_defaults(func=digest_directory_argparse)
 
     p_search = subparsers.add_parser('search')
     p_search.add_argument('--area', dest='area', default=None)
