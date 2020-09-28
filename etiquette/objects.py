@@ -682,7 +682,7 @@ class Photo(ObjectBase):
         self.id = db_row['id']
         self.created = db_row['created']
         self.author_id = self.normalize_author_id(db_row['author_id'])
-        self.basename = db_row['override_filename'] or self.real_path.basename
+        self.override_filename = db_row['override_filename']
         self.extension = db_row['extension']
         self.tagged_at = db_row['tagged_at']
 
@@ -775,6 +775,10 @@ class Photo(ObjectBase):
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 
         return tag
+
+    @property
+    def basename(self):
+        return self.override_filename or self.real_path.basename
 
     @property
     def bitrate(self):
@@ -1196,7 +1200,7 @@ class Photo(ObjectBase):
             'override_filename': new_filename,
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
-        self.basename = new_filename
+        self.override_filename = new_filename
 
         self.__reinit__()
 
