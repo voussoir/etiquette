@@ -278,6 +278,12 @@ class Album(ObjectBase, GroupableMixin):
     def __repr__(self):
         return f'Album:{self.id}'
 
+    def __str__(self):
+        if self.title:
+            return f'Album:{self.id}:{self.title}'
+        else:
+            return f'Album:{self.id}'
+
     @staticmethod
     def normalize_description(description):
         if description is None:
@@ -714,6 +720,9 @@ class Photo(ObjectBase):
 
     def __repr__(self):
         return f'Photo:{self.id}'
+
+    def __str__(self):
+        return f'Photo:{self.id}:{self.basename}'
 
     @staticmethod
     def normalize_override_filename(override_filename):
