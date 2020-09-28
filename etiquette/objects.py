@@ -429,6 +429,13 @@ class Album(ObjectBase, GroupableMixin):
         self.title = title
         self.description = description
 
+    @property
+    def full_name(self):
+        if self.title:
+            return f'{self.id} - {self.title}'
+        else:
+            return self.id
+
     def get_associated_directories(self):
         directory_rows = self.photodb.sql_select(
             'SELECT directory FROM album_associated_directories WHERE albumid == ?',
