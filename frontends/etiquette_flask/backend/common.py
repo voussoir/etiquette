@@ -143,6 +143,10 @@ def P_album(album_id):
     return P.get_album(album_id)
 
 @P_wrapper
+def P_albums(album_ids):
+    return P.get_albums_by_id(album_ids)
+
+@P_wrapper
 def P_bookmark(bookmark_id):
     return P.get_bookmark(bookmark_id)
 

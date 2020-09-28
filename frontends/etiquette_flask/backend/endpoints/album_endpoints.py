@@ -56,18 +56,23 @@ def get_album_zip(album_id):
 @decorators.required_fields(['child_id'], forbid_whitespace=True)
 def post_album_add_child(album_id):
     album = common.P_album(album_id, response_type='json')
-    child = common.P_album(request.form['child_id'], response_type='json')
-    album.add_child(child, commit=True)
-    response = etiquette.jsonify.album(child)
+
+    child_ids = etiquette.helpers.comma_space_split(request.form['child_id'])
+    children = list(common.P_albums(child_ids, response_type='json'))
+    print(children)
+    album.add_children(children, commit=True)
+    response = etiquette.jsonify.album(album)
     return jsonify.make_json_response(response)
 
 @site.route('/album/<album_id>/remove_child', methods=['POST'])
 @decorators.required_fields(['child_id'], forbid_whitespace=True)
 def post_album_remove_child(album_id):
     album = common.P_album(album_id, response_type='json')
-    child = common.P_album(request.form['child_id'], response_type='json')
-    album.remove_child(child, commit=True)
-    response = etiquette.jsonify.album(child)
+
+    child_ids = etiquette.helpers.comma_space_split(request.form['child_id'])
+    children = list(common.P_albums(child_ids, response_type='json'))
+    album.remove_children(children, commit=True)
+    response = etiquette.jsonify.album(album)
     return jsonify.make_json_response(response)
 
 @site.route('/album/<album_id>/refresh_directories', methods=['POST'])
