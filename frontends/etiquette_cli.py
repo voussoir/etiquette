@@ -66,6 +66,19 @@ def main(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers()
 
+    primary_args = []
+    photo_search_args = []
+    album_search_args = []
+    mode = primary_args
+    for arg in argv:
+        if arg in {'--search', '--photo_search', '--photo-search'}:
+            mode = photo_search_args
+            continue
+        if arg in {'--album_search', '--album-search'}:
+            mode = album_search_args
+            continue
+        mode.append(arg)
+
     p_search = subparsers.add_parser('search')
     p_search.add_argument('--area', dest='area', default=None)
     p_search.add_argument('--width', dest='width', default=None)
@@ -92,7 +105,17 @@ def main(argv):
     # p_search.add_argument('--yield_albums', '--yield-albums', dest='yield_albums', default=None)
     p_search.set_defaults(func=search_argparse)
 
-    args = parser.parse_args(argv)
+    args = parser.parse_args(primary_args)
+    if photo_search_args:
+        args.photo_search_args = p_search.parse_args(photo_search_args)
+    else:
+        args.photo_search_args = None
+
+    if album_search_args:
+        args.album_search_args = p_search.parse_args(album_search_args)
+    else:
+        args.album_search_args = None
+
     return args.func(args)
 
 if __name__ == '__main__':
