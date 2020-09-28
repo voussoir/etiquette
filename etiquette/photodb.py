@@ -53,6 +53,9 @@ class PDBAlbumMixin:
         album_ids = (album_id for (album_id,) in album_rows)
         return self.get_albums_by_id(album_ids)
 
+    def get_albums_by_sql(self, query, bindings=None):
+        return self.get_things_by_sql('album', query, bindings)
+
     def get_root_albums(self):
         '''
         Yield Albums that have no parent.
@@ -153,6 +156,9 @@ class PDBBookmarkMixin:
 
     def get_bookmarks_by_id(self, ids):
         return self.get_things_by_id('bookmark', ids)
+
+    def get_bookmarks_by_sql(self, query, bindings=None):
+        return self.get_things_by_sql('bookmark', query, bindings)
 
     @decorators.required_feature('bookmark.new')
     @decorators.transaction
@@ -374,6 +380,11 @@ class PDBCacheManagerMixin:
                 thing_cache[thing.id] = thing
                 yield thing
 
+    def get_things_by_sql(self, thing_type, query, bindings=None):
+        thing_rows = self.sql_select(query, bindings)
+        thing_ids = (thing_id for (thing_id,) in thing_rows)
+        return self.get_things_by_id(thing_type, thing_ids)
+
 ####################################################################################################
 
 class PDBPhotoMixin:
@@ -435,6 +446,9 @@ class PDBPhotoMixin:
             count -= 1
             if count <= 0:
                 break
+
+    def get_photos_by_sql(self, query, bindings=None):
+        return self.get_things_by_sql('photo', query, bindings)
 
     @decorators.required_feature('photo.new')
     @decorators.transaction
@@ -1193,6 +1207,9 @@ class PDBTagMixin:
     def get_tags_by_id(self, ids):
         return self.get_things_by_id('tag', ids)
 
+    def get_tags_by_sql(self, query, bindings=None):
+        return self.get_things_by_sql('tag', query, bindings)
+
     @decorators.required_feature('tag.new')
     @decorators.transaction
     def new_tag(self, tagname, description=None, *, author=None):
@@ -1349,6 +1366,12 @@ class PDBUserMixin:
 
     def get_users(self):
         return self.get_things('user')
+
+    def get_users_by_id(self, ids):
+        return self.get_things_by_id('user', ids)
+
+    def get_users_by_sql(self):
+        return self.get_things_by_sql('user', query, bindings)
 
     @decorators.required_feature('user.login')
     def login(self, username=None, id=None, *, password):
