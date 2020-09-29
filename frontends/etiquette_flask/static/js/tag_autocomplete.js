@@ -5,28 +5,6 @@ tag_autocomplete.synonyms = {};
 
 tag_autocomplete.DATALIST_ID = "tag_autocomplete_datalist";
 
-// {
-//     const db_name = "tag_autocomplete";
-//     const db_version = 1;
-//     const open_request = window.indexedDB.open(db_name, db_version);
-//     open_request.onsuccess = function(event)
-//     {
-//         const db = event.target.result;
-//         tag_autocomplete.db = db;
-//         console.log("Initialized db.");
-//     }
-//     open_request.onupgradeneeded = function(event)
-//     {
-//         const db = event.target.result;
-//         const tag_store = db.createObjectStore("tags", {"keyPath": "name"});
-//         const synonym_store = db.createObjectStore("synonyms", {"keyPath": "name"});
-//         const meta_store = db.createObjectStore("meta", {"keyPath": "key"});
-//         tag_store.createIndex("name", "name", {unique: true});
-//         synonym_store.createIndex("name", "name", {unique: true});
-//         console.log("Installed db schema.");
-//     }
-// }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 tag_autocomplete.init_datalist =
@@ -120,64 +98,6 @@ function resolve(tagname)
     return null;
 }
 
-// function update_stored_tags(data)
-// {
-//     console.log("Updating db tags.");
-//     const updated = data.updated;
-//     const version_transaction = tag_autocomplete.db.transaction(["meta"], "readwrite");
-//     const meta_store = version_transaction.objectStore("meta");
-//     meta_store.add({"key": "updated", "val": updated});
-//     const tags_transaction = tag_autocomplete.db.transaction(["tags"], "readwrite");
-//     const tags_store = tags_transaction.objectStore("tags");
-//     for (const name of data.tags)
-//     {
-//         tags_store.add({"name": name});
-//         tag_autocomplete.tags.add(name);
-//     }
-//     const synonyms_transaction = tag_autocomplete.db.transaction(["synonyms"], "readwrite");
-//     const synonyms_store = synonyms_transaction.objectStore("synonyms");
-//     for (const [name, mastertag] of Object.entries(data.synonyms))
-//     {
-//         synonyms_store.add({"name": name, "mastertag": mastertag});
-//     }
-//     tag_autocomplete.synonyms = data.synonyms;
-//     count = data.tags.length + Object.keys(data.synonyms).length;
-//     console.log(`Updated db tags with ${count} items.`);
-//     if (document.getElementById(tag_autocomplete.DATALIST_ID))
-//     {
-//         setTimeout(() => tag_autocomplete.init_datalist(), 0);
-//     }
-// }
-
-// function load_stored_tags()
-// {
-//     console.log("Loading stored db tags.");
-//     const load_transaction = tag_autocomplete.db.transaction(["tags", "synonyms"]);
-//     const tags_store = load_transaction.objectStore("tags");
-//     const tags_request = tags_store.getAll();
-//     tags_request.onsuccess = function(event)
-//     {
-//         for (row of event.target.result)
-//         {
-//             tag_autocomplete.tags.add(row["name"]);
-//         }
-//     }
-//     // const synonyms_transaction = tag_autocomplete.db.transaction(["synonyms"]);
-//     const synonyms_store = load_transaction.objectStore("synonyms");
-//     const synonyms_request = synonyms_store.getAll();
-//     synonyms_request.onsuccess = function(event)
-//     {
-//         for (row of event.target.result)
-//         {
-//             tag_autocomplete.synonyms[row["name"]] = row["mastertag"];
-//         }
-//         if (document.getElementById(tag_autocomplete.DATALIST_ID))
-//         {
-//             setTimeout(() => tag_autocomplete.init_datalist(), 0);
-//         }
-//     }
-// }
-
 tag_autocomplete.get_all_tags_callback =
 function get_all_tags_callback(response)
 {
@@ -191,21 +111,6 @@ function get_all_tags_callback(response)
         return;
     }
 
-    // const server_updated = response.data.updated;
-    // const transaction = tag_autocomplete.db.transaction(["meta"]);
-    // const meta_store = transaction.objectStore("meta");
-    // const request = meta_store.get("updated");
-    // request.onsuccess = function(event)
-    // {
-    //     if (event.target.result === undefined || event.target.result < server_updated)
-    //     {
-    //         update_stored_tags(response.data);
-    //     }
-    //     else
-    //     {
-    //         load_stored_tags();
-    //     }
-    // }
     tag_autocomplete.tags = new Set(response.data.tags);
     tag_autocomplete.synonyms = response.data.synonyms;
     setTimeout(() => tag_autocomplete.init_datalist(), 0);
