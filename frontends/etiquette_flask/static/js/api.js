@@ -347,6 +347,13 @@ function edit(tag_name, name, description, callback)
     common.post(url, data, callback);
 }
 
+api.tags.get_all_tags =
+function get_all_tags(callback)
+{
+    const url = "/all_tags.json";
+    common.get(url, callback);
+}
+
 api.tags.remove_child =
 function remove_child(tag_name, child_name, callback)
 {

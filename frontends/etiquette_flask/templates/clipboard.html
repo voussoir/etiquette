@@ -225,7 +225,6 @@ function my_clipboard_load_save_hook()
     refresh_divs();
 }
 
-tag_autocomplete.init_datalist();
 photo_clipboard.on_load_hooks.push(my_clipboard_load_save_hook);
 photo_clipboard.on_save_hooks.push(my_clipboard_load_save_hook);
 

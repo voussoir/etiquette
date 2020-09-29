@@ -1,34 +1,64 @@
 const tag_autocomplete = {};
 
-tag_autocomplete.tagset = {"tags": [], "synonyms": {}};
+tag_autocomplete.tags = new Set();
+tag_autocomplete.synonyms = {};
 
 tag_autocomplete.DATALIST_ID = "tag_autocomplete_datalist";
+
+// {
+//     const db_name = "tag_autocomplete";
+//     const db_version = 1;
+//     const open_request = window.indexedDB.open(db_name, db_version);
+//     open_request.onsuccess = function(event)
+//     {
+//         const db = event.target.result;
+//         tag_autocomplete.db = db;
+//         console.log("Initialized db.");
+//     }
+//     open_request.onupgradeneeded = function(event)
+//     {
+//         const db = event.target.result;
+//         const tag_store = db.createObjectStore("tags", {"keyPath": "name"});
+//         const synonym_store = db.createObjectStore("synonyms", {"keyPath": "name"});
+//         const meta_store = db.createObjectStore("meta", {"keyPath": "key"});
+//         tag_store.createIndex("name", "name", {unique: true});
+//         synonym_store.createIndex("name", "name", {unique: true});
+//         console.log("Installed db schema.");
+//     }
+// }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 tag_autocomplete.init_datalist =
 function init_datalist()
 {
+    console.log("Init datalist.");
     let datalist;
     datalist = document.getElementById(tag_autocomplete.DATALIST_ID);
-    if (!datalist)
+    if (datalist)
     {
-        datalist = document.createElement("datalist");
-        datalist.id = tag_autocomplete.DATALIST_ID;
-        document.body.appendChild(datalist);
+        return;
     }
 
+    datalist = document.createElement("datalist");
+    datalist.id = tag_autocomplete.DATALIST_ID;
+    document.body.appendChild(datalist);
+
+    const fragment = document.createDocumentFragment();
     common.delete_all_children(datalist);
-    for (const tag_name of tag_autocomplete.tagset["tags"])
+    for (const tag_name of tag_autocomplete.tags)
     {
         const option = document.createElement("option");
         option.value = tag_name;
-        datalist.appendChild(option);
+        fragment.appendChild(option);
     }
-    for (const synonym in tag_autocomplete.tagset["synonyms"])
+    for (const synonym in tag_autocomplete.synonyms)
     {
         const option = document.createElement("option");
-        option.value = tag_autocomplete.tagset["synonyms"][synonym] + "+" + synonym;
-        datalist.appendChild(option);
+        option.value = tag_autocomplete.synonyms[synonym] + "+" + synonym;
+        fragment.appendChild(option);
     }
+    datalist.appendChild(fragment);
 }
 
 tag_autocomplete.normalize_tagname =
@@ -79,49 +109,113 @@ tag_autocomplete.resolve =
 function resolve(tagname)
 {
     tagname = tag_autocomplete.normalize_tagname(tagname);
-    if (tag_autocomplete.tagset["tags"].indexOf(tagname) != -1)
+    if (tag_autocomplete.tags.has(tagname))
     {
         return tagname;
     }
-    if (tagname in tag_autocomplete.tagset["synonyms"])
+    if (tagname in tag_autocomplete.synonyms)
     {
-        return tag_autocomplete.tagset["synonyms"][tagname];
+        return tag_autocomplete.synonyms[tagname];
     }
     return null;
 }
 
-tag_autocomplete.update_tagset_callback =
-function update_tagset_callback(response)
+// function update_stored_tags(data)
+// {
+//     console.log("Updating db tags.");
+//     const updated = data.updated;
+//     const version_transaction = tag_autocomplete.db.transaction(["meta"], "readwrite");
+//     const meta_store = version_transaction.objectStore("meta");
+//     meta_store.add({"key": "updated", "val": updated});
+//     const tags_transaction = tag_autocomplete.db.transaction(["tags"], "readwrite");
+//     const tags_store = tags_transaction.objectStore("tags");
+//     for (const name of data.tags)
+//     {
+//         tags_store.add({"name": name});
+//         tag_autocomplete.tags.add(name);
+//     }
+//     const synonyms_transaction = tag_autocomplete.db.transaction(["synonyms"], "readwrite");
+//     const synonyms_store = synonyms_transaction.objectStore("synonyms");
+//     for (const [name, mastertag] of Object.entries(data.synonyms))
+//     {
+//         synonyms_store.add({"name": name, "mastertag": mastertag});
+//     }
+//     tag_autocomplete.synonyms = data.synonyms;
+//     count = data.tags.length + Object.keys(data.synonyms).length;
+//     console.log(`Updated db tags with ${count} items.`);
+//     if (document.getElementById(tag_autocomplete.DATALIST_ID))
+//     {
+//         setTimeout(() => tag_autocomplete.init_datalist(), 0);
+//     }
+// }
+
+// function load_stored_tags()
+// {
+//     console.log("Loading stored db tags.");
+//     const load_transaction = tag_autocomplete.db.transaction(["tags", "synonyms"]);
+//     const tags_store = load_transaction.objectStore("tags");
+//     const tags_request = tags_store.getAll();
+//     tags_request.onsuccess = function(event)
+//     {
+//         for (row of event.target.result)
+//         {
+//             tag_autocomplete.tags.add(row["name"]);
+//         }
+//     }
+//     // const synonyms_transaction = tag_autocomplete.db.transaction(["synonyms"]);
+//     const synonyms_store = load_transaction.objectStore("synonyms");
+//     const synonyms_request = synonyms_store.getAll();
+//     synonyms_request.onsuccess = function(event)
+//     {
+//         for (row of event.target.result)
+//         {
+//             tag_autocomplete.synonyms[row["name"]] = row["mastertag"];
+//         }
+//         if (document.getElementById(tag_autocomplete.DATALIST_ID))
+//         {
+//             setTimeout(() => tag_autocomplete.init_datalist(), 0);
+//         }
+//     }
+// }
+
+tag_autocomplete.get_all_tags_callback =
+function get_all_tags_callback(response)
 {
     if (response["meta"]["status"] == 304)
     {
         return;
     }
-    if (response["meta"]["status"] == 200)
+    if (response["meta"]["status"] != 200)
     {
-        tag_autocomplete.tagset = response["data"];
-        if (document.getElementById(tag_autocomplete.DATALIST_ID))
-        {
-            tag_autocomplete.init_datalist();
-        }
-        console.log(`Updated tagset contains ${tag_autocomplete.tagset.tags.length}.`);
-        return tag_autocomplete.tagset;
+        console.error(response);
+        return;
     }
-    console.error(response);
-}
 
-tag_autocomplete.update_tagset =
-function update_tagset()
-{
-    console.log("Updating known tagset.");
-    const url = "/all_tags.json";
-    common.get(url, tag_autocomplete.update_tagset_callback);
+    // const server_updated = response.data.updated;
+    // const transaction = tag_autocomplete.db.transaction(["meta"]);
+    // const meta_store = transaction.objectStore("meta");
+    // const request = meta_store.get("updated");
+    // request.onsuccess = function(event)
+    // {
+    //     if (event.target.result === undefined || event.target.result < server_updated)
+    //     {
+    //         update_stored_tags(response.data);
+    //     }
+    //     else
+    //     {
+    //         load_stored_tags();
+    //     }
+    // }
+    tag_autocomplete.tags = new Set(response.data.tags);
+    tag_autocomplete.synonyms = response.data.synonyms;
+    setTimeout(() => tag_autocomplete.init_datalist(), 0);
+    return tag_autocomplete.tagset;
 }
 
 tag_autocomplete.on_pageload =
 function on_pageload()
 {
-    tag_autocomplete.update_tagset();
+    setTimeout(() => api.tags.get_all_tags(tag_autocomplete.get_all_tags_callback), 0);
     tag_autocomplete.init_entry_with_tagname_replacements();
 }
 document.addEventListener("DOMContentLoaded", tag_autocomplete.on_pageload);
