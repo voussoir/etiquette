@@ -1552,26 +1552,23 @@ class PDBUtilMixin:
             photo.relocate(filepath.absolute_path)
             return photo
 
-        def create_or_fetch_photos(filepaths, new_photo_kwargs):
+        def create_or_fetch_photo(filepath, new_photo_kwargs):
             '''
-            Given an iterable of filepaths, find the corresponding Photo object
-            if it exists, otherwise create it and then return it.
+            Given a filepath, find the corresponding Photo object if it exists,
+            otherwise create it and then return it.
             '''
-            photos = []
-            for filepath in filepaths:
-                try:
-                    photo = self.get_photo_by_path(filepath)
-                except exceptions.NoSuchPhoto:
-                    photo = None
-                if not photo:
-                    photo = check_renamed_inode(filepath)
-                if not photo:
-                    photo = self.new_photo(filepath.absolute_path, **new_photo_kwargs)
-                    if new_photo_ratelimit is not None:
-                        new_photo_ratelimit.limit()
+            try:
+                photo = self.get_photo_by_path(filepath)
+            except exceptions.NoSuchPhoto:
+                photo = None
+            if not photo:
+                photo = check_renamed_inode(filepath)
+            if not photo:
+                photo = self.new_photo(filepath.absolute_path, **new_photo_kwargs)
+                if new_photo_ratelimit is not None:
+                    new_photo_ratelimit.limit()
 
-                photos.append(photo)
-            return photos
+            return photo
 
         def create_or_fetch_current_albums(albums_by_path, current_directory):
             current_albums = albums_by_path.get(current_directory.absolute_path, None)
@@ -1625,7 +1622,7 @@ class PDBUtilMixin:
             if natural_sort:
                 files = sorted(files, key=lambda f: helpers.natural_sorter(f.basename))
 
-            photos = create_or_fetch_photos(files, new_photo_kwargs=new_photo_kwargs)
+            photos = [create_or_fetch_photo(file, new_photo_kwargs=new_photo_kwargs) for file in files]
 
             if yield_photos:
                 yield from photos
