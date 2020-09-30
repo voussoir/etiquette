@@ -42,6 +42,7 @@ site.jinja_env.trim_blocks = True
 site.jinja_env.lstrip_blocks = True
 jinja_filters.register_all(site)
 site.debug = True
+site.localhost_only = False
 
 session_manager = sessions.SessionManager(maxlen=10000)
 file_cache_manager = caching.FileCacheManager(
@@ -72,6 +73,12 @@ def decorate_and_route(*route_args, **route_kwargs):
         return endpoint
     return wrapper
 site.route = decorate_and_route
+
+@site.before_request
+def before_request():
+    ip = request.remote_addr
+    if site.localhost_only and ip != '127.0.0.1':
+        flask.abort(403)
 
 gzip_minimum_size = 500
 gzip_maximum_size = 5 * 2**20
