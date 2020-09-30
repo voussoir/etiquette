@@ -36,7 +36,6 @@
 #right
 {
     display: grid;
-    position: relative;
     grid-template: "viewer" 1fr / 1fr;
 }
 #editor_area
@@ -98,8 +97,8 @@
 #hovering_tools
 {
     position: absolute;
-    right: 8px;
-    top: 8px;
+    right: 0px;
+    top: 0px;
 
     display: flex;
     flex-direction: column;
@@ -114,6 +113,16 @@
             "left right" 1fr
             / 310px 1fr;
     }
+    #right
+    {
+        position: fixed;
+        /* header=18 + 8px body top margin + 8px header/body gap = 34 */
+        top: 34px;
+        bottom: 8px;
+        right: 8px;
+        /* left=310px + 8px body left margin + 8px left/right gap = 326 */
+        left: 326px;
+    }
 }
 
 @media screen and (max-width: 800px)
@@ -124,6 +133,10 @@
             "right" 100%
             "left" max-content
             / 1fr;
+    }
+    #right
+    {
+        position: relative;
     }
 }
 </style>
