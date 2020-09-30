@@ -26,7 +26,13 @@ site = backend.site
 
 HTTPS_DIR = pathclass.Path(__file__).parent.with_child('https')
 
-def etiquette_flask_launch(create, port, localhost_only, use_https):
+def etiquette_flask_launch(
+        *,
+        create,
+        localhost_only,
+        port,
+        use_https,
+    ):
     if use_https is None:
         use_https = port == 443
 
@@ -61,8 +67,8 @@ def etiquette_flask_launch(create, port, localhost_only, use_https):
 def etiquette_flask_launch_argparse(args):
     return etiquette_flask_launch(
         create=args.create,
-        port=args.port,
         localhost_only=args.localhost_only,
+        port=args.port,
         use_https=args.use_https,
     )
 
@@ -71,8 +77,8 @@ def main(argv):
 
     parser.add_argument('port', nargs='?', type=int, default=5000)
     parser.add_argument('--dont_create', '--dont-create', '--no-create', dest='create', action='store_false', default=True)
-    parser.add_argument('--localhost_only', '--localhost-only', dest='localhost_only', action='store_true')
     parser.add_argument('--https', dest='use_https', action='store_true', default=None)
+    parser.add_argument('--localhost_only', '--localhost-only', dest='localhost_only', action='store_true')
     parser.set_defaults(func=etiquette_flask_launch_argparse)
 
     args = parser.parse_args(argv)
