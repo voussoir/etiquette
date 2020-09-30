@@ -30,6 +30,44 @@ def find_photodb():
 
 ####################################################################################################
 
+def tag_breplace_argparse(args):
+    photodb = find_photodb()
+    renames = []
+    tag_names = photodb.get_all_tag_names()
+    all_names = tag_names.union(photodb.get_all_synonyms())
+    for tag_name in tag_names:
+        if args.regex:
+            new_name = re.sub(args.replace_from, args.replace_to, tag_name)
+        else:
+            new_name = tag_name.replace(args.replace_from, args.replace_to)
+        new_name = photodb.normalize_tagname(new_name)
+        if new_name == tag_name:
+            continue
+
+        if new_name in all_names:
+            raise etiquette.exceptions.TagExists(new_name)
+
+        if args.set_synonym:
+            printline = f'{tag_name} -> {new_name}+{tag_name}'
+        else:
+            printline = f'{tag_name} -> {new_name}'
+
+        renames.append((tag_name, new_name, printline))
+
+    if not args.autoyes:
+        for (tag_name, new_name, printline) in renames:
+            print(printline)
+        if not getpermission.getpermission('Ok?', must_pick=True):
+            return
+
+    for (tag_name, new_name, printline) in renames:
+        print(printline)
+        tag = photodb.get_tag(tag_name)
+        tag.rename(new_name)
+        if args.set_synonym:
+            tag.add_synonym(tag_name)
+    photodb.commit()
+
 def digest_directory_argparse(args):
     directory = pathclass.Path(args.directory)
     photodb = find_photodb()
@@ -101,6 +139,14 @@ def main(argv):
             mode = album_search_args
             continue
         mode.append(arg)
+
+    p_tag_breplace = subparsers.add_parser('tag_breplace')
+    p_tag_breplace.add_argument('replace_from')
+    p_tag_breplace.add_argument('replace_to')
+    p_tag_breplace.add_argument('--set_synonym', '--set-synonym', dest='set_synonym', action='store_true')
+    p_tag_breplace.add_argument('--regex', dest='regex', action='store_true')
+    p_tag_breplace.add_argument('--yes', dest='autoyes', action='store_true')
+    p_tag_breplace.set_defaults(func=tag_breplace_argparse)
 
     p_digest = subparsers.add_parser('digest', aliases=['digest_directory', 'digest-directory'])
     p_digest.add_argument('directory')
