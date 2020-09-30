@@ -121,6 +121,7 @@ class PDBAlbumMixin:
             album_ids = sqlhelpers.listify(a.id for a in albums)
             query += f' AND albumid IN {album_ids}'
         self.sql_execute(query)
+        yield from directories
 
     @decorators.transaction
     def purge_empty_albums(self, albums=None):
@@ -138,6 +139,7 @@ class PDBAlbumMixin:
             # This may have been the last child of an otherwise empty parent.
             to_check.update(album.get_parents())
             album.delete()
+            yield album
 
 ####################################################################################################
 
@@ -535,6 +537,7 @@ class PDBPhotoMixin:
             if photo.real_path.exists:
                 continue
             photo.delete()
+            yield photo
 
     def search(
             self,
