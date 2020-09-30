@@ -85,6 +85,20 @@ def digest_directory_argparse(args):
     if args.autoyes or getpermission.getpermission('Commit?'):
         photodb.commit()
 
+def purge_deleted_photos_argparse(args):
+    photodb = find_photodb()
+    for deleted in photodb.purge_deleted_files():
+        print(deleted)
+    if args.autoyes or getpermission.getpermission('Commit?'):
+        photodb.commit()
+
+def purge_empty_albums_argparse(args):
+    photodb = find_photodb()
+    for deleted in photodb.purge_empty_albums():
+        print(deleted)
+    if args.autoyes or getpermission.getpermission('Commit?'):
+        photodb.commit()
+
 def search_by_argparse(args, yield_albums=False, yield_photos=False):
     photodb = find_photodb()
     cwd = pathclass.cwd()
@@ -155,6 +169,15 @@ def main(argv):
     p_digest.add_argument('--no_recurse', '--no-recurse', dest='recurse', action='store_false', default=True)
     p_digest.add_argument('--yes', dest='autoyes', action='store_true')
     p_digest.set_defaults(func=digest_directory_argparse)
+
+
+    p_purge_deleted_photos = subparsers.add_parser('purge_deleted_photos', aliases=['purge-deleted-photos'])
+    p_purge_deleted_photos.add_argument('--yes', dest='autoyes', action='store_true')
+    p_purge_deleted_photos.set_defaults(func=purge_deleted_photos_argparse)
+
+    p_purge_empty_albums = subparsers.add_parser('purge_empty_albums', aliases=['purge-empty-albums'])
+    p_purge_empty_albums.add_argument('--yes', dest='autoyes', action='store_true')
+    p_purge_empty_albums.set_defaults(func=purge_empty_albums_argparse)
 
     p_search = subparsers.add_parser('search')
     p_search.add_argument('--area', dest='area', default=None)
