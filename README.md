@@ -50,15 +50,15 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
 <details><summary><strong>Click to view run instructions</strong></summary>
 <details><summary><strong>Running Flask locally</strong></summary>
 
-- Run `python etiquette_flask_launch.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
+- Run `python etiquette_flask_dev.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
 - Run `python -i etiquette_repl_launch.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 - Note: Do not `cd` into the frontends folder. Stay wherever you want the photodb to be created, and start the frontend by specifying full file path of the launch file.
 
         Windows:
-        D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_flask\etiquette_flask_launch.py 5001
+        D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_flask\etiquette_flask_dev.py 5001
 
         Linux:
-        /somewhere $ python /home/Owner/Git/Etiquette/frontends/etiquette_flask/etiquette_flask_launch.py 5001
+        /somewhere $ python /home/Owner/Git/Etiquette/frontends/etiquette_flask/etiquette_flask_dev.py 5001
 
 </details>
 
@@ -72,7 +72,7 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
 
 2. To run non-daemonized, on a specific port, with logging to the terminal, use:
 
-        gunicorn etiquette_flask_entrypoint:site --bind "0.0.0.0:PORT" --access-logfile "-"
+        gunicorn etiquette_flask_prod:site --bind "0.0.0.0:PORT" --access-logfile "-"
 
 </details>
 </details>

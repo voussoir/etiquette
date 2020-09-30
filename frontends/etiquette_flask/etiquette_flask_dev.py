@@ -2,7 +2,7 @@
 This file is the gevent launcher for local / development use.
 
 Simply run it on the command line:
-python etiquette_flask_launch.py [port]
+python etiquette_flask_dev.py [port]
 '''
 import gevent.monkey; gevent.monkey.patch_all()
 
@@ -18,7 +18,11 @@ import sys
 
 from voussoirkit import pathclass
 
-import etiquette_flask_entrypoint
+import backend
+
+####################################################################################################
+
+site = backend.site
 
 HTTPS_DIR = pathclass.Path(__file__).parent.with_child('https')
 
@@ -29,17 +33,17 @@ def etiquette_flask_launch(create, port, use_https):
     if use_https:
         http = gevent.pywsgi.WSGIServer(
             listener=('0.0.0.0', port),
-            application=etiquette_flask_entrypoint.site,
+            application=site,
             keyfile=HTTPS_DIR.with_child('etiquette.key').absolute_path,
             certfile=HTTPS_DIR.with_child('etiquette.crt').absolute_path,
         )
     else:
         http = gevent.pywsgi.WSGIServer(
             listener=('0.0.0.0', port),
-            application=etiquette_flask_entrypoint.site,
+            application=site,
         )
 
-    etiquette_flask_entrypoint.backend.common.init_photodb(create=create)
+    backend.common.init_photodb(create=create)
 
     message = f'Starting server on port {port}'
     if use_https:
