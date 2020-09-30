@@ -30,7 +30,6 @@
 
 #error_message_area
 {
-    grid-area: error_message_area;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -38,7 +37,6 @@
 }
 #happy_message_area
 {
-    grid-area: happy_message_area;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -83,8 +81,6 @@
     #content_body
     {
         grid-template:
-            "left error_message_area" auto
-            "left happy_message_area" auto
             "left right" 1fr
             / 310px 1fr;
     }
@@ -95,8 +91,6 @@
     #content_body
     {
         grid-template:
-            "error_message_area" auto
-            "happy_message_area" auto
             "right" auto
             "left" auto
             / auto;
@@ -344,15 +338,15 @@
         </ul>
         {% endif %}
     </div>
-    <div id="error_message_area">
-        {% for warning in warnings %}
-            <p class="error_message">{{warning}}</p>
-        {% endfor %}
-    </div>
-    <div id="happy_message_area">
-        <p>You got {{results|length}} items.</p>
-    </div>
     <div id="right">
+        <div id="error_message_area">
+            {% for warning in warnings %}
+                <p class="error_message">{{warning}}</p>
+            {% endfor %}
+        </div>
+        <div id="happy_message_area">
+            <p>You got {{results|length}} items.</p>
+        </div>
         {{prev_next_buttons()}}
         <div id="search_results_holder">
             {% for result in results %}
