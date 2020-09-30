@@ -16,31 +16,37 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
 
 <details><summary><strong>Setting up via symlink</strong></summary>
 
-- The repository you're looking at right now is `D:\Git\Etiquette`. The toplevel `etiquette` folder is the main package. We want this package to be a child of our existing lib directory.
+- The repository you're looking at right now is `D:\Git\Etiquette` or `/Git/Etiquette`. The toplevel `etiquette` folder is the main package. We want this package to be a child of our existing lib directory.
 - The easiest way to find your lib path is `python -c "import os; print(os)"`.
-- Make the symlink:
+- Make the junction or symlink:
 
-    Windows: `mklink /J fakepath realpath`  
-    for example `mklink /J "C:\Python36\Lib\etiquette" "D:\Git\Etiquette\etiquette"`
+  Windows: `mklink /J fakepath realpath`  
+  for example `mklink /J "C:\Python36\Lib\etiquette" "D:\Git\Etiquette\etiquette"`
 
-    Linux: `ln --symbolic realpath fakepath`  
-    for example `ln --symbolic "/home/Owner/Git/Etiquette/etiquette" "/usr/local/lib/python3.6/etiquette"`
+  Linux: `ln --symbolic realpath fakepath`  
+  for example `ln --symbolic "/Git/Etiquette/etiquette" "/usr/local/lib/python3.6/etiquette"`
+
+- Run `python -c "import etiquette; print(etiquette)"` to confirm.
 
 </details>
 
 <details><summary><strong>Setting up via pythonpath</strong></summary>
 
-- The repository you're looking at right now is `D:\Git\Etiquette`. The toplevel `etiquette` folder is the main package.
+- The repository you're looking at right now is `D:\Git\Etiquette` or `/Git/Etiquette`. The toplevel `etiquette` folder is the main package.
+- The PYTHONPATH environment variable contains a list of directories that *contain* the packages you need to import, not the packages themselves. Therefore we want to add the repository's path, because it contains the package.
+- Set the pythonpath:
 
-    The pythonpath points to directories that *contain* the packages you need to import, not to the packages themselves. Therefore we point to the repository.
+  Windows: `set "PYTHONPATH=%PYTHONPATH%;D:\Git\Etiquette"`  
+  Note the semicolon to delimit paths.  
+  This only applies to the current cmd session. To make it permanent, use Windows's Environment Variable editor or the `setx` command. The editor is easier to use.
 
-    Windows: `set "PYTHONPATH=%PYTHONPATH%;D:\Git\Etiquette"`  
-    Note the semicolon to delimit paths.  
-    This only applies to the current cmd session. To make it permanent, use Windows's Environment Variable editor or the `setx` command. The editor is easier to use.
+  Linux: `PYTHONPATH="$PYTHONPATH:/Git/Etiquette"`  
+  Note the colon to delimit paths.  
+  This only applies to the current terminal session. To make it permanent, add the export to your bashrc.
 
-    Linux: `PYTHONPATH="$PYTHONPATH:/home/Owner/Git/Etiquette"`  
-    Note the colon to delimit paths.  
-    To make it permanent, add the export to your bashrc.
+- Run `echo %PYTHONPATH%` or `echo $PYTHONPATH` to confirm.
+- Close your terminal and re-open it so that it uses the new environment variables.
+- Run `python -c "import etiquette; print(etiquette)"` to confirm.
 
 </details>
 </details>
@@ -51,30 +57,62 @@ I have not made a setup.py yet. So I use a filesystem junction / symlink to make
 <details><summary><strong>Running Flask locally</strong></summary>
 
 - Run `python etiquette_flask_dev.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
-- Run `python -i etiquette_repl_launch.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 - Note: Do not `cd` into the frontends folder. Stay wherever you want the photodb to be created, and start the frontend by specifying full file path of the launch file.
 
-        Windows:
-        D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_flask\etiquette_flask_dev.py 5001
+      Windows:
+      D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_flask\etiquette_flask_dev.py 5001
 
-        Linux:
-        /somewhere $ python /home/Owner/Git/Etiquette/frontends/etiquette_flask/etiquette_flask_dev.py 5001
+      Linux:
+      /somewhere $ python /Git/Etiquette/frontends/etiquette_flask/etiquette_flask_dev.py 5001
+
+- In practice, I have a shortcut file on my PATH which runs this command.
 
 </details>
 
 <details><summary><strong>Running Flask with Gunicorn</strong></summary>
 
-1. Use the PYTHONPATH technique to make `etiquette` and the flask `backend` both importable. Symlinking into the lib is not as convenient here because the server relies on the static files and jinja templates relative to the code's location.
+1. Use the PYTHONPATH technique to make both `etiquette` and the flask `backend` importable. Symlinking into the lib is not as convenient here because the server relies on the static files and jinja templates relative to the code's location.
 
-    The Pythonpath points to directories that *contain* the packages you need to import, not to the packages themselves. Therefore we point to the etiquette and etiquette_flask repositories.
+   Remember that the Pythonpath points to directories that *contain* the packages you need to import, not to the packages themselves. Therefore we point to the etiquette and etiquette_flask repositories.
 
-        PYTHONPATH="$PYTHONPATH:/home/Owner/Git/Etiquette:/home/Owner/Git/Etiquette/frontends/etiquette_flask
+       PYTHONPATH="$PYTHONPATH:/Git/Etiquette:/Git/Etiquette/frontends/etiquette_flask
 
 2. To run non-daemonized, on a specific port, with logging to the terminal, use:
 
-        gunicorn etiquette_flask_prod:site --bind "0.0.0.0:PORT" --access-logfile "-"
+       gunicorn etiquette_flask_prod:site --bind "0.0.0.0:PORT" --access-logfile "-"
 
 </details>
+
+<details><summary><strong>Running Etiquette REPL</strong></summary>
+
+- Run `python -i etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
+- Note: Do not `cd` into the frontends folder. Stay wherever you want the photodb to be created, and start the frontend by specifying full file path of the launch file.
+
+      Windows:
+      D:\somewhere> python -i D:\Git\Etiquette\frontends\etiquette_repl.py
+
+      Linux:
+      /somewhere $ python -i /Git/Etiquette/frontends/etiquette_repl.py
+
+- In practice, I have a shortcut file on my PATH which runs this command.
+
+</details>
+
+<details><summary><strong>Running Etiquette CLI</strong></summary>
+
+- Run `python -i etiquette_cli.py` to launch the script.
+- Note: Do not `cd` into the frontends folder. Stay wherever you want the photodb to be created, and start the frontend by specifying full file path of the launch file.
+
+      Windows:
+      D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_cli.py
+
+      Linux:
+      /somewhere $ python /Git/Etiquette/frontends/etiquette_cli.py
+
+- In practice, I have a shortcut file on my PATH which runs this command.
+
+</details>
+
 </details>
 
 ### Project stability
