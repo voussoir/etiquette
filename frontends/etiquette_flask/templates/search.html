@@ -56,16 +56,36 @@
 {
     flex: 1;
 
+    display: flex;
+    flex-direction: column;
+
     padding: 8px;
 
     background-color: var(--color_transparency);
 
     word-wrap: break-word;
 }
+#tags_on_this_page_holder
+{
+    /*
+    This allows the search results to dominate the height of the page, and
+    left will simply match that height then scroll the rest of
+    tags_on_this_page.
+    */
+    position: relative;
+    flex: 1;
+    min-height: 200px;
+    overflow-y: auto;
+}
 #tags_on_this_page_list
 {
     list-style-type: none;
     padding: 0;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 
 #right
@@ -304,6 +324,7 @@
         </form>
         {% if total_tags %}
         <h4>Tags on this page:</h4>
+        <div id="tags_on_this_page_holder">
         <ul id="tags_on_this_page_list">
             {% for tag in total_tags %}
             <li>
@@ -336,6 +357,7 @@
             </li>
             {% endfor %}
         </ul>
+        </div>
         {% endif %}
     </div>
     <div id="right">
