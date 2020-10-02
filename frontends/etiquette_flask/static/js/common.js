@@ -439,6 +439,7 @@ function init_tabbed_container(tabbed_container)
         button_container.append(button);
     }
     tabs[0].classList.remove("hidden");
+    tabbed_container.dataset.activeTabId = tabs[0].dataset.tabId;
     button_container.firstElementChild.classList.remove("tab_button_inactive");
     button_container.firstElementChild.classList.add("tab_button_active");
 }
@@ -474,7 +475,6 @@ function tabbed_container_switcher(event)
 
     const tab_id = tab_button.dataset.tabId;
     const tab_buttons = tab_button.parentElement.getElementsByClassName("tab_button");
-    const tabs = tab_button.parentElement.parentElement.getElementsByClassName("tab");
     for (const tab_button of tab_buttons)
     {
         if (tab_button.dataset.tabId === tab_id)
@@ -488,6 +488,9 @@ function tabbed_container_switcher(event)
             tab_button.classList.add("tab_button_inactive");
         }
     }
+    const tabbed_container = tab_button.closest(".tabbed_container");
+    tabbed_container.dataset.activeTabId = tab_id;
+    const tabs = tabbed_container.getElementsByClassName("tab");
     for (const tab of tabs)
     {
         if (tab.dataset.tabId === tab_id)
