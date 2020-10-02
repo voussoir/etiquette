@@ -191,7 +191,7 @@ def render_template(request, template_name, **kwargs):
 
     old_theme = request.cookies.get('etiquette_theme', None)
     new_theme = request.args.get('theme', None)
-    theme = 'turquoise' if new_theme == '' else new_theme or old_theme
+    theme = new_theme or old_theme or 'turquoise'
 
     response = flask.render_template(
         template_name,
