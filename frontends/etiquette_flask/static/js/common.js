@@ -8,6 +8,7 @@ function _request(method, url, callback)
     const request = new XMLHttpRequest();
     const response = {
         "completed": false,
+        "meta": {"status": 0},
     };
 
     request.onreadystatechange = function()
@@ -18,10 +19,9 @@ function _request(method, url, callback)
         if (callback == null)
             {return;}
 
-        response.meta = {
-            "request_url": url,
-            "status": request.status
-        }
+        response.meta.status = request.status;
+        response.meta.request_url = url;
+
         if (request.status != 0)
         {
             response.completed = true;
