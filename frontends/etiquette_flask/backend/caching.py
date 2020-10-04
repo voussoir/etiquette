@@ -43,6 +43,8 @@ def cached_endpoint(max_age):
             if (not state['max_age']) or (time.time() - state['last_run'] > state['max_age']):
                 value = function(*args, **kwargs)
                 if isinstance(value, flask.Response):
+                    if value.headers.get('Content-Type'):
+                        state['headers']['Content-Type'] = value.headers.get('Content-Type')
                     value = value.response
                 if value != state['stored_value']:
                     state['stored_value'] = value
