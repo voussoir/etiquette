@@ -141,6 +141,7 @@ const ALBUM_ID = undefined;
     {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
+    <script src="/static/js/album_autocomplete.js"></script>
     <script src="/static/js/spinner.js"></script>
     <script src="/static/js/editor.js"></script>
     <script src="/static/js/hotkeys.js"></script>
@@ -180,6 +181,7 @@ const ALBUM_ID = undefined;
 
         <button
         class="green_button button_with_confirm"
+        data-holder-id="add_child_holder"
         data-is-input="1"
         data-prompt="Child ID"
         data-cancel-class="gray_button"
@@ -368,6 +370,24 @@ function on_cancel(ed, edit_element_map, display_element_map)
 const title_text = document.getElementById("title_text");
 const description_text = document.getElementById("description_text");
 const ed = new editor.Editor([title_text, description_text], on_open, on_save, on_cancel);
+
+function add_album_datalist_on_load(datalist)
+{
+    /*
+    I found that the `list` property must be set by setAttribute, not
+    regular assignment, and it must be provided the ID of the datalist, not
+    the datalist object itself. Furthermore, it cannot be done until the
+    datalist is ready -- I tried adjusting the button_with_confirm
+    initializer to let me set the datalist during the input's construction,
+    but at that point the datalist prep usually / certainly hasn't run yet
+    and it didn't work. All that is to say I had to add this on_load hook
+    function to only call setAttribute after the datalist has been prepared.
+    */
+    const holder = document.getElementById("add_child_holder");
+    const input = holder.getElementsByTagName("input")[0];
+    input.setAttribute("list", "album_autocomplete_datalist");
+}
+album_autocomplete.on_load_hooks.push(add_album_datalist_on_load);
 </script>
 
 {% endif %} {## Shared ############################################################################}

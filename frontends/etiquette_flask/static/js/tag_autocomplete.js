@@ -4,26 +4,24 @@ tag_autocomplete.tags = new Set();
 tag_autocomplete.synonyms = {};
 
 tag_autocomplete.DATALIST_ID = "tag_autocomplete_datalist";
+tag_autocomplete.datalist = null;
+tag_autocomplete.on_load_hooks = [];
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 tag_autocomplete.init_datalist =
 function init_datalist()
 {
-    console.log("Init datalist.");
-    let datalist;
-    datalist = document.getElementById(tag_autocomplete.DATALIST_ID);
-    if (datalist)
+    if (tag_autocomplete.datalist)
     {
         return;
     }
-
-    datalist = document.createElement("datalist");
+    console.log("Init tag_autocomplete datalist.");
+    const datalist = document.createElement("datalist");
     datalist.id = tag_autocomplete.DATALIST_ID;
     document.body.appendChild(datalist);
 
     const fragment = document.createDocumentFragment();
-    common.delete_all_children(datalist);
     for (const tag_name of tag_autocomplete.tags)
     {
         const option = document.createElement("option");
@@ -37,6 +35,12 @@ function init_datalist()
         fragment.appendChild(option);
     }
     datalist.appendChild(fragment);
+    tag_autocomplete.datalist = datalist;
+
+    for (const hook of tag_autocomplete.on_load_hooks)
+    {
+        hook(datalist);
+    }
 }
 
 tag_autocomplete.normalize_tagname =
@@ -101,11 +105,7 @@ function resolve(tagname)
 tag_autocomplete.get_all_tags_callback =
 function get_all_tags_callback(response)
 {
-    if (response["meta"]["status"] == 304)
-    {
-        return;
-    }
-    if (response["meta"]["status"] != 200)
+    if (response.meta.status !== 200)
     {
         console.error(response);
         return;
@@ -113,8 +113,7 @@ function get_all_tags_callback(response)
 
     tag_autocomplete.tags = new Set(response.data.tags);
     tag_autocomplete.synonyms = response.data.synonyms;
-    setTimeout(() => tag_autocomplete.init_datalist(), 0);
-    return tag_autocomplete.tagset;
+    setTimeout(tag_autocomplete.init_datalist, 0);
 }
 
 tag_autocomplete.on_pageload =

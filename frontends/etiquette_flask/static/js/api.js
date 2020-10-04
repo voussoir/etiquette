@@ -61,6 +61,13 @@ function _delete(album_id, callback)
     common.post(url, null, callback);
 }
 
+api.albums.get_all_albums =
+function get_all_albums(callback)
+{
+    const url = "/all_albums.json";
+    common.get(url, callback);
+}
+
 api.albums.edit =
 function edit(album_id, title, description, callback)
 {
