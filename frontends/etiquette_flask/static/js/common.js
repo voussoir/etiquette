@@ -278,7 +278,13 @@ function init_button_with_confirm(button)
     button.classList.remove("button_with_confirm");
 
     const holder = document.createElement("span");
-    holder.className = "confirm_holder " + (button.dataset.holderClass || "");
+    holder.className = ("confirm_holder " + (button.dataset.holderClass || "")).trim();
+    delete button.dataset.holderClass;
+    if (button.dataset.holderId)
+    {
+        holder.id = button.dataset.holderId;
+        delete button.dataset.holderId;
+    }
     button.parentElement.insertBefore(holder, button);
 
     const holder_stage1 = document.createElement("span");
@@ -304,7 +310,10 @@ function init_button_with_confirm(button)
         prompt.innerText = (button.dataset.prompt || "Are you sure?") + " ";
         input_source = undefined;
     }
-    prompt.className = button.dataset.promptClass || "";
+    if (button.dataset.promptClass)
+    {
+        prompt.className = button.dataset.promptClass;
+    }
     holder_stage2.appendChild(prompt)
     delete button.dataset.prompt;
     delete button.dataset.promptClass;
