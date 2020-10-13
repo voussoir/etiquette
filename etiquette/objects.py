@@ -639,6 +639,13 @@ class Bookmark(ObjectBase):
         self._uncache()
         self.deleted = True
 
+    @property
+    def display_name(self):
+        if self.title:
+            return self.title
+        else:
+            return self.id
+
     @decorators.required_feature('bookmark.edit')
     @decorators.transaction
     def edit(self, title=None, url=None):

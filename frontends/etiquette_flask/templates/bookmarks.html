@@ -58,11 +58,7 @@
                 data-editor-placeholder="title (optional)"
                 data-editor-empty-text="{{bookmark.id}}"
                 >
-                    {%- if bookmark.title -%}
-                        {{bookmark.title}}
-                    {%- else -%}
-                        {{bookmark.id}}
-                    {%- endif -%}
+                    {{-bookmark.display_name-}}
                 </a>
 
                 <a
