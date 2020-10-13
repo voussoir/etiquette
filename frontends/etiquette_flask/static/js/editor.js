@@ -187,18 +187,16 @@ function Editor(elements, on_open, on_save, on_cancel)
             return fallback.bind(this);
         }
 
-        const bindable = function()
+        if (this.can_use_element_map)
         {
-            if (this.can_use_element_map)
-            {
-                func(this, this.edit_element_map, this.display_element_map);
-            }
-            else
-            {
-                func(this, this.edit_elements, this.display_elements);
-            }
+            const bindable = () => func(this, this.edit_element_map, this.display_element_map);
+            return bindable.bind(this);
         }
-        return bindable.bind(this);
+        else
+        {
+            const bindable = () => func(this, this.edit_elements, this.display_elements);
+            return bindable.bind(this);
+        }
     }
 
     const placeholders = document.getElementsByClassName("editor_toolbox_placeholder");
