@@ -335,10 +335,13 @@ def normalize_orderby(orderby, warning_bag=None):
             column = 'RANDOM()'
 
         elif column == 'area':
-            column = 'width * height'
+            column = '(width * height)'
+
+        elif column == 'bitrate':
+            column = '((bytes / 128) / duration)'
 
         elif column == 'ratio':
-            column = 'width / height'
+            column = '(width / height)'
 
         if direction not in ('asc', 'desc'):
             message = constants.WARNING_ORDERBY_BADDIRECTION.format(

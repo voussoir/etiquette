@@ -196,6 +196,7 @@ SQL_INDEX = sqlhelpers.reverse_table_column_map(SQL_COLUMNS)
 
 ALLOWED_ORDERBY_COLUMNS = [
     'extension',
+    'bitrate',
     'width',
     'height',
     'ratio',
