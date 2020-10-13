@@ -163,7 +163,7 @@
             {% set tags = photo.get_tags()|sort(attribute='name') %}
             {% for tag in tags %}
             <li>
-                {{tag_object.tag_object(tag, with_alt_description=True)}}<!--
+                {{tag_object.tag_object(tag, link="info", with_alt_description=True)}}<!--
                 --><button
                 class="remove_tag_button red_button"
                 onclick="return remove_photo_tag_form('{{photo.id}}', '{{tag.name}}');">
@@ -315,7 +315,7 @@ function add_photo_tag_callback(response)
     const li = document.createElement("li");
     const tag_object = document.createElement("a");
     tag_object.className = "tag_object"
-    tag_object.href = "/search?tag_musts=" + response.data.tagname;
+    tag_object.href = "/tag/" + response.data.tagname;
     tag_object.innerText = response.data.tagname;
     const remove_button = document.createElement("button");
     remove_button.className = "remove_tag_button red_button"
