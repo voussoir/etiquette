@@ -101,7 +101,6 @@ h2, h3
     </div>
     <div id="left">
         {% if specific_tag %}
-        {% do tags.remove((specific_tag.name, specific_tag)) %}
         <div id="hierarchy_self">
             <div id="tag_metadata">
                 <h2>{{tag_object.tag_object(
@@ -160,7 +159,7 @@ h2, h3
             <h2>{{tag_count}} Tags</h2>
             {% endif %}
             <ul id="tag_list">
-            {% for (qualified_name, tag) in tags %}
+            {% for (qualified_name, tag) in tags if tag != specific_tag %}
                 <li>
                     {{tag_object.tag_object(tag, link="search_musts", innertext="(+)")}}
                     {{tag_object.tag_object(tag, link="search_forbids", innertext="(x)")}}
