@@ -1246,6 +1246,9 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.group_getter_many = self.photodb.get_tags_by_id
 
+    def __lt__(self, other):
+        return self.name < other.name
+
     def __repr__(self):
         return f'Tag:{self.id}:{self.name}'
 
