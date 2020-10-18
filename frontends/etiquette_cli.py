@@ -47,6 +47,12 @@ def digest_directory_argparse(args):
     if args.autoyes or getpermission.getpermission('Commit?'):
         photodb.commit()
 
+def easybake_argparse(args):
+    photodb = find_photodb()
+    for eb_string in args.eb_strings:
+        notes = photodb.easybake(eb_string)
+    photodb.commit()
+
 def purge_deleted_photos_argparse(args):
     photodb = find_photodb()
     for deleted in photodb.purge_deleted_files():
@@ -153,6 +159,10 @@ def main(argv):
             mode = album_search_args
             continue
         mode.append(arg)
+
+    p_easybake = subparsers.add_parser('easybake')
+    p_easybake.add_argument('eb_strings', nargs='+')
+    p_easybake.set_defaults(func=easybake_argparse)
 
     p_tag_breplace = subparsers.add_parser('tag_breplace')
     p_tag_breplace.add_argument('replace_from')
