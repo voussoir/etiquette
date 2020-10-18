@@ -126,11 +126,11 @@ input, select, textarea
 {
     /*position: absolute;*/
     vertical-align: middle;
-    font-size: 7pt;
+    font-size: 8pt;
 
     min-width:  18px;
     min-height: 14px;
-    /*padding: 0;*/
+    padding: 0;
 
 }
 /*
