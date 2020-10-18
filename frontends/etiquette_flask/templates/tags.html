@@ -159,7 +159,7 @@ h2, h3
             <h2>{{tag_count}} Tags</h2>
             {% endif %}
             <ul id="tag_list">
-            {% for (qualified_name, tag) in tags if tag != specific_tag %}
+            {% for (qualified_name, tag) in tags %}
                 <li>
                     {{tag_object.tag_object(tag, link="search_musts", innertext="(+)")}}
                     {{tag_object.tag_object(tag, link="search_forbids", innertext="(x)")}}
