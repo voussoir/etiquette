@@ -93,12 +93,12 @@ def get_tags_html(specific_tag_name=None):
         tags = [specific_tag]
         tag_count = sum(1 for child in specific_tag.walk_children())
 
-    tags = list(common.P.get_cached_tag_export(
+    tags = common.P.get_cached_tag_export(
         'easybake',
         tags=tags,
         include_synonyms=False,
         with_objects=True,
-    ))
+    )
 
     response = common.render_template(
         request,

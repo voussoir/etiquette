@@ -12,19 +12,20 @@ def easybake(tags, include_synonyms=True, with_objects=False):
     people.family.mother
     people.family.mother+mom
     '''
-    lines = []
+    tags = sorted(tags)
     for tag in tags:
         if with_objects:
             my_line = (tag.name, tag)
         else:
             my_line = tag.name
-        lines.append(my_line)
+
+        yield my_line
 
         if include_synonyms:
-            syn_lines = [f'{tag.name}+{syn}' for syn in tag.get_synonyms()]
+            syn_lines = [f'{tag.name}+{syn}' for syn in sorted(tag.get_synonyms())]
             if with_objects:
                 syn_lines = [(line, tag) for line in syn_lines]
-            lines.extend(syn_lines)
+            yield from syn_lines
 
         child_lines = easybake(
             tag.get_children(),
@@ -32,13 +33,10 @@ def easybake(tags, include_synonyms=True, with_objects=False):
             with_objects=with_objects,
         )
         if with_objects:
-            child_lines = [(f'{tag.name}.{line[0]}', line[1]) for line in child_lines]
+            child_lines = ((f'{tag.name}.{line[0]}', line[1]) for line in child_lines)
         else:
-            child_lines = [f'{tag.name}.{line}' for line in child_lines]
-        lines.extend(child_lines)
-
-    lines.sort()
-    return lines
+            child_lines = (f'{tag.name}.{line}' for line in child_lines)
+        yield from child_lines
 
 def flat_dict(tags, include_synonyms=True):
     '''

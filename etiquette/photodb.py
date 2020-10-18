@@ -6,6 +6,7 @@ import random
 import sqlite3
 import tempfile
 import time
+import types
 
 from voussoirkit import cacheclass
 from voussoirkit import configlayers
@@ -268,6 +269,8 @@ class PDBCacheManagerMixin:
             return exp
         except KeyError:
             exp = function(**kwargs)
+            if isinstance(exp, types.GeneratorType):
+                exp = tuple(exp)
             self.caches['tag_exports'][key] = exp
             return exp
 
