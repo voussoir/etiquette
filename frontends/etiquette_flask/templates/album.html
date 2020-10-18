@@ -321,13 +321,13 @@ function unpaste_photo_clipboard()
     api.albums.remove_photos(ALBUM_ID, photo_ids, common.refresh);
 }
 
-function on_open(ed, edit_element_map, display_element_map)
+function rename_ed_on_open(ed, edit_element_map, display_element_map)
 {
     ed.open();
     edit_element_map["title"].focus();
 }
 
-function on_save(ed, edit_element_map, display_element_map)
+function rename_ed_on_save(ed, edit_element_map, display_element_map)
 {
     function callback(response)
     {
@@ -358,7 +358,7 @@ function on_save(ed, edit_element_map, display_element_map)
     api.albums.edit(ALBUM_ID, title, description, callback);
 }
 
-function on_cancel(ed, edit_element_map, display_element_map)
+function rename_ed_on_cancel(ed, edit_element_map, display_element_map)
 {
     ed.cancel();
     if (display_element_map["description"].innerText == "")
@@ -367,9 +367,12 @@ function on_cancel(ed, edit_element_map, display_element_map)
     }
 }
 
-const title_text = document.getElementById("title_text");
-const description_text = document.getElementById("description_text");
-const ed = new editor.Editor([title_text, description_text], on_open, on_save, on_cancel);
+const rename_ed = new editor.Editor(
+    [document.getElementById("title_text"), document.getElementById("description_text")],
+    rename_ed_on_open,
+    rename_ed_on_save,
+    rename_ed_on_cancel
+);
 
 function add_album_datalist_on_load(datalist)
 {

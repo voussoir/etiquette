@@ -375,13 +375,13 @@ function tag_action_callback(response)
 }
 
 {% if specific_tag is not none %}
-function on_open(ed, edit_element_map)
+function rename_ed_on_open(ed, edit_element_map)
 {
     ed.open();
     edit_element_map["name"].focus();
 }
 
-function on_save(ed, edit_element_map, display_element_map)
+function rename_ed_on_save(ed, edit_element_map, display_element_map)
 {
     function callback(response)
     {
@@ -418,7 +418,7 @@ function on_save(ed, edit_element_map, display_element_map)
     api.tags.edit(tag_name, new_name, new_description, callback)
 }
 
-function on_cancel(ed, edit_element_map, display_element_map)
+function rename_ed_on_cancel(ed, edit_element_map, display_element_map)
 {
     ed.cancel();
     if (display_element_map["description"].innerText == "")
@@ -427,9 +427,12 @@ function on_cancel(ed, edit_element_map, display_element_map)
     }
 }
 
-const name_text = document.getElementById("name_text");
-const description_text = document.getElementById("description_text");
-const ed = new editor.Editor([name_text, description_text], on_open, on_save, on_cancel);
+const rename_ed = new editor.Editor(
+    [document.getElementById("name_text"), document.getElementById("description_text")],
+    rename_ed_on_open,
+    rename_ed_on_save,
+    rename_ed_on_cancel,
+);
 {% endif %}
 </script>
 </html>
