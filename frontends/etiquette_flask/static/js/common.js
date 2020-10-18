@@ -2,6 +2,48 @@ const common = {};
 
 common.INPUT_TYPES = new Set(["INPUT", "TEXTAREA"]);
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// UTILS ///////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+common.create_message_bubble =
+function create_message_bubble(message_area, message_positivity, message_text, lifespan)
+{
+    if (lifespan === undefined)
+    {
+        lifespan = 8000;
+    }
+    const message = document.createElement("div");
+    message.className = "message_bubble " + message_positivity;
+    const span = document.createElement("span");
+    span.innerHTML = message_text;
+    message.appendChild(span);
+    message_area.appendChild(message);
+    setTimeout(function(){message_area.removeChild(message);}, lifespan);
+}
+
+common.is_narrow_mode =
+function is_narrow_mode()
+{
+    return getComputedStyle(document.documentElement).getPropertyValue("--narrow").trim() === "1";
+}
+
+common.is_wide_mode =
+function is_wide_mode()
+{
+    return getComputedStyle(document.documentElement).getPropertyValue("--wide").trim() === "1";
+}
+
+common.refresh =
+function refresh()
+{
+    window.location.reload();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// HTTP ////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 common._request =
 function _request(method, url, callback)
 {
@@ -56,6 +98,31 @@ function post(url, data, callback)
     request.send(data);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// HTML & DOM //////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+common.delete_all_children =
+function delete_all_children(element)
+{
+    while (element.firstChild)
+    {
+        element.removeChild(element.firstChild);
+    }
+}
+
+common.html_to_element =
+function html_to_element(html)
+{
+    const template = document.createElement("template");
+    template.innerHTML = html.trim();
+    return template.content.firstElementChild;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// HOOKS & ADD-ONS /////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 common.bind_box_to_button =
 function bind_box_to_button(box, button, ctrl_enter)
 {
@@ -84,102 +151,9 @@ function bind_box_to_button(box, button, ctrl_enter)
     box.addEventListener("keyup", bound_box_hook);
 }
 
-common.create_message_bubble =
-function create_message_bubble(message_area, message_positivity, message_text, lifespan)
-{
-    if (lifespan === undefined)
-    {
-        lifespan = 8000;
-    }
-    const message = document.createElement("div");
-    message.className = "message_bubble " + message_positivity;
-    const span = document.createElement("span");
-    span.innerHTML = message_text;
-    message.appendChild(span);
-    message_area.appendChild(message);
-    setTimeout(function(){message_area.removeChild(message);}, lifespan);
-}
-
-common.delete_all_children =
-function delete_all_children(element)
-{
-    while (element.firstChild)
-    {
-        element.removeChild(element.firstChild);
-    }
-}
-
-common.entry_with_history_hook =
-function entry_with_history_hook(event)
-{
-    const box = event.target;
-
-    if (box.entry_history === undefined)
-        {box.entry_history = [];}
-
-    if (box.entry_history_pos === undefined)
-        {box.entry_history_pos = null;}
-
-    if (event.key === "Enter")
-    {
-        if (box.value === "")
-            {return;}
-        box.entry_history.push(box.value);
-        box.entry_history_pos = null;
-    }
-    else if (event.key === "Escape")
-    {
-        box.entry_history_pos = null;
-        box.value = "";
-    }
-
-    if (box.entry_history.length == 0)
-        {return}
-
-    if (box.entry_history_pos !== null && box.value !== box.entry_history[box.entry_history_pos])
-        {return;}
-
-    if (event.key === "ArrowUp")
-    {
-        if (box.entry_history_pos === null)
-            {box.entry_history_pos = box.entry_history.length - 1;}
-        else if (box.entry_history_pos == 0)
-            {;}
-        else
-            {box.entry_history_pos -= 1;}
-
-        if (box.entry_history_pos === null)
-            {box.value = "";}
-        else
-            {box.value = box.entry_history[box.entry_history_pos];}
-
-        setTimeout(function(){box.selectionStart = box.value.length;}, 0);
-    }
-    else if (event.key === "ArrowDown")
-    {
-        if (box.entry_history_pos === null)
-            {;}
-        else if (box.entry_history_pos == box.entry_history.length-1)
-            {box.entry_history_pos = null;}
-        else
-            {box.entry_history_pos += 1;}
-
-        if (box.entry_history_pos === null)
-            {box.value = "";}
-        else
-            {box.value = box.entry_history[box.entry_history_pos];}
-
-        setTimeout(function(){box.selectionStart = box.value.length;}, 0);
-    }
-}
-
-common.html_to_element =
-function html_to_element(html)
-{
-    const template = document.createElement("template");
-    template.innerHTML = html.trim();
-    return template.content.firstElementChild;
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// CSS-JS CLASSES //////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 common.init_atag_merge_params =
 function init_atag_merge_params(a)
@@ -241,6 +215,8 @@ function init_all_atag_merge_params()
         setTimeout(() => common.init_atag_merge_params(a), 0);
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 common.init_button_with_confirm =
 function init_button_with_confirm(button)
@@ -387,6 +363,8 @@ function init_all_button_with_confirm()
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 common.init_enable_on_pageload =
 function init_enable_on_pageload(element)
 {
@@ -409,6 +387,8 @@ function init_all_enable_on_pageload()
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 common.init_entry_with_history =
 function init_entry_with_history(input)
 {
@@ -425,6 +405,72 @@ function init_all_entry_with_history()
         setTimeout(() => common.init_entry_with_history(input), 0);
     }
 }
+
+common.entry_with_history_hook =
+function entry_with_history_hook(event)
+{
+    const box = event.target;
+
+    if (box.entry_history === undefined)
+        {box.entry_history = [];}
+
+    if (box.entry_history_pos === undefined)
+        {box.entry_history_pos = null;}
+
+    if (event.key === "Enter")
+    {
+        if (box.value === "")
+            {return;}
+        box.entry_history.push(box.value);
+        box.entry_history_pos = null;
+    }
+    else if (event.key === "Escape")
+    {
+        box.entry_history_pos = null;
+        box.value = "";
+    }
+
+    if (box.entry_history.length == 0)
+        {return}
+
+    if (box.entry_history_pos !== null && box.value !== box.entry_history[box.entry_history_pos])
+        {return;}
+
+    if (event.key === "ArrowUp")
+    {
+        if (box.entry_history_pos === null)
+            {box.entry_history_pos = box.entry_history.length - 1;}
+        else if (box.entry_history_pos == 0)
+            {;}
+        else
+            {box.entry_history_pos -= 1;}
+
+        if (box.entry_history_pos === null)
+            {box.value = "";}
+        else
+            {box.value = box.entry_history[box.entry_history_pos];}
+
+        setTimeout(function(){box.selectionStart = box.value.length;}, 0);
+    }
+    else if (event.key === "ArrowDown")
+    {
+        if (box.entry_history_pos === null)
+            {;}
+        else if (box.entry_history_pos == box.entry_history.length-1)
+            {box.entry_history_pos = null;}
+        else
+            {box.entry_history_pos += 1;}
+
+        if (box.entry_history_pos === null)
+            {box.value = "";}
+        else
+            {box.value = box.entry_history[box.entry_history_pos];}
+
+        setTimeout(function(){box.selectionStart = box.value.length;}, 0);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 common.init_tabbed_container =
 function init_tabbed_container(tabbed_container)
@@ -463,18 +509,6 @@ function init_all_tabbed_container()
     }
 }
 
-common.is_narrow_mode =
-function is_narrow_mode()
-{
-    return getComputedStyle(document.documentElement).getPropertyValue("--narrow").trim() === "1";
-}
-
-common.is_wide_mode =
-function is_wide_mode()
-{
-    return getComputedStyle(document.documentElement).getPropertyValue("--wide").trim() === "1";
-}
-
 common.tabbed_container_switcher =
 function tabbed_container_switcher(event)
 {
@@ -509,11 +543,7 @@ function tabbed_container_switcher(event)
     }
 }
 
-common.refresh =
-function refresh()
-{
-    window.location.reload();
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 common.on_pageload =
 function on_pageload()
