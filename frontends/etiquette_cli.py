@@ -30,44 +30,6 @@ def find_photodb():
 
 ####################################################################################################
 
-def tag_breplace_argparse(args):
-    photodb = find_photodb()
-    renames = []
-    tag_names = photodb.get_all_tag_names()
-    all_names = tag_names.union(photodb.get_all_synonyms())
-    for tag_name in tag_names:
-        if args.regex:
-            new_name = re.sub(args.replace_from, args.replace_to, tag_name)
-        else:
-            new_name = tag_name.replace(args.replace_from, args.replace_to)
-        new_name = photodb.normalize_tagname(new_name)
-        if new_name == tag_name:
-            continue
-
-        if new_name in all_names:
-            raise etiquette.exceptions.TagExists(new_name)
-
-        if args.set_synonym:
-            printline = f'{tag_name} -> {new_name}+{tag_name}'
-        else:
-            printline = f'{tag_name} -> {new_name}'
-
-        renames.append((tag_name, new_name, printline))
-
-    if not args.autoyes:
-        for (tag_name, new_name, printline) in renames:
-            print(printline)
-        if not getpermission.getpermission('Ok?', must_pick=True):
-            return
-
-    for (tag_name, new_name, printline) in renames:
-        print(printline)
-        tag = photodb.get_tag(tag_name)
-        tag.rename(new_name)
-        if args.set_synonym:
-            tag.add_synonym(tag_name)
-    photodb.commit()
-
 def digest_directory_argparse(args):
     directory = pathclass.Path(args.directory)
     photodb = find_photodb()
@@ -136,6 +98,44 @@ def search_argparse(args):
     photos = sorted(photos, key=lambda p: p.real_path)
     for photo in photos:
         print(photo.real_path.absolute_path)
+
+def tag_breplace_argparse(args):
+    photodb = find_photodb()
+    renames = []
+    tag_names = photodb.get_all_tag_names()
+    all_names = tag_names.union(photodb.get_all_synonyms())
+    for tag_name in tag_names:
+        if args.regex:
+            new_name = re.sub(args.replace_from, args.replace_to, tag_name)
+        else:
+            new_name = tag_name.replace(args.replace_from, args.replace_to)
+        new_name = photodb.normalize_tagname(new_name)
+        if new_name == tag_name:
+            continue
+
+        if new_name in all_names:
+            raise etiquette.exceptions.TagExists(new_name)
+
+        if args.set_synonym:
+            printline = f'{tag_name} -> {new_name}+{tag_name}'
+        else:
+            printline = f'{tag_name} -> {new_name}'
+
+        renames.append((tag_name, new_name, printline))
+
+    if not args.autoyes:
+        for (tag_name, new_name, printline) in renames:
+            print(printline)
+        if not getpermission.getpermission('Ok?', must_pick=True):
+            return
+
+    for (tag_name, new_name, printline) in renames:
+        print(printline)
+        tag = photodb.get_tag(tag_name)
+        tag.rename(new_name)
+        if args.set_synonym:
+            tag.add_synonym(tag_name)
+    photodb.commit()
 
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__)
