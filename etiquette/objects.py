@@ -5,6 +5,7 @@ but are returned by the PDB accesses.
 import abc
 import os
 import PIL.Image
+import re
 import send2trash
 import traceback
 
@@ -1275,6 +1276,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         name = name.lower()
         name = helpers.remove_control_characters(name)
+        name = re.sub(r'\s+', ' ', name)
         name = name.strip(' .+')
         name = name.split('+')[0].split('.')[-1]
         name = name.replace('-', '_')
