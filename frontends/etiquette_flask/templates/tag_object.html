@@ -19,6 +19,7 @@
     tag,
     extra_classes="",
     innertext=None,
+    innertext_safe=None,
     link='search',
     onclick=None,
     with_alt_description=False
@@ -35,9 +36,9 @@
 -%}
 {%- set class = ("tag_object" + " " + extra_classes).strip() -%}
 {%- set title = (with_alt_description and tag.description) or None -%}
-{%- set innertext = innertext or tag.name -%}
+{%- set innertext = innertext_safe or (innertext or tag.name)|e -%}
 {%- set element = "a" if (link or onclick) else "span" -%}
 
-<{{element}} {{make_attributes(class=class, title=title, href=href, onclick=onclick, **kwargs)|safe}}>{{innertext}}</{{element}}>
+<{{element}} {{make_attributes(class=class, title=title, href=href, onclick=onclick, **kwargs)|safe}}>{{innertext|safe}}</{{element}}>
 {{-''-}}
 {%- endmacro -%}
