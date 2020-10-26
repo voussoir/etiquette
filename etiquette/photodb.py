@@ -838,7 +838,8 @@ class PDBPhotoMixin:
             notnulls.add('extension')
 
         if within_directory:
-            patterns = {f'{d.absolute_path}{os.sep}%' for d in within_directory}
+            patterns = {d.absolute_path.rstrip(os.sep) for d in within_directory}
+            patterns = {f'{d}{os.sep}%' for d in patterns}
             clauses = ['filepath LIKE ?'] * len(patterns)
             if len(clauses) > 1:
                 clauses = ' OR '.join(clauses)
