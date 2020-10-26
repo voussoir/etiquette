@@ -164,7 +164,7 @@ h2, h3
                     {{tag_object.tag_object(tag, link="search_musts", innertext="(+)")}}
                     {{tag_object.tag_object(tag, link="search_forbids", innertext="(x)")}}
                     {{tag_object.tag_object(tag, link="info", innertext=qualified_name, with_alt_description=True)-}}
-                    {% if '.' in qualified_name -%}
+                    {% if specific_tag or '.' in qualified_name -%}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
                     data-holder-class="confirm_holder_remove_child"
@@ -298,9 +298,20 @@ function remove_child_form(event)
     const delete_button = event.target;
     const li = delete_button.closest("li");
     const tag_object = tag_object_from_li(li);
-    const parts = tag_object.innerText.split(".");
-    const tag_name = parts.pop();
-    const parent_name = parts.pop();
+    const qual_name = tag_object.innerText;
+    let tag_name;
+    let parent_name;
+    if (qual_name.indexOf(".") != -1)
+    {
+        const parts = qual_name.split(".");
+        tag_name = parts.pop();
+        parent_name = parts.pop();
+    }
+    else if (SPECIFIC_TAG)
+    {
+        tag_name = qual_name;
+        parent_name = SPECIFIC_TAG;
+    }
     return api.tags.remove_child(parent_name, tag_name, tag_action_callback);
 }
 
