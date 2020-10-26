@@ -436,9 +436,14 @@ function add_searchtag_from_box(box, inputted_list, li_class)
     {return;}
 
     let value = box.value;
-    value = tag_autocomplete.resolve(value);
-    if (value === null)
-    {return;}
+    if (tag_autocomplete.datalist !== null)
+    {
+        // If the autocomplete failed for whatever reason, or is simply taking
+        // too long, let's just let it slide.
+        value = tag_autocomplete.resolve(value);
+        if (value === null)
+        {return;}
+    }
 
     console.log(inputted_list);
     ul = box.parentElement.parentElement;
