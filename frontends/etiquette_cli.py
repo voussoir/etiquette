@@ -164,14 +164,6 @@ def main(argv):
     p_easybake.add_argument('eb_strings', nargs='+')
     p_easybake.set_defaults(func=easybake_argparse)
 
-    p_tag_breplace = subparsers.add_parser('tag_breplace')
-    p_tag_breplace.add_argument('replace_from')
-    p_tag_breplace.add_argument('replace_to')
-    p_tag_breplace.add_argument('--set_synonym', '--set-synonym', dest='set_synonym', action='store_true')
-    p_tag_breplace.add_argument('--regex', dest='regex', action='store_true')
-    p_tag_breplace.add_argument('--yes', dest='autoyes', action='store_true')
-    p_tag_breplace.set_defaults(func=tag_breplace_argparse)
-
     p_digest = subparsers.add_parser('digest', aliases=['digest_directory', 'digest-directory'])
     p_digest.add_argument('directory')
     p_digest.add_argument('--no_albums', '--no-albums', dest='make_albums', action='store_false', default=True)
@@ -214,6 +206,14 @@ def main(argv):
     p_search.add_argument('--orderby', dest='orderby', default=None)
     # p_search.add_argument('--yield_albums', '--yield-albums', dest='yield_albums', default=None)
     p_search.set_defaults(func=search_argparse)
+
+    p_tag_breplace = subparsers.add_parser('tag_breplace')
+    p_tag_breplace.add_argument('replace_from')
+    p_tag_breplace.add_argument('replace_to')
+    p_tag_breplace.add_argument('--set_synonym', '--set-synonym', dest='set_synonym', action='store_true')
+    p_tag_breplace.add_argument('--regex', dest='regex', action='store_true')
+    p_tag_breplace.add_argument('--yes', dest='autoyes', action='store_true')
+    p_tag_breplace.set_defaults(func=tag_breplace_argparse)
 
     args = parser.parse_args(primary_args)
     if photo_search_args:
