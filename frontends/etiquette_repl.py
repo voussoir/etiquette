@@ -13,8 +13,6 @@ from voussoirkit import getpermission
 
 import etiquette
 
-P = etiquette.photodb.PhotoDB()
-
 def easytagger():
     while True:
         i = input('> ')
@@ -33,11 +31,12 @@ def photag(photo_id):
     while True:
         photo.add_tag(input('> '))
 
-get = P.get_tag
-
 ################################################################################
 
 def erepl_argparse(args):
+    global P
+    P = etiquette.photodb.PhotoDB('.', create=args.create)
+
     if args.exec_statement:
         exec(args.exec_statement)
         P.commit()
@@ -57,6 +56,7 @@ def main(argv):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--exec', dest='exec_statement', default=None)
+    parser.add_argument('--dont_create', '--dont-create', '--no-create', dest='create', action='store_false', default=True)
     parser.set_defaults(func=erepl_argparse)
 
     args = parser.parse_args(argv)
