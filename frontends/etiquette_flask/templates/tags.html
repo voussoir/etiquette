@@ -425,7 +425,7 @@ function rename_ed_on_save(ed, edit_element_map, display_element_map)
     const new_description = description_editor.value;
 
     ed.show_spinner();
-    api.tags.edit(tag_name, new_name, new_description, callback)
+    api.tags.edit(tag_name, new_name, new_description, callback);
 }
 
 function rename_ed_on_cancel(ed, edit_element_map, display_element_map)
