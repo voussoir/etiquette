@@ -433,11 +433,20 @@ function set_searchhidden_form(event)
     const checkbox = event.target;
     if (checkbox.checked)
     {
-        api.photos.set_searchhidden(PHOTO_ID);
+        api.photos.set_searchhidden(PHOTO_ID, set_searchhidden_callback);
     }
     else
     {
-        api.photos.unset_searchhidden(PHOTO_ID);
+        api.photos.unset_searchhidden(PHOTO_ID, set_searchhidden_callback);
+    }
+}
+
+function set_searchhidden_callback(response)
+{
+    if (response.meta.status !== 200)
+    {
+        alert(JSON.stringify(response));
+        return;
     }
 }
 
