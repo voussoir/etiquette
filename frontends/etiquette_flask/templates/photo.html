@@ -191,7 +191,7 @@
             <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
             <li>
                 <label>
-                <input type="checkbox" {%if photo.searchhidden%}checked{%endif%} onchange="return set_searchhidden_form(event);"
+                <input id="searchhidden_checkbox" type="checkbox" {%if photo.searchhidden%}checked{%endif%} onchange="return set_searchhidden_form();"
                 />Hidden from search
                 </label>
             </li>
@@ -282,6 +282,8 @@ common.bind_box_to_button(add_tag_box, add_tag_button, false);
 
 const message_area = document.getElementById('message_area');
 
+// API /////////////////////////////////////////////////////////////////////////////////////////////
+
 function add_photo_tag_form()
 {
     const tagname = document.getElementById("add_tag_textbox").value;
@@ -292,6 +294,7 @@ function add_photo_tag_form()
     api.photos.add_tag(PHOTO_ID, tagname, add_photo_tag_callback);
     add_tag_box.value = "";
 }
+
 function add_photo_tag_callback(response)
 {
     add_remove_photo_tag_callback(response);
@@ -327,6 +330,7 @@ function remove_photo_tag_form(photo_id, tagname)
     api.photos.remove_tag(photo_id, tagname, remove_photo_tag_callback);
     add_tag_box.focus();
 }
+
 function remove_photo_tag_callback(response)
 {
     add_remove_photo_tag_callback(response);
@@ -385,21 +389,11 @@ function delete_photo_from_disk_form()
     api.photos.delete(PHOTO_ID, true, api.photos.callback_go_to_search);
 }
 
-function sort_tag_objects()
+function generate_thumbnail_for_video_form(event)
 {
-    const tag_list = document.getElementById("this_tags");
-    const lis = Array.from(tag_list.children).filter(el => el.getElementsByClassName("tag_object").length);
-    function compare(li1, li2)
-    {
-        const tag1 = li1.querySelector(".tag_object:last-of-type").innerText;
-        const tag2 = li2.querySelector(".tag_object:last-of-type").innerText;
-        return tag1 < tag2 ? -1 : 1;
-    }
-    lis.sort(compare);
-    for (const li of lis)
-    {
-        tag_list.appendChild(li);
-    }
+    const timestamp = document.querySelector("#right video").currentTime;
+    const special = {"timestamp": timestamp};
+    api.photos.generate_thumbnail(PHOTO_ID, special, generate_thumbnail_callback)
 }
 
 function generate_thumbnail_callback(response)
@@ -408,19 +402,16 @@ function generate_thumbnail_callback(response)
     {
         common.create_message_bubble(message_area, "message_positive", "Thumbnail captured", 8000);
     }
-    else
+    else if (response.meta.json_ok)
     {
         common.create_message_bubble(message_area, "message_negative", response.data.error_message, 8000);
     }
+    else
+    {
+        alert(JSON.stringify(response));
+    }
     const generate_thumbnail_button = document.getElementById("generate_thumbnail_button");
     window[generate_thumbnail_button.dataset.spinnerCloser]();
-}
-
-function generate_thumbnail_for_video_form(event)
-{
-    const timestamp = document.querySelector("#right video").currentTime;
-    const special = {"timestamp": timestamp};
-    api.photos.generate_thumbnail(PHOTO_ID, special, generate_thumbnail_callback)
 }
 
 function refresh_metadata_form()
@@ -428,9 +419,9 @@ function refresh_metadata_form()
     api.photos.refresh_metadata(PHOTO_ID, common.refresh);
 }
 
-function set_searchhidden_form(event)
+function set_searchhidden_form()
 {
-    const checkbox = event.target;
+    const checkbox = document.getElementById("searchhidden_checkbox");
     if (checkbox.checked)
     {
         api.photos.set_searchhidden(PHOTO_ID, set_searchhidden_callback);
@@ -449,6 +440,27 @@ function set_searchhidden_callback(response)
         return;
     }
 }
+
+// UI //////////////////////////////////////////////////////////////////////////////////////////////
+
+function sort_tag_objects()
+{
+    const tag_list = document.getElementById("this_tags");
+    const lis = Array.from(tag_list.children).filter(el => el.getElementsByClassName("tag_object").length);
+    function compare(li1, li2)
+    {
+        const tag1 = li1.querySelector(".tag_object:last-of-type").innerText;
+        const tag2 = li2.querySelector(".tag_object:last-of-type").innerText;
+        return tag1 < tag2 ? -1 : 1;
+    }
+    lis.sort(compare);
+    for (const li of lis)
+    {
+        tag_list.appendChild(li);
+    }
+}
+
+// UI - HOVERZOOM //////////////////////////////////////////////////////////////////////////////////
 
 const ZOOM_BG_URL = "url('{{photo|file_link}}')";
 function enable_hoverzoom(event)
@@ -576,6 +588,8 @@ function autofocus_add_tag_box()
         add_tag_box.focus();
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function on_pageload()
 {
