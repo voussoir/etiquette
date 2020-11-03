@@ -186,9 +186,9 @@
                 <li>Duration: {{photo.duration_string}}</li>
                 <li>Overall Bitrate: {{photo.bitrate|int}} kbps</li>
             {% endif %}
+            <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="return refresh_metadata_form();">refresh metadata</button></li>
             <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as original filename</a></li>
             <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
-            <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="return refresh_metadata_form();">refresh</button></li>
             <li>
                 <label>
                 <input type="checkbox" {%if photo.searchhidden%}checked{%endif%} onchange="return set_searchhidden_form(event);"
