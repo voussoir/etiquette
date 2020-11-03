@@ -47,6 +47,25 @@ function refresh()
 common._request =
 function _request(method, url, callback)
 {
+    /*
+    Perform an HTTP request and call the `callback` with the response.
+
+    The response will have the following structure:
+    {
+        "completed": true / false,
+        "meta": {
+            "status": If the connection failed or request otherwise could not
+                complete, `status` will be 0. If the request completed,
+                `status` will be the HTTP response code.
+            "json_ok": If the server responded with parseable json, `json_ok`
+                will be true, and that data will be in `response.data`. If the
+                server response was not parseable json, `json_ok` will be false
+                and `response.data` will be undefined.
+            "request_url": The URL exactly as given to this call.
+        }
+        "data": {JSON parsed from server response}.
+    }
+    */
     const request = new XMLHttpRequest();
     const response = {
         "completed": false,
@@ -55,6 +74,14 @@ function _request(method, url, callback)
 
     request.onreadystatechange = function()
     {
+        /*
+        readystate values:
+        0 UNSENT
+        1 OPENED
+        2 HEADERS_RECEIVED
+        3 LOADING
+        4 DONE
+        */
         if (request.readyState != 4)
             {return;}
 
@@ -94,6 +121,9 @@ function get(url, callback)
 common.post =
 function post(url, data, callback)
 {
+    /*
+    `data`: a FormData object which you have already filled with values.
+    */
     request = common._request("POST", url, callback);
     request.send(data);
 }
