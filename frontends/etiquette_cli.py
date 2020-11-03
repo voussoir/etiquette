@@ -28,7 +28,80 @@ def find_photodb():
     photodbs[path] = photodb
     return photodb
 
+# HELPERS ##########################################################################################
+
+def get_photos_from_args(args):
+    photos = []
+    if args.photo_id_args:
+        photos.extend(photodb.get_photos_by_id(args.photo_id_args))
+
+    if args.photo_search_args:
+        photos.extend(search_by_argparse(args.photo_search_args, yield_photos=True))
+
+    return photos
+
+def get_albums_from_args(args):
+    albums = []
+    if args.album_id_args:
+        albums.extend(photodb.get_albums_by_id(args.album_id_args))
+
+    if args.album_search_args:
+        albums.extend(search_by_argparse(args.album_search_args, yield_albums=True))
+
+    return albums
+
+def search_in_cwd(**kwargs):
+    photodb = find_photodb()
+    cwd = pathclass.cwd()
+    return photodb.search(
+        within_directory=cwd,
+        **kwargs,
+    )
+
+def search_by_argparse(args, yield_albums=False, yield_photos=False):
+    return search_in_cwd(
+        area=args.area,
+        width=args.width,
+        height=args.height,
+        ratio=args.ratio,
+        bytes=args.bytes,
+        duration=args.duration,
+        author=args.author,
+        created=args.created,
+        extension=args.extension,
+        extension_not=args.extension_not,
+        filename=args.filename,
+        has_tags=args.has_tags,
+        has_thumbnail=args.has_thumbnail,
+        is_searchhidden=args.is_searchhidden,
+        mimetype=args.mimetype,
+        tag_musts=args.tag_musts,
+        tag_mays=args.tag_mays,
+        tag_forbids=args.tag_forbids,
+        tag_expression=args.tag_expression,
+        limit=args.limit,
+        offset=args.offset,
+        orderby=args.orderby,
+        yield_albums=yield_albums,
+        yield_photos=yield_photos,
+    )
+
 ####################################################################################################
+
+def add_tag_argparse(args):
+    photodb = find_photodb()
+
+    tag = photodb.get_tag(name=args.tag_name)
+    if args.photo_id_args or args.photo_search_args:
+        photos = get_photos_from_args(args)
+    else:
+        photos = search_in_cwd()
+
+    for photo in photos:
+        photo.add_tag(tag)
+
+    if args.autoyes or getpermission.getpermission('Commit?'):
+        photodb.commit()
 
 def digest_directory_argparse(args):
     directory = pathclass.Path(args.directory)
@@ -51,6 +124,12 @@ def easybake_argparse(args):
     photodb = find_photodb()
     for eb_string in args.eb_strings:
         notes = photodb.easybake(eb_string)
+
+    if args.autoyes or getpermission.getpermission('Commit?'):
+        photodb.commit()
+
+def init_argparse(args):
+    photodb = etiquette.photodb.PhotoDB('.', create=True)
     photodb.commit()
 
 def purge_deleted_photos_argparse(args):
@@ -64,46 +143,35 @@ def purge_empty_albums_argparse(args):
     photodb = find_photodb()
     for deleted in photodb.purge_empty_albums():
         print(deleted)
+
     if args.autoyes or getpermission.getpermission('Commit?'):
         photodb.commit()
-
-def search_by_argparse(args, yield_albums=False, yield_photos=False):
-    photodb = find_photodb()
-    cwd = pathclass.cwd()
-    results = photodb.search(
-        area=args.area,
-        width=args.width,
-        height=args.height,
-        ratio=args.ratio,
-        bytes=args.bytes,
-        duration=args.duration,
-        author=args.author,
-        created=args.created,
-        extension=args.extension,
-        extension_not=args.extension_not,
-        filename=args.filename,
-        has_tags=args.has_tags,
-        has_thumbnail=args.has_thumbnail,
-        is_searchhidden=args.is_searchhidden,
-        mimetype=args.mimetype,
-        tag_musts=args.tag_musts,
-        tag_mays=args.tag_mays,
-        tag_forbids=args.tag_forbids,
-        tag_expression=args.tag_expression,
-        within_directory=cwd,
-        limit=args.limit,
-        offset=args.offset,
-        orderby=args.orderby,
-        yield_albums=yield_albums,
-        yield_photos=yield_photos,
-    )
-    return results
 
 def search_argparse(args):
     photos = search_by_argparse(args, yield_photos=True)
     photos = sorted(photos, key=lambda p: p.real_path)
     for photo in photos:
         print(photo.real_path.absolute_path)
+
+def set_unset_searchhidden_argparse(args, searchhidden):
+    photodb = find_photodb()
+
+    if args.photo_search_args:
+        args.photo_search_args.is_searchhidden = not searchhidden
+
+    if args.album_search_args:
+        args.album_search_args.is_searchhidden = not searchhidden
+
+    photos = get_photos_from_args(args)
+    albums = get_albums_from_args(args)
+    photos.extend(photo for album in albums for photo in album.walk_photos())
+
+    for photo in photos:
+        print(photo)
+        photo.set_searchhidden(searchhidden)
+
+    if args.autoyes or getpermission.getpermission('Commit?'):
+        photodb.commit()
 
 def tag_breplace_argparse(args):
     photodb = find_photodb()
@@ -148,20 +216,33 @@ def main(argv):
     subparsers = parser.add_subparsers()
 
     primary_args = []
+    photo_id_args = []
     photo_search_args = []
+    album_id_args = []
     album_search_args = []
     mode = primary_args
     for arg in argv:
-        if arg in {'--search', '--photo_search', '--photo-search'}:
+        if 0:
+            pass
+        elif arg in {'--search', '--photo_search', '--photo-search'}:
             mode = photo_search_args
-            continue
-        if arg in {'--album_search', '--album-search'}:
+        elif arg in {'--album_search', '--album-search'}:
             mode = album_search_args
-            continue
-        mode.append(arg)
+        elif arg == '--photos':
+            mode = photo_id_args
+        elif arg == '--albums':
+            mode = album_id_args
+        else:
+            mode.append(arg)
+
+    p_add_tag = subparsers.add_parser('add_tag', aliases=['add-tag'])
+    p_add_tag.add_argument('tag_name')
+    p_add_tag.add_argument('--yes', dest='autoyes', action='store_true')
+    p_add_tag.set_defaults(func=add_tag_argparse)
 
     p_easybake = subparsers.add_parser('easybake')
     p_easybake.add_argument('eb_strings', nargs='+')
+    p_easybake.add_argument('--yes', dest='autoyes', action='store_true')
     p_easybake.set_defaults(func=easybake_argparse)
 
     p_digest = subparsers.add_parser('digest', aliases=['digest_directory', 'digest-directory'])
@@ -172,6 +253,9 @@ def main(argv):
     p_digest.add_argument('--yes', dest='autoyes', action='store_true')
     p_digest.set_defaults(func=digest_directory_argparse)
 
+
+    p_init = subparsers.add_parser('init', aliases=['create'])
+    p_init.set_defaults(func=init_argparse)
 
     p_purge_deleted_photos = subparsers.add_parser('purge_deleted_photos', aliases=['purge-deleted-photos'])
     p_purge_deleted_photos.add_argument('--yes', dest='autoyes', action='store_true')
@@ -207,6 +291,14 @@ def main(argv):
     # p_search.add_argument('--yield_albums', '--yield-albums', dest='yield_albums', default=None)
     p_search.set_defaults(func=search_argparse)
 
+    p_set_searchhidden = subparsers.add_parser('set_searchhidden', aliases=['set-searchhidden'])
+    p_set_searchhidden.add_argument('--yes', dest='autoyes', action='store_true')
+    p_set_searchhidden.set_defaults(func=lambda args: set_unset_searchhidden_argparse(args, searchhidden=True))
+
+    p_unset_searchhidden = subparsers.add_parser('unset_searchhidden', aliases=['unset-searchhidden'])
+    p_unset_searchhidden.add_argument('--yes', dest='autoyes', action='store_true')
+    p_unset_searchhidden.set_defaults(func=lambda args: set_unset_searchhidden_argparse(args, searchhidden=False))
+
     p_tag_breplace = subparsers.add_parser('tag_breplace')
     p_tag_breplace.add_argument('replace_from')
     p_tag_breplace.add_argument('replace_to')
@@ -215,16 +307,19 @@ def main(argv):
     p_tag_breplace.add_argument('--yes', dest='autoyes', action='store_true')
     p_tag_breplace.set_defaults(func=tag_breplace_argparse)
 
-    args = parser.parse_args(primary_args)
-    if photo_search_args:
-        args.photo_search_args = p_search.parse_args(photo_search_args)
-    else:
-        args.photo_search_args = None
+    ##
 
-    if album_search_args:
-        args.album_search_args = p_search.parse_args(album_search_args)
-    else:
-        args.album_search_args = None
+    args = parser.parse_args(primary_args)
+
+    photo_search_args = p_search.parse_args(photo_search_args) if photo_search_args else None
+    album_search_args = p_search.parse_args(album_search_args) if album_search_args else None
+    photo_id_args = [id for arg in photo_id_args for id in etiquette.helpers.comma_space_split(arg)]
+    album_id_args = [id for arg in album_id_args for id in etiquette.helpers.comma_space_split(arg)]
+
+    args.photo_search_args = photo_search_args
+    args.album_search_args = album_search_args
+    args.photo_id_args = photo_id_args
+    args.album_id_args = album_id_args
 
     return args.func(args)
 
