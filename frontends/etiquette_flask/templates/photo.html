@@ -33,11 +33,6 @@
 
     background-color: var(--color_transparency);
 }
-#right
-{
-    display: grid;
-    grid-template: "viewer" 1fr / 1fr;
-}
 #editor_area
 {
     grid-area: editor_area;
@@ -57,8 +52,8 @@
 }
 #photo_viewer
 {
-    grid-area: viewer;
-    display: grid;
+    position: absolute;
+    top: 0; bottom: 0; left: 0; right: 0;
 }
 .photo_viewer_audio,
 .photo_viewer_video,
@@ -84,8 +79,9 @@
     max-height: 100%;
     background-repeat: no-repeat;
 }
-.photo_viewer_image img
+#photo_viewer img
 {
+    position: absolute;
     max-height: 100%;
     max-width: 100%;
 }
