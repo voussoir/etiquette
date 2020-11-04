@@ -360,13 +360,16 @@
     <div id="right" class="panel">
         <div id="error_message_area">
             {% for warning in warnings %}
-                <p class="error_message">{{warning}}</p>
+            <p class="error_message">{{warning}}</p>
             {% endfor %}
         </div>
+
         <div id="happy_message_area">
             <p>You got {{results|length}} items.</p>
         </div>
+
         {{prev_next_buttons()}}
+
         <div id="search_results_holder">
             {% for result in results %}
                 {% if result.__class__.__name__ == 'Photo' %}
