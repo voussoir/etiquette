@@ -29,8 +29,6 @@ h2, h3
     display: grid;
     grid-row-gap: 8px;
     grid-auto-rows: min-content;
-    padding: 8px;
-    background-color: var(--color_transparency);
 }
 
 #right > *
@@ -101,7 +99,7 @@ h2, h3
             {% endfor %}
         </div>
     </div>
-    <div id="right">
+    <div id="right" class="panel">
         {% if view != "list" %}
             <a href="?view=list">List view</a>
         {% else %}
@@ -153,7 +151,7 @@ const ALBUM_ID = undefined;
 <body>
 {{header.make_header(session=session)}}
 <div id="content_body" class="sticky_side_right sticky_bottom_right">
-    <div id="right">
+    <div id="right" class="panel">
         {% if view != "list" %}
             <a href="?view=list">List view</a>
         {% else %}

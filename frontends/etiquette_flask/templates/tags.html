@@ -30,12 +30,6 @@ h2, h3
     grid-row-gap: 30px;
     grid-auto-rows: max-content;
 }
-#left > *
-{
-    background-color: var(--color_transparency);
-    padding: 8px;
-    border-radius: 5px;
-}
 #tag_metadata h2 .editor_input
 {
     font-size: inherit;
@@ -53,8 +47,6 @@ h2, h3
 #right
 {
     display: grid;
-    padding: 8px;
-    background-color: var(--color_transparency);
 }
 #editor_area
 {
@@ -91,7 +83,7 @@ h2, h3
 <body>
 {{header.make_header(session=session)}}
 <div id="content_body" class="sticky_side_right sticky_bottom_right">
-    <div id="right">
+    <div id="right" class="panel">
         <div id="editor_area">
             <input type="text" id="add_tag_textbox" class="entry_with_history entry_with_tagname_replacements" autofocus>
             <button class="add_tag_button green_button" id="add_tag_button" onclick="return easybake_form();">bake</button>
@@ -101,7 +93,7 @@ h2, h3
     </div>
     <div id="left">
         {% if specific_tag %}
-        <div id="hierarchy_self">
+        <div id="hierarchy_self" class="panel">
             <div id="tag_metadata">
                 <h2>{{tag_object.tag_object(
                     specific_tag,
@@ -136,7 +128,7 @@ h2, h3
 
         {% set parents = specific_tag.get_parents() %}
         {% if parents %}
-        <div id="hierarchy_parents">
+        <div id="hierarchy_parents" class="panel">
             <h3>{{parents|length}} Parents</h3>
             <ul id="parent_list">
             {% for ancestor in specific_tag.get_parents() %}
@@ -152,7 +144,7 @@ h2, h3
         {% endif %} <!-- if specific tag -->
 
         {% if tags or not specific_tag %}
-        <div id="hierarchy_tags">
+        <div id="hierarchy_tags" class="panel">
             {% if specific_tag %}
             <h3>{{tag_count}} Descendants</h3>
             {% else %}
@@ -219,7 +211,7 @@ h2, h3
         {% if specific_tag and include_synonyms %}
         {% set synonyms = specific_tag.get_synonyms() %}
         {% if synonyms %}
-        <div id="hierarchy_synonyms">
+        <div id="hierarchy_synonyms" class="panel">
             <h3>{{synonyms|length}} Synonyms</h3>
             <ul>
             {% for synonym in synonyms %}

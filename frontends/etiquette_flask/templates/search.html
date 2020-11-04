@@ -59,10 +59,6 @@
     display: flex;
     flex-direction: column;
 
-    padding: 8px;
-
-    background-color: var(--color_transparency);
-
     word-wrap: break-word;
 }
 #tags_on_this_page_holder
@@ -193,7 +189,7 @@
 <body>
 {{header.make_header(session=session)}}
 <div id="content_body">
-    <div id="left">
+    <div id="left" class="panel">
         {% for tagtype in ["musts", "mays", "forbids"] %}
         <div id="search_builder_{{tagtype}}" {% if search_kwargs["tag_expression"]%}class="hidden"{%endif%}>
             <span>Tag {{tagtype}}:</span>
@@ -361,7 +357,7 @@
         </div>
         {% endif %}
     </div>
-    <div id="right">
+    <div id="right" class="panel">
         <div id="error_message_area">
             {% for warning in warnings %}
                 <p class="error_message">{{warning}}</p>

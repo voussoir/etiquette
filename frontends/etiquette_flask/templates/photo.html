@@ -30,13 +30,10 @@
         /1fr;
 
     min-height: min-content;
-
-    background-color: var(--color_transparency);
 }
 #editor_area
 {
     grid-area: editor_area;
-    padding: 8px;
     word-wrap: break-word;
 }
 #before_after_links
@@ -48,7 +45,7 @@
 {
     grid-area: message_area;
     min-height: 30px;
-    margin: 8px;
+    margin-top: 8px;
 }
 #photo_viewer
 {
@@ -145,7 +142,7 @@
 <body>
 {{header.make_header(session=session)}}
 <div id="content_body">
-<div id="left">
+<div id="left" class="panel">
     <div id="editor_area">
         <h3 id="photo_filename">{{photo.basename}}</h3>
 
