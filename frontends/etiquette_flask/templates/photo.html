@@ -249,7 +249,7 @@
     </div>
     <div id="hovering_tools">
         {% if photo.simple_mimetype == "video" %}
-        <button id="generate_thumbnail_button" class="green_button button_with_spinner" onclick="return generate_thumbnail_for_video_form(event);">Capture thumbnail</button>
+        <button id="generate_thumbnail_button" class="green_button button_with_spinner" onclick="return generate_thumbnail_for_video_form();">Capture thumbnail</button>
         {% endif %}
         <button
         class="red_button button_with_confirm"
@@ -389,7 +389,7 @@ function delete_photo_from_disk_form()
     api.photos.delete(PHOTO_ID, true, api.photos.callback_go_to_search);
 }
 
-function generate_thumbnail_for_video_form(event)
+function generate_thumbnail_for_video_form()
 {
     const timestamp = document.querySelector("#right video").currentTime;
     const special = {"timestamp": timestamp};
