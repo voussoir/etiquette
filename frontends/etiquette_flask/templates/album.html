@@ -253,7 +253,7 @@ const ALBUM_ID = undefined;
 
         {% set photos = album.get_photos() %}
         {% if photos %}
-        <div id="hierarchy_photos" class="panel">
+        <div id="hierarchy_photos" class="photos_holder panel">
             <h3>{{photos|length}} Photos</h3>
             <div id="photo_list">
             {% for photo in photos|sort(attribute='basename', case_sensitive=False) %}

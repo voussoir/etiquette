@@ -371,7 +371,7 @@
 
         {{prev_next_buttons()}}
 
-        <div id="search_results_holder">
+        <div id="search_results_holder" class="photos_holder">
             {% for result in results %}
                 {% if result.__class__.__name__ == 'Photo' %}
                 {{photo_card.create_photo_card(result, view=search_kwargs["view"])}}
