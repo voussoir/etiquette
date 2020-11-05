@@ -19,6 +19,12 @@
     <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
+#left
+{
+    display: grid;
+    grid-row-gap: 8px;
+    grid-auto-rows: max-content;
+}
 #right
 {
     display: grid;
@@ -90,10 +96,10 @@
 <div id="content_body" class="sticky_side_right sticky_bottom_right">
 <div id="left">
     <div class="panel">The clipboard contains <span class="clipboard_count">0</span> items.
-    <button id="clear_clipboard_button" class="red_button" onclick="return photo_clipboard.clear_clipboard();">Clear it.</button>
+        <button id="clear_clipboard_button" class="red_button" onclick="return photo_clipboard.clear_clipboard();">Clear it.</button>
     </div>
 
-    <div id="photo_card_holder">
+    <div id="clipboard_photos_holder" class="photos_holder panel">
     </div>
 </div>
 <div id="right">
@@ -131,7 +137,7 @@
 <script type="text/javascript">
 const divs = {};
 const needed = new Set();
-const holder = document.getElementById("photo_card_holder");
+const holder = document.getElementById("clipboard_photos_holder");
 
 const add_box = document.getElementById("add_tag_textbox");
 const add_button = document.getElementById("add_tag_button");
