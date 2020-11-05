@@ -12,12 +12,6 @@
     {
         --narrow: 1;
     }
-    .photos_holder
-    {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
 }
 
 .hidden

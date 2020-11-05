@@ -106,6 +106,12 @@ input, select, textarea
         background-color: var(--color_transparency);
         z-index: -1;
     }
+    .photos_holder
+    {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
 }
 
 .editor_input
