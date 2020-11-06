@@ -92,7 +92,7 @@ def add_tag_argparse(args):
     photodb = find_photodb()
 
     tag = photodb.get_tag(name=args.tag_name)
-    if args.photo_id_args or args.photo_search_args:
+    if args.any_id_args:
         photos = get_photos_from_args(args)
     else:
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
@@ -162,9 +162,12 @@ def set_unset_searchhidden_argparse(args, searchhidden):
     if args.album_search_args:
         args.album_search_args.is_searchhidden = not searchhidden
 
-    photos = get_photos_from_args(args)
-    albums = get_albums_from_args(args)
-    photos.extend(photo for album in albums for photo in album.walk_photos())
+    if args.any_id_args:
+        photos = get_photos_from_args(args)
+        albums = get_albums_from_args(args)
+        photos.extend(photo for album in albums for photo in album.walk_photos())
+    else:
+        photos = search_in_cwd(yield_photos=True, yield_albums=False)
 
     for photo in photos:
         print(photo)
@@ -320,6 +323,7 @@ def main(argv):
     args.album_search_args = album_search_args
     args.photo_id_args = photo_id_args
     args.album_id_args = album_id_args
+    args.any_id_args = bool(photo_search_args or album_search_args or photo_id_args or album_id_args)
 
     return args.func(args)
 
