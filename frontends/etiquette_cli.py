@@ -95,7 +95,7 @@ def add_tag_argparse(args):
     if args.photo_id_args or args.photo_search_args:
         photos = get_photos_from_args(args)
     else:
-        photos = search_in_cwd()
+        photos = search_in_cwd(yield_photos=True, yield_albums=False)
 
     for photo in photos:
         photo.add_tag(tag)
