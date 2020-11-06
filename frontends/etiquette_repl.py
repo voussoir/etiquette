@@ -35,7 +35,7 @@ def photag(photo_id):
 
 def erepl_argparse(args):
     global P
-    P = etiquette.photodb.PhotoDB('.', create=args.create)
+    P = etiquette.photodb.PhotoDB(create=args.create)
 
     if args.exec_statement:
         exec(args.exec_statement)
