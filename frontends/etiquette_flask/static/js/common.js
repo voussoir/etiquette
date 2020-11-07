@@ -63,8 +63,8 @@ function _request(method, url, callback)
 
     The response will have the following structure:
     {
-        "completed": true / false,
         "meta": {
+            "completed": true / false,
             "status": If the connection failed or request otherwise could not
                 complete, `status` will be 0. If the request completed,
                 `status` will be the HTTP response code.
@@ -74,13 +74,12 @@ function _request(method, url, callback)
                 and `response.data` will be undefined.
             "request_url": The URL exactly as given to this call.
         }
-        "data": {JSON parsed from server response}.
+        "data": {JSON parsed from server response if json_ok}.
     }
     */
     const request = new XMLHttpRequest();
     const response = {
-        "completed": false,
-        "meta": {"status": 0},
+        "meta": {"completed": false, "status": 0},
     };
 
     request.onreadystatechange = function()
@@ -104,7 +103,7 @@ function _request(method, url, callback)
 
         if (request.status != 0)
         {
-            response.completed = true;
+            response.meta.completed = true;
             try
             {
                 response.data = JSON.parse(request.responseText);
