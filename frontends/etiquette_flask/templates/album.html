@@ -295,7 +295,7 @@ function add_child(child_id)
     {
         return;
     }
-    api.albums.add_child(ALBUM_ID, child_id, common.refresh);
+    api.albums.add_child(ALBUM_ID, child_id, common.refresh_or_alert);
 }
 
 function delete_album_form()
@@ -305,18 +305,18 @@ function delete_album_form()
 
 function refresh_associated_directories_form()
 {
-    api.albums.refresh_directories(ALBUM_ID, common.refresh);
+    api.albums.refresh_directories(ALBUM_ID, common.refresh_or_alert);
 }
 
 function paste_photo_clipboard()
 {
     const photo_ids = Array.from(photo_clipboard.clipboard);
-    api.albums.add_photos(ALBUM_ID, photo_ids, common.refresh);
+    api.albums.add_photos(ALBUM_ID, photo_ids, common.refresh_or_alert);
 }
 function unpaste_photo_clipboard()
 {
     const photo_ids = Array.from(photo_clipboard.clipboard);
-    api.albums.remove_photos(ALBUM_ID, photo_ids, common.refresh);
+    api.albums.remove_photos(ALBUM_ID, photo_ids, common.refresh_or_alert);
 }
 
 function rename_ed_on_open(ed, edit_element_map, display_element_map)
@@ -450,16 +450,16 @@ function on_album_drag_drop(event)
 
     if (parent_id === "root")
     {
-        api.albums.remove_child(ALBUM_ID, child_id, common.refresh);
+        api.albums.remove_child(ALBUM_ID, child_id, common.refresh_or_alert);
     }
     else if (ALBUM_ID)
     {
         api.albums.add_child(parent_id, child_id, null);
-        api.albums.remove_child(ALBUM_ID, child_id, common.refresh);
+        api.albums.remove_child(ALBUM_ID, child_id, common.refresh_or_alert);
     }
     else
     {
-        api.albums.add_child(parent_id, child_id, common.refresh);
+        api.albums.add_child(parent_id, child_id, common.refresh_or_alert);
     }
 }
 </script>

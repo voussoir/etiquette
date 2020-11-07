@@ -418,7 +418,7 @@ function generate_thumbnail_callback(response)
 
 function refresh_metadata_form()
 {
-    api.photos.refresh_metadata(PHOTO_ID, common.refresh);
+    api.photos.refresh_metadata(PHOTO_ID, common.refresh_or_alert);
 }
 
 function set_searchhidden_form()

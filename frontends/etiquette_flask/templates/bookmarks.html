@@ -108,13 +108,13 @@ function create_bookmark_form()
     {
         return;
     }
-    return api.bookmarks.create(url, title, common.refresh);
+    return api.bookmarks.create(url, title, common.refresh_or_alert);
 }
 
 function delete_bookmark_form(event)
 {
     const id = event.target.closest(".bookmark_card").dataset.id;
-    api.bookmarks.delete(id, common.refresh);
+    api.bookmarks.delete(id, common.refresh_or_alert);
 }
 
 function on_open(ed, edit_element_map)

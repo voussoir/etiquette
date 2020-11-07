@@ -26,7 +26,7 @@ draggable=true
         {% if unlink_parent is not none %}
         <button
         class="remove_child_button button_with_confirm red_button"
-        data-onclick="return api.albums.remove_child('{{unlink_parent.id}}', '{{album.id}}', common.refresh);"
+        data-onclick="return api.albums.remove_child('{{unlink_parent.id}}', '{{album.id}}', common.refresh_or_alert);"
         data-prompt="Remove child?"
         data-holder-class="remove_child_button"
         data-confirm-class="red_button"
