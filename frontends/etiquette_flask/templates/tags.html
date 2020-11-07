@@ -329,6 +329,12 @@ function remove_synonym_form(event)
 
 function tag_action_callback(response)
 {
+    if (response.meta.status !== 200)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
+
     let datas = response.data;
     if (!Array.isArray(datas))
     {
@@ -387,23 +393,25 @@ function rename_ed_on_save(ed, edit_element_map, display_element_map)
 {
     function callback(response)
     {
-        console.log(response);
         ed.hide_spinner();
-        if (response.meta.status == 200)
+        if (response.meta.status !== 200)
         {
-            const new_name = response.data.name;
-            const new_description = response.data.description;
-            document.title = new_name + " | Tags";
-            SPECIFIC_TAG = new_name;
-            window.history.replaceState(null, null, "/tag/" + new_name);
-            name_editor.value = new_name;
-            name_display.href = "/search?tag_musts=" + new_name;
-            description_editor.value = new_description;
-            ed.save();
-            if (new_description === "")
-            {
-                description_display.classList.add("hidden");
-            }
+            alert(JSON.stringify(response));
+            return;
+        }
+
+        const new_name = response.data.name;
+        const new_description = response.data.description;
+        document.title = new_name + " | Tags";
+        SPECIFIC_TAG = new_name;
+        window.history.replaceState(null, null, "/tag/" + new_name);
+        name_editor.value = new_name;
+        name_display.href = "/search?tag_musts=" + new_name;
+        description_editor.value = new_description;
+        ed.save();
+        if (new_description === "")
+        {
+            description_display.classList.add("hidden");
         }
     }
 

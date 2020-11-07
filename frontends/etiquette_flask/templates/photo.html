@@ -299,8 +299,8 @@ function add_photo_tag_form()
 
 function add_photo_tag_callback(response)
 {
-    add_remove_photo_tag_callback(response);
-    if (response.meta.status !== 200)
+    const abort = add_remove_photo_tag_callback(response);
+    if (abort)
     {
         return;
     }
@@ -335,8 +335,8 @@ function remove_photo_tag_form(photo_id, tagname)
 
 function remove_photo_tag_callback(response)
 {
-    add_remove_photo_tag_callback(response);
-    if (response.meta.status !== 200)
+    const abort = add_remove_photo_tag_callback(response);
+    if (abort)
     {
         return;
     }
@@ -353,12 +353,19 @@ function remove_photo_tag_callback(response)
 
 function add_remove_photo_tag_callback(response)
 {
+    if (! response.meta.json_ok)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
     let message_text;
     let message_positivity;
+    let abort;
     if ("error_type" in response.data)
     {
         message_positivity = "message_negative";
         message_text = response.data.error_message;
+        abort = true;
     }
     else
     {
@@ -373,12 +380,10 @@ function add_remove_photo_tag_callback(response)
         {
             message_text = "Removed tag " + tagname;
         }
-        else
-        {
-            return;
-        }
+        abort = false;
     }
     common.create_message_bubble(message_area, message_positivity, message_text, 8000);
+    return abort;
 }
 
 function delete_photo_form()
@@ -400,20 +405,26 @@ function generate_thumbnail_for_video_form()
 
 function generate_thumbnail_callback(response)
 {
+    const generate_thumbnail_button = document.getElementById("generate_thumbnail_button");
+    window[generate_thumbnail_button.dataset.spinnerCloser]();
+    if (! response.meta.json_ok)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
     if (response.meta.status == 200)
     {
         common.create_message_bubble(message_area, "message_positive", "Thumbnail captured", 8000);
     }
-    else if (response.meta.json_ok)
+    else if ("error_type" in response.data)
     {
         common.create_message_bubble(message_area, "message_negative", response.data.error_message, 8000);
     }
     else
     {
         alert(JSON.stringify(response));
+        return;
     }
-    const generate_thumbnail_button = document.getElementById("generate_thumbnail_button");
-    window[generate_thumbnail_button.dataset.spinnerCloser]();
 }
 
 function refresh_metadata_form()

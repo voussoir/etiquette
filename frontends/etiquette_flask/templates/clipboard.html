@@ -209,6 +209,7 @@ function request_more_divs()
     {
         if (response.meta.status !== 200)
         {
+            alert(JSON.stringify(response));
             return;
         }
         for (photo_id in response.data)
@@ -238,6 +239,11 @@ photo_clipboard.on_save_hooks.push(my_clipboard_load_save_hook);
 
 function add_remove_tag_callback(response)
 {
+    if (! response.meta.json_ok)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
     const tagname = response.data.tagname;
     const message_area = document.getElementById("message_area");
     let message_positivity;
@@ -309,6 +315,11 @@ const refresh_metadata_button = document.getElementById("refresh_metadata_button
 function refresh_metadata_callback(response)
 {
     window[refresh_metadata_button.dataset.spinnerCloser]();
+    if (! response.meta.json_ok)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
     if ("error_type" in response.data)
     {
         const message_area = document.getElementById("message_area");
@@ -337,6 +348,11 @@ function refresh_metadata_form()
 
 function set_unset_searchhidden_callback(response)
 {
+    if (! response.meta.json_ok)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
     const message_area = document.getElementById("message_area");
     let message_positivity;
     let message_text;

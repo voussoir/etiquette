@@ -124,6 +124,11 @@ function register_form(event)
 
 function login_register_callback(response)
 {
+    if (! response.json_ok)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
     if ("error_type" in response.data)
     {
         common.create_message_bubble(message_area, "message_negative", response.data.error_message);
