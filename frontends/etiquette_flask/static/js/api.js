@@ -103,27 +103,23 @@ function remove_photos(album_id, photo_ids, callback)
 api.albums.callback_follow =
 function callback_follow(response)
 {
-    if (response["meta"]["status"] == 200 && response["data"]["id"])
+    if ((response.meta.status !== 200) || (! response.json_ok) || (! response.data.id))
     {
-        window.location.href = "/album/" + response["data"]["id"];
+        alert(JSON.stringify(response));
+        return;
     }
-    else
-    {
-        console.log(response);
-    }
+    window.location.href = "/album/" + response.data.id;
 }
 
 api.albums.callback_go_to_albums =
 function callback_go_to_albums(response)
 {
-    if (response["meta"]["status"] == 200)
+    if (response.meta.status !== 200)
     {
-        window.location.href = "/albums";
+        alert(JSON.stringify(response));
+        return;
     }
-    else
-    {
-        console.log(response);
-    }
+    window.location.href = "/albums";
 }
 
 /**************************************************************************************************/
@@ -294,16 +290,14 @@ function unset_searchhidden(photo_id, callback)
 }
 
 api.photos.callback_go_to_search =
-function callback_go_to_albums(response)
+function callback_go_to_search(response)
 {
-    if (response["meta"]["status"] == 200)
+    if (response.meta.status !== 200)
     {
-        window.location.href = "/search";
+        alert(JSON.stringify(response));
+        return;
     }
-    else
-    {
-        console.log(response);
-    }
+    window.location.href = "/search";
 }
 
 /**************************************************************************************************/
@@ -382,14 +376,12 @@ function remove_synonym(tag_name, syn_name, callback)
 api.tags.callback_go_to_tags =
 function callback_go_to_tags(response)
 {
-    if (response["meta"]["status"] == 200)
+    if (response.meta.status !== 200)
     {
-        window.location.href = "/tags";
+        alert(JSON.stringify(response));
+        return;
     }
-    else
-    {
-        console.log(response);
-    }
+    window.location.href = "/tags";
 }
 
 /**************************************************************************************************/
