@@ -17,14 +17,16 @@ import gevent.pywsgi
 import sys
 
 from voussoirkit import pathclass
+from voussoirkit import vlogging
 
 import backend
-
-####################################################################################################
 
 site = backend.site
 
 HTTPS_DIR = pathclass.Path(__file__).parent.with_child('https')
+LOG_LEVEL = vlogging.NOTSET
+
+####################################################################################################
 
 def etiquette_flask_launch(
         *,
@@ -52,7 +54,7 @@ def etiquette_flask_launch(
     if localhost_only:
         site.localhost_only = True
 
-    backend.common.init_photodb(create=create)
+    backend.common.init_photodb(create=create, log_level=LOG_LEVEL)
 
     message = f'Starting server on port {port}'
     if use_https:
@@ -73,6 +75,9 @@ def etiquette_flask_launch_argparse(args):
     )
 
 def main(argv):
+    global LOG_LEVEL
+    (LOG_LEVEL, argv) = vlogging.get_level_by_argv(argv)
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument('port', nargs='?', type=int, default=5000)

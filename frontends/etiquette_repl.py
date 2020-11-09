@@ -10,8 +10,11 @@ import sys
 import traceback
 
 from voussoirkit import getpermission
+from voussoirkit import vlogging
 
 import etiquette
+
+LOG_LEVEL = vlogging.NOTSET
 
 def easytagger():
     while True:
@@ -35,7 +38,7 @@ def photag(photo_id):
 
 def erepl_argparse(args):
     global P
-    P = etiquette.photodb.PhotoDB(create=args.create)
+    P = etiquette.photodb.PhotoDB(create=args.create, log_level=LOG_LEVEL)
 
     if args.exec_statement:
         exec(args.exec_statement)
@@ -53,6 +56,9 @@ def erepl_argparse(args):
                 break
 
 def main(argv):
+    global LOG_LEVEL
+    (LOG_LEVEL, argv) = vlogging.get_level_by_argv(argv)
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--exec', dest='exec_statement', default=None)

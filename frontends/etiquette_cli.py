@@ -3,8 +3,11 @@ import sys
 
 from voussoirkit import getpermission
 from voussoirkit import pathclass
+from voussoirkit import vlogging
 
 import etiquette
+
+LOG_LEVEL = vlogging.NOTSET
 
 class CantFindPhotoDB(Exception):
     pass
@@ -24,7 +27,12 @@ def find_photodb():
         if path == path.parent:
             raise CantFindPhotoDB()
         path = path.parent
-    photodb = etiquette.photodb.PhotoDB(path.with_child('_etiquette'), create=False)
+
+    photodb = etiquette.photodb.PhotoDB(
+        path.with_child('_etiquette'),
+        create=False,
+        log_level=LOG_LEVEL,
+    )
     photodbs[path] = photodb
     return photodb
 
@@ -215,6 +223,9 @@ def tag_breplace_argparse(args):
     photodb.commit()
 
 def main(argv):
+    global LOG_LEVEL
+    (LOG_LEVEL, argv) = vlogging.get_level_by_argv(argv)
+
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers()
 
