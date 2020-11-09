@@ -253,8 +253,6 @@ DEFAULT_CONFIGNAME = 'config.json'
 DEFAULT_THUMBDIR = 'site_thumbnails'
 
 DEFAULT_CONFIGURATION = {
-    'log_level': logging.DEBUG,
-
     'cache_size': {
         'album': 1000,
         'bookmark': 100,

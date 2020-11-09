@@ -15,6 +15,7 @@ from voussoirkit import pathclass
 from voussoirkit import ratelimiter
 from voussoirkit import spinal
 from voussoirkit import sqlhelpers
+from voussoirkit import vlogging
 
 from . import constants
 from . import decorators
@@ -1711,6 +1712,7 @@ class PhotoDB(
             *,
             create=True,
             ephemeral=False,
+            log_level=vlogging.NOTSET,
             skip_version_check=False,
         ):
         '''
@@ -1759,8 +1761,8 @@ class PhotoDB(
             raise exceptions.BadDataDirectory(self.data_directory.absolute_path)
 
         # LOGGING
-        self.log = logging.getLogger('etiquette:%s' % self.data_directory.absolute_path)
-        self.log.setLevel(logging.DEBUG)
+        self.log = vlogging.getLogger('etiquette:%s' % self.data_directory.absolute_path)
+        self.log.setLevel(log_level)
 
         # DATABASE
         if self.ephemeral:
@@ -1791,10 +1793,6 @@ class PhotoDB(
         # CONFIG
         self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
         self.load_config()
-        if self.config['log_level'] is None:
-            self.log.setLevel(logging.NOTSET)
-        else:
-            self.log.setLevel(self.config['log_level'])
 
         self.caches = {
             'album': cacheclass.Cache(maxlen=self.config['cache_size']['album']),
