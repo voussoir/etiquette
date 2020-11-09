@@ -85,7 +85,7 @@ class PDBAlbumMixin:
 
         # Ok.
         album_id = self.generate_id(table='albums')
-        self.log.debug('New Album: %s %s', album_id, title)
+        self.log.info('New Album: %s %s.', album_id, title)
 
         data = {
             'id': album_id,
@@ -115,7 +115,7 @@ class PDBAlbumMixin:
         directories = [directory.absolute_path for directory in directories if not directory.exists]
         if not directories:
             return
-        self.log.debug('Purging associated directories %s', directories)
+        self.log.info('Purging associated directories %s.', directories)
         directories = sqlhelpers.listify(directories)
 
         query = f'DELETE FROM album_associated_directories WHERE directory in {directories}'
@@ -174,7 +174,7 @@ class PDBBookmarkMixin:
 
         # Ok.
         bookmark_id = self.generate_id(table='bookmarks')
-        self.log.debug('New Bookmark: %s %s %s', bookmark_id, title, url)
+        self.log.info('New Bookmark: %s %s %s.', bookmark_id, title, url)
 
         data = {
             'id': bookmark_id,
@@ -485,7 +485,7 @@ class PDBPhotoMixin:
 
         # Ok.
         photo_id = self.generate_id(table='photos')
-        self.log.debug('New Photo: %s %s', photo_id, filepath.absolute_path)
+        self.log.info('New Photo: %s %s.', photo_id, filepath.absolute_path)
 
         data = {
             'id': photo_id,
@@ -1008,7 +1008,6 @@ class PDBSQLMixin:
             # method instead of allowing sql's release to commit.
             self.commit()
         else:
-            self.log.log(5, 'Releasing savepoint %s', savepoint)
             self.sql_execute(f'RELEASE "{savepoint}"')
             self.savepoints = helpers.slice_before(self.savepoints, savepoint)
 
@@ -1040,7 +1039,7 @@ class PDBSQLMixin:
             task['action'](*args, **kwargs)
 
         if savepoint is not None:
-            self.log.debug('Rolling back to %s', savepoint)
+            self.log.debug('Rolling back to %s.', savepoint)
             self.sql_execute(f'ROLLBACK TO "{savepoint}"')
             self.savepoints = helpers.slice_before(self.savepoints, savepoint)
             self.on_commit_queue = helpers.slice_before(self.on_commit_queue, savepoint)
@@ -1228,7 +1227,7 @@ class PDBTagMixin:
 
         # Ok.
         tag_id = self.generate_id(table='tags')
-        self.log.debug('New Tag: %s %s', tag_id, tagname)
+        self.log.info('New Tag: %s %s.', tag_id, tagname)
 
         self.caches['tag_exports'].clear()
 
@@ -1414,7 +1413,7 @@ class PDBUserMixin:
 
         # Ok.
         user_id = self.generate_user_id()
-        self.log.debug('New User: %s %s', user_id, username)
+        self.log.info('New User: %s %s.', user_id, username)
 
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
 
@@ -1617,7 +1616,7 @@ class PDBUtilMixin:
 
         albums_by_path = {}
 
-        self.log.debug('Digesting directory "%s".', directory.absolute_path)
+        self.log.info('Digesting directory "%s".', directory.absolute_path)
         walk_generator = spinal.walk_generator(
             directory,
             exclude_directories=exclude_directories,
@@ -1817,7 +1816,7 @@ class PhotoDB(
             )
 
     def _first_time_setup(self):
-        self.log.debug('Running first-time database setup.')
+        self.log.info('Running first-time database setup.')
         self.sql.executescript(constants.DB_INIT)
         self.sql.commit()
 

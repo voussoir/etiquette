@@ -111,7 +111,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         if self.has_child(member):
             return BAIL
 
-        self.photodb.log.debug('Adding child %s to %s.', member, self)
+        self.photodb.log.info('Adding child %s to %s.', member, self)
 
         for my_ancestor in self.walk_parents():
             if my_ancestor == member:
@@ -215,7 +215,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         if not self.has_child(member):
             return BAIL
 
-        self.photodb.log.debug('Removing child %s from %s.', member, self)
+        self.photodb.log.info('Removing child %s from %s.', member, self)
 
         pairs = {
             'parentid': self.id,
@@ -321,7 +321,7 @@ class Album(ObjectBase, GroupableMixin):
         if self.has_associated_directory(path):
             return
 
-        self.photodb.log.debug('Adding directory "%s" to %s.', path.absolute_path, self)
+        self.photodb.log.info('Adding directory "%s" to %s.', path.absolute_path, self)
         data = {'albumid': self.id, 'directory': path.absolute_path}
         self.photodb.sql_insert(table='album_associated_directories', data=data)
 
@@ -352,7 +352,7 @@ class Album(ObjectBase, GroupableMixin):
         return super().add_children(*args, **kwargs)
 
     def _add_photo(self, photo):
-        self.photodb.log.debug('Adding photo %s to %s', photo, self)
+        self.photodb.log.info('Adding photo %s to %s.', photo, self)
         data = {'albumid': self.id, 'photoid': photo.id}
         self.photodb.sql_insert(table='album_photo_rel', data=data)
 
@@ -397,7 +397,7 @@ class Album(ObjectBase, GroupableMixin):
     @decorators.required_feature('album.edit')
     @decorators.transaction
     def delete(self, *, delete_children=False):
-        self.photodb.log.debug('Deleting %s', self)
+        self.photodb.log.info('Deleting %s.', self)
         GroupableMixin.delete(self, delete_children=delete_children)
         self.photodb.sql_delete(table='album_associated_directories', pairs={'albumid': self.id})
         self.photodb.sql_delete(table='album_photo_rel', pairs={'albumid': self.id})
@@ -522,7 +522,7 @@ class Album(ObjectBase, GroupableMixin):
         return super().remove_children(*args, **kwargs)
 
     def _remove_photo(self, photo):
-        self.photodb.log.debug('Removing photo %s from %s', photo, self)
+        self.photodb.log.info('Removing photo %s from %s.', photo, self)
         pairs = {'albumid': self.id, 'photoid': photo.id}
         self.photodb.sql_delete(table='album_photo_rel', pairs=pairs)
 
@@ -760,16 +760,16 @@ class Photo(ObjectBase):
         # keep our current one.
         existing = self.has_tag(tag, check_children=True)
         if existing:
-            self.photodb.log.debug('Preferring existing %s over %s', existing, tag)
+            self.photodb.log.debug('Preferring existing %s over %s.', existing, tag)
             return existing
 
         # If the new tag is more specific, remove our current one for it.
         for parent in tag.walk_parents():
             if self.has_tag(parent, check_children=False):
-                self.photodb.log.debug('Preferring new %s over %s', tag, parent)
+                self.photodb.log.debug('Preferring new %s over %s.', tag, parent)
                 self.remove_tag(parent)
 
-        self.photodb.log.debug('Applying %s to %s', tag, self)
+        self.photodb.log.info('Applying %s to %s.', tag, self)
 
         data = {
             'photoid': self.id,
@@ -816,7 +816,7 @@ class Photo(ObjectBase):
         '''
         Delete the Photo and its relation to any tags and albums.
         '''
-        self.photodb.log.debug('Deleting %s', self)
+        self.photodb.log.info('Deleting %s.', self)
         self.photodb.sql_delete(table='photo_tag_rel', pairs={'photoid': self.id})
         self.photodb.sql_delete(table='album_photo_rel', pairs={'photoid': self.id})
         self.photodb.sql_delete(table='photos', pairs={'id': self.id})
@@ -824,10 +824,10 @@ class Photo(ObjectBase):
         if delete_file:
             path = self.real_path.absolute_path
             if self.photodb.config['recycle_instead_of_delete']:
-                self.photodb.log.debug('Recycling %s', path)
+                self.photodb.log.debug('Recycling %s.', path)
                 action = send2trash.send2trash
             else:
-                self.photodb.log.debug('Deleting %s', path)
+                self.photodb.log.debug('Deleting %s.', path)
                 action = os.remove
 
             self.photodb.on_commit_queue.append({
@@ -861,7 +861,7 @@ class Photo(ObjectBase):
         return_filepath = None
 
         if self.simple_mimetype == 'image':
-            self.photodb.log.debug('Thumbnailing %s', self.real_path.absolute_path)
+            self.photodb.log.info('Thumbnailing %s.', self.real_path.absolute_path)
             try:
                 image = helpers.generate_image_thumbnail(
                     self.real_path.absolute_path,
@@ -875,7 +875,7 @@ class Photo(ObjectBase):
                 return_filepath = hopeful_filepath
 
         elif self.simple_mimetype == 'video' and constants.ffmpeg:
-            self.photodb.log.debug('Thumbnailing %s', self.real_path.absolute_path)
+            self.photodb.log.info('Thumbnailing %s.', self.real_path.absolute_path)
             try:
                 success = helpers.generate_video_thumbnail(
                     self.real_path.absolute_path,
@@ -1027,7 +1027,7 @@ class Photo(ObjectBase):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
         '''
-        self.photodb.log.debug('Reloading metadata for %s', self)
+        self.photodb.log.info('Reloading metadata for %s.', self)
 
         self.bytes = None
         self.dev_ino = None
@@ -1090,7 +1090,7 @@ class Photo(ObjectBase):
 
         self.photodb.assert_no_such_photo_by_path(filepath=new_filepath)
 
-        self.photodb.log.debug('Relocating %s to "%s"', self, new_filepath.absolute_path)
+        self.photodb.log.info('Relocating %s to "%s".', self, new_filepath.absolute_path)
         data = {
             'id': self.id,
             'filepath': new_filepath.absolute_path,
@@ -1104,7 +1104,7 @@ class Photo(ObjectBase):
     def remove_tag(self, tag):
         tag = self.photodb.get_tag(name=tag)
 
-        self.photodb.log.debug('Removing %s from %s', tag, self)
+        self.photodb.log.info('Removing %s from %s.', tag, self)
         pairs = {'photoid': self.id, 'tagid': tag.id}
         self.photodb.sql_delete(table='photo_tag_rel', pairs=pairs)
 
@@ -1119,7 +1119,7 @@ class Photo(ObjectBase):
     def remove_tags(self, tags):
         tags = [self.photodb.get_tag(name=tag) for tag in tags]
 
-        self.photodb.log.debug('Removing %s from %s', tags, self)
+        self.photodb.log.info('Removing %s from %s.', tags, self)
         query = f'''
         DELETE FROM photo_tag_rel
         WHERE tagid IN {sqlhelpers.listify(tag.id for tag in tags)}
@@ -1159,7 +1159,7 @@ class Photo(ObjectBase):
 
         new_path.assert_not_exists()
 
-        self.photodb.log.debug('Renaming file "%s" -> "%s"', old_path.absolute_path, new_path.absolute_path)
+        self.photodb.log.info('Renaming file "%s" -> "%s".', old_path.absolute_path, new_path.absolute_path)
 
         new_path.parent.makedirs(exist_ok=True)
 
@@ -1345,7 +1345,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.photodb.assert_no_such_tag(name=synname)
 
-        self.photodb.log.debug('New synonym %s of %s', synname, self.name)
+        self.photodb.log.info('New synonym %s of %s.', synname, self.name)
 
         self.photodb.caches['tag_exports'].clear()
 
@@ -1423,7 +1423,7 @@ class Tag(ObjectBase, GroupableMixin):
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def delete(self, *, delete_children=False):
-        self.photodb.log.debug('Deleting %s', self)
+        self.photodb.log.info('Deleting %s.', self)
         super().delete(delete_children=delete_children)
         self.photodb.sql_delete(table='photo_tag_rel', pairs={'tagid': self.id})
         self.photodb.sql_delete(table='tag_synonyms', pairs={'mastername': self.name})
