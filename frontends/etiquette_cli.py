@@ -161,6 +161,20 @@ def search_argparse(args):
     for photo in photos:
         print(photo.real_path.absolute_path)
 
+def show_associated_directories_argparse(args):
+    if args.album_id_args or args.album_search_args:
+        albums = get_albums_from_args(args)
+    else:
+        albums = search_in_cwd(yield_photos=False, yield_albums=True)
+
+    for album in albums:
+        directories = album.get_associated_directories()
+        if not directories:
+            continue
+        directories = [f'"{d.absolute_path}"' for d in directories]
+        directories = ' '.join(directories)
+        print(f'{album} | {directories}')
+
 def set_unset_searchhidden_argparse(args, searchhidden):
     photodb = find_photodb()
 
@@ -304,6 +318,9 @@ def main(argv):
     p_search.add_argument('--orderby', dest='orderby', default=None)
     # p_search.add_argument('--yield_albums', '--yield-albums', dest='yield_albums', default=None)
     p_search.set_defaults(func=search_argparse)
+
+    p_show_associated_directories = subparsers.add_parser('show_associated_directories', aliases=['show-associated-directories'])
+    p_show_associated_directories.set_defaults(func=show_associated_directories_argparse)
 
     p_set_searchhidden = subparsers.add_parser('set_searchhidden', aliases=['set-searchhidden'])
     p_set_searchhidden.add_argument('--yes', dest='autoyes', action='store_true')
