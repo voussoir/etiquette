@@ -149,11 +149,6 @@ def checkerboard_image(color_1, color_2, image_size, checker_size):
         offset = not offset
     return image
 
-def collapse_whitespace(s):
-    s = s.strip()
-    s = re.sub(r'\s+', ' ', s)
-    return s
-
 def comma_space_split(s):
     '''
     Split the string apart by commas and spaces, discarding all extra

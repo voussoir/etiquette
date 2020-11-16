@@ -16,6 +16,7 @@ from voussoirkit import pathclass
 from voussoirkit import sentinel
 from voussoirkit import spinal
 from voussoirkit import sqlhelpers
+from voussoirkit import stringtools
 
 from . import constants
 from . import decorators
@@ -307,7 +308,7 @@ class Album(ObjectBase, GroupableMixin):
         if not isinstance(title, str):
             raise TypeError(f'Title must be {str}, not {type(title)}.')
 
-        title = helpers.collapse_whitespace(title)
+        title = stringtools.collapse_whitespace(title)
 
         return title
 
@@ -613,7 +614,7 @@ class Bookmark(ObjectBase):
         if not isinstance(title, str):
             raise TypeError(f'Title must be {str}, not {type(title)}.')
 
-        title = helpers.collapse_whitespace(title)
+        title = stringtools.collapse_whitespace(title)
 
         return title
 
@@ -1569,7 +1570,7 @@ class User(ObjectBase):
         if not isinstance(display_name, str):
             raise TypeError(f'Display name must be string, not {type(display_name)}.')
 
-        display_name = helpers.collapse_whitespace(display_name)
+        display_name = stringtools.collapse_whitespace(display_name)
 
         if display_name == '':
             return None
