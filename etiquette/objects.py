@@ -10,6 +10,7 @@ import send2trash
 import traceback
 
 from voussoirkit import bytestring
+from voussoirkit import hms
 from voussoirkit import pathclass
 from voussoirkit import sentinel
 from voussoirkit import spinal
@@ -847,7 +848,7 @@ class Photo(ObjectBase):
     def duration_string(self):
         if self.duration is None:
             return None
-        return helpers.seconds_to_hms(self.duration)
+        return hms.seconds_to_hms(self.duration)
 
     #@decorators.time_me
     @decorators.required_feature('photo.generate_thumbnail')

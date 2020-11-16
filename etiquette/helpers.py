@@ -13,6 +13,7 @@ import unicodedata
 import zipstream
 
 from voussoirkit import bytestring
+from voussoirkit import hms
 from voussoirkit import imagetools
 from voussoirkit import pathclass
 
@@ -364,22 +365,6 @@ def hyphen_range(s):
 
     return low, high
 
-def hms_to_seconds(hms):
-    '''
-    Convert hh:mm:ss string to an integer seconds.
-    '''
-    hms = hms.split(':')
-    seconds = 0
-    if len(hms) == 3:
-        seconds += int(hms[0]) * 3600
-        hms.pop(0)
-    if len(hms) == 2:
-        seconds += int(hms[0]) * 60
-        hms.pop(0)
-    if len(hms) == 1:
-        seconds += float(hms[0])
-    return seconds
-
 def is_xor(*args):
     '''
     Return True if and only if one arg is truthy.
@@ -417,7 +402,7 @@ def parse_unit_string(s):
     s = s.strip()
 
     if ':' in s:
-        return hms_to_seconds(s)
+        return hms.hms_to_seconds(s)
 
     elif all(c in '0123456789' for c in s):
         return int(s)
@@ -496,23 +481,6 @@ def remove_path_badchars(filepath, allowed=''):
 def run_generator(g):
     for x in g:
         pass
-
-def seconds_to_hms(seconds):
-    '''
-    Convert integer number of seconds to an hh:mm:ss string.
-    Only the necessary fields are used.
-    '''
-    seconds = math.ceil(seconds)
-    (minutes, seconds) = divmod(seconds, 60)
-    (hours, minutes) = divmod(minutes, 60)
-    parts = []
-    if hours:
-        parts.append(hours)
-    if hours or minutes:
-        parts.append(minutes)
-    parts.append(seconds)
-    hms = ':'.join(f'{part:02d}' for part in parts)
-    return hms
 
 def slice_before(li, item):
     index = li.index(item)
