@@ -1278,7 +1278,7 @@ class Tag(ObjectBase, GroupableMixin):
         #     valid_chars = constants.DEFAULT_CONFIGURATION['tag']['valid_chars']
 
         name = name.lower()
-        name = helpers.remove_control_characters(name)
+        name = stringtools.remove_control_characters(name)
         name = re.sub(r'\s+', ' ', name)
         name = name.strip(' .+')
         name = name.split('+')[0].split('.')[-1]

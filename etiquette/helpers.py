@@ -16,6 +16,7 @@ from voussoirkit import bytestring
 from voussoirkit import hms
 from voussoirkit import imagetools
 from voussoirkit import pathclass
+from voussoirkit import stringtools
 
 from . import constants
 from . import exceptions
@@ -413,21 +414,6 @@ def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=bytestring.
             yield chunk
             sent_amount += len(chunk)
 
-def remove_characters(text, characters):
-    translator = {ord(c): None for c in characters}
-    text = text.translate(translator)
-    return text
-
-def remove_control_characters(text):
-    '''
-    Thanks Alex Quinn
-    https://stackoverflow.com/a/19016117
-
-    unicodedata.category(character) returns some two-character string
-    where if [0] is a C then the character is a control character.
-    '''
-    return ''.join(c for c in text if unicodedata.category(c)[0] != 'C')
-
 def remove_path_badchars(filepath, allowed=''):
     '''
     Remove the bad characters seen in constants.FILENAME_BADCHARS, except
@@ -436,9 +422,9 @@ def remove_path_badchars(filepath, allowed=''):
     'file*name' -> 'filename'
     ('D:\\file*name', allowed=':\\') -> 'D:\\filename'
     '''
-    badchars = remove_characters(constants.FILENAME_BADCHARS, allowed)
-    filepath = remove_characters(filepath, badchars)
-    filepath = remove_control_characters(filepath)
+    badchars = stringtools.remove_characters(constants.FILENAME_BADCHARS, allowed)
+    filepath = stringtools.remove_characters(filepath, badchars)
+    filepath = stringtools.remove_control_characters(filepath)
 
     filepath = filepath.replace('/', os.sep)
     filepath = filepath.replace('\\', os.sep)
