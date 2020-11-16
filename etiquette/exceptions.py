@@ -1,13 +1,4 @@
-import re
-
-def pascal_to_loudsnakes(text):
-    '''
-    NoSuchPhoto -> NO_SUCH_PHOTO
-    '''
-    text = re.sub(r'([a-z])([A-Z])', r'\1_\2', text)
-    text = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', text)
-    text = text.upper()
-    return text
+from voussoirkit import stringtools
 
 class ErrorTypeAdder(type):
     '''
@@ -23,7 +14,7 @@ class ErrorTypeAdder(type):
     '''
     def __init__(cls, name, bases, clsdict):
         type.__init__(cls, name, bases, clsdict)
-        cls.error_type = pascal_to_loudsnakes(name)
+        cls.error_type = stringtools.pascal_to_loudsnakes(name)
 
 class EtiquetteException(Exception, metaclass=ErrorTypeAdder):
     '''
