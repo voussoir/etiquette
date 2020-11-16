@@ -38,7 +38,35 @@ def find_photodb():
 
 # HELPERS ##########################################################################################
 
+def get_photos_by_glob(pattern):
+    photodb = find_photodb()
+    pattern = pathclass.normalize_sep(pattern)
+
+    if pattern == '**':
+        return search_in_cwd(yield_photos=True, yield_albums=False)
+
+    cwd = pathclass.cwd()
+
+    (folder, pattern) = os.path.split(pattern)
+    if folder:
+        folder = cwd.join(folder)
+    else:
+        folder = cwd
+
+    files = [f for f in folder.glob(pattern) if f.is_file]
+    for file in files:
+        try:
+            photo = photodb.get_photo_by_path(file)
+        except etiquette.exceptions.NoSuchPhoto:
+            pass
+        yield photo
+
+def get_photos_by_globs(patterns):
+    for pattern in patterns:
+        yield from get_photos_by_glob(pattern)
+
 def get_photos_from_args(args):
+    photodb = find_photodb()
     photos = []
     if args.photo_id_args:
         photos.extend(photodb.get_photos_by_id(args.photo_id_args))
@@ -49,6 +77,7 @@ def get_photos_from_args(args):
     return photos
 
 def get_albums_from_args(args):
+    photodb = find_photodb()
     albums = []
     if args.album_id_args:
         albums.extend(photodb.get_albums_by_id(args.album_id_args))
@@ -102,6 +131,8 @@ def add_tag_argparse(args):
     tag = photodb.get_tag(name=args.tag_name)
     if args.any_id_args:
         photos = get_photos_from_args(args)
+    elif args.globs:
+        photos = get_photos_by_globs(args.globs)
     else:
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
 
@@ -265,6 +296,7 @@ def main(argv):
 
     p_add_tag = subparsers.add_parser('add_tag', aliases=['add-tag'])
     p_add_tag.add_argument('tag_name')
+    p_add_tag.add_argument('globs', nargs='*')
     p_add_tag.add_argument('--yes', dest='autoyes', action='store_true')
     p_add_tag.set_defaults(func=add_tag_argparse)
 
