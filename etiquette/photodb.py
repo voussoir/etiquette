@@ -1371,7 +1371,7 @@ class PDBUserMixin:
     def get_users_by_id(self, ids):
         return self.get_things_by_id('user', ids)
 
-    def get_users_by_sql(self):
+    def get_users_by_sql(self, query, bindings=None):
         return self.get_things_by_sql('user', query, bindings)
 
     @decorators.required_feature('user.login')
