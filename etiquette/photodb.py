@@ -1760,7 +1760,7 @@ class PhotoDB(
             raise exceptions.BadDataDirectory(self.data_directory.absolute_path)
 
         # LOGGING
-        self.log = vlogging.getLogger('etiquette:%s' % self.data_directory.absolute_path)
+        self.log = vlogging.getLogger(f'{__name__}:{self.data_directory.absolute_path}')
         self.log.setLevel(log_level)
 
         # DATABASE
