@@ -187,3 +187,7 @@ Here are some thoughts about the kinds of features that need to exist within the
 - Deleting tags (`can_delete_tag`)
     - Only those that I have created (`can_delete_tag_own`)
     - Any time vs. only if they are not in use (`can_delete_tag_in_use`)
+
+https://github.com/voussoir/etiquette
+
+https://gitlab.com/voussoir/etiquette
