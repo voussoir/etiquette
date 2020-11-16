@@ -149,17 +149,6 @@ def checkerboard_image(color_1, color_2, image_size, checker_size):
         offset = not offset
     return image
 
-def comma_space_split(s):
-    '''
-    Split the string apart by commas and spaces, discarding all extra
-    whitespace and blank phrases.
-
-    'a b, c,,d' -> ['a', 'b', 'c', 'd']
-    '''
-    if s is None:
-        return s
-    return re.split(r'[ ,]+', s.strip())
-
 def decollide_names(things, namer):
     '''
     When generating zip files, or otherwise exporting photos to disk, it is

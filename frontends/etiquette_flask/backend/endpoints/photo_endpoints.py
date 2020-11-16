@@ -3,6 +3,7 @@ import traceback
 import urllib.parse
 
 from voussoirkit import cacheclass
+from voussoirkit import stringtools
 
 import etiquette
 
@@ -80,7 +81,7 @@ def post_photo_delete(photo_id):
 
 def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
     if isinstance(photo_ids, str):
-        photo_ids = etiquette.helpers.comma_space_split(photo_ids)
+        photo_ids = stringtools.comma_space_split(photo_ids)
 
     photos = list(common.P_photos(photo_ids, response_type='json'))
     tag = common.P_tag(tagname, response_type='json')
@@ -156,7 +157,7 @@ def post_photo_generate_thumbnail(photo_id):
 
 def post_photo_refresh_metadata_core(photo_ids):
     if isinstance(photo_ids, str):
-        photo_ids = etiquette.helpers.comma_space_split(photo_ids)
+        photo_ids = stringtools.comma_space_split(photo_ids)
 
     photos = list(common.P_photos(photo_ids, response_type='json'))
 
@@ -199,7 +200,7 @@ def post_photo_unset_searchhidden(photo_id):
 
 def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
     if isinstance(photo_ids, str):
-        photo_ids = etiquette.helpers.comma_space_split(photo_ids)
+        photo_ids = stringtools.comma_space_split(photo_ids)
 
     photos = list(common.P_photos(photo_ids, response_type='json'))
 
@@ -235,7 +236,7 @@ def get_clipboard_page():
 def post_batch_photos_photo_cards():
     photo_ids = request.form['photo_ids']
 
-    photo_ids = etiquette.helpers.comma_space_split(photo_ids)
+    photo_ids = stringtools.comma_space_split(photo_ids)
     photos = list(common.P_photos(photo_ids, response_type='json'))
 
     # Photo filenames are prevented from having colons, so using it as a split
@@ -294,7 +295,7 @@ def post_batch_photos_download_zip():
     that they want, and then they can retrieve the zip itself via GET.
     '''
     photo_ids = request.form['photo_ids']
-    photo_ids = etiquette.helpers.comma_space_split(photo_ids)
+    photo_ids = stringtools.comma_space_split(photo_ids)
 
     photos = list(common.P_photos(photo_ids, response_type='json'))
     if not photos:

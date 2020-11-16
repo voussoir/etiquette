@@ -3,6 +3,7 @@ import sys
 
 from voussoirkit import getpermission
 from voussoirkit import pathclass
+from voussoirkit import stringtools
 from voussoirkit import vlogging
 
 import etiquette
@@ -376,8 +377,8 @@ def main(argv):
 
     photo_search_args = p_search.parse_args(photo_search_args) if photo_search_args else None
     album_search_args = p_search.parse_args(album_search_args) if album_search_args else None
-    photo_id_args = [id for arg in photo_id_args for id in etiquette.helpers.comma_space_split(arg)]
-    album_id_args = [id for arg in album_id_args for id in etiquette.helpers.comma_space_split(arg)]
+    photo_id_args = [id for arg in photo_id_args for id in stringtools.comma_space_split(arg)]
+    album_id_args = [id for arg in album_id_args for id in stringtools.comma_space_split(arg)]
 
     args.photo_search_args = photo_search_args
     args.album_search_args = album_search_args

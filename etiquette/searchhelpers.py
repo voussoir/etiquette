@@ -11,6 +11,7 @@ from . import objects
 from voussoirkit import expressionmatch
 from voussoirkit import pathclass
 from voussoirkit import sqlhelpers
+from voussoirkit import stringtools
 
 def expand_mmf(tag_musts, tag_mays, tag_forbids):
     '''
@@ -131,7 +132,7 @@ def normalize_author(authors, photodb, warning_bag=None):
         authors = []
 
     if isinstance(authors, str):
-        authors = helpers.comma_space_split(authors)
+        authors = stringtools.comma_space_split(authors)
 
     users = set()
     for requested_author in authors:
@@ -165,7 +166,7 @@ def normalize_extension(extensions):
         extensions = set()
 
     elif isinstance(extensions, str):
-        extensions = helpers.comma_space_split(extensions)
+        extensions = stringtools.comma_space_split(extensions)
 
     extensions = [e.lower().strip('.').strip() for e in extensions]
     extensions = set(e for e in extensions if e)
@@ -468,7 +469,7 @@ def normalize_tagset(photodb, tags, warning_bag=None):
         return None
 
     if isinstance(tags, str):
-        tags = helpers.comma_space_split(tags)
+        tags = stringtools.comma_space_split(tags)
 
     tagset = set()
     for tag in tags:

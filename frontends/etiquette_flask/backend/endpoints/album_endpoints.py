@@ -2,6 +2,8 @@ import flask; from flask import request
 import time
 import urllib.parse
 
+from voussoirkit import stringtools
+
 import etiquette
 
 from .. import caching
@@ -59,7 +61,7 @@ def get_album_zip(album_id):
 def post_album_add_child(album_id):
     album = common.P_album(album_id, response_type='json')
 
-    child_ids = etiquette.helpers.comma_space_split(request.form['child_id'])
+    child_ids = stringtools.comma_space_split(request.form['child_id'])
     children = list(common.P_albums(child_ids, response_type='json'))
     print(children)
     album.add_children(children, commit=True)
@@ -71,7 +73,7 @@ def post_album_add_child(album_id):
 def post_album_remove_child(album_id):
     album = common.P_album(album_id, response_type='json')
 
-    child_ids = etiquette.helpers.comma_space_split(request.form['child_id'])
+    child_ids = stringtools.comma_space_split(request.form['child_id'])
     children = list(common.P_albums(child_ids, response_type='json'))
     album.remove_children(children, commit=True)
     response = etiquette.jsonify.album(album)
@@ -96,7 +98,7 @@ def post_album_add_photo(album_id):
     '''
     album = common.P_album(album_id, response_type='json')
 
-    photo_ids = etiquette.helpers.comma_space_split(request.form['photo_id'])
+    photo_ids = stringtools.comma_space_split(request.form['photo_id'])
     photos = list(common.P_photos(photo_ids, response_type='json'))
     album.add_photos(photos, commit=True)
     response = etiquette.jsonify.album(album)
@@ -110,7 +112,7 @@ def post_album_remove_photo(album_id):
     '''
     album = common.P_album(album_id, response_type='json')
 
-    photo_ids = etiquette.helpers.comma_space_split(request.form['photo_id'])
+    photo_ids = stringtools.comma_space_split(request.form['photo_id'])
     photos = list(common.P_photos(photo_ids, response_type='json'))
     album.remove_photos(photos, commit=True)
     response = etiquette.jsonify.album(album)
