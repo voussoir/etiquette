@@ -1,6 +1,5 @@
 import bcrypt
 import json
-import logging
 import os
 import random
 import sqlite3
