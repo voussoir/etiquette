@@ -162,6 +162,7 @@ Here is a brief overview of the project to help you learn your way around:
 - Batch movement of Albums... but without winding up with a second clipboard system?
 - Overall, more dynamism with cards and tag objects and updating page without requiring refresh.
 - Absolute consistency of CSS classes for divs that hold photo cards.
+- Serve RSS/Atom forms of search results.
 
 ### To do list: User permissions
 Here are some thoughts about the kinds of features that need to exist within the permission system. I don't know how I'll actually manage it just yet. Possibly a `permissions` table in the database with `user_id | permission` where `permission` is some reliably-formatted string.
