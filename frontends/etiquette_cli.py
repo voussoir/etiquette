@@ -126,7 +126,7 @@ def search_by_argparse(args, yield_albums=False, yield_photos=False):
 
 ####################################################################################################
 
-def add_tag_argparse(args):
+def add_remove_tag_argparse(args, action):
     photodb = find_photodb()
 
     tag = photodb.get_tag(name=args.tag_name)
@@ -138,7 +138,10 @@ def add_tag_argparse(args):
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
 
     for photo in photos:
-        photo.add_tag(tag)
+        if action == 'add':
+            photo.add_tag(tag)
+        elif action == 'remove':
+            photo.remove_tag(tag)
 
     if args.autoyes or getpermission.getpermission('Commit?'):
         photodb.commit()
@@ -299,7 +302,13 @@ def main(argv):
     p_add_tag.add_argument('tag_name')
     p_add_tag.add_argument('globs', nargs='*')
     p_add_tag.add_argument('--yes', dest='autoyes', action='store_true')
-    p_add_tag.set_defaults(func=add_tag_argparse)
+    p_add_tag.set_defaults(func=lambda args: add_remove_tag_argparse(args, action='add'))
+
+    p_remove_tag = subparsers.add_parser('remove_tag', aliases=['remove-tag'])
+    p_remove_tag.add_argument('tag_name')
+    p_remove_tag.add_argument('globs', nargs='*')
+    p_remove_tag.add_argument('--yes', dest='autoyes', action='store_true')
+    p_remove_tag.set_defaults(func=lambda args: add_remove_tag_argparse(args, action='remove'))
 
     p_easybake = subparsers.add_parser('easybake')
     p_easybake.add_argument('eb_strings', nargs='+')
