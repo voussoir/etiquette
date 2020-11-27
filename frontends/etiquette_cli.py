@@ -372,7 +372,7 @@ def main(argv):
     p_unset_searchhidden.add_argument('--yes', dest='autoyes', action='store_true')
     p_unset_searchhidden.set_defaults(func=lambda args: set_unset_searchhidden_argparse(args, searchhidden=False))
 
-    p_tag_breplace = subparsers.add_parser('tag_breplace')
+    p_tag_breplace = subparsers.add_parser('tag_breplace', aliases=['tag-breplace'])
     p_tag_breplace.add_argument('replace_from')
     p_tag_breplace.add_argument('replace_to')
     p_tag_breplace.add_argument('--set_synonym', '--set-synonym', dest='set_synonym', action='store_true')
