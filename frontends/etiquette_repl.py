@@ -9,7 +9,7 @@ import code
 import sys
 import traceback
 
-from voussoirkit import getpermission
+from voussoirkit import interactive
 from voussoirkit import vlogging
 
 import etiquette
@@ -52,7 +52,7 @@ def erepl_argparse(args):
             if len(P.savepoints) == 0:
                 break
             print('You have uncommited changes, are you sure you want to quit?')
-            if getpermission.getpermission():
+            if interactive.getpermission():
                 break
 
 def main(argv):

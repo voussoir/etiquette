@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from voussoirkit import getpermission
+from voussoirkit import interactive
 from voussoirkit import pathclass
 from voussoirkit import stringtools
 from voussoirkit import vlogging
@@ -143,7 +143,7 @@ def add_remove_tag_argparse(args, action):
         elif action == 'remove':
             photo.remove_tag(tag)
 
-    if args.autoyes or getpermission.getpermission('Commit?'):
+    if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
 def digest_directory_argparse(args):
@@ -160,7 +160,7 @@ def digest_directory_argparse(args):
     for result in digest:
         print(result)
 
-    if args.autoyes or getpermission.getpermission('Commit?'):
+    if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
 def easybake_argparse(args):
@@ -168,7 +168,7 @@ def easybake_argparse(args):
     for eb_string in args.eb_strings:
         notes = photodb.easybake(eb_string)
 
-    if args.autoyes or getpermission.getpermission('Commit?'):
+    if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
 def init_argparse(args):
@@ -179,7 +179,7 @@ def purge_deleted_photos_argparse(args):
     photodb = find_photodb()
     for deleted in photodb.purge_deleted_files():
         print(deleted)
-    if args.autoyes or getpermission.getpermission('Commit?'):
+    if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
 def purge_empty_albums_argparse(args):
@@ -187,7 +187,7 @@ def purge_empty_albums_argparse(args):
     for deleted in photodb.purge_empty_albums():
         print(deleted)
 
-    if args.autoyes or getpermission.getpermission('Commit?'):
+    if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
 def search_argparse(args):
@@ -230,7 +230,7 @@ def set_unset_searchhidden_argparse(args, searchhidden):
         print(photo)
         photo.set_searchhidden(searchhidden)
 
-    if args.autoyes or getpermission.getpermission('Commit?'):
+    if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
 def tag_breplace_argparse(args):
@@ -260,7 +260,7 @@ def tag_breplace_argparse(args):
     if not args.autoyes:
         for (tag_name, new_name, printline) in renames:
             print(printline)
-        if not getpermission.getpermission('Ok?', must_pick=True):
+        if not interactive.getpermission('Ok?', must_pick=True):
             return
 
     for (tag_name, new_name, printline) in renames:
