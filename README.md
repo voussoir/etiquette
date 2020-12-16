@@ -192,3 +192,5 @@ Here are some thoughts about the kinds of features that need to exist within the
 https://github.com/voussoir/etiquette
 
 https://gitlab.com/voussoir/etiquette
+
+https://codeberg.org/voussoir/etiquette
