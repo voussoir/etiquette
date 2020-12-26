@@ -84,6 +84,8 @@ function apply_check(checkbox)
     checkbox.checked = photo_clipboard.clipboard.has(photo_id);
     if (! photo_card)
     {
+        // E.g. on the Photo page there is a checkbox for adding it to the
+        // clipboard, though it does not reside in a photo_card div.
         return;
     }
     if (checkbox.checked)
@@ -128,16 +130,35 @@ function on_photo_select(event)
     let action;
     if (checkbox.checked)
     {
-        action = photo_clipboard.clipboard.add.bind(photo_clipboard.clipboard);
+        action = function(photo_div)
+        {
+            console.log("photo_card_selected");
+            photo_clipboard.clipboard.add(photo_div.dataset.id);
+            photo_div.classList.remove("photo_card_unselected");
+            photo_div.classList.add("photo_card_selected");
+        }
     }
     else
     {
-        action = photo_clipboard.clipboard.delete.bind(photo_clipboard.clipboard);
+        action = function(photo_div)
+        {
+            console.log("photo_card_unselected");
+            photo_clipboard.clipboard.delete(photo_div.dataset.id);
+            photo_div.classList.remove("photo_card_selected");
+            photo_div.classList.add("photo_card_unselected");
+        }
     }
 
     if (! checkbox.parentElement.classList.contains("photo_card"))
     {
-        action(checkbox.dataset.photoId);
+        if (checkbox.checked)
+        {
+            photo_clipboard.clipboard.add(checkbox.dataset.photoId);
+        }
+        else
+        {
+            photo_clipboard.clipboard.delete(checkbox.dataset.photoId);
+        }
     }
     else if (event.shiftKey && photo_clipboard.previous_photo_select)
     {
@@ -162,17 +183,17 @@ function on_photo_select(event)
 
         for (const photo_div of slice)
         {
-            action(photo_div.dataset.id);
+            action(photo_div);
         }
         photo_clipboard.previous_photo_select = current_photo_div;
     }
     else
     {
         const photo_div = checkbox.parentElement;
-        action(photo_div.dataset.id);
+        action(photo_div);
         photo_clipboard.previous_photo_select = photo_div;
     }
-    photo_clipboard.save_clipboard();
+    setTimeout(() => photo_clipboard.save_clipboard(), 0);
 }
 
 photo_clipboard.select_all_photos =
@@ -182,9 +203,16 @@ function select_all_photos()
     for (const photo_div of photo_divs)
     {
         photo_clipboard.clipboard.add(photo_div.dataset.id);
+        photo_div.classList.remove("photo_card_unselected");
+        photo_div.classList.add("photo_card_selected");
+        const checkbox = photo_div.getElementsByClassName("photo_card_selector_checkbox")[0];
+        if (checkbox)
+        {
+            checkbox.checked = true;
+        }
     }
-    photo_clipboard.apply_check_all();
-    photo_clipboard.save_clipboard();
+    photo_clipboard.previous_photo_select = null;
+    setTimeout(() => photo_clipboard.save_clipboard(), 0);
 }
 
 photo_clipboard.unselect_all_photos =
@@ -194,10 +222,16 @@ function unselect_all_photos()
     for (const photo_div of photo_divs)
     {
         photo_clipboard.clipboard.delete(photo_div.dataset.id);
+        photo_div.classList.remove("photo_card_selected");
+        photo_div.classList.add("photo_card_unselected");
+        const checkbox = photo_div.getElementsByClassName("photo_card_selector_checkbox")[0];
+        if (checkbox)
+        {
+            checkbox.checked = false;
+        }
     }
-    photo_clipboard.apply_check_all()
     photo_clipboard.previous_photo_select = null;
-    photo_clipboard.save_clipboard();
+    setTimeout(() => photo_clipboard.save_clipboard(), 0);
 }
 
 // Tray management /////////////////////////////////////////////////////////////////////////////////
