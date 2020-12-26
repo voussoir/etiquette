@@ -124,7 +124,7 @@ function register_form(event)
 
 function login_register_callback(response)
 {
-    if (! response.json_ok)
+    if (! response.meta.json_ok)
     {
         alert(JSON.stringify(response));
         return;
