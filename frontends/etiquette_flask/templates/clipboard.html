@@ -135,6 +135,9 @@
 </body>
 
 <script type="text/javascript">
+// divs maps photo IDs to the photo card div which will be shown in the holder.
+// They are stored in this map so we can update them from API data without
+// navigating the dom for them.
 const divs = {};
 const needed = new Set();
 const holder = document.getElementById("clipboard_photos_holder");
@@ -189,6 +192,14 @@ function refresh_divs()
             holder.appendChild(photo_div)
         }
     }
+    if (holder.childElementCount == 0)
+    {
+        holder.classList.add("hidden");
+    }
+    else
+    {
+        holder.classList.remove("hidden");
+    }
 }
 
 function request_more_divs()
@@ -217,13 +228,13 @@ function request_more_divs()
             photo_div = common.html_to_element(response.data[photo_id]);
             divs[photo_id] = photo_div;
             needed.delete(photo_id)
-            holder.appendChild(photo_div);
         }
         photo_clipboard.apply_check_all();
         if (needed.size > 0)
         {
             console.log("Needed but not received: " + Array.from(needed));
         }
+        refresh_divs();
     }
     common.post(url, data, callback);
 }
