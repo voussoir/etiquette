@@ -220,7 +220,10 @@ function request_more_divs()
             holder.appendChild(photo_div);
         }
         photo_clipboard.apply_check_all();
-        console.log("Needed but not received: " + Array.from(needed));
+        if (needed.size > 0)
+        {
+            console.log("Needed but not received: " + Array.from(needed));
+        }
     }
     common.post(url, data, callback);
 }
