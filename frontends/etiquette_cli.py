@@ -175,7 +175,7 @@ def init_argparse(args):
     photodb = etiquette.photodb.PhotoDB('.', create=True)
     photodb.commit()
 
-def purge_deleted_photos_argparse(args):
+def purge_deleted_files_argparse(args):
     photodb = find_photodb()
     for deleted in photodb.purge_deleted_files():
         print(deleted)
@@ -327,9 +327,9 @@ def main(argv):
     p_init = subparsers.add_parser('init', aliases=['create'])
     p_init.set_defaults(func=init_argparse)
 
-    p_purge_deleted_photos = subparsers.add_parser('purge_deleted_photos', aliases=['purge-deleted-photos'])
-    p_purge_deleted_photos.add_argument('--yes', dest='autoyes', action='store_true')
-    p_purge_deleted_photos.set_defaults(func=purge_deleted_photos_argparse)
+    p_purge_deleted_files = subparsers.add_parser('purge_deleted_files', aliases=['purge-deleted-files'])
+    p_purge_deleted_files.add_argument('--yes', dest='autoyes', action='store_true')
+    p_purge_deleted_files.set_defaults(func=purge_deleted_files_argparse)
 
     p_purge_empty_albums = subparsers.add_parser('purge_empty_albums', aliases=['purge-empty-albums'])
     p_purge_empty_albums.add_argument('--yes', dest='autoyes', action='store_true')
