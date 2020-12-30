@@ -3,6 +3,7 @@ import os
 import re
 import sys
 
+from voussoirkit import betterhelp
 from voussoirkit import interactive
 from voussoirkit import pathclass
 from voussoirkit import spinal
@@ -393,6 +394,258 @@ def tag_breplace_argparse(args):
             tag.add_synonym(tag_name)
     photodb.commit()
 
+DOCSTRING = '''
+Etiquette CLI
+=============
+
+{add_tag}
+
+{remove_tag}
+
+{digest}
+
+{easybake}
+
+{export_symlinks}
+
+{init}
+
+{purge_deleted_files}
+
+{purge_empty_albums}
+
+{search}
+
+{show_associated_directories}
+
+{set_searchhidden}
+
+{unset_searchhidden}
+
+{tag_breplace}
+
+At any time, you may add --silent, --quiet, --debug, --loud to change logging.
+
+You can add --yes to avoid the "Commit?" prompt.
+
+TO SEE DETAILS ON EACH COMMAND, RUN
+> etiquette_cli.py <command> --help
+'''
+
+SUB_DOCSTRINGS = dict(
+add_tag='''
+add_tag:
+    Add a tag to files by a filename glob.
+
+    > etiquette_cli.py add_tag tag_name glob_pattern
+'''.strip(),
+
+remove_tag='''
+remove_tag:
+    Remove a tag from files by a filename glob.
+
+    > etiquette_cli.py remove_tag tag_name glob_pattern
+'''.strip(),
+
+digest='''
+digest:
+    Digest a directory, adding new files as Photos into the database.
+
+    > etiquette_cli.py digest directory <flags>
+
+    flags:
+    --no_albums:
+        Do not create any albums the directories. By default, albums are created
+        and nested to match the directory structure.
+
+    --ratelimit X:
+        Limit the ingest of new Photos to only one per X seconds. This can be
+        used to reduce system load or to make sure that two photos don't get the
+        same `created` timestamp.
+
+    --no_recurse:
+        Do not recurse into subdirectories. Only create Photos from files in
+        the current directory.
+'''.strip(),
+
+easybake='''
+easybake:
+    Create and manipulate tags by easybake strings.
+
+    > etiquette_cli.py easybake eb_string
+'''.strip(),
+
+export_symlinks='''
+export_symlinks:
+    Search for photos or albums, then create symlinks pointing to the results.
+
+    THIS IS STILL A BIT EXPERIMENTAL.
+    This can be used to gather up search results for the purpose of further
+    uploading, transfering, etc. with other applications.
+    Symlinks point to files (if result is a photo) or directories (if result is
+    an album with an associated directory).
+    Albums are limited to only one associated directory since the output
+    symlink can't point to two places at once.
+
+    > etiquette_cli.py export_symlinks --destination directory --search searchargs
+    > etiquette_cli.py export_symlinks --destination directory --album-search searchargs
+
+    flags:
+    --destination:
+        A path to a directory into which the symlinks will be placed.
+
+    --dry:
+        Print the results without actually creating the symlinks.
+
+    --prune:
+        In the destination directory, any existing symlinks whose target no
+        longer exists will be deleted.
+
+    See search --help for more info about searchargs.
+'''.strip(),
+
+init='''
+init:
+    Create a new Etiquette database in the current directory.
+
+    > etiquette_cli.py init
+'''.strip(),
+
+purge_deleted_files='''
+purge_deleted_files:
+    Delete any Photo objects whose file no longer exists on disk.
+
+    > etiquette_cli.py purge_deleted_files
+'''.strip(),
+
+purge_empty_albums='''
+purge_empty_albums:
+    Delete any albums which have no child albums or photos.
+
+    Consider running purge_deleted_files first, so that albums containing
+    deleted files will get cleared out and then caught by this function.
+
+    > etiquette_cli.py purge_empty_albums
+'''.strip(),
+
+search='''
+search:
+    Search for photos and albums with complex operators.
+
+    > etiquette_cli.py search searchargs
+    > etiquette_cli.py search --album-search searchargs
+
+    Searchargs:
+    --area X-Y:
+        Photo/video width*height between X and Y.
+
+    --width X-Y:
+        Photo/video width between X and Y.
+
+    --height X-Y:
+        Photo/video height between X and Y.
+
+    --ratio X-Y:
+        Photo/video aspect ratio between X and Y.
+
+    --bytes X-Y:
+        File size in bytes between X and Y.
+
+    --duration X-Y:
+        Media duration between X and Y seconds.
+
+    --author X:
+        Photo authored by user with username X.
+
+    --created X-Y:
+        Photo creation date between X and Y unix timestamp.
+
+    --extension A,B,C:
+        Photo with any extension of A, B, C...
+
+    --extension_not A,B,C:
+        Photo without any extension of A, B, C...
+
+    --filename X:
+        Search terms for Photo's filename.
+
+    --has_tags yes/no/null:
+        If yes, Photo must have at least one tag.
+        If no, Photo must have no tags.
+        If null, doesn't matter.
+
+    --has_thumbnail yes/no/null:
+
+    --is_searchhidden yes/no/null:
+
+    --mimetype A,B,C:
+        Photo with any mimetype of A, B, C...
+
+    --tag_musts A,B,C:
+        Photo must have all tags A and B and C...
+
+    --tag_mays A,B,C:
+        Photo must have at least one tag of A, B, C...
+
+    --tag_forbids A,B,C:
+        Photo must not have any tags of A, B, C...
+
+    --tag_expression X:
+        Complex expression string to match tags.
+
+    --limit X:
+        Limit results to first X items.
+
+    --offset X:
+        Skip the first X items.
+
+    --orderby X-Y:
+        Order the results by property X in direction Y. E.g. created-desc or
+        bytes-asc.
+'''.strip(),
+
+show_associated_directories='''
+show_associated_directories:
+    Show the associated directories for albums.
+
+    > etiquette_cli.py show_associated_directories
+    > etiquette_cli.py show_associated_directories --albums id id id
+    > etiquette_cli.py show_associated_directories --album-search searchargs
+
+    See search --help for more info about searchargs.
+'''.strip(),
+
+set_searchhidden='''
+set_searchhidden:
+    Mark photos as searchhidden.
+
+    > etiquette_cli.py set_searchhidden --photos id id id
+    > etiquette_cli.py set_searchhidden --search searchargs
+
+    See search --help for more info about searchargs.
+'''.strip(),
+
+unset_searchhidden='''
+unset_searchhidden:
+    Unmark photos as searchhidden.
+
+    > etiquette_cli.py unset_searchhidden --photos id id id
+    > etiquette_cli.py unset_searchhidden --search searchargs
+
+    See search --help for more info about searchargs.
+'''.strip(),
+
+tag_breplace='''
+tag_breplace:
+    For all tags in the database, use find-and-replace to rename the tags.
+
+    > etiquette_cli.py tag_breplace replace_from replace_to
+'''.strip(),
+
+)
+
+DOCSTRING = betterhelp.add_previews(DOCSTRING, SUB_DOCSTRINGS)
+
 def main(argv):
     global LOG_LEVEL
     (LOG_LEVEL, argv) = vlogging.get_level_by_argv(argv)
@@ -432,11 +685,6 @@ def main(argv):
     p_remove_tag.add_argument('--yes', dest='autoyes', action='store_true')
     p_remove_tag.set_defaults(func=lambda args: add_remove_tag_argparse(args, action='remove'))
 
-    p_easybake = subparsers.add_parser('easybake')
-    p_easybake.add_argument('eb_strings', nargs='+')
-    p_easybake.add_argument('--yes', dest='autoyes', action='store_true')
-    p_easybake.set_defaults(func=easybake_argparse)
-
     p_digest = subparsers.add_parser('digest', aliases=['digest_directory', 'digest-directory'])
     p_digest.add_argument('directory')
     p_digest.add_argument('--no_albums', '--no-albums', dest='make_albums', action='store_false', default=True)
@@ -444,6 +692,11 @@ def main(argv):
     p_digest.add_argument('--no_recurse', '--no-recurse', dest='recurse', action='store_false', default=True)
     p_digest.add_argument('--yes', dest='autoyes', action='store_true')
     p_digest.set_defaults(func=digest_directory_argparse)
+
+    p_easybake = subparsers.add_parser('easybake')
+    p_easybake.add_argument('eb_strings', nargs='+')
+    p_easybake.add_argument('--yes', dest='autoyes', action='store_true')
+    p_easybake.set_defaults(func=easybake_argparse)
 
     p_export_symlinks = subparsers.add_parser('export_symlinks', aliases=['export-symlinks'])
     p_export_symlinks.add_argument('--destination', dest='destination', required=True)
@@ -509,20 +762,26 @@ def main(argv):
 
     ##
 
-    args = parser.parse_args(primary_args)
+    def pp(args):
+        args.photo_search_args = p_search.parse_args(photo_search_args) if photo_search_args else None
+        args.album_search_args = p_search.parse_args(album_search_args) if album_search_args else None
+        args.photo_id_args = [id for arg in photo_id_args for id in stringtools.comma_space_split(arg)]
+        args.album_id_args = [id for arg in album_id_args for id in stringtools.comma_space_split(arg)]
+        args.any_id_args = bool(
+            args.photo_search_args or
+            args.album_search_args or
+            args.photo_id_args or
+            args.album_id_args
+        )
+        return args
 
-    photo_search_args = p_search.parse_args(photo_search_args) if photo_search_args else None
-    album_search_args = p_search.parse_args(album_search_args) if album_search_args else None
-    photo_id_args = [id for arg in photo_id_args for id in stringtools.comma_space_split(arg)]
-    album_id_args = [id for arg in album_id_args for id in stringtools.comma_space_split(arg)]
-
-    args.photo_search_args = photo_search_args
-    args.album_search_args = album_search_args
-    args.photo_id_args = photo_id_args
-    args.album_id_args = album_id_args
-    args.any_id_args = bool(photo_search_args or album_search_args or photo_id_args or album_id_args)
-
-    return args.func(args)
+    return betterhelp.subparser_main(
+        primary_args,
+        parser,
+        main_docstring=DOCSTRING,
+        sub_docstrings=SUB_DOCSTRINGS,
+        args_postprocessor=pp,
+    )
 
 if __name__ == '__main__':
     raise SystemExit(main(sys.argv[1:]))
