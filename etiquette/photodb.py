@@ -2,6 +2,7 @@ import bcrypt
 import json
 import os
 import random
+import re
 import sqlite3
 import tempfile
 import time
@@ -1093,6 +1094,19 @@ class PDBSQLMixin:
         cur.execute(query, bindings)
         return cur
 
+    def sql_executescript(self, script):
+        '''
+        The problem with Python's default executescript is that it executes a
+        COMMIT before running your script. If I wanted a commit I'd write one!
+        '''
+        lines = re.split(r';(:?\n|$)', script)
+        lines = (line.strip() for line in lines)
+        lines = (line for line in lines if line)
+        cur = self.sql.cursor()
+        for line in lines:
+            self.log.loud(line)
+            cur.execute(line)
+
     def sql_insert(self, table, data):
         self.assert_table_exists(table)
         column_names = constants.SQL_COLUMNS[table]
@@ -1833,12 +1847,12 @@ class PhotoDB(
 
     def _first_time_setup(self):
         self.log.info('Running first-time database setup.')
-        self.sql.executescript(constants.DB_INIT)
+        self.sql_executescript(constants.DB_INIT)
         self.sql.commit()
 
     def _load_pragmas(self):
         self.log.debug('Reloading pragmas.')
-        self.sql.executescript(constants.DB_PRAGMAS)
+        self.sql_executescript(constants.DB_PRAGMAS)
         self.sql.commit()
 
     def __del__(self):
