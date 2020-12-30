@@ -172,7 +172,7 @@ def easybake_argparse(args):
         photodb.commit()
 
 def init_argparse(args):
-    photodb = etiquette.photodb.PhotoDB('.', create=True)
+    photodb = etiquette.photodb.PhotoDB(create=True)
     photodb.commit()
 
 def purge_deleted_files_argparse(args):
