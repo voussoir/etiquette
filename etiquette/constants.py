@@ -193,19 +193,19 @@ COMMIT;
 SQL_COLUMNS = sqlhelpers.extract_table_column_map(DB_INIT)
 SQL_INDEX = sqlhelpers.reverse_table_column_map(SQL_COLUMNS)
 
-ALLOWED_ORDERBY_COLUMNS = [
-    'extension',
-    'bitrate',
-    'width',
-    'height',
-    'ratio',
+ALLOWED_ORDERBY_COLUMNS = {
     'area',
-    'duration',
+    'bitrate',
     'bytes',
     'created',
-    'tagged_at',
+    'duration',
+    'extension',
+    'height',
     'random',
-]
+    'ratio',
+    'tagged_at',
+    'width',
+}
 
 # Errors and warnings ##############################################################################
 
