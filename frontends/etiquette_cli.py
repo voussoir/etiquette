@@ -58,9 +58,9 @@ def get_photos_by_glob(pattern):
     for file in files:
         try:
             photo = photodb.get_photo_by_path(file)
+            yield photo
         except etiquette.exceptions.NoSuchPhoto:
             pass
-        yield photo
 
 def get_photos_by_globs(patterns):
     for pattern in patterns:
