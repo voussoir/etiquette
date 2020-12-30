@@ -1,8 +1,11 @@
 import argparse
+import os
+import re
 import sys
 
 from voussoirkit import interactive
 from voussoirkit import pathclass
+from voussoirkit import spinal
 from voussoirkit import stringtools
 from voussoirkit import vlogging
 
@@ -38,6 +41,62 @@ def find_photodb():
     return photodb
 
 # HELPERS ##########################################################################################
+
+def export_symlinks_albums(albums, destination, dry_run):
+    album_directory_names = etiquette.helpers.decollide_names(albums, lambda a: a.display_name)
+    for album in albums:
+        associated_directories = album.get_associated_directories()
+        if len(associated_directories) == 1:
+            album_dir = associated_directories.pop()
+            symlink_dir = destination.with_child(etiquette.helpers.remove_path_badchars(album.display_name))
+            if dry_run:
+                yield symlink_dir
+                continue
+            if symlink_dir.exists:
+                yield symlink_dir
+                continue
+            print(album, symlink_dir)
+            os.symlink(src=album_dir.absolute_path, dst=symlink_dir.absolute_path)
+            yield symlink_dir
+
+        # photo_filenames = etiquette.helpers.album_photos_as_filename_map(
+        #     album,
+        #     once_each=False,
+        #     naming='simplified',
+        #     root_name=album_directory_names[album],
+        # )
+        # for (photo, filepaths) in photo_filenames.items():
+        #     if not include_searchhidden and photo.searchhidden:
+        #         continue
+        #     if not photo.real_path.exists:
+        #         continue
+        #     for filepath in filepaths:
+        #         filepath = destination.join(filepath)
+        #         print(filepath.absolute_path)
+        #         if dry_run:
+        #             yield filepath
+        #             continue
+        #         if filepath.exists:
+        #             yield filepath
+        #             continue
+        #         print(filepath, filepath.exists)
+        #         filepath.parent.makedirs(exist_ok=True)
+        #         os.symlink(src=photo.real_path.absolute_path, dst=filepath.absolute_path)
+        #         yield filepath
+
+def export_symlinks_photos(photos, destination, dry_run):
+    photo_filenames = etiquette.helpers.decollide_names(photos, lambda p: p.basename)
+    for (photo, filename) in photo_filenames.items():
+        filepath = destination.with_child(filename)
+        print(filepath.absolute_path)
+        if dry_run:
+            yield filepath
+            continue
+        if filepath.exists:
+            yield filepath
+            continue
+        os.symlink(src=photo.real_path.absolute_path, dst=filepath.absolute_path)
+        yield filepath
 
 def get_photos_by_glob(pattern):
     photodb = find_photodb()
@@ -170,6 +229,54 @@ def easybake_argparse(args):
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
+
+def export_symlinks_argparse(args):
+    photodb = find_photodb()
+    destination = pathclass.Path(args.destination)
+    destination.makedirs(exist_ok=True)
+
+    total_paths = set()
+
+    albums = []
+    if args.album_id_args:
+        albums.extend(photodb.get_albums_by_id(args.album_id_args))
+    if args.album_search_args:
+        albums.extend(search_by_argparse(args.album_search_args, yield_albums=True))
+    export = export_symlinks_albums(
+        albums,
+        destination,
+        dry_run=args.dry_run,
+    )
+    total_paths.update(export)
+
+    photos = []
+    if args.photo_id_args:
+        photos.extend(photodb.get_photos_by_id(args.photo_id_args))
+    if args.photo_search_args:
+        photos.extend(search_by_argparse(args.photo_search_args, yield_photos=True))
+    export = export_symlinks_photos(
+        photos,
+        destination,
+        dry_run=args.dry_run,
+    )
+    total_paths.update(export)
+
+    if args.prune and not args.dry_run:
+        symlinks = set(file for file in spinal.walk_generator(destination) if file.is_link)
+        symlinks = symlinks.difference(total_paths)
+        for old_symlink in symlinks:
+            print(f'Pruning {old_symlink}.')
+            os.remove(old_symlink.absolute_path)
+            if not old_symlink.parent.listdir():
+                os.rmdir(old_symlink.parent.absolute_path)
+        checkdirs = set(spinal.walk_generator(destination, yield_directories=True, yield_files=False))
+        while checkdirs:
+            check = checkdirs.pop()
+            if check not in destination:
+                continue
+            if len(check.listdir()) == 0:
+                os.rmdir(check.absolute_path)
+                checkdirs.add(check.parent)
 
 def init_argparse(args):
     photodb = etiquette.photodb.PhotoDB(create=True)
@@ -322,6 +429,11 @@ def main(argv):
     p_digest.add_argument('--yes', dest='autoyes', action='store_true')
     p_digest.set_defaults(func=digest_directory_argparse)
 
+    p_export_symlinks = subparsers.add_parser('export_symlinks', aliases=['export-symlinks'])
+    p_export_symlinks.add_argument('--destination', dest='destination', required=True)
+    p_export_symlinks.add_argument('--dry', dest='dry_run', action='store_true')
+    p_export_symlinks.add_argument('--prune', dest='prune', action='store_true')
+    p_export_symlinks.set_defaults(func=export_symlinks_argparse)
 
     p_init = subparsers.add_parser('init', aliases=['create'])
     p_init.set_defaults(func=init_argparse)
