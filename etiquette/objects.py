@@ -1098,6 +1098,7 @@ class Photo(ObjectBase):
             'id': self.id,
             'filepath': new_filepath.absolute_path,
             'basename': new_filepath.basename,
+            'extension': new_filepath.extension.no_dot,
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
         self.real_path = new_filepath
@@ -1184,6 +1185,7 @@ class Photo(ObjectBase):
             'id': self.id,
             'filepath': new_path.absolute_path,
             'basename': new_path.basename,
+            'extension': new_path.extension.no_dot,
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
         self.real_path = new_path
