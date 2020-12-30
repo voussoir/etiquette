@@ -1097,6 +1097,7 @@ class Photo(ObjectBase):
         data = {
             'id': self.id,
             'filepath': new_filepath.absolute_path,
+            'basename': new_filepath.basename,
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
         self.real_path = new_filepath
@@ -1180,9 +1181,11 @@ class Photo(ObjectBase):
                 spinal.copy_file(old_path, new_path)
 
         data = {
-            'filepath': (old_path.absolute_path, new_path.absolute_path),
+            'id': self.id,
+            'filepath': new_path.absolute_path,
+            'basename': new_path.basename,
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='filepath')
+        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
         self.real_path = new_path
 
         if new_path.normcase == old_path.normcase:

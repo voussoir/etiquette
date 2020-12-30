@@ -192,7 +192,6 @@ def purge_empty_albums_argparse(args):
 
 def search_argparse(args):
     photos = search_by_argparse(args, yield_photos=True)
-    photos = sorted(photos, key=lambda p: p.real_path)
     for photo in photos:
         print(photo.real_path.absolute_path)
 
@@ -357,7 +356,7 @@ def main(argv):
     p_search.add_argument('--tag_expression', '--tag-expression', dest='tag_expression', default=None)
     p_search.add_argument('--limit', dest='limit', default=None)
     p_search.add_argument('--offset', dest='offset', default=None)
-    p_search.add_argument('--orderby', dest='orderby', default=None)
+    p_search.add_argument('--orderby', dest='orderby', default='basename-ASC')
     # p_search.add_argument('--yield_albums', '--yield-albums', dest='yield_albums', default=None)
     p_search.set_defaults(func=search_argparse)
 

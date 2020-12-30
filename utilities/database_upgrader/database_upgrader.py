@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 
 from voussoirkit import sqlhelpers
@@ -453,6 +454,66 @@ def upgrade_14_to_15(photodb):
             continue
         dev_ino = f'{dev},{ino}'
         photodb.sql_execute('UPDATE photos SET dev_ino = ? WHERE id == ?', [dev_ino, photo.id])
+
+def upgrade_15_to_16(photodb):
+    '''
+    Added the basename column to photos. Added collate nocase to extension.
+    '''
+    with Regenerator(photodb, except_tables='photos'):
+        photodb.sql_executescript('''
+        PRAGMA foreign_keys = OFF;
+
+        BEGIN;
+
+        ALTER TABLE photos RENAME TO photos_old;
+
+        CREATE TABLE photos(
+            id TEXT PRIMARY KEY NOT NULL,
+            filepath TEXT COLLATE NOCASE,
+            dev_ino TEXT,
+            basename TEXT COLLATE NOCASE,
+            override_filename TEXT COLLATE NOCASE,
+            extension TEXT COLLATE NOCASE,
+            width INT,
+            height INT,
+            ratio REAL,
+            area INT,
+            duration INT,
+            bytes INT,
+            created INT,
+            thumbnail TEXT,
+            tagged_at INT,
+            author_id TEXT,
+            searchhidden INT,
+            FOREIGN KEY(author_id) REFERENCES users(id)
+        );
+
+        INSERT INTO photos SELECT
+            id,
+            filepath,
+            dev_ino,
+            NULL,
+            override_filename,
+            extension,
+            width,
+            height,
+            ratio,
+            area,
+            duration,
+            bytes,
+            created,
+            thumbnail,
+            tagged_at,
+            author_id,
+            searchhidden
+        FROM photos_old;
+
+        DROP TABLE photos_old;
+        ''')
+
+    for (id, filepath) in photodb.sql_select('SELECT id, filepath FROM photos'):
+        basename = os.path.basename(filepath)
+        photodb.sql_execute('UPDATE photos SET basename = ? WHERE id == ?', [basename, id])
 
 def upgrade_all(data_directory):
     '''

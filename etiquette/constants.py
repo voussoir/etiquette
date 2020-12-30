@@ -41,7 +41,7 @@ ffmpeg = _load_ffmpeg()
 
 # Database #########################################################################################
 
-DATABASE_VERSION = 15
+DATABASE_VERSION = 16
 DB_VERSION_PRAGMA = f'''
 PRAGMA user_version = {DATABASE_VERSION};
 '''
@@ -91,8 +91,9 @@ CREATE TABLE IF NOT EXISTS photos(
     id TEXT PRIMARY KEY NOT NULL,
     filepath TEXT COLLATE NOCASE,
     dev_ino TEXT,
+    basename TEXT COLLATE NOCASE,
     override_filename TEXT COLLATE NOCASE,
-    extension TEXT,
+    extension TEXT COLLATE NOCASE,
     width INT,
     height INT,
     ratio REAL,
@@ -195,6 +196,7 @@ SQL_INDEX = sqlhelpers.reverse_table_column_map(SQL_COLUMNS)
 
 ALLOWED_ORDERBY_COLUMNS = {
     'area',
+    'basename',
     'bitrate',
     'bytes',
     'created',

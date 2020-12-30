@@ -338,6 +338,9 @@ def normalize_orderby(orderby, warning_bag=None):
         elif column == 'area':
             column = '(width * height)'
 
+        elif column == 'basename':
+            column = 'COALESCE(override_filename, basename)'
+
         elif column == 'bitrate':
             column = '((bytes / 128) / duration)'
 
