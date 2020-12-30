@@ -57,6 +57,23 @@ class PDBAlbumMixin:
     def get_albums_by_sql(self, query, bindings=None):
         return self.get_things_by_sql('album', query, bindings)
 
+    def get_albums_within_directory(self, directory):
+        # This function is something of a stopgap measure since `search` only
+        # searches for photos and then yields their containing albums. Thus it
+        # is not possible for search to find albums that contain no photos.
+        # I'd like to find a better solution than this separate method.
+        directory = pathclass.Path(directory)
+        directory.assert_is_directory()
+        pattern = directory.absolute_path.rstrip(os.sep)
+        pattern = f'{pattern}{os.sep}%'
+        album_rows = self.sql_select(
+            'SELECT DISTINCT albumid FROM album_associated_directories WHERE directory LIKE ?',
+            [pattern]
+        )
+        album_ids = (album_id for (album_id,) in album_rows)
+        albums = self.get_albums_by_id(album_ids)
+        return albums
+
     def get_root_albums(self):
         '''
         Yield Albums that have no parent.
