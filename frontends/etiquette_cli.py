@@ -284,14 +284,30 @@ def init_argparse(args):
 
 def purge_deleted_files_argparse(args):
     photodb = find_photodb()
-    for deleted in photodb.purge_deleted_files():
+
+    if args.photo_id_args or args.photo_search_args:
+        photos = get_photos_from_args(args)
+    else:
+        photos = search_in_cwd(yield_photos=True, yield_albums=False)
+
+    for deleted in photodb.purge_deleted_files(photos):
         print(deleted)
+
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
 def purge_empty_albums_argparse(args):
     photodb = find_photodb()
-    for deleted in photodb.purge_empty_albums():
+
+    # We do not check args.album_search_args because currently it is not
+    # possible for search results to find empty albums on account of the fact
+    # that albums are only yielded when they contain some result photo.
+    if args.album_id_args:
+        albums = get_albums_from_args(args)
+    else:
+        albums = photodb.get_albums_within_directory(pathclass.cwd())
+
+    for deleted in photodb.purge_empty_albums(albums):
         print(deleted)
 
     if args.autoyes or interactive.getpermission('Commit?'):
