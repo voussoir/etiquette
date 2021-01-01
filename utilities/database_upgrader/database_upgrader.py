@@ -6,8 +6,6 @@ from voussoirkit import sqlhelpers
 
 import etiquette
 
-import old_inits
-
 class Regenerator:
     '''
     Many of the upgraders involve adding columns. ALTER TABLE ADD COLUMN only
