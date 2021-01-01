@@ -168,6 +168,7 @@
 <li class="search_builder_orderby_li">
     <select onchange="return orderby_hide_direction_hook(event);">
         <option value="created" {{"selected" if selected_column=="created" else ""}}>Creation date</option>
+        <option value="basename" {{"selected" if selected_column=="basename" else ""}}>Filename</option>
         <option value="area" {{"selected" if selected_column=="area" else ""}}>Area</option>
         <option value="width" {{"selected" if selected_column=="width" else ""}}>Width</option>
         <option value="height" {{"selected" if selected_column=="height" else ""}}>Height</option>
