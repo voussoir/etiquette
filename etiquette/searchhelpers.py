@@ -324,6 +324,18 @@ def normalize_orderby(orderby, warning_bag=None):
                 raise exc
             continue
 
+        if direction not in ('asc', 'desc'):
+            message = constants.WARNING_ORDERBY_BADDIRECTION.format(
+                column=column,
+                direction=direction,
+            )
+            exc = ValueError(message)
+            if warning_bag:
+                warning_bag.add(exc)
+            else:
+                raise exc
+            direction = 'desc'
+
         if column not in constants.ALLOWED_ORDERBY_COLUMNS:
             exc = ValueError(constants.WARNING_ORDERBY_BADCOL.format(column=column))
             if warning_bag:
@@ -346,18 +358,6 @@ def normalize_orderby(orderby, warning_bag=None):
 
         elif column == 'ratio':
             column = '(width / height)'
-
-        if direction not in ('asc', 'desc'):
-            message = constants.WARNING_ORDERBY_BADDIRECTION.format(
-                column=column,
-                direction=direction,
-            )
-            exc = ValueError(message)
-            if warning_bag:
-                warning_bag.add(exc)
-            else:
-                raise exc
-            direction = 'desc'
 
         requested_order = (column, direction)
         final_orderby.append(requested_order)
