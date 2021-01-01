@@ -132,7 +132,7 @@ def P_wrapper(function):
             if response_type == 'html':
                 flask.abort(status, exc.error_message)
             else:
-                response = etiquette.jsonify.exception(exc)
+                response = exc.jsonify()
                 response = jsonify.make_json_response(response, status=status)
                 flask.abort(response)
 

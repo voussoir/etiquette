@@ -35,6 +35,14 @@ class EtiquetteException(Exception, metaclass=ErrorTypeAdder):
     def __str__(self):
         return self.error_type + '\n' + self.error_message
 
+    def jsonify(self):
+        j = {
+            'type': 'error',
+            'error_type': self.error_type,
+            'error_message': self.error_message,
+        }
+        return j
+
 # NO SUCH ##########################################################################################
 
 class NoSuch(EtiquetteException):

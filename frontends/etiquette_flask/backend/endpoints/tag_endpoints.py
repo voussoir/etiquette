@@ -40,7 +40,7 @@ def post_tag_edit(tagname):
     description = request.form.get('description', None)
     tag.edit(description=description, commit=True)
 
-    response = etiquette.jsonify.tag(tag)
+    response = tag.jsonify()
     response = jsonify.make_json_response(response)
     return response
 
@@ -129,7 +129,7 @@ def get_tags_json(specific_tag_name=None):
     else:
         tags = list(specific_tag.walk_children())
 
-    tags = [etiquette.jsonify.tag(tag, include_synonyms=include_synonyms) for tag in tags]
+    tags = [tag.jsonify(include_synonyms=include_synonyms) for tag in tags]
     return jsonify.make_json_response(tags)
 
 # Tag create and delete ############################################################################
@@ -141,7 +141,7 @@ def post_tag_create():
     description = request.form.get('description', None)
 
     tag = common.P.new_tag(name, description, author=session_manager.get(request).user, commit=True)
-    response = etiquette.jsonify.tag(tag)
+    response = tag.jsonify()
     return jsonify.make_json_response(response)
 
 @site.route('/tags/easybake', methods=['POST'])

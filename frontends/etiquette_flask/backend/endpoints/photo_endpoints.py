@@ -26,7 +26,7 @@ def get_photo_html(photo_id):
 @site.route('/photo/<photo_id>.json')
 def get_photo_json(photo_id):
     photo = common.P_photo(photo_id, response_type='json')
-    photo = etiquette.jsonify.photo(photo)
+    photo = photo.jsonify()
     photo = jsonify.make_json_response(photo)
     return photo
 
@@ -488,12 +488,12 @@ def get_search_json():
     search_kwargs['tag_forbids'] = tagname_helper(search_kwargs['tag_forbids'])
 
     search_results['results'] = [
-        etiquette.jsonify.photo(result, include_albums=False)
+        result.jsonify(include_albums=False)
         if isinstance(result, etiquette.objects.Photo) else
-        etiquette.jsonify.album(result, minimal=True)
+        result.jsonify(minimal=True)
         for result in search_results['results']
     ]
     search_results['total_tags'] = [
-        etiquette.jsonify.tag(tag, minimal=True) for tag in search_results['total_tags']
+        tag.jsonify(minimal=True) for tag in search_results['total_tags']
     ]
     return jsonify.make_json_response(search_results)

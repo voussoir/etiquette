@@ -14,7 +14,7 @@ session_manager = common.session_manager
 @site.route('/bookmark/<bookmark_id>.json')
 def get_bookmark_json(bookmark_id):
     bookmark = common.P_bookmark(bookmark_id, response_type='json')
-    response = etiquette.jsonify.bookmark(bookmark)
+    response = bookmark.jsonify()
     return jsonify.make_json_response(response)
 
 @site.route('/bookmark/<bookmark_id>/edit', methods=['POST'])
@@ -25,7 +25,7 @@ def post_bookmark_edit(bookmark_id):
     url = request.form.get('url', None) or None
     bookmark.edit(title=title, url=url, commit=True)
 
-    response = etiquette.jsonify.bookmark(bookmark)
+    response = bookmark.jsonify()
     response = jsonify.make_json_response(response)
     return response
 
@@ -38,7 +38,7 @@ def get_bookmarks_html():
 
 @site.route('/bookmarks.json')
 def get_bookmarks_json():
-    bookmarks = [etiquette.jsonify.bookmark(b) for b in common.P.get_bookmarks()]
+    bookmarks = [b.jsonify() for b in common.P.get_bookmarks()]
     return jsonify.make_json_response(bookmarks)
 
 # Bookmark create and delete #######################################################################
@@ -50,7 +50,7 @@ def post_bookmark_create():
     title = request.form.get('title', None)
     user = session_manager.get(request).user
     bookmark = common.P.new_bookmark(url=url, title=title, author=user, commit=True)
-    response = etiquette.jsonify.bookmark(bookmark)
+    response = bookmark.jsonify()
     response = jsonify.make_json_response(response)
     return response
 

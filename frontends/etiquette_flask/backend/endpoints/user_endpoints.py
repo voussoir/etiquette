@@ -20,7 +20,7 @@ def get_user_html(username):
 @site.route('/user/<username>.json')
 def get_user_json(username):
     user = common.P_user(username, response_type='json')
-    user = etiquette.jsonify.user(user)
+    user = user.jsonify()
     return jsonify.make_json_response(user)
 
 @site.route('/userid/<user_id>')
@@ -53,7 +53,7 @@ def post_login():
     session = session_manager.get(request)
     if session.user:
         exc = etiquette.exceptions.AlreadySignedIn()
-        response = etiquette.jsonify.exception(exc)
+        response = exc.jsonify()
         return jsonify.make_json_response(response, status=403)
 
     username = request.form['username']
@@ -66,10 +66,10 @@ def post_login():
         user = common.P.login(username=username, password=password)
     except (etiquette.exceptions.NoSuchUser, etiquette.exceptions.WrongLogin):
         exc = etiquette.exceptions.WrongLogin()
-        response = etiquette.jsonify.exception(exc)
+        response = exc.jsonify()
         return jsonify.make_json_response(response, status=422)
     except etiquette.exceptions.FeatureDisabled as exc:
-        response = etiquette.jsonify.exception(exc)
+        response = exc.jsonify()
         return jsonify.make_json_response(response, status=400)
     session = sessions.Session(request, user)
     session_manager.add(session)
@@ -93,7 +93,7 @@ def post_register():
     session = session_manager.get(request)
     if session.user:
         exc = etiquette.exceptions.AlreadySignedIn()
-        response = etiquette.jsonify.exception(exc)
+        response = exc.jsonify()
         return jsonify.make_json_response(response, status=403)
 
     username = request.form['username']

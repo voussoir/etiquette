@@ -514,6 +514,21 @@ class Album(ObjectBase, GroupableMixin):
         )
         return row is not None
 
+    def jsonify(self, minimal=False):
+        j = {
+            'type': 'album',
+            'id': self.id,
+            'description': self.description,
+            'title': self.title,
+            'author': self.get_author().jsonify() if self.author_id else None,
+        }
+        if not minimal:
+            j['photos'] = [photo.jsonify(include_albums=False) for photo in self.get_photos()]
+            j['parents'] = [parent.jsonify(minimal=True) for parent in self.get_parents()]
+            j['sub_albums'] = [child.jsonify(minimal=True) for child in self.get_children()]
+
+        return j
+
     @decorators.required_feature('album.edit')
     @decorators.transaction
     def remove_child(self, *args, **kwargs):
@@ -673,6 +688,16 @@ class Bookmark(ObjectBase):
         self.photodb.sql_update(table='bookmarks', pairs=data, where_key='id')
         self.title = title
         self.url = url
+
+    def jsonify(self):
+        j = {
+            'type': 'bookmark',
+            'id': self.id,
+            'author': self.get_author().jsonify() if self.author_id else None,
+            'url': self.url,
+            'title': self.title,
+        }
+        return j
 
 class Photo(ObjectBase):
     '''
@@ -958,6 +983,34 @@ class Photo(ObjectBase):
             return False
 
         return tag_by_id[rel_row[0]]
+
+    def jsonify(self, include_albums=True, include_tags=True):
+        j = {
+            'type': 'photo',
+            'id': self.id,
+            'author': self.get_author().jsonify() if self.author_id else None,
+            'extension': self.extension,
+            'width': self.width,
+            'height': self.height,
+            'ratio': self.ratio,
+            'area': self.area,
+            'bytes': self.bytes,
+            'duration_str': self.duration_string,
+            'duration': self.duration,
+            'bytes_str': self.bytestring,
+            'has_thumbnail': bool(self.thumbnail),
+            'created': self.created,
+            'filename': self.basename,
+            'mimetype': self.mimetype,
+            'searchhidden': bool(self.searchhidden),
+        }
+        if include_albums:
+            j['albums'] = [album.jsonify(minimal=True) for album in self.get_containing_albums()]
+
+        if include_tags:
+            j['tags'] = [tag.jsonify(minimal=True) for tag in self.get_tags()]
+
+        return j
 
     def make_thumbnail_filepath(self):
         '''
@@ -1468,6 +1521,22 @@ class Tag(ObjectBase, GroupableMixin):
         synonyms = set(name for (name,) in syn_rows)
         return synonyms
 
+    def jsonify(self, include_synonyms=False, minimal=False):
+        j = {
+            'type': 'tag',
+            'id': self.id,
+            'name': self.name,
+        }
+        if not minimal:
+            j['author'] = self.get_author().jsonify() if self.author_id else None,
+            j['description'] = self.description
+            j['children'] = [child.jsonify(minimal=True) for child in self.get_children()]
+
+        if include_synonyms:
+            j['synonyms'] = list(self.get_synonyms())
+
+        return j
+
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def remove_child(self, *args, **kwargs):
@@ -1591,6 +1660,16 @@ class User(ObjectBase):
             return self.username
         else:
             return self._display_name
+
+    def jsonify(self):
+        j = {
+            'type': 'user',
+            'id': self.id,
+            'username': self.username,
+            'created': self.created,
+            'display_name': self.display_name,
+        }
+        return j
 
     @decorators.required_feature('user.edit')
     @decorators.transaction
