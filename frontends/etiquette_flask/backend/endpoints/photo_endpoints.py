@@ -403,6 +403,11 @@ def get_search_core():
             continue
         search_results.append(item)
 
+    warnings = [
+        w.error_message if hasattr(w, 'error_message') else str(w)
+        for w in warnings
+    ]
+
     # TAGS ON THIS PAGE
     total_tags = set()
     for result in search_results:

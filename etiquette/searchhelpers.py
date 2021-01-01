@@ -107,7 +107,7 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
 
     except exceptions.OutOfOrder as exc:
         if warning_bag:
-            warning_bag.add(exc.error_message)
+            warning_bag.add(exc)
             return
         else:
             raise
@@ -146,7 +146,7 @@ def normalize_author(authors, photodb, warning_bag=None):
             user = photodb.get_user(username=requested_author)
         except exceptions.NoSuchUser as exc:
             if warning_bag:
-                warning_bag.add(exc.error_message)
+                warning_bag.add(exc)
             else:
                 raise
         else:
@@ -255,7 +255,7 @@ def normalize_mmf_vs_expression_conflict(
     if (tag_musts or tag_mays or tag_forbids) and tag_expression:
         exc = exceptions.NotExclusive(['tag_musts+mays+forbids', 'tag_expression'])
         if warning_bag:
-            warning_bag.add(exc.error_message)
+            warning_bag.add(exc)
         else:
             raise exc
         conflict = True
@@ -317,19 +317,19 @@ def normalize_orderby(orderby, warning_bag=None):
             direction = 'desc'
 
         else:
-            message = constants.WARNING_ORDERBY_INVALID.format(request=requested_order)
+            exc = ValueError(constants.WARNING_ORDERBY_INVALID.format(request=requested_order))
             if warning_bag:
-                warning_bag.add(message)
+                warning_bag.add(exc)
             else:
-                raise ValueError(message)
+                raise exc
             continue
 
         if column not in constants.ALLOWED_ORDERBY_COLUMNS:
-            message = constants.WARNING_ORDERBY_BADCOL.format(column=column)
+            exc = ValueError(constants.WARNING_ORDERBY_BADCOL.format(column=column))
             if warning_bag:
-                warning_bag.add(message)
+                warning_bag.add(exc)
             else:
-                raise ValueError(message)
+                raise exc
             continue
 
         if column == 'random':
@@ -352,10 +352,11 @@ def normalize_orderby(orderby, warning_bag=None):
                 column=column,
                 direction=direction,
             )
+            exc = ValueError(message)
             if warning_bag:
-                warning_bag.add(message)
+                warning_bag.add(exc)
             else:
-                raise ValueError(message)
+                raise exc
             direction = 'desc'
 
         requested_order = (column, direction)
@@ -492,7 +493,7 @@ def normalize_tagset(photodb, tags, warning_bag=None):
             tag = photodb.get_tag(name=tag)
         except exceptions.NoSuchTag as exc:
             if warning_bag:
-                warning_bag.add(exc.error_message)
+                warning_bag.add(exc)
                 continue
             else:
                 raise exc
@@ -519,7 +520,7 @@ def tag_expression_tree_builder(
             node.token = photodb.get_tag(name=node.token).name
         except (exceptions.NoSuchTag) as exc:
             if warning_bag:
-                warning_bag.add(exc.error_message)
+                warning_bag.add(exc)
                 node.token = None
             else:
                 raise
