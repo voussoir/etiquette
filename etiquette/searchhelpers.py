@@ -348,22 +348,13 @@ def normalize_orderby(orderby, warning_bag=None):
                 raise exc
 
         column_friendly = column
-        column_expanded = column
-
-        if column_expanded == 'random':
-            column_expanded = 'RANDOM()'
-
-        elif column_expanded == 'area':
-            column_expanded = '(width * height)'
-
-        elif column_expanded == 'basename':
-            column_expanded = 'COALESCE(override_filename, basename)'
-
-        elif column_expanded == 'bitrate':
-            column_expanded = '((bytes / 128) / duration)'
-
-        elif column_expanded == 'ratio':
-            column_expanded = '(width / height)'
+        column_expanded = {
+            'random': 'RANDOM()',
+            'area': '(width * height)',
+            'basename': 'COALESCE(override_filename, basename)',
+            'bitrate': '((bytes / 128) / duration)',
+            'ratio': '(width / height)',
+        }.get(column, column)
 
         final_orderby.append( (column_friendly, column_expanded, direction) )
 
