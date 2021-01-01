@@ -320,9 +320,9 @@ def normalize_orderby(orderby, warning_bag=None):
             exc = ValueError(constants.WARNING_ORDERBY_INVALID.format(request=requested_order))
             if warning_bag:
                 warning_bag.add(exc)
+                continue
             else:
                 raise exc
-            continue
 
         if direction not in ('asc', 'desc'):
             message = constants.WARNING_ORDERBY_BADDIRECTION.format(
@@ -332,17 +332,17 @@ def normalize_orderby(orderby, warning_bag=None):
             exc = ValueError(message)
             if warning_bag:
                 warning_bag.add(exc)
+                direction = 'desc'
             else:
                 raise exc
-            direction = 'desc'
 
         if column not in constants.ALLOWED_ORDERBY_COLUMNS:
             exc = ValueError(constants.WARNING_ORDERBY_BADCOL.format(column=column))
             if warning_bag:
                 warning_bag.add(exc)
+                continue
             else:
                 raise exc
-            continue
 
         if column == 'random':
             column = 'RANDOM()'
