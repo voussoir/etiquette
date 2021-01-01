@@ -290,7 +290,10 @@ def normalize_orderby(orderby, warning_bag=None):
 
     With no direction, direction is implied desc.
 
-    Returns: A list of tuples of (column, direction)
+    Returns: A list of tuples of (column_friendly, column_expanded, direction)
+    where friendly is the name as the user would see it and expanded is the
+    expression to be used in the SQL query. This is important for columns like
+    "area" which is expanded into width*height.
     '''
     if orderby is None:
         orderby = []
@@ -344,23 +347,25 @@ def normalize_orderby(orderby, warning_bag=None):
             else:
                 raise exc
 
-        if column == 'random':
-            column = 'RANDOM()'
+        column_friendly = column
+        column_expanded = column
 
-        elif column == 'area':
-            column = '(width * height)'
+        if column_expanded == 'random':
+            column_expanded = 'RANDOM()'
 
-        elif column == 'basename':
-            column = 'COALESCE(override_filename, basename)'
+        elif column_expanded == 'area':
+            column_expanded = '(width * height)'
 
-        elif column == 'bitrate':
-            column = '((bytes / 128) / duration)'
+        elif column_expanded == 'basename':
+            column_expanded = 'COALESCE(override_filename, basename)'
 
-        elif column == 'ratio':
-            column = '(width / height)'
+        elif column_expanded == 'bitrate':
+            column_expanded = '((bytes / 128) / duration)'
 
-        requested_order = (column, direction)
-        final_orderby.append(requested_order)
+        elif column_expanded == 'ratio':
+            column_expanded = '(width / height)'
+
+        final_orderby.append( (column_friendly, column_expanded, direction) )
 
     return final_orderby
 

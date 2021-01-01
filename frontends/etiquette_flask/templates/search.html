@@ -168,13 +168,13 @@
 <li class="search_builder_orderby_li">
     <select onchange="return orderby_hide_direction_hook(event);">
         <option value="created" {{"selected" if selected_column=="created" else ""}}>Creation date</option>
-        <option value="area" {{"selected" if selected_column=="(width * height)" else ""}}>Area</option>
+        <option value="area" {{"selected" if selected_column=="area" else ""}}>Area</option>
         <option value="width" {{"selected" if selected_column=="width" else ""}}>Width</option>
         <option value="height" {{"selected" if selected_column=="height" else ""}}>Height</option>
-        <option value="ratio" {{"selected" if selected_column=="(width / height)" else ""}}>Aspect Ratio</option>
+        <option value="ratio" {{"selected" if selected_column=="ratio" else ""}}>Aspect Ratio</option>
         <option value="bytes" {{"selected" if selected_column=="bytes" else ""}}>File size</option>
         <option value="duration" {{"selected" if selected_column=="duration" else ""}}>Duration</option>
-        <option value="bitrate" {{"selected" if selected_column=="((bytes / 128) / duration)" else ""}}>Bitrate</option>
+        <option value="bitrate" {{"selected" if selected_column=="bitrate" else ""}}>Bitrate</option>
         <option value="tagged_at" {{"selected" if selected_column=="tagged_at" else ""}}>Recently tagged</option>
         <option value="random" {{"selected" if selected_column=="random" else ""}}>Random</option>
     </select>

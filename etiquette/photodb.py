@@ -776,12 +776,14 @@ class PDBPhotoMixin:
         else:
             filename_tree = None
 
-        giveback_orderby = [
-            '%s-%s' % (column.replace('RANDOM()', 'random'), direction)
-            for (column, direction) in orderby
-        ]
-
-        if not orderby:
+        if orderby:
+            giveback_orderby = [
+                f'{friendly}-{direction}'
+                for (friendly, expanded, direction) in orderby
+            ]
+            orderby = [(expanded, direction) for (friendly, expanded, direction) in orderby]
+        else:
+            giveback_orderby = None
             orderby = [('created', 'desc')]
 
         if give_back_parameters:
@@ -807,7 +809,7 @@ class PDBPhotoMixin:
                 'within_directory': within_directory or None,
                 'limit': limit,
                 'offset': offset or None,
-                'orderby': giveback_orderby or None,
+                'orderby': giveback_orderby,
                 'yield_albums': yield_albums,
                 'yield_photos': yield_photos,
             }
