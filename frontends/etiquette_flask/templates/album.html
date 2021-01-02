@@ -207,19 +207,10 @@ const ALBUM_ID = undefined;
     <div id="left">
         <div id="hierarchy_self" class="panel">
             <div id="album_metadata">
-                <h2><span
-                id="title_text"
-                data-editor-id="title"
-                data-editor-empty-text="{{album.id}}"
-                data-editor-placeholder="title"
-                >
-                    {{-album.display_name-}}
-                </span></h2>
+                <h2><span id="title_text">{{-album.display_name-}}</span></h2>
 
                 <pre
                 id="description_text"
-                data-editor-id="description"
-                data-editor-placeholder="description"
                 {% if not album.description %}class="hidden"{% endif %}
                 >
                     {{-album.description-}}
@@ -319,13 +310,9 @@ function unpaste_photo_clipboard()
     api.albums.remove_photos(ALBUM_ID, photo_ids, common.refresh_or_alert);
 }
 
-function rename_ed_on_open(ed, edit_element_map, display_element_map)
-{
-    ed.open();
-    edit_element_map["title"].focus();
-}
+rename_ed_on_open = undefined;
 
-function rename_ed_on_save(ed, edit_element_map, display_element_map)
+function rename_ed_on_save(ed)
 {
     function callback(response)
     {
@@ -342,41 +329,41 @@ function rename_ed_on_save(ed, edit_element_map, display_element_map)
             return;
         }
 
+        // The data coming back from the server will have been normalized.
+        ed.elements["title"].edit.value = response.data.title;
+
         ed.save();
 
-        const title_display = display_element_map["title"];
-        const description_display = display_element_map["description"];
-
-        document.title = title_display.innerText + " | Albums";
-
-        if (description_display.innerText == "")
-        {
-            description_display.classList.add("hidden");
-        }
+        document.title = ed.elements["title"].display.innerText + " | Albums";
     }
 
-    edit_element_map["title"].value = edit_element_map["title"].value.trim();
-    const title = edit_element_map["title"].value;
-    const description = edit_element_map["description"].value;
+    const title = ed.elements["title"].edit.value;
+    const description = ed.elements["description"].edit.value;
 
     ed.show_spinner();
     api.albums.edit(ALBUM_ID, title, description, callback);
 }
 
-function rename_ed_on_cancel(ed, edit_element_map, display_element_map)
-{
-    ed.cancel();
-    if (display_element_map["description"].innerText == "")
+const rename_ed_elements = [
     {
-        display_element_map["description"].classList.add("hidden");
-    }
-}
+        "id": "title",
+        "element": document.getElementById("title_text"),
+        "placeholder": "title",
+        "empty_text": ALBUM_ID,
+        "autofocus": true,
+    },
+    {
+        "id": "description",
+        "element": document.getElementById("description_text"),
+        "placeholder": "description",
+        "hide_when_empty": true,
+    },
+];
 
 const rename_ed = new editor.Editor(
-    [document.getElementById("title_text"), document.getElementById("description_text")],
+    rename_ed_elements,
     rename_ed_on_open,
     rename_ed_on_save,
-    rename_ed_on_cancel
 );
 
 function add_album_datalist_on_load(datalist)

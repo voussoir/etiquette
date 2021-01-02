@@ -99,15 +99,11 @@ h2, h3
                     specific_tag,
                     link="search",
                     id="name_text",
-                    data_editor_id="name",
-                    data_editor_placeholder="name",
                     )}}
                 </h2>
 
                 <pre
                 id="description_text"
-                data-editor-id="description"
-                data-editor-placeholder="description"
                 {% if specific_tag.description == "" %}class="hidden"{% endif -%}
                 >
                     {{-specific_tag.description-}}
@@ -383,65 +379,64 @@ function tag_action_callback(response)
 }
 
 {% if specific_tag is not none %}
-function rename_ed_on_open(ed, edit_element_map)
-{
-    ed.open();
-    edit_element_map["name"].focus();
-}
+rename_ed_on_open = undefined;
 
-function rename_ed_on_save(ed, edit_element_map, display_element_map)
+function rename_ed_on_save(ed)
 {
     function callback(response)
     {
         ed.hide_spinner();
+
         if (response.meta.status !== 200)
         {
             alert(JSON.stringify(response));
             return;
         }
 
+        // The data that comes back from the server will have been normalized,
+        // so we update some local state.
         const new_name = response.data.name;
         const new_description = response.data.description;
-        document.title = new_name + " | Tags";
+
         SPECIFIC_TAG = new_name;
+        document.title = new_name + " | Tags";
         window.history.replaceState(null, null, "/tag/" + new_name);
-        name_editor.value = new_name;
-        name_display.href = "/search?tag_musts=" + new_name;
-        description_editor.value = new_description;
+
+        ed.elements["name"].display.href = "/search?tag_musts=" + new_name;
+        ed.elements["name"].edit.value = new_name;
+        ed.elements["description"].edit.value = new_description;
+
         ed.save();
-        if (new_description === "")
-        {
-            description_display.classList.add("hidden");
-        }
     }
 
-    const name_display = display_element_map["name"];
-    const name_editor = edit_element_map["name"];
-    const description_display = display_element_map["description"];
-    const description_editor = edit_element_map["description"];
-
-    const tag_name = name_display.innerText;
-    const new_name = name_editor.value;
-    const new_description = description_editor.value;
-
     ed.show_spinner();
+
+    const tag_name = ed.elements["name"].display.innerText;
+    const new_name = ed.elements["name"].edit.value;
+    const new_description = ed.elements["description"].edit.value;
+
     api.tags.edit(tag_name, new_name, new_description, callback);
 }
 
-function rename_ed_on_cancel(ed, edit_element_map, display_element_map)
-{
-    ed.cancel();
-    if (display_element_map["description"].innerText == "")
+const rename_ed_elements = [
     {
-        display_element_map["description"].classList.add("hidden");
-    }
-}
+        "id": "name",
+        "element": document.getElementById("name_text"),
+        "placeholder": "name",
+        "autofocus": true,
+    },
+    {
+        "id": "description",
+        "element": document.getElementById("description_text"),
+        "placeholder": "description",
+        "hide_when_empty": true,
+    },
+];
 
 const rename_ed = new editor.Editor(
-    [document.getElementById("name_text"), document.getElementById("description_text")],
+    rename_ed_elements,
     rename_ed_on_open,
     rename_ed_on_save,
-    rename_ed_on_cancel,
 );
 {% endif %}
 </script>

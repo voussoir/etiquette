@@ -3,30 +3,40 @@ const editor = {};
 editor.PARAGRAPH_TYPES = new Set(["P", "PRE"]);
 
 editor.Editor =
-function Editor(elements, on_open, on_save, on_cancel)
+function Editor(element_argss, on_open, on_save, on_cancel)
 {
     /*
-    This class wraps around display elements like headers and paragraphs, and
-    creates edit elements like inputs and textareas to edit them with.
+    This class wraps around display elements like spans, headers, and
+    paragraphs, and creates edit elements like inputs and textareas to edit
+    them with.
 
-    You may add the following data- attributes to your display elements to
-    affect their corresponding edit elements:
-    data-editor-empty-text: If the display element contains this text, then
-        the edit element will be set to "" when opened.
+    element_argss should be a list of dicts. Each dict is required to have "id"
+    which is unique amongst its peers, and "element" which is the display
+    element. Additionally, you may add the following properties to change the
+    element's behavior:
+
+    "autofocus": true
+        When the user opens the editor, this element will get .focus().
+        Only one element should have this.
+
+    "empty_text": string
+        If the display element contains this text, then the edit element will
+        be set to "" when opened.
         If the edit element contains "", then the display element will
         contain this text when saved.
-    data-editor-id: The string used as the key into display_element_map and
-        edit_element_map.
-    data-editor-placeholder: The placeholder attribute of the edit element.
 
-    Your on_open, on_save and on_cancel hooks will be called with:
-        1. This editor object.
-        2. The edit elements as either:
-            If ALL of the display elements have a data-editor-id,
-            then a dictionary of {data-editor-id: edit_element, ...}.
-            Otherwise, an array of [edit_element, ...] in the order they were
-            given to the constructor.
-        3. The display elements as either the map or the array, similarly.
+    "hide_when_empty": true
+        If the element does not have any text, it will get the "hidden" css
+        class after saving / closing.
+
+    "placeholder": string
+        The placeholder attribute of the edit element.
+
+    The editor object will contain a dict called elements that maps IDs to the
+    display element, edit elements, and your other options.
+
+    Your on_open, on_save and on_cancel hooks will be called with the editor
+    object as the only argument.
 
     When your callbacks are used, the default `open`, `save`, `cancel`
     methods are not called automatically. You should call them from within
@@ -41,10 +51,13 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.close = function()
     {
-        for (let index = 0; index < this.display_elements.length; index += 1)
+        for (const element of Object.values(this.elements))
         {
-            this.display_elements[index].classList.remove("hidden");
-            this.edit_elements[index].classList.add("hidden");
+            element.edit.classList.add("hidden");
+            if (! (element.display.innerText === "" && element.hide_when_empty))
+            {
+                element.display.classList.remove("hidden");
+            }
         }
         this.hide_spinner();
         this.hide_error();
@@ -65,22 +78,23 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.open = function()
     {
-        for (let index = 0; index < this.display_elements.length; index += 1)
+        for (const element of Object.values(this.elements))
         {
-            const display_element = this.display_elements[index];
-            const edit_element = this.edit_elements[index];
+            element.display.classList.add("hidden");
+            element.edit.classList.remove("hidden");
 
-            display_element.classList.add("hidden");
-            edit_element.classList.remove("hidden");
-
-            const empty_text = display_element.dataset.editorEmptyText;
-            if (empty_text !== undefined && display_element.innerText == empty_text)
+            if (element.autofocus)
             {
-                edit_element.value = "";
+                element.edit.focus();
+            }
+
+            if (element.empty_text !== undefined && element.display.innerText == element.empty_text)
+            {
+                element.edit.value = "";
             }
             else
             {
-                edit_element.value = display_element.innerText;
+                element.edit.value = element.display.innerText;
             }
         }
         this.open_button.classList.add("hidden");
@@ -90,18 +104,15 @@ function Editor(elements, on_open, on_save, on_cancel)
 
     this.save = function()
     {
-        for (let index = 0; index < this.display_elements.length; index += 1)
+        for (const element of Object.values(this.elements))
         {
-            const display_element = this.display_elements[index];
-            const edit_element = this.edit_elements[index];
-
-            if (display_element.dataset.editorEmptyText !== undefined && edit_element.value == "")
+            if (element.empty_text !== undefined && element.edit.value == "")
             {
-                display_element.innerText = display_element.dataset.editorEmptyText;
+                element.display.innerText = element.empty_text;
             }
             else
             {
-                display_element.innerText = edit_element.value;
+                element.display.innerText = element.edit.value;
             }
         }
 
@@ -121,64 +132,54 @@ function Editor(elements, on_open, on_save, on_cancel)
         this.spinner.show(delay);
     };
 
-    this.display_elements = [];
-    this.edit_elements = [];
+    this.elements = {};
 
-    this.can_use_element_map = true;
-    this.display_element_map = {};
-    this.edit_element_map = {};
-
+    // End-user can put anything they want in here.
     this.misc_data = {};
 
-    for (const display_element of elements)
+    // Keep track of last edit element so we can put the toolbox after it.
+    let last_element;
+
+    for (const element_args of element_argss)
     {
-        let edit_element;
-        if (editor.PARAGRAPH_TYPES.has(display_element.tagName))
+        const element = {};
+        element.id = element_args.id;
+        this.elements[element.id] = element;
+
+        element.display = element_args.element;
+        element.empty_text = element_args.empty_text;
+        element.hide_when_empty = element_args.hide_when_empty;
+        element.autofocus = element_args.autofocus;
+
+        if (editor.PARAGRAPH_TYPES.has(element.display.tagName))
         {
-            edit_element = document.createElement("textarea");
-            edit_element.rows = 6;
+            element.edit = document.createElement("textarea");
+            element.edit.rows = 6;
         }
         else
         {
-            edit_element = document.createElement("input");
-            edit_element.type = "text";
+            element.edit = document.createElement("input");
+            element.edit.type = "text";
         }
-        edit_element.classList.add("editor_input");
-        edit_element.classList.add("hidden");
 
-        if (display_element.dataset.editorPlaceholder !== undefined)
+        element.edit.classList.add("editor_input");
+        element.edit.classList.add("hidden");
+
+        if (element_args.placeholder !== undefined)
         {
-            edit_element.placeholder = display_element.dataset.editorPlaceholder;
+            element.edit.placeholder = element_args.placeholder;
         }
 
-        if (this.can_use_element_map)
-        {
-            if (display_element.dataset.editorId !== undefined)
-            {
-                this.display_element_map[display_element.dataset.editorId] = display_element;
-                this.edit_element_map[display_element.dataset.editorId] = edit_element;
-            }
-            else
-            {
-                this.can_use_element_map = false;
-                this.edit_element_map = null;
-                this.display_element_map = null;
-            }
-        }
-
-        display_element.parentElement.insertBefore(edit_element, display_element.nextSibling);
-
-        this.display_elements.push(display_element);
-        this.edit_elements.push(edit_element);
+        element.display.parentElement.insertBefore(element.edit, element.display.nextSibling);
+        last_element = element.edit;
     }
 
     this.binder = function(func, fallback)
     {
         /*
-        Given a function that takes an Editor as its first argument, and the
-        element arrays/maps as the second and third, return a new function
-        which requires no arguments and calls the given function with the
-        correct data.
+        Given a function that takes an Editor as its first argument,
+        return a new function which requires no arguments and calls the
+        function with this editor.
 
         This is done so that the new function can be used in an event handler.
         */
@@ -187,25 +188,19 @@ function Editor(elements, on_open, on_save, on_cancel)
             return fallback.bind(this);
         }
 
-        if (this.can_use_element_map)
-        {
-            const bindable = () => func(this, this.edit_element_map, this.display_element_map);
-            return bindable.bind(this);
-        }
-        else
-        {
-            const bindable = () => func(this, this.edit_elements, this.display_elements);
-            return bindable.bind(this);
-        }
+        const bindable = () => func(this);
+        return bindable.bind(this);
     }
 
+    // In order to prevent page jumping on load, you can add an element with
+    // class editor_toolbox_placeholder to the page and size it so it matches
+    // the buttons that are going to get placed there.
     const placeholders = document.getElementsByClassName("editor_toolbox_placeholder");
     for (const placeholder of placeholders)
     {
         placeholder.parentElement.removeChild(placeholder);
     }
 
-    const last_element = this.edit_elements[this.edit_elements.length - 1];
     const toolbox = document.createElement("div");
     toolbox.classList.add("editor_toolbox");
     last_element.parentElement.insertBefore(toolbox, last_element.nextSibling);
@@ -249,15 +244,9 @@ function Editor(elements, on_open, on_save, on_cancel)
     this.spinner = new spinner.Spinner(spinner_element);
     toolbox.appendChild(spinner_element);
 
-    for (const edit_element of this.edit_elements)
+    for (const element of Object.values(this.elements))
     {
-        if (edit_element.tagName == "TEXTAREA")
-        {
-            common.bind_box_to_button(edit_element, this.save_button, true);
-        }
-        else
-        {
-            common.bind_box_to_button(edit_element, this.save_button, false);
-        }
+        const ctrl_enter = element.edit.tagName == "TEXTAREA";
+        common.bind_box_to_button(element.edit, this.save_button, ctrl_enter);
     }
 }

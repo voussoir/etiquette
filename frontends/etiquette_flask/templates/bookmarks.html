@@ -63,9 +63,6 @@
                 <a
                 href="{{bookmark.url}}"
                 class="bookmark_title"
-                data-editor-id="title"
-                data-editor-placeholder="title (optional)"
-                data-editor-empty-text="{{bookmark.id}}"
                 >
                     {{-bookmark.display_name-}}
                 </a>
@@ -73,8 +70,6 @@
                 <a
                 href="{{bookmark.url}}"
                 class="bookmark_url"
-                data-editor-id="url"
-                data-editor-placeholder="url"
                 >
                     {{-bookmark.url-}}
                 </a>
@@ -117,51 +112,65 @@ function delete_bookmark_form(event)
     api.bookmarks.delete(id, common.refresh_or_alert);
 }
 
-function on_open(ed, edit_element_map)
-{
-    ed.open();
-    edit_element_map["title"].focus();
-}
+ed_on_open = undefined;
 
-function on_save(ed, edit_element_map, display_element_map)
+function ed_on_save(ed)
 {
     function callback(response)
     {
+        ed.hide_spinner();
+
         if (response.meta.status != 200)
         {
             ed.show_error("Status: " + response.meta.status);
             return;
         }
 
+        // The data coming back from the server will have been normalized.
+        ed.elements["title"].edit.value = response.data.title;
+
         ed.save();
-        display_element_map["title"].href = response.data.url;
-        display_element_map["url"].href = response.data.url;
+
+        ed.elements["title"].display.href = response.data.url;
+        ed.elements["url"].display.href = response.data.url;
     }
 
-    edit_element_map["url"].value = edit_element_map["url"].value.trim();
-    if (!edit_element_map["url"].value)
+    ed.elements["url"].edit.value = ed.elements["url"].edit.value.trim();
+    if (! ed.elements["url"].edit.value)
     {
         return;
     }
 
     const bookmark_id = ed.misc_data["bookmark_id"];
-    const title = edit_element_map["title"].value;
-    const url = edit_element_map["url"].value;
+    const title = ed.elements["title"].edit.value;
+    const url = ed.elements["url"].edit.value;
 
     ed.show_spinner();
     api.bookmarks.edit(bookmark_id, title, url, callback);
 }
 
-on_cancel = undefined;
+ed_on_cancel = undefined;
 
 function create_editors()
 {
     const cards = document.getElementsByClassName("bookmark_card");
     for (const card of cards)
     {
-        const title_div = card.getElementsByClassName("bookmark_title")[0];
-        const url_div = card.getElementsByClassName("bookmark_url")[0];
-        ed = new editor.Editor([title_div, url_div], on_open, on_save, on_cancel);
+        const ed_elements = [
+            {
+                "id": "title",
+                "element": card.getElementsByClassName("bookmark_title")[0],
+                "placeholder": "title (optional)",
+                "empty_text": card.dataset.id,
+                "autofocus": true,
+            },
+            {
+                "id": "url",
+                "element": card.getElementsByClassName("bookmark_url")[0],
+                "placeholder": "url",
+            },
+        ];
+        ed = new editor.Editor(ed_elements, ed_on_open, ed_on_save, ed_on_cancel);
         ed.misc_data["bookmark_id"] = card.dataset.id;
     }
 }
