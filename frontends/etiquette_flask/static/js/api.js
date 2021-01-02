@@ -387,6 +387,15 @@ function callback_go_to_tags(response)
 /**************************************************************************************************/
 api.users = {};
 
+api.users.edit =
+function edit(username, display_name, callback)
+{
+    const url = `/user/${username}/edit`;
+    const data = new FormData();
+    data.append("display_name", display_name);
+    common.post(url, data, callback);
+}
+
 api.users.login =
 function login(username, password, callback)
 {

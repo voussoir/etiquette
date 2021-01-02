@@ -35,6 +35,23 @@ def get_user_id_redirect(user_id):
     url = request.url.replace(url_from, url_to)
     return flask.redirect(url)
 
+@site.route('/user/<username>/edit', methods=['POST'])
+def post_user_edit(username):
+    session = session_manager.get(request)
+    if not session:
+        return jsonify.make_json_response({}, status=403)
+    user = common.P_user(username, response_type='json')
+    if session.user != user:
+        return jsonify.make_json_response({}, status=403)
+
+    display_name = request.form.get('display_name')
+    if display_name is not None:
+        user.set_display_name(display_name)
+
+    common.P.commit()
+
+    return jsonify.make_json_response(user.jsonify())
+
 # Login and logout #################################################################################
 
 @site.route('/login', methods=['GET'])

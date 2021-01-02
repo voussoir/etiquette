@@ -10,6 +10,8 @@
     {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
+    <script src="/static/js/editor.js"></script>
+    <script src="/static/js/spinner.js"></script>
 
 <style>
 #content_body
@@ -23,13 +25,69 @@
 <body>
     {{header.make_header(session=session)}}
     <div id="content_body">
-        <h2>{{user.display_name}}</h2>
+        <div class="panel">
+        <h2 id="display_name">{{user.display_name}}</h2>
         <p>ID: <a href="/userid/{{user.id}}">{{user.id}}</a></p>
         <p>User since <span title="{{user.created|int|timestamp_to_8601}}">{{user.created|timestamp_to_naturaldate}}.</span></p>
         <p><a href="/search?author={{user.username}}">Photos by {{user.display_name}}</a></p>
+        </div>
     </div>
 </body>
 
 <script type="text/javascript">
+{% if user.id == session.user.id %}
+const USERNAME = "{{user.username}}";
+
+profile_ed_on_open = undefined;
+
+function profile_ed_on_save(ed)
+{
+    function callback(response)
+    {
+        ed.hide_spinner();
+
+        if (! response.meta.json_ok)
+        {
+            alert(JSON.stringify(response));
+            return;
+        }
+        if ("error_type" in response.data)
+        {
+            ed.show_error(response.data.error_message);
+            return;
+        }
+
+        // The data that comes back from the server will have been normalized.
+        const new_display_name = response.data.display_name;
+        document.title = new_display_name;
+
+        ed.elements["display_name"].edit.value = new_display_name;
+
+        ed.save();
+    }
+
+    ed.show_spinner();
+    api.users.edit(USERNAME, ed.elements["display_name"].edit.value, callback);
+}
+
+profile_ed_on_cancel = undefined;
+
+const profile_ed_elements = [
+    {
+        "id": "display_name",
+        "element": document.getElementById("display_name"),
+        "placeholder": "Display name",
+        "empty_text": USERNAME,
+        "autofocus": true,
+    },
+];
+
+const profile_ed = new editor.Editor(
+    profile_ed_elements,
+    profile_ed_on_open,
+    profile_ed_on_save,
+    profile_ed_on_cancel,
+);
+{% endif %}
 </script>
 </html>
