@@ -57,6 +57,7 @@ BEGIN;
 {DB_PRAGMAS}
 {DB_VERSION_PRAGMA}
 ----------------------------------------------------------------------------------------------------
+-- users table is defined first because other tables have foreign keys here.
 CREATE TABLE IF NOT EXISTS users(
     id TEXT PRIMARY KEY NOT NULL,
     username TEXT NOT NULL COLLATE NOCASE,
