@@ -40,7 +40,7 @@ body
         "content_body" 1fr
         /1fr;
 
-    height: 100%;
+    min-height: 100%;
     margin: 0;
 
     background-color: var(--color_primary);
