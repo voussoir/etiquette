@@ -45,13 +45,16 @@ def find_photodb():
 
 def export_symlinks_albums(albums, destination, dry_run):
     album_directory_names = etiquette.helpers.decollide_names(albums, lambda a: a.display_name)
-    for album in albums:
+    for (album, directory_name) in album_directory_names.items():
         associated_directories = album.get_associated_directories()
         if len(associated_directories) == 1:
             album_dir = associated_directories.pop()
-            symlink_dir = destination.with_child(etiquette.helpers.remove_path_badchars(album.display_name))
+            directory_name = etiquette.helpers.remove_path_badchars(directory_name)
+            symlink_dir = destination.with_child(directory_name)
             if dry_run:
                 yield symlink_dir
+                continue
+            if not album_dir.exists:
                 continue
             if symlink_dir.exists:
                 yield symlink_dir
@@ -60,44 +63,21 @@ def export_symlinks_albums(albums, destination, dry_run):
             os.symlink(src=album_dir.absolute_path, dst=symlink_dir.absolute_path)
             yield symlink_dir
 
-        # photo_filenames = etiquette.helpers.album_photos_as_filename_map(
-        #     album,
-        #     once_each=False,
-        #     naming='simplified',
-        #     root_name=album_directory_names[album],
-        # )
-        # for (photo, filepaths) in photo_filenames.items():
-        #     if not include_searchhidden and photo.searchhidden:
-        #         continue
-        #     if not photo.real_path.exists:
-        #         continue
-        #     for filepath in filepaths:
-        #         filepath = destination.join(filepath)
-        #         print(filepath.absolute_path)
-        #         if dry_run:
-        #             yield filepath
-        #             continue
-        #         if filepath.exists:
-        #             yield filepath
-        #             continue
-        #         print(filepath, filepath.exists)
-        #         filepath.parent.makedirs(exist_ok=True)
-        #         os.symlink(src=photo.real_path.absolute_path, dst=filepath.absolute_path)
-        #         yield filepath
-
 def export_symlinks_photos(photos, destination, dry_run):
     photo_filenames = etiquette.helpers.decollide_names(photos, lambda p: p.basename)
     for (photo, filename) in photo_filenames.items():
-        filepath = destination.with_child(filename)
-        print(filepath.absolute_path)
+        symlink_path = destination.with_child(filename)
         if dry_run:
-            yield filepath
+            yield symlink_path
             continue
-        if filepath.exists:
-            yield filepath
+        if not photo.real_path.exists:
             continue
-        os.symlink(src=photo.real_path.absolute_path, dst=filepath.absolute_path)
-        yield filepath
+        if symlink_path.exists:
+            yield symlink_path
+            continue
+        print(symlink_path.absolute_path)
+        os.symlink(src=photo.real_path.absolute_path, dst=symlink_path.absolute_path)
+        yield symlink_path
 
 def get_photos_by_glob(pattern):
     photodb = find_photodb()
