@@ -9,7 +9,6 @@ import mimetypes
 import os
 import PIL.Image
 import re
-import unicodedata
 import zipstream
 
 from voussoirkit import bytestring
