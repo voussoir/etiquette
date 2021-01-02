@@ -452,6 +452,17 @@ def get_search_core():
     }
     return final_results
 
+@site.route('/search_embed')
+def get_search_embed():
+    search_results = get_search_core()
+    response = common.render_template(
+        request,
+        'search_embed.html',
+        results=search_results['results'],
+        search_kwargs=search_results['search_kwargs'],
+    )
+    return response
+
 @site.route('/search')
 def get_search_html():
     search_results = get_search_core()

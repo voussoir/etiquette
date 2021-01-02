@@ -14,10 +14,15 @@
     <script src="/static/js/spinner.js"></script>
 
 <style>
+h2, h3
+{
+    margin-top: 0;
+}
+
 #content_body
 {
-    /* overriding common.css here */
-    display: block;
+    grid-row-gap: 8px;
+    grid-auto-rows: max-content;
 }
 </style>
 </head>
@@ -26,10 +31,18 @@
     {{header.make_header(session=session)}}
     <div id="content_body">
         <div class="panel">
-        <h2 id="display_name">{{user.display_name}}</h2>
-        <p>ID: <a href="/userid/{{user.id}}">{{user.id}}</a></p>
-        <p>User since <span title="{{user.created|int|timestamp_to_8601}}">{{user.created|timestamp_to_naturaldate}}.</span></p>
-        <p><a href="/search?author={{user.username}}">Photos by {{user.display_name}}</a></p>
+            <h2 id="display_name">{{user.display_name}}</h2>
+            <p>ID: <a href="/userid/{{user.id}}">{{user.id}}</a></p>
+            <p>User since <span title="{{user.created|int|timestamp_to_8601}}">{{user.created|timestamp_to_naturaldate}}.</span></p>
+        </div>
+        <div class="panel">
+            <h3><a href="/search?author={{user.username}}">Photos by {{user.display_name}}</a></h3>
+            <iframe
+            class="embedded_search"
+            src="/search_embed?author={{user.username}}&orderby=created-desc&yield_albums=no&limit=10"
+            onload="return common.size_iframe_to_content(this);"
+            >
+            </iframe>
         </div>
     </div>
 </body>

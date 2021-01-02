@@ -1,0 +1,31 @@
+<!DOCTYPE html5>
+<html>
+<head>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/etiquette.css">
+    <link rel="stylesheet" href="/static/css/photo_card.css">
+    {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
+
+<style>
+body
+{
+    background-color: initial;
+}
+</style>
+</head>
+
+<body>
+    <div>
+    {% import "photo_card.html" as photo_card %}
+    {% import "album_card.html" as album_card %}
+    {% for result in results %}
+        {% if result.__class__.__name__ == 'Photo' %}
+        {{photo_card.create_photo_card(result, view=search_kwargs["view"])}}
+        {% elif result.__class__.__name__ == 'Album' %}
+        {{album_card.create_album_card(result, view=search_kwargs["view"])}}
+        {% endif %}
+    {% endfor %}
+    </div>
+</body>
+
+</html>

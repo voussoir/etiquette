@@ -15,6 +15,13 @@ input, select, textarea
     border-radius: 2px;
 }
 
+iframe.embedded_search
+{
+    width: 100%;
+    max-height: 500px;
+    border: none;
+}
+
 .header_element:hover
 {
     background-color: var(--color_secondary);

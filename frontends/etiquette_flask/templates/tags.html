@@ -233,6 +233,18 @@ h2, h3
         </div>
         {% endif %} <!-- if synonyms -->
         {% endif %} <!-- if specific tag and include synonyms -->
+
+        {% if specific_tag %}
+        <div id="hierarchy_recentphotos" class="panel">
+            <h3><a href="/search?tag_musts={{specific_tag.name}}&orderby=tagged_at-desc">Recent photos</a></h3>
+            <iframe
+            class="embedded_search"
+            src="/search_embed?tag_musts={{specific_tag.name}}&orderby=tagged_at-desc&yield_albums=no&limit=10"
+            onload="return common.size_iframe_to_content(this);"
+            >
+            </iframe>
+        </div>
+        {% endif %} <!-- if specific tag -->
     </div>
 </div>
 </body>
