@@ -6,7 +6,7 @@ from voussoirkit import sqlhelpers
 
 import etiquette
 
-class Regenerator:
+class Migrator:
     '''
     Many of the upgraders involve adding columns. ALTER TABLE ADD COLUMN only
     allows adding at the end, which I usually don't prefer. In order to add a
@@ -14,48 +14,59 @@ class Regenerator:
     the data, and drop the old one. But, foreign keys and indices will still
     point to the old table, which causes broken foreign keys and dropped
     indices. So, the only way to prevent all that is to regenerate all affected
-    tables and indices. Rathern than parsing relationships to determine the
+    tables and indices. Rather than parsing relationships to determine the
     affected tables, this implementation just regenerates everything.
 
     It's kind of horrible but it allows me to have the columns in the order I
     want instead of just always appending. Besides, modifying collations cannot
     be done in-place either.
-    '''
-    def __init__(self, photodb, except_tables=[]):
-        self.photodb = photodb
-        if isinstance(except_tables, str):
-            except_tables = [except_tables]
-        self.except_tables = except_tables
 
-    def __enter__(self):
+    If you want to truly remove a table or index and not have it get
+    regenerated, just do that before instantiating the Migrator.
+    '''
+    def __init__(self, photodb):
+        self.photodb = photodb
+
         query = 'SELECT name, sql FROM sqlite_master WHERE type == "table"'
-        if self.except_tables:
-            query += ' AND name NOT IN ' + sqlhelpers.listify(self.except_tables)
-        self.tables = list(self.photodb.sql_select(query))
+        self.tables = {
+            name: {'create': sql, 'transfer': f'INSERT INTO {name} SELECT * FROM {name}_old'}
+            for (name, sql) in self.photodb.sql_select(query)
+        }
+
+        # The user may be adding entirely new tables derived from the data of
+        # old ones. We'll need to skip new tables for the rename and drop_old
+        # steps. So we track which tables already existed at the beginning.
+        self.existing_tables = set(self.tables)
 
         query = 'SELECT name, sql FROM sqlite_master WHERE type == "index" AND name NOT LIKE "sqlite_%"'
         self.indices = list(self.photodb.sql_select(query))
 
-    def __exit__(self, exc_type, exc, exc_traceback):
-        if exc:
-            raise exc
-
-        # This loop is split in two parts, because otherwise if table A
+    def go(self):
+        # This loop is split in many parts, because otherwise if table A
         # references table B and table A is completely reconstructed, it will
         # be pointing to the version of B which has not been reconstructed yet,
         # which is about to get renamed to B_old and then A's reference will be
         # broken.
-        for (name, query) in self.tables:
+        self.photodb.sql_execute('PRAGMA foreign_keys = OFF')
+        self.photodb.sql_execute('BEGIN')
+        for (name, table) in self.tables.items():
+            if name not in self.existing_tables:
+                continue
             self.photodb.sql_execute(f'ALTER TABLE {name} RENAME TO {name}_old')
 
-        for (name, query) in self.tables:
-            self.photodb.sql_execute(query)
-            self.photodb.sql_execute(f'INSERT INTO {name} SELECT * FROM {name}_old')
+        for (name, table) in self.tables.items():
+            self.photodb.sql_execute(table['create'])
+
+        for (name, table) in self.tables.items():
+            self.photodb.sql_execute(table['transfer'])
+
+        for (name, query) in self.tables.items():
+            if name not in self.existing_tables:
+                continue
             self.photodb.sql_execute(f'DROP TABLE {name}_old')
 
         for (name, query) in self.indices:
             self.photodb.sql_execute(query)
-        # self.photodb.sql_execute('REINDEX')
 
 def upgrade_1_to_2(photodb):
     '''
@@ -184,63 +195,67 @@ def upgrade_6_to_7(photodb):
     for index in indices:
         photodb.sql_execute(f'DROP INDEX {index}')
 
-    with Regenerator(photodb, except_tables='albums'):
-        photodb.sql_executescript('''
-        CREATE TABLE album_associated_directories(
-            albumid TEXT,
-            directory TEXT COLLATE NOCASE
-        );
+    m = Migrator(photodb)
+    m.tables['album_associated_directories']['create'] = '''
+    CREATE TABLE album_associated_directories(
+        albumid TEXT,
+        directory TEXT COLLATE NOCASE
+    );
+    '''
+    m.tables['album_associated_directories']['transfer'] = '''
+    INSERT INTO album_associated_directories SELECT
+        id,
+        associated_directory
+    FROM albums_old
+    WHERE associated_directory IS NOT NULL;
+    '''
 
-        ALTER TABLE albums RENAME TO deleting_albums;
+    m.tables['albums']['create'] = '''
+    CREATE TABLE albums(
+        id TEXT,
+        title TEXT,
+        description TEXT
+    );
+    '''
+    m.tables['albums']['transfer'] = '''
+    INSERT INTO albums SELECT
+        id,
+        title,
+        description
+    FROM albums_old;
+    '''
 
-        CREATE TABLE albums(
-            id TEXT,
-            title TEXT,
-            description TEXT
-        );
+    m.go()
 
-        INSERT INTO albums SELECT
-            id,
-            title,
-            description
-        FROM deleting_albums;
-
-        INSERT INTO album_associated_directories SELECT
-            id,
-            associated_directory
-        FROM deleting_albums
-        WHERE associated_directory IS NOT NULL;
-
-        DROP TABLE deleting_albums;
-
-        CREATE INDEX IF NOT EXISTS index_album_associated_directories_albumid on
-            album_associated_directories(albumid);
-        CREATE INDEX IF NOT EXISTS index_album_associated_directories_directory on
-            album_associated_directories(directory);
-        CREATE INDEX IF NOT EXISTS index_album_group_rel_parentid on album_group_rel(parentid);
-        CREATE INDEX IF NOT EXISTS index_album_group_rel_memberid on album_group_rel(memberid);
-        CREATE INDEX IF NOT EXISTS index_album_photo_rel_albumid on album_photo_rel(albumid);
-        CREATE INDEX IF NOT EXISTS index_album_photo_rel_photoid on album_photo_rel(photoid);
-        CREATE INDEX IF NOT EXISTS index_albums_id on albums(id);
-        CREATE INDEX IF NOT EXISTS index_bookmarks_id on bookmarks(id);
-        CREATE INDEX IF NOT EXISTS index_bookmarks_author on bookmarks(author_id);
-        CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid on photo_tag_rel(photoid);
-        CREATE INDEX IF NOT EXISTS index_photo_tag_rel_tagid on photo_tag_rel(tagid);
-        CREATE INDEX IF NOT EXISTS index_photos_id on photos(id);
-        CREATE INDEX IF NOT EXISTS index_photos_filepath on photos(filepath COLLATE NOCASE);
-        CREATE INDEX IF NOT EXISTS index_photos_override_filename on
-            photos(override_filename COLLATE NOCASE);
-        CREATE INDEX IF NOT EXISTS index_photos_created on photos(created);
-        CREATE INDEX IF NOT EXISTS index_photos_extension on photos(extension);
-        CREATE INDEX IF NOT EXISTS index_photos_author_id on photos(author_id);
-        CREATE INDEX IF NOT EXISTS index_tag_group_rel_parentid on tag_group_rel(parentid);
-        CREATE INDEX IF NOT EXISTS index_tag_group_rel_memberid on tag_group_rel(memberid);
-        CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
-        CREATE INDEX IF NOT EXISTS index_tags_id on tags(id);
-        CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
-        CREATE INDEX IF NOT EXISTS index_users_id on users(id);
-        CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE);
-        ''')
+    photodb.sql_executescript('''
+    CREATE INDEX IF NOT EXISTS index_album_associated_directories_albumid on
+        album_associated_directories(albumid);
+    CREATE INDEX IF NOT EXISTS index_album_associated_directories_directory on
+        album_associated_directories(directory);
+    CREATE INDEX IF NOT EXISTS index_album_group_rel_parentid on album_group_rel(parentid);
+    CREATE INDEX IF NOT EXISTS index_album_group_rel_memberid on album_group_rel(memberid);
+    CREATE INDEX IF NOT EXISTS index_album_photo_rel_albumid on album_photo_rel(albumid);
+    CREATE INDEX IF NOT EXISTS index_album_photo_rel_photoid on album_photo_rel(photoid);
+    CREATE INDEX IF NOT EXISTS index_albums_id on albums(id);
+    CREATE INDEX IF NOT EXISTS index_bookmarks_id on bookmarks(id);
+    CREATE INDEX IF NOT EXISTS index_bookmarks_author on bookmarks(author_id);
+    CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid on photo_tag_rel(photoid);
+    CREATE INDEX IF NOT EXISTS index_photo_tag_rel_tagid on photo_tag_rel(tagid);
+    CREATE INDEX IF NOT EXISTS index_photos_id on photos(id);
+    CREATE INDEX IF NOT EXISTS index_photos_filepath on photos(filepath COLLATE NOCASE);
+    CREATE INDEX IF NOT EXISTS index_photos_override_filename on
+        photos(override_filename COLLATE NOCASE);
+    CREATE INDEX IF NOT EXISTS index_photos_created on photos(created);
+    CREATE INDEX IF NOT EXISTS index_photos_extension on photos(extension);
+    CREATE INDEX IF NOT EXISTS index_photos_author_id on photos(author_id);
+    CREATE INDEX IF NOT EXISTS index_tag_group_rel_parentid on tag_group_rel(parentid);
+    CREATE INDEX IF NOT EXISTS index_tag_group_rel_memberid on tag_group_rel(memberid);
+    CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
+    CREATE INDEX IF NOT EXISTS index_tags_id on tags(id);
+    CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
+    CREATE INDEX IF NOT EXISTS index_users_id on users(id);
+    CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE);
+    ''')
 
 def upgrade_7_to_8(photodb):
     '''
@@ -292,49 +307,45 @@ def upgrade_10_to_11(photodb):
     Added Primary keys, Foreign keys, and NOT NULL constraints.
     Added author_id column to Album and Tag tables.
     '''
-    with Regenerator(photodb, except_tables=['albums', 'tags']):
-        photodb.sql_executescript('''
-        PRAGMA foreign_keys = OFF;
-        BEGIN;
+    m = Migrator(photodb)
 
-        ALTER TABLE albums RENAME TO albums_old;
+    m.tables['albums']['create'] = '''
+    CREATE TABLE albums(
+        id TEXT PRIMARY KEY NOT NULL,
+        title TEXT,
+        description TEXT,
+        author_id TEXT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['albums']['transfer'] = '''
+    INSERT INTO albums SELECT
+        id,
+        title,
+        description,
+        NULL
+    FROM albums_old;
+    '''
 
-        CREATE TABLE albums(
-            id TEXT PRIMARY KEY NOT NULL,
-            title TEXT,
-            description TEXT,
-            author_id TEXT,
-            FOREIGN KEY(author_id) REFERENCES users(id)
-        );
+    m.tables['tags']['create'] = '''
+    CREATE TABLE tags(
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        author_id TEXT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['tags']['transfer'] = '''
+    INSERT INTO tags SELECT
+        id,
+        name,
+        description,
+        NULL
+    FROM tags_old;
+    '''
 
-        INSERT INTO albums SELECT
-            id,
-            title,
-            description,
-            NULL
-        FROM albums_old;
-
-        DROP TABLE albums_old;
-
-        ALTER_TABLE tags RENAME TO tags_old;
-
-        CREATE TABLE tags(
-            id TEXT PRIMARY KEY NOT NULL,
-            name TEXT NOT NULL,
-            description TEXT,
-            author_id TEXT,
-            FOREIGN KEY(author_id) REFERENCES users(id)
-        );
-
-        INSERT INTO tags SELECT
-            id,
-            name,
-            description,
-            NULL
-        FROM tags_old;
-
-        DROP TABLE tags_old;
-        ''')
+    m.go()
 
 def upgrade_11_to_12(photodb):
     '''
@@ -352,32 +363,25 @@ def upgrade_12_to_13(photodb):
     '''
     Added display_name column to the User table.
     '''
-    with Regenerator(photodb, except_tables='users'):
-        photodb.sql_executescript('''
-        PRAGMA foreign_keys = OFF;
-
-        BEGIN;
-
-        ALTER TABLE users RENAME TO users_old;
-
-        CREATE TABLE users(
-            id TEXT PRIMARY KEY NOT NULL,
-            username TEXT NOT NULL COLLATE NOCASE,
-            password BLOB NOT NULL,
-            display_name TEXT,
-            created INT
-        );
-
-        INSERT INTO users SELECT
-            id,
-            username,
-            password,
-            NULL,
-            created
-        FROM users_old;
-
-        DROP TABLE users_old;
-        ''')
+    m = Migrator(photodb)
+    m.tables['users']['create'] = '''
+    CREATE TABLE users(
+        id TEXT PRIMARY KEY NOT NULL,
+        username TEXT NOT NULL COLLATE NOCASE,
+        password BLOB NOT NULL,
+        display_name TEXT,
+        created INT
+    );
+    '''
+    m.tables['users']['transfer'] = '''
+    INSERT INTO users SELECT
+        id,
+        username,
+        password,
+        NULL,
+        created
+    FROM users_old;
+    '''
 
 def upgrade_13_to_14(photodb):
     '''
@@ -391,57 +395,52 @@ def upgrade_14_to_15(photodb):
     '''
     Added the dev_ino column to photos.
     '''
-    with Regenerator(photodb, except_tables='photos'):
-        photodb.sql_executescript('''
-        PRAGMA foreign_keys = OFF;
+    m = Migrator(photodb)
+    m.tables['photos']['create'] = '''
+    CREATE TABLE photos(
+        id TEXT PRIMARY KEY NOT NULL,
+        filepath TEXT COLLATE NOCASE,
+        dev_ino TEXT,
+        override_filename TEXT COLLATE NOCASE,
+        extension TEXT,
+        width INT,
+        height INT,
+        ratio REAL,
+        area INT,
+        duration INT,
+        bytes INT,
+        created INT,
+        thumbnail TEXT,
+        tagged_at INT,
+        author_id TEXT,
+        searchhidden INT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['photos']['transfer'] = '''
+    INSERT INTO photos SELECT
+        id,
+        filepath,
+        NULL,
+        override_filename,
+        extension,
+        width,
+        height,
+        ratio,
+        area,
+        duration,
+        bytes,
+        created,
+        thumbnail,
+        tagged_at,
+        author_id,
+        searchhidden
+    FROM photos_old;
+    '''
 
-        BEGIN;
+    m.go()
 
-        ALTER TABLE photos RENAME TO photos_old;
-
-        CREATE TABLE photos(
-            id TEXT PRIMARY KEY NOT NULL,
-            filepath TEXT COLLATE NOCASE,
-            dev_ino TEXT,
-            override_filename TEXT COLLATE NOCASE,
-            extension TEXT,
-            width INT,
-            height INT,
-            ratio REAL,
-            area INT,
-            duration INT,
-            bytes INT,
-            created INT,
-            thumbnail TEXT,
-            tagged_at INT,
-            author_id TEXT,
-            searchhidden INT,
-            FOREIGN KEY(author_id) REFERENCES users(id)
-        );
-
-        INSERT INTO photos SELECT
-            id,
-            filepath,
-            NULL,
-            override_filename,
-            extension,
-            width,
-            height,
-            ratio,
-            area,
-            duration,
-            bytes,
-            created,
-            thumbnail,
-            tagged_at,
-            author_id,
-            searchhidden
-        FROM photos_old;
-
-        DROP TABLE photos_old;
-
-        CREATE INDEX index_photos_dev_ino ON photos(dev_ino);
-        ''')
+    photodb.sql_execute('CREATE INDEX index_photos_dev_ino ON photos(dev_ino);')
 
     for photo in photodb.get_photos_by_recent():
         if not photo.real_path.is_file:
@@ -457,57 +456,52 @@ def upgrade_15_to_16(photodb):
     '''
     Added the basename column to photos. Added collate nocase to extension.
     '''
-    with Regenerator(photodb, except_tables='photos'):
-        photodb.sql_executescript('''
-        PRAGMA foreign_keys = OFF;
+    m = Migrator(photodb)
+    m.tables['photos']['create'] = '''
+    CREATE TABLE photos(
+        id TEXT PRIMARY KEY NOT NULL,
+        filepath TEXT COLLATE NOCASE,
+        dev_ino TEXT,
+        basename TEXT COLLATE NOCASE,
+        override_filename TEXT COLLATE NOCASE,
+        extension TEXT COLLATE NOCASE,
+        width INT,
+        height INT,
+        ratio REAL,
+        area INT,
+        duration INT,
+        bytes INT,
+        created INT,
+        thumbnail TEXT,
+        tagged_at INT,
+        author_id TEXT,
+        searchhidden INT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['photos']['transfer'] = '''
+    INSERT INTO photos SELECT
+        id,
+        filepath,
+        dev_ino,
+        NULL,
+        override_filename,
+        extension,
+        width,
+        height,
+        ratio,
+        area,
+        duration,
+        bytes,
+        created,
+        thumbnail,
+        tagged_at,
+        author_id,
+        searchhidden
+    FROM photos_old;
+    '''
 
-        BEGIN;
-
-        ALTER TABLE photos RENAME TO photos_old;
-
-        CREATE TABLE photos(
-            id TEXT PRIMARY KEY NOT NULL,
-            filepath TEXT COLLATE NOCASE,
-            dev_ino TEXT,
-            basename TEXT COLLATE NOCASE,
-            override_filename TEXT COLLATE NOCASE,
-            extension TEXT COLLATE NOCASE,
-            width INT,
-            height INT,
-            ratio REAL,
-            area INT,
-            duration INT,
-            bytes INT,
-            created INT,
-            thumbnail TEXT,
-            tagged_at INT,
-            author_id TEXT,
-            searchhidden INT,
-            FOREIGN KEY(author_id) REFERENCES users(id)
-        );
-
-        INSERT INTO photos SELECT
-            id,
-            filepath,
-            dev_ino,
-            NULL,
-            override_filename,
-            extension,
-            width,
-            height,
-            ratio,
-            area,
-            duration,
-            bytes,
-            created,
-            thumbnail,
-            tagged_at,
-            author_id,
-            searchhidden
-        FROM photos_old;
-
-        DROP TABLE photos_old;
-        ''')
+    m.go()
 
     for (id, filepath) in photodb.sql_select('SELECT id, filepath FROM photos'):
         basename = os.path.basename(filepath)
