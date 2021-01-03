@@ -996,7 +996,13 @@ class PDBSQLMixin:
                 continue
             args = task.get('args', [])
             kwargs = task.get('kwargs', {})
-            task['action'](*args, **kwargs)
+            action = task['action']
+            try:
+                action(*args, **kwargs)
+            except Exception as exc:
+                self.log.debug(f'{action} raised {repr(exc)}.')
+                self.rollback()
+                raise
 
         self.savepoints.clear()
         self.sql.commit()
