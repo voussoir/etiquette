@@ -294,6 +294,15 @@ def purge_empty_albums_argparse(args):
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
+def relocate_argparse(args):
+    photodb = find_photodb()
+
+    photo = photodb.get_photo(args.photo_id)
+    photo.relocate(args.filepath)
+
+    if args.autoyes or interactive.getpermission('Commit?'):
+        photodb.commit()
+
 def search_argparse(args):
     photos = search_by_argparse(args, yield_photos=True)
     for photo in photos:
@@ -508,6 +517,14 @@ purge_empty_albums:
     > etiquette_cli.py purge_empty_albums
 '''.strip(),
 
+relocate='''
+relocate:
+    Change a photo's filepath. Used for updating photos that have been changed
+    by external tools.
+
+    > etiquette_cli.py relocate photo_id filepath
+'''.strip(),
+
 search='''
 search:
     Search for photos and albums with complex operators.
@@ -694,6 +711,12 @@ def main(argv):
     p_purge_empty_albums = subparsers.add_parser('purge_empty_albums', aliases=['purge-empty-albums'])
     p_purge_empty_albums.add_argument('--yes', dest='autoyes', action='store_true')
     p_purge_empty_albums.set_defaults(func=purge_empty_albums_argparse)
+
+    p_relocate = subparsers.add_parser('relocate')
+    p_relocate.add_argument('photo_id')
+    p_relocate.add_argument('filepath')
+    p_relocate.add_argument('--yes', dest='autoyes', action='store_true')
+    p_relocate.set_defaults(func=relocate_argparse)
 
     p_search = subparsers.add_parser('search')
     p_search.add_argument('--area', dest='area', default=None)
