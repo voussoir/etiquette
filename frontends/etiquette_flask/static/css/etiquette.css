@@ -87,6 +87,16 @@ iframe.embedded_search
             "right" var(--size_sticky_bottom)
             / 1fr;
     }
+    /*
+    Usually, the panels are made by giving them a translucent background, which
+    stands out from the body layer. But, since the sticky_bottom will probably
+    be on top of content, we don't want to see through it! So we give it the
+    same background as the body color, and then use a pseudoelement to get the
+    transparent panel look back again.
+    An alternative solution might be to really split the page into a scrollable
+    top half and the non-scrollable sticky_bottom. I will look into this at
+    some point.
+    */
     #content_body.sticky_bottom_left #left,
     #content_body.sticky_bottom_right #right
     {
