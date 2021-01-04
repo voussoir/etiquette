@@ -59,7 +59,15 @@ body > div
 </head>
 
 <body>
-    <p id="motd">{{motd}}</p>
+    <p id="motd">
+        {%- if motd is string -%}
+        {{motd}}
+        {%- elif motd[0] == "html" -%}
+        {{motd[1]|safe}}
+        {%- else -%}
+        {{motd[1]}}
+        {%- endif -%}
+    </p>
     <a class="nice_link" href="/search">Search</a>
     <a class="nice_link" href="/tags">Browse tags</a>
     <a class="nice_link" href="/albums">Browse albums</a>
