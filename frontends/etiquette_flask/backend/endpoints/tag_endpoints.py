@@ -91,7 +91,8 @@ def get_tags_html(specific_tag_name=None):
         tag_count = common.P.get_tag_count()
     else:
         tags = specific_tag.get_children()
-        tag_count = sum(1 for child in specific_tag.walk_children())
+        # Set because tags may have multiple lineages
+        tag_count = len(set(specific_tag.walk_children()))
 
     tags = common.P.get_cached_tag_export(
         'easybake',

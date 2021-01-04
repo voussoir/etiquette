@@ -142,7 +142,7 @@ h2, h3
         {% if tags or not specific_tag %}
         <div id="hierarchy_tags" class="panel">
             {% if specific_tag %}
-            <h3>{{tag_count}} Descendants</h3>
+            <h3>{{tag_count - 1}} Descendants</h3>
             {% else %}
             <h2>{{tag_count}} Tags</h2>
             {% endif %}
