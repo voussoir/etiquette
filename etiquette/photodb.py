@@ -722,6 +722,8 @@ class PDBPhotoMixin:
         yield_photos = searchhelpers.normalize_yield_photos(yield_photos)
 
         if has_tags is False:
+            if (tag_musts or tag_mays or tag_forbids or tag_expression) and warning_bag:
+                warning_bag.add("has_tags=False so all tag requests are ignored.")
             tag_musts = None
             tag_mays = None
             tag_forbids = None
