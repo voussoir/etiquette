@@ -271,8 +271,18 @@ function easybake_form()
         add_tag_textbox.focus();
         return;
     }
-    api.tags.easybake(easybake_string, tag_action_callback);
-    add_tag_textbox.value = "";
+
+    function callback(response)
+    {
+        if (response.meta.status !== 200)
+        {
+            alert(JSON.stringify(response));
+            return;
+        }
+        tag_action_callback(response);
+        add_tag_textbox.value = "";
+    }
+    api.tags.easybake(easybake_string, callback);
 }
 
 function delete_specific_tag_form(event)
