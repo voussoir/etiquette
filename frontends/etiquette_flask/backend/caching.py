@@ -3,6 +3,7 @@ import functools
 import time
 
 from voussoirkit import cacheclass
+from voussoirkit import passwordy
 
 import etiquette
 
@@ -48,7 +49,7 @@ def cached_endpoint(max_age):
                     value = value.response
                 if value != state['stored_value']:
                     state['stored_value'] = value
-                    state['stored_etag'] = etiquette.helpers.random_hex(20)
+                    state['stored_etag'] = passwordy.random_hex(20)
                     state['headers']['ETag'] = state['stored_etag']
                 state['last_run'] = time.time()
             else:

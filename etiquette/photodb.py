@@ -11,6 +11,7 @@ import types
 from voussoirkit import cacheclass
 from voussoirkit import configlayers
 from voussoirkit import expressionmatch
+from voussoirkit import passwordy
 from voussoirkit import pathclass
 from voussoirkit import ratelimiter
 from voussoirkit import spinal
@@ -1077,7 +1078,7 @@ class PDBSQLMixin:
             self.on_commit_queue.clear()
 
     def savepoint(self, message=None):
-        savepoint_id = helpers.random_hex(length=16)
+        savepoint_id = passwordy.random_hex(length=16)
         if message:
             self.log.log(5, 'Savepoint %s for %s.', savepoint_id, message)
         else:

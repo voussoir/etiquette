@@ -4,6 +4,7 @@ import werkzeug.wrappers
 import werkzeug.datastructures
 
 from voussoirkit import cacheclass
+from voussoirkit import passwordy
 
 import etiquette
 
@@ -12,7 +13,7 @@ REQUEST_TYPES = (flask.Request, werkzeug.wrappers.Request, werkzeug.local.LocalP
 RESPONSE_TYPES = (flask.Response, werkzeug.wrappers.Response)
 
 def _generate_token(length=32):
-    return etiquette.helpers.random_hex(length=length)
+    return passwordy.random_hex(length=length)
 
 def _normalize_token(token):
     if isinstance(token, REQUEST_TYPES):

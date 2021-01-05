@@ -379,12 +379,6 @@ def parse_unit_string(s):
     else:
         return bytestring.parsebytes(s)
 
-def random_hex(length=12):
-    randbytes = os.urandom(math.ceil(length / 2))
-    token = ''.join('{:02x}'.format(x) for x in randbytes)
-    token = token[:length]
-    return token
-
 def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=bytestring.MIBIBYTE):
     '''
     Yield chunks of bytes from the file between the endpoints.
