@@ -3,7 +3,6 @@ import time
 
 import etiquette
 
-from .. import caching
 from .. import common
 from .. import decorators
 from .. import jsonify
@@ -65,7 +64,7 @@ def post_tag_remove_child(tagname):
 # Tag listings #####################################################################################
 
 @site.route('/all_tags.json')
-@caching.cached_endpoint(max_age=0)
+@decorators.cached_endpoint(max_age=0)
 def get_all_tag_names():
     all_tags = list(common.P.get_all_tag_names())
     all_synonyms = common.P.get_all_synonyms()

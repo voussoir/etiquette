@@ -6,7 +6,6 @@ from voussoirkit import stringtools
 
 import etiquette
 
-from .. import caching
 from .. import common
 from .. import decorators
 from .. import jsonify
@@ -159,7 +158,7 @@ def post_album_edit(album_id):
 # Album listings ###################################################################################
 
 @site.route('/all_albums.json')
-@caching.cached_endpoint(max_age=0)
+@decorators.cached_endpoint(max_age=0)
 def get_all_album_names():
     all_albums = {album.display_name: album.id for album in common.P.get_albums()}
     response = {'updated': int(time.time()), 'albums': all_albums}
