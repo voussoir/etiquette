@@ -2,6 +2,7 @@ import flask; from flask import request
 import functools
 import time
 
+from voussoirkit import dotdict
 from voussoirkit import passwordy
 
 import etiquette
@@ -31,31 +32,31 @@ def cached_endpoint(max_age):
     An example use case would be large-sized data dumps that don't need to be
     precisely up to date every time.
     '''
-    state = {
+    state = dotdict.DotDict({
         'max_age': max_age,
         'stored_value': None,
         'stored_etag': None,
         'headers': {'ETag': None, 'Cache-Control': f'max-age={max_age}'},
         'last_run': 0,
-    }
+    })
 
     def wrapper(function):
         def get_value(*args, **kwargs):
-            if state['max_age'] and (time.time() - state['last_run']) > state['max_age']:
-                return state['stored_value']
+            if state.max_age and (time.time() - state.last_run) > state.max_age:
+                return state.stored_value
 
             value = function(*args, **kwargs)
             if isinstance(value, flask.Response):
                 if value.headers.get('Content-Type'):
-                    state['headers']['Content-Type'] = value.headers.get('Content-Type')
+                    state.headers['Content-Type'] = value.headers.get('Content-Type')
                 value = value.response
 
-            if value != state['stored_value']:
-                state['stored_value'] = value
-                state['stored_etag'] = passwordy.random_hex(20)
-                state['headers']['ETag'] = state['stored_etag']
+            if value != state.stored_value:
+                state.stored_value = value
+                state.stored_etag = passwordy.random_hex(20)
+                state.headers['ETag'] = state.stored_etag
 
-            state['last_run'] = time.time()
+            state.last_run = time.time()
             return value
 
         @functools.wraps(function)
@@ -63,10 +64,10 @@ def cached_endpoint(max_age):
             value = get_value(*args, **kwargs)
 
             client_etag = request.headers.get('If-None-Match', None)
-            if client_etag == state['stored_etag']:
-                response = flask.Response(status=304, headers=state['headers'])
+            if client_etag == state.stored_etag:
+                response = flask.Response(status=304, headers=state.headers)
             else:
-                response = flask.Response(value, status=200, headers=state['headers'])
+                response = flask.Response(value, status=200, headers=state.headers)
 
             return response
         return wrapped
