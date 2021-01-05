@@ -110,6 +110,7 @@ iframe.embedded_search
         right: 8px;
         bottom: 8px;
         height: var(--size_sticky_bottom);
+        overflow-y: scroll;
     }
     #content_body.sticky_bottom_left #left:before,
     #content_body.sticky_bottom_right #right:before
