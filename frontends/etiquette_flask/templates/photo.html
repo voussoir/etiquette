@@ -607,6 +607,7 @@ function autofocus_add_tag_box()
 function on_pageload()
 {
     autofocus_add_tag_box();
+    photo_clipboard.apply_check(document.getElementById("clipboard_checkbox"));
 }
 document.addEventListener("DOMContentLoaded", on_pageload);
 </script>

@@ -54,6 +54,21 @@ function save_clipboard()
 
 // Card management /////////////////////////////////////////////////////////////////////////////////
 
+photo_clipboard.give_checkbox =
+function give_checkbox(photo_card)
+{
+    // There are some UIs where photo cards appear
+    const checkbox = document.createElement("input")
+    checkbox.type = "checkbox";
+    checkbox.className = "photo_clipboard_selector_checkbox";
+    checkbox.onclick = function(event)
+    {
+        return photo_clipboard.on_photo_select(event);
+    }
+    photo_card.appendChild(checkbox);
+    return checkbox;
+}
+
 photo_clipboard.apply_check =
 function apply_check(checkbox)
 {
@@ -104,12 +119,17 @@ photo_clipboard.apply_check_all =
 function apply_check_all()
 {
     /*
-    Run through all the photo cards on the page and set their checkbox to the
-    correct value.
+    Run through all the photo cards, give them their checkbox if they don't
+    already have it, and check it if that photo is on the clipboard.
     */
-    const checkboxes = document.getElementsByClassName("photo_clipboard_selector_checkbox");
-    for (const checkbox of checkboxes)
+    const cards = document.getElementsByClassName("photo_card");
+    for (const card of cards)
     {
+        let checkbox = card.getElementsByClassName("photo_clipboard_selector_checkbox")[0];
+        if (! checkbox)
+        {
+            checkbox = photo_clipboard.give_checkbox(card);
+        }
         photo_clipboard.apply_check(checkbox);
     }
 }

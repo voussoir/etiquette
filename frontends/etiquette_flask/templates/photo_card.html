@@ -29,7 +29,6 @@
     data-id="{{photo.id}}"
     class="photo_card photo_card_{{view}} photo_card_unselected {%if photo.searchhidden%}photo_card_searchhidden{%endif%}"
 >
-    <input type="checkbox" class="photo_clipboard_selector_checkbox" onclick="return photo_clipboard.on_photo_select(event);"/>
     <div class="photo_card_filename"><a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a></div>
     <span class="photo_card_metadata">
         {{- metadata_inner|safe -}}
