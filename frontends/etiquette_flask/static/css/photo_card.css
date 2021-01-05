@@ -96,7 +96,7 @@
     margin: 8px;
     padding: 4px;
 }
-.photo_card_list .photo_card_selector_checkbox
+.photo_card_list .photo_clipboard_selector_checkbox
 {
     grid-area: checkbox;
     align-self: center;
@@ -119,7 +119,7 @@
 
     border-radius: 8px;
 }
-.photo_card_grid .photo_card_selector_checkbox
+.photo_card_grid .photo_clipboard_selector_checkbox
 {
     position:absolute;
     left:5px;

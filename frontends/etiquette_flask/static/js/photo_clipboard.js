@@ -107,7 +107,7 @@ function apply_check_all()
     Run through all the photo cards on the page and set their checkbox to the
     correct value.
     */
-    const checkboxes = document.getElementsByClassName("photo_card_selector_checkbox");
+    const checkboxes = document.getElementsByClassName("photo_clipboard_selector_checkbox");
     for (const checkbox of checkboxes)
     {
         photo_clipboard.apply_check(checkbox);
@@ -205,7 +205,7 @@ function select_all_photos()
         photo_clipboard.clipboard.add(photo_div.dataset.id);
         photo_div.classList.remove("photo_card_unselected");
         photo_div.classList.add("photo_card_selected");
-        const checkbox = photo_div.getElementsByClassName("photo_card_selector_checkbox")[0];
+        const checkbox = photo_div.getElementsByClassName("photo_clipboard_selector_checkbox")[0];
         if (checkbox)
         {
             checkbox.checked = true;
@@ -224,7 +224,7 @@ function unselect_all_photos()
         photo_clipboard.clipboard.delete(photo_div.dataset.id);
         photo_div.classList.remove("photo_card_selected");
         photo_div.classList.add("photo_card_unselected");
-        const checkbox = photo_div.getElementsByClassName("photo_card_selector_checkbox")[0];
+        const checkbox = photo_div.getElementsByClassName("photo_clipboard_selector_checkbox")[0];
         if (checkbox)
         {
             checkbox.checked = false;
