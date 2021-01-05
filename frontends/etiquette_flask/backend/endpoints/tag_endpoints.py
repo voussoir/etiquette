@@ -80,7 +80,7 @@ def get_tags_html(specific_tag_name=None):
     else:
         specific_tag = common.P_tag(specific_tag_name, response_type='html')
         if specific_tag.name != specific_tag_name:
-            new_url = request.url.replace('/tag/' + specific_tag_name, '/tag/' + specific_tag.name)
+            new_url = '/tag/' + specific_tag.name + request.query_string.decode('utf-8')
             return flask.redirect(new_url)
 
     include_synonyms = request.args.get('include_synonyms')
