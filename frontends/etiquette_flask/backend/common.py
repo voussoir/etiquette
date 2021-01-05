@@ -13,7 +13,7 @@ from voussoirkit import pathclass
 
 import etiquette
 
-from . import caching
+from . import client_caching
 from . import decorators
 from . import jinja_filters
 from . import jsonify
@@ -45,7 +45,7 @@ site.debug = True
 site.localhost_only = False
 
 session_manager = sessions.SessionManager(maxlen=10000)
-file_etag_manager = caching.FileEtagManager(
+file_etag_manager = client_caching.FileEtagManager(
     maxlen=10000,
     max_filesize=5 * bytestring.MIBIBYTE,
     max_age=BROWSER_CACHE_DURATION,

@@ -21,6 +21,8 @@ class FileEtagManager:
 
     We use the file's MD5 hash as the ETag, and will only recalculate it if the
     file's mtime has changed since the last request.
+
+    Note, this class does not store any of the file's content data.
     '''
     def __init__(self, maxlen, max_age, max_filesize):
         '''
