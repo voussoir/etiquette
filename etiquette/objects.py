@@ -1578,6 +1578,8 @@ class Tag(ObjectBase, GroupableMixin):
         self.photodb.caches['tag_exports'].clear()
         self.photodb.sql_delete(table='tag_synonyms', pairs={'name': synname})
 
+        return synname
+
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def rename(self, new_name, *, apply_to_synonyms=True):
