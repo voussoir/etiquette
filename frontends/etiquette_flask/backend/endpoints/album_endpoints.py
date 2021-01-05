@@ -161,7 +161,7 @@ def post_album_edit(album_id):
 @decorators.cached_endpoint(max_age=0)
 def get_all_album_names():
     all_albums = {album.display_name: album.id for album in common.P.get_albums()}
-    response = {'updated': int(time.time()), 'albums': all_albums}
+    response = {'albums': all_albums}
     return jsonify.make_json_response(response)
 
 def get_albums_core():
