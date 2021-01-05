@@ -371,12 +371,14 @@ function tag_action_callback(response)
         else if ("action" in data)
         {
             const action = data.action;
+            const syn_name = data.synonym || tagname;
+
             message_positivity = "message_positive";
             if (action == "new_tag")
             {message_text = `Created tag ${tagname}`;}
 
-            else if (action == "new_synonym")
-            {message_text = `New synonym ${tagname}`;}
+            else if (action == "add_synonym")
+            {message_text = `New synonym ${syn_name}`;}
 
             else if (action == "existing_tag")
             {message_text = `Existing tag ${tagname}`;}
@@ -391,7 +393,7 @@ function tag_action_callback(response)
             {message_text = `Deleted tag ${tagname}`;}
 
             else if (action == "delete_synonym")
-            {message_text = `Deleted synonym ${data.synonym}`;}
+            {message_text = `Deleted synonym ${syn_name}`;}
 
             else if (action == "remove_child")
             {message_text = `Unlinked tags ${tagname}`;}

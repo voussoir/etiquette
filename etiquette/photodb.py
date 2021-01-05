@@ -1728,7 +1728,7 @@ class PDBUtilMixin:
 
         if synonym:
             synonym = tag.add_synonym(synonym)
-            note = ('new_synonym', f'{tag.name}+{synonym}')
+            note = ('add_synonym', f'{tag.name}+{synonym}')
             output_notes.append(note)
 
         return output_notes
