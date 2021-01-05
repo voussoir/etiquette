@@ -45,7 +45,7 @@ site.debug = True
 site.localhost_only = False
 
 session_manager = sessions.SessionManager(maxlen=10000)
-file_cache_manager = caching.FileCacheManager(
+file_etag_manager = caching.FileEtagManager(
     maxlen=10000,
     max_filesize=5 * bytestring.MIBIBYTE,
     max_age=BROWSER_CACHE_DURATION,
@@ -240,7 +240,7 @@ def send_file(filepath, override_mimetype=None):
 
     file_size = filepath.size
 
-    headers = file_cache_manager.matches(request=request, filepath=filepath)
+    headers = file_etag_manager.get_304_headers(request=request, filepath=filepath)
     if headers:
         response = flask.Response(status=304, headers=headers)
         return response
@@ -292,9 +292,10 @@ def send_file(filepath, override_mimetype=None):
 
     outgoing_headers['Accept-Ranges'] = 'bytes'
     outgoing_headers['Content-Length'] = (range_max - range_min) + 1
-    cache_file = file_cache_manager.get(filepath)
-    if cache_file is not None:
-        outgoing_headers.update(cache_file.get_headers())
+
+    file_etag = file_etag_manager.get_file(filepath)
+    if file_etag is not None:
+        outgoing_headers.update(file_etag.get_headers())
 
     if request.method == 'HEAD':
         outgoing_data = bytes()
