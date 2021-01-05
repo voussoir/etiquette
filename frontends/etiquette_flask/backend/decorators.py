@@ -40,21 +40,27 @@ def cached_endpoint(max_age):
     }
 
     def wrapper(function):
+        def get_value(*args, **kwargs):
+            if state['max_age'] and (time.time() - state['last_run']) > state['max_age']:
+                return state['stored_value']
+
+            value = function(*args, **kwargs)
+            if isinstance(value, flask.Response):
+                if value.headers.get('Content-Type'):
+                    state['headers']['Content-Type'] = value.headers.get('Content-Type')
+                value = value.response
+
+            if value != state['stored_value']:
+                state['stored_value'] = value
+                state['stored_etag'] = passwordy.random_hex(20)
+                state['headers']['ETag'] = state['stored_etag']
+
+            state['last_run'] = time.time()
+            return value
+
         @functools.wraps(function)
         def wrapped(*args, **kwargs):
-            if (not state['max_age']) or (time.time() - state['last_run'] > state['max_age']):
-                value = function(*args, **kwargs)
-                if isinstance(value, flask.Response):
-                    if value.headers.get('Content-Type'):
-                        state['headers']['Content-Type'] = value.headers.get('Content-Type')
-                    value = value.response
-                if value != state['stored_value']:
-                    state['stored_value'] = value
-                    state['stored_etag'] = passwordy.random_hex(20)
-                    state['headers']['ETag'] = state['stored_etag']
-                state['last_run'] = time.time()
-            else:
-                value = state['stored_value']
+            value = get_value(*args, **kwargs)
 
             client_etag = request.headers.get('If-None-Match', None)
             if client_etag == state['stored_etag']:
