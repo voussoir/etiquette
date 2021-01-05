@@ -312,6 +312,15 @@ function add_child(tag_name, child_name, callback)
     common.post(url, data, callback);
 }
 
+api.tags.add_synonym =
+function add_synonym(tag_name, syn_name, callback)
+{
+    const url = `/tag/${tag_name}/add_synonym`;
+    const data = new FormData();
+    data.append("syn_name", syn_name);
+    common.post(url, data, callback);
+}
+
 api.tags.create =
 function create(name, description, callback)
 {

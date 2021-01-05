@@ -52,6 +52,17 @@ def post_tag_add_child(tagname):
     response = {'action': 'add_child', 'tagname': f'{parent.name}.{child.name}'}
     return jsonify.make_json_response(response)
 
+@site.route('/tag/<tagname>/add_synonym', methods=['POST'])
+@decorators.required_fields(['syn_name'], forbid_whitespace=True)
+def post_tag_add_synonym(tagname):
+    syn_name = request.form['syn_name']
+
+    master_tag = common.P_tag(tagname, response_type='json')
+    syn_name = master_tag.add_synonym(syn_name, commit=True)
+
+    response = {'action': 'add_synonym', 'synonym': syn_name}
+    return jsonify.make_json_response(response)
+
 @site.route('/tag/<tagname>/remove_child', methods=['POST'])
 @decorators.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_remove_child(tagname):
@@ -59,6 +70,17 @@ def post_tag_remove_child(tagname):
     child = common.P_tag(request.form['child_name'], response_type='json')
     parent.remove_child(child, commit=True)
     response = {'action': 'remove_child', 'tagname': f'{parent.name}.{child.name}'}
+    return jsonify.make_json_response(response)
+
+@site.route('/tag/<tagname>/remove_synonym', methods=['POST'])
+@decorators.required_fields(['syn_name'], forbid_whitespace=True)
+def post_tag_remove_synonym(tagname):
+    syn_name = request.form['syn_name']
+
+    master_tag = common.P_tag(tagname, response_type='json')
+    syn_name = master_tag.remove_synonym(syn_name, commit=True)
+
+    response = {'action': 'delete_synonym', 'synonym': syn_name}
     return jsonify.make_json_response(response)
 
 # Tag listings #####################################################################################
@@ -158,15 +180,4 @@ def post_tag_delete(tagname):
     tag = common.P_tag(tagname, response_type='json')
     tag.delete(commit=True)
     response = {'action': 'delete_tag', 'tagname': tag.name}
-    return jsonify.make_json_response(response)
-
-@site.route('/tag/<tagname>/remove_synonym', methods=['POST'])
-@decorators.required_fields(['syn_name'], forbid_whitespace=True)
-def post_tag_remove_synonym(tagname):
-    syn_name = request.form['syn_name']
-
-    master_tag = common.P_tag(tagname, response_type='json')
-    master_tag.remove_synonym(syn_name, commit=True)
-
-    response = {'action': 'delete_synonym', 'synonym': syn_name}
     return jsonify.make_json_response(response)
