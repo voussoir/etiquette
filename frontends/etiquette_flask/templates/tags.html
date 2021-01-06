@@ -85,8 +85,8 @@ h2, h3
 <div id="content_body" class="sticky_side_right sticky_bottom_right">
     <div id="right" class="panel">
         <div id="editor_area">
-            <input type="text" id="add_tag_textbox" class="entry_with_history entry_with_tagname_replacements" autofocus>
-            <button class="add_tag_button green_button" id="add_tag_button" onclick="return easybake_form();">bake</button>
+            <input type="text" id="easybake_input" class="entry_with_tagname_replacements" autofocus>
+            <button class="green_button" id="easybake_button" onclick="return easybake_form();">bake</button>
         </div>
         <div id="message_area">
         </div>
@@ -139,7 +139,6 @@ h2, h3
         {% endif %} <!-- if parents -->
         {% endif %} <!-- if specific tag -->
 
-        {% if tags or not specific_tag %}
         <div id="hierarchy_tags" class="panel">
             {% if specific_tag %}
             <h3>{{tag_count - 1}} Descendants</h3>
@@ -200,13 +199,18 @@ h2, h3
                 {% endfor %}
                 {% endif %}
             {% endfor %}
+
+            {% if specific_tag %}
+            <li>
+                <input id="add_child_input" type="text" class="entry_with_tagname_replacements" list="tag_autocomplete_datalist"></input><!--
+                 --><button id="add_child_button" class="green_button" onclick="return add_child_form(event);">Add child</button>
+            </li>
+            {% endif %} <!-- if specific_tag -->
             </ul>
         </div> <!-- hierarchy_tags -->
-        {% endif %} <!-- if tags or not specific tag -->
 
         {% if specific_tag and include_synonyms %}
         {% set synonyms = specific_tag.get_synonyms() %}
-        {% if synonyms %}
         <div id="hierarchy_synonyms" class="panel">
             <h3>{{synonyms|length}} Synonyms</h3>
             <ul>
@@ -229,9 +233,13 @@ h2, h3
                 </button>
             </li>
             {% endfor %}
+
+            <li>
+                <input id="add_synonym_input" type="text" class="entry_with_tagname_replacements"></input><!--
+                 --><button id="add_synonym_button" class="green_button" onclick="return add_synonym_form(event);">Add synonym</button>
+            </li>
             </ul>
         </div>
-        {% endif %} <!-- if synonyms -->
         {% endif %} <!-- if specific tag and include synonyms -->
 
         {% if specific_tag %}
@@ -252,10 +260,64 @@ h2, h3
 <script type="text/javascript">
 let SPECIFIC_TAG = "{{specific_tag.name}}";
 
-const add_tag_textbox = document.getElementById('add_tag_textbox');
-const add_tag_button = document.getElementById('add_tag_button');
+const easybake_input = document.getElementById('easybake_input');
+const easybake_button = document.getElementById('easybake_button');
 const message_area = document.getElementById('message_area');
-common.bind_box_to_button(add_tag_textbox, add_tag_button, false);
+common.bind_box_to_button(easybake_input, easybake_button, false);
+
+common.bind_box_to_button(document.getElementById("add_child_input"), document.getElementById("add_child_button"));
+common.bind_box_to_button(document.getElementById("add_synonym_input"), document.getElementById("add_synonym_button"));
+
+function add_child_form(event)
+{
+    const input = document.getElementById("add_child_input")
+    const child_name = input.value.trim();
+    if (! child_name)
+    {
+        return;
+    }
+
+    if (child_name.match(/[\.\+\=]/))
+    {
+        common.create_message_bubble(message_area, "message_negative", "Tag name can't contain ., +, =.");
+        return
+    }
+
+    const easybake_string = SPECIFIC_TAG + "." + child_name
+
+    function callback(response)
+    {
+        tag_action_callback(response);
+        if (response.meta.status === 200)
+        {
+            input.value = "";
+        }
+    }
+    // This function uses the easybake function instead of the add_child
+    // function because we want to be able to create new tags from this UI.
+    // The add_child function is only for grouping existing tags.
+    api.tags.easybake(easybake_string, callback);
+}
+
+function add_synonym_form(event)
+{
+    const input = document.getElementById("add_synonym_input")
+    const syn_name = input.value.trim();
+    if (! syn_name)
+    {
+        return;
+    }
+
+    function callback(response)
+    {
+        tag_action_callback(response);
+        if (response.meta.status === 200)
+        {
+            input.value = "";
+        }
+    }
+    api.tags.add_synonym(SPECIFIC_TAG, syn_name, callback);
+}
 
 function tag_object_from_li(li)
 {
@@ -265,22 +327,20 @@ function tag_object_from_li(li)
 
 function easybake_form()
 {
-    const easybake_string = add_tag_textbox.value;
+    const easybake_string = easybake_input.value;
     if (easybake_string === "")
     {
-        add_tag_textbox.focus();
+        easybake_input.focus();
         return;
     }
 
     function callback(response)
     {
-        if (response.meta.status !== 200)
-        {
-            alert(JSON.stringify(response));
-            return;
-        }
         tag_action_callback(response);
-        add_tag_textbox.value = "";
+        if (response.meta.status === 200)
+        {
+            easybake_input.value = "";
+        }
     }
     api.tags.easybake(easybake_string, callback);
 }
@@ -347,7 +407,7 @@ function remove_synonym_form(event)
 
 function tag_action_callback(response)
 {
-    if (response.meta.status !== 200)
+    if (! response.meta.json_ok)
     {
         alert(JSON.stringify(response));
         return;
