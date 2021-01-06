@@ -2,8 +2,6 @@ import argparse
 import os
 import sys
 
-from voussoirkit import sqlhelpers
-
 import etiquette
 
 class Migrator:

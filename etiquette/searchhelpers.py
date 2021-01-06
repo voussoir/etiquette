@@ -534,6 +534,7 @@ def tag_expression_matcher_builder(frozen_children):
         (tag.name if not isinstance(tag, str) else tag): children
         for (tag, children) in frozen_children.items()
     }
+
     def match_function(photo_tags, tagname):
         '''
         Used as the `match_function` for the ExpressionTree evaluation.

@@ -225,6 +225,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
             'memberid': member.id,
         }
         self.photodb.sql_delete(table=self.group_table, pairs=pairs)
+
     @abc.abstractmethod
     def remove_child(self, member):
         return self.__remove_child(member)
@@ -877,7 +878,6 @@ class Photo(ObjectBase):
             return None
         return hms.seconds_to_hms(self.duration)
 
-    #@decorators.time_me
     @decorators.required_feature('photo.generate_thumbnail')
     @decorators.transaction
     def generate_thumbnail(self, **special):
@@ -1076,7 +1076,6 @@ class Photo(ObjectBase):
 
         self.duration = probe.audio.duration
 
-    #@decorators.time_me
     @decorators.required_feature('photo.reload_metadata')
     @decorators.transaction
     def reload_metadata(self):
@@ -1208,7 +1207,7 @@ class Photo(ObjectBase):
             new_path = old_path.parent.with_child(new_filename)
         else:
             new_path = pathclass.Path(new_filename)
-        #new_path.correct_case()
+
         if (new_path.parent != old_path.parent) and not move:
             raise ValueError('Cannot move the file without param move=True.')
 

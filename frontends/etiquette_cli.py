@@ -207,6 +207,8 @@ def easybake_argparse(args):
     photodb = find_photodb()
     for eb_string in args.eb_strings:
         notes = photodb.easybake(eb_string)
+        for (action, tagname) in notes:
+            print(action, tagname)
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()

@@ -4,7 +4,6 @@ codebase but don't deserve to be methods of any class.
 '''
 import datetime
 import hashlib
-import math
 import mimetypes
 import os
 import PIL.Image
