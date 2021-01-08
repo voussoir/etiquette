@@ -47,7 +47,7 @@ draggable=true
     <div class="album_card_metadata">
         {% if album == "root" %}
         {% else %}
-        {% set child_count = album.get_children()|length %}
+        {% set child_count = album.sum_children(recurse=False) %}
         {% set photo_count = album.sum_photos(recurse=False) %}
         <span class="album_card_child_count" title="{{child_count}} child albums">{{child_count}}</span>
         {{-' | '-}}

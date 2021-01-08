@@ -562,13 +562,13 @@ class Album(ObjectBase, GroupableMixin):
             self._remove_photo(photo)
 
     def sum_bytes(self, recurse=True):
-        query = '''
+        query = stringtools.collapse_whitespace('''
         SELECT SUM(bytes) FROM photos
         WHERE photos.id IN (
             SELECT photoid FROM album_photo_rel WHERE
             albumid IN {albumids}
         )
-        '''
+        ''')
         if recurse:
             albumids = [child.id for child in self.walk_children()]
         else:
@@ -579,17 +579,33 @@ class Album(ObjectBase, GroupableMixin):
         total = self.photodb.sql_select_one(query)[0]
         return total
 
+    def sum_children(self, recurse=True):
+        if recurse:
+            walker = self.walk_children()
+            # First yield is itself.
+            next(walker)
+            return sum(1 for child in walker)
+
+        query = stringtools.collapse_whitespace('''
+        SELECT COUNT(memberid)
+        FROM album_group_rel
+        WHERE parentid == ?
+        ''')
+        bindings = [self.id]
+        total = self.photodb.sql_select_one(query, bindings)[0]
+        return total
+
     def sum_photos(self, recurse=True):
         '''
         If all you need is the number of photos in the album, this method is
         preferable to len(album.get_photos()) because it performs the counting
         in the database instead of creating the Photo objects.
         '''
-        query = '''
+        query = stringtools.collapse_whitespace('''
         SELECT COUNT(photoid)
         FROM album_photo_rel
         WHERE albumid IN {albumids}
-        '''
+        ''')
         if recurse:
             albumids = [child.id for child in self.walk_children()]
         else:
