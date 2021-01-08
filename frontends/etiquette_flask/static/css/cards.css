@@ -273,3 +273,22 @@
     background-color: rgba(0, 0, 255, 0.25);
     border-radius: inherit;
 }
+
+/* ########################################################################## */
+/* ########################################################################## */
+/* ########################################################################## */
+
+.tag_card
+{
+    border-radius: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+
+    background-color: var(--color_tag_card_bg);
+    color: var(--color_tag_card_fg);
+
+    font-size: 0.9em;
+    text-decoration: none;
+    font-family: monospace;
+    line-height: 1.5;
+}

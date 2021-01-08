@@ -165,27 +165,13 @@ is hovered over.
 {
     display: none;
 }
+
 .tag_card:hover ~ * .remove_tag_button,
 .tag_card:hover ~ .remove_tag_button,
 .remove_tag_button:hover,
 .remove_tag_button_perm:hover
 {
     display:inline;
-}
-
-.tag_card
-{
-    border-radius: 2px;
-    padding-left: 2px;
-    padding-right: 2px;
-
-    background-color: var(--color_tag_card_bg);
-    color: var(--color_tag_card_fg);
-
-    font-size: 0.9em;
-    text-decoration: none;
-    font-family: monospace;
-    line-height: 1.5;
 }
 
 #message_area
