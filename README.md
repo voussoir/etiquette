@@ -151,18 +151,16 @@ Here is a brief overview of the project to help you learn your way around:
 - Currently, the Jinja templates are having a tangling influence on the backend objects, because Jinja cannot import my other modules like bytestring, but it can access the methods of the objects I pass into the template. As a result, the objects have excess helper methods. Consider making them into Jinja filters instead. Which is also kind of ugly but will move that pollution out of the backend at least.
 - Perhaps instead of actually deleting objects, they should just have a `deleted` flag, to make easy restoration possible. Also consider regrouping the children of restored Groupables if those children haven't already been reassigned somewhere else.
 - Add a new table to store permanent history of add/remove of tags on photos, so that accidents or trolling can be reversed.
-- Fix album size cache when photo reload metadata and generally improve that validation.
-- Better bookmark url validation.
-- Extension currently does not believe in the override filename. On one hand this is kind of good because if they override the name to have no extension, we can still provide a downloadable file with the correct extension by remembering it. But on the other hand it does break the illusion of override_filename.
+- Better (any) bookmark url validation.
+- The photo.extension does not reflect the override filename. On one hand this is kind of good because if they override the name to have no extension, we can still provide a downloadable file with the correct extension by remembering it. But on the other hand it does break the illusion of override_filename.
 - When batch fetching objects, consider whether or not a NoSuch should be raised. Perhaps a warningbag should be used.
 - Find a way to batch the fetching of photo tags in a way that isn't super ugly (e.g. on an album page, the photos themselves are batched, but then the `photo.get_tags()` on each one is not. In order to batch this we would have to have a separate function that fetches a whole bunch of tags and assigns them to the photo object).
-- Consider using executemany for some of the batch operations.
 - Check for embedded cover art when thumbnailing audio files.
-- Similarly, rename all "tag_object" to tag card and unify that experience a bit.
+- Rename "tag_object" to tag card and unify the card experience.
 - Batch movement of Albums... but without winding up with a second clipboard system?
 - Overall, more dynamism with cards and tag objects and updating page without requiring refresh.
-- Absolute consistency of CSS classes for divs that hold photo cards.
 - Serve RSS/Atom forms of search results.
+- Caching!! I want more caching of photo's tags and albums, album's children and photos, tag's children, etc. At the moment I don't trust myself to implement it correctly with respect to deletion, relationship changes, and the possibility of two object instances (like an album holding on to a photo, but the photo itself falls out of photodb's get_cached_instance cache, then later a new instance of the photo is created, modified, deleted...)
 
 ### To do list: User permissions
 Here are some thoughts about the kinds of features that need to exist within the permission system. I don't know how I'll actually manage it just yet. Possibly a `permissions` table in the database with `user_id | permission` where `permission` is some reliably-formatted string.
