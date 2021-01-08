@@ -1,12 +1,14 @@
 <!DOCTYPE html5>
 <html>
 <head>
+    {% import "bookmark_card.html" as bookmark_card %}
     {% import "header.html" as header %}
     <title>Bookmarks</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
     <link rel="stylesheet" href="/static/css/etiquette.css">
+    <link rel="stylesheet" href="/static/css/cards.css">
     {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
@@ -20,36 +22,6 @@
     flex: 0 0 auto;
     flex-direction: column;
 }
-
-.bookmark_card,
-.new_bookmark_card
-{
-    display: inline-flex;
-    flex: 0 0 auto;
-    flex-direction: column;
-    align-items: baseline;
-
-    padding: 8px;
-    margin: 8px;
-    max-width: 500px;
-
-    border-radius: 8px;
-    box-shadow: 2px 2px 5px 0px var(--color_dropshadow);
-
-    background-color: var(--color_secondary);
-}
-
-.bookmark_card input,
-.new_bookmark_card input
-{
-    width: 100%;
-}
-
-.bookmark_card .bookmark_url
-{
-    color: #aaa;
-}
-
 </style>
 </head>
 
@@ -59,36 +31,15 @@
         <div id="bookmark_list">
             <h2>Bookmarks</h2>
             {% for bookmark in bookmarks %}
-            <div class="bookmark_card" data-id="{{bookmark.id}}">
-                <a
-                href="{{bookmark.url}}"
-                class="bookmark_title"
-                >
-                    {{-bookmark.display_name-}}
-                </a>
-
-                <a
-                href="{{bookmark.url}}"
-                class="bookmark_url"
-                >
-                    {{-bookmark.url-}}
-                </a>
-
-                <button
-                class="red_button button_with_confirm"
-                data-onclick="return delete_bookmark_form(event);"
-                data-prompt="Delete Bookmark?"
-                data-cancel-class="gray_button"
-                >
-                    Delete
-                </button>
-            </div>
+            {{bookmark_card.create_bookmark_card(bookmark, add_delete_button=True)}}
             {% endfor %}
 
-            <div class="new_bookmark_card">
+            <div class="bookmark_card new_bookmark_card">
                 <input id="new_bookmark_title" type="text" placeholder="title (optional)">
                 <input id="new_bookmark_url" type="text" placeholder="url">
-                <button id="new_bookmark_button" class="green_button" onclick="return create_bookmark_form();">Create</button>
+                <div class="bookmark_toolbox">
+                    <button id="new_bookmark_button" class="green_button" onclick="return create_bookmark_form();">Create</button>
+                </div>
             </div>
         </div>
     </div>
@@ -156,6 +107,10 @@ function create_editors()
     const cards = document.getElementsByClassName("bookmark_card");
     for (const card of cards)
     {
+        if (card.classList.contains("new_bookmark_card"))
+        {
+            continue;
+        }
         const ed_elements = [
             {
                 "id": "title",

@@ -77,6 +77,59 @@
 /* ########################################################################## */
 /* ########################################################################## */
 
+.bookmark_card
+{
+    position: relative;
+    display: inline-grid;
+    grid-template:
+        "title" auto
+        "url" auto
+        "toolbox" auto
+        /1fr;
+
+    padding: 8px;
+    margin: 8px;
+    max-width: 500px;
+
+    border-radius: 8px;
+
+    background-color: var(--color_secondary);
+}
+
+.bookmark_card:hover
+{
+    box-shadow: 2px 2px 5px 0px var(--color_dropshadow);
+}
+
+.bookmark_card .bookmark_title
+{
+    grid-area: "title";
+}
+
+.bookmark_card .bookmark_url
+{
+    grid-area: "url";
+}
+
+.bookmark_card .bookmark_toolbox
+{
+    grid-area: "toolbox";
+}
+
+.bookmark_card input
+{
+    width: 100%;
+}
+
+.bookmark_card .bookmark_url
+{
+    color: #aaa;
+}
+
+/* ########################################################################## */
+/* ########################################################################## */
+/* ########################################################################## */
+
 .photo_card
 {
     background-color: var(--color_secondary);
