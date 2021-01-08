@@ -171,6 +171,19 @@ function size_iframe_to_content(iframe)
     iframe.style.height = iframe.contentWindow.document.documentElement.scrollHeight + 'px';
 }
 
+common.update_dynamic_elements =
+function update_dynamic_elements(class_name, text)
+{
+    /*
+    Find all elements with this class and set their innertext to this text.
+    */
+    const elements = document.getElementsByClassName(class_name);
+    for (const element of elements)
+    {
+        element.innerText = text;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // HOOKS & ADD-ONS /////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
