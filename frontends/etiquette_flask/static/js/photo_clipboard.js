@@ -379,16 +379,6 @@ function open_full_clipboard_tab()
     window.open("/clipboard");
 }
 
-photo_clipboard.update_clipboard_count =
-function update_clipboard_count()
-{
-    const elements = document.getElementsByClassName("clipboard_count");
-    for (const element of elements)
-    {
-        element.innerText = photo_clipboard.clipboard.size;
-    }
-}
-
 photo_clipboard.on_storage_event =
 function on_storage_event()
 {
@@ -405,7 +395,7 @@ function update_pagestate()
     /*
     Update all relevant DOM elements to match internal state.
     */
-    photo_clipboard.update_clipboard_count();
+    common.update_dynamic_elements("dynamic_clipboard_count", photo_clipboard.clipboard.size);
     photo_clipboard.update_clipboard_tray();
     photo_clipboard.apply_check_all();
 }

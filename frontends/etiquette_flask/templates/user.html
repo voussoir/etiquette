@@ -2,7 +2,7 @@
 <html>
 <head>
     {% import "header.html" as header %}
-    <title>{{user.display_name}}</title>
+    <title class="dynamic_user_display_name">{{user.display_name}}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
@@ -36,7 +36,7 @@ h2, h3
             <p>User since <span title="{{user.created|int|timestamp_to_8601}}">{{user.created|timestamp_to_naturaldate}}.</span></p>
         </div>
         <div class="panel">
-            <h3><a href="/search?author={{user.username}}">Photos by {{user.display_name}}</a></h3>
+            <h3><a href="/search?author={{user.username}}">Photos by <span class="dynamic_user_display_name">{{user.display_name}}</span></a></h3>
             <iframe
             class="embedded_search"
             src="/search_embed?author={{user.username}}&orderby=created-desc&yield_albums=no&limit=10"
@@ -72,7 +72,7 @@ function profile_ed_on_save(ed)
 
         // The data that comes back from the server will have been normalized.
         const new_display_name = response.data.display_name;
-        document.title = new_display_name;
+        common.update_dynamic_elements("dynamic_user_display_name", new_display_name);
 
         ed.elements["display_name"].edit.value = new_display_name;
 
