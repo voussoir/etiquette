@@ -1545,7 +1545,7 @@ class Tag(ObjectBase, GroupableMixin):
             'name': self.name,
         }
         if not minimal:
-            j['author'] = self.get_author().jsonify() if self.author_id else None,
+            j['author'] = self.get_author().jsonify() if self.author_id else None
             j['description'] = self.description
             j['children'] = [child.jsonify(minimal=True) for child in self.get_children()]
 
