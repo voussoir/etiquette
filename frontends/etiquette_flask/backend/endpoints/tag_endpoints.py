@@ -146,13 +146,13 @@ def get_tags_json(specific_tag_name=None):
     include_synonyms = request.args.get('synonyms')
     include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
 
-    if specific_tag is None:
-        tags = list(common.P.get_tags())
+    if specific_tag:
+        response = specific_tag.jsonify(include_synonyms=include_synonyms)
     else:
-        tags = list(specific_tag.walk_children())
+        tags = list(common.P.get_tags())
+        response = [tag.jsonify(include_synonyms=include_synonyms) for tag in tags]
 
-    tags = [tag.jsonify(include_synonyms=include_synonyms) for tag in tags]
-    return jsonify.make_json_response(tags)
+    return jsonify.make_json_response(response)
 
 # Tag create and delete ############################################################################
 
