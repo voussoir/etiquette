@@ -103,7 +103,7 @@ function remove_photos(album_id, photo_ids, callback)
 api.albums.callback_follow =
 function callback_follow(response)
 {
-    if ((response.meta.status !== 200) || (! response.json_ok) || (! response.data.id))
+    if ((response.meta.status !== 200) || (! response.meta.json_ok) || (! response.data.id))
     {
         alert(JSON.stringify(response));
         return;
