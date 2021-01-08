@@ -277,10 +277,6 @@ class Album(ObjectBase, GroupableMixin):
 
         self.group_getter_many = self.photodb.get_albums_by_id
 
-        self._sum_bytes_local = None
-        self._sum_bytes_recursive = None
-        self._sum_photos_recursive = None
-
     def __repr__(self):
         return f'Album:{self.id}'
 
@@ -374,9 +370,12 @@ class Album(ObjectBase, GroupableMixin):
     def add_photos(self, photos):
         existing_photos = set(self.get_photos())
         photos = set(photos)
-        photos = photos.difference(existing_photos)
+        new_photos = photos.difference(existing_photos)
 
-        for photo in photos:
+        if not new_photos:
+            return
+
+        for photo in new_photos:
             self._add_photo(photo)
 
     # Photo.add_tag already has @required_feature
@@ -457,7 +456,6 @@ class Album(ObjectBase, GroupableMixin):
         return directories
 
     def get_photos(self):
-        photos = []
         photo_rows = self.photodb.sql_select(
             'SELECT photoid FROM album_photo_rel WHERE albumid == ?',
             [self.id]
@@ -556,9 +554,12 @@ class Album(ObjectBase, GroupableMixin):
     def remove_photos(self, photos):
         existing_photos = set(self.get_photos())
         photos = set(photos)
-        photos = photos.intersection(existing_photos)
+        remove_photos = photos.intersection(existing_photos)
 
-        for photo in photos:
+        if not remove_photos:
+            return
+
+        for photo in remove_photos:
             self._remove_photo(photo)
 
     def sum_bytes(self, recurse=True):
