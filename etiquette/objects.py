@@ -273,6 +273,7 @@ class Album(ObjectBase, GroupableMixin):
         self.id = db_row['id']
         self.title = self.normalize_title(db_row['title'])
         self.description = self.normalize_description(db_row['description'])
+        self.created = db_row['created']
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
         self.group_getter_many = self.photodb.get_albums_by_id
@@ -520,6 +521,7 @@ class Album(ObjectBase, GroupableMixin):
             'id': self.id,
             'description': self.description,
             'title': self.title,
+            'created': self.created,
             'author': self.get_author().jsonify() if self.author_id else None,
         }
         if not minimal:
@@ -635,6 +637,7 @@ class Bookmark(ObjectBase):
         self.id = db_row['id']
         self.title = self.normalize_title(db_row['title'])
         self.url = self.normalize_url(db_row['url'])
+        self.created = db_row['created']
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
     def __repr__(self):
@@ -714,6 +717,7 @@ class Bookmark(ObjectBase):
             'id': self.id,
             'author': self.get_author().jsonify() if self.author_id else None,
             'url': self.url,
+            'created': self.created,
             'title': self.title,
         }
         return j
@@ -1321,6 +1325,7 @@ class Tag(ObjectBase, GroupableMixin):
         # from previous character / length rules.
         self.name = db_row['name']
         self.description = self.normalize_description(db_row['description'])
+        self.created = db_row['created']
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
         self.group_getter_many = self.photodb.get_tags_by_id
@@ -1543,6 +1548,7 @@ class Tag(ObjectBase, GroupableMixin):
             'type': 'tag',
             'id': self.id,
             'name': self.name,
+            'created': self.created,
         }
         if not minimal:
             j['author'] = self.get_author().jsonify() if self.author_id else None

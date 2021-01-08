@@ -109,6 +109,7 @@ class PDBAlbumMixin:
             'id': album_id,
             'title': title,
             'description': description,
+            'created': helpers.now(),
             'author_id': author_id,
         }
         self.sql_insert(table='albums', data=data)
@@ -196,9 +197,10 @@ class PDBBookmarkMixin:
 
         data = {
             'id': bookmark_id,
-            'author_id': author_id,
             'title': title,
             'url': url,
+            'created': helpers.now(),
+            'author_id': author_id,
         }
         self.sql_insert(table='bookmarks', data=data)
 
@@ -411,6 +413,10 @@ class PDBCacheManagerMixin:
                 yield thing
 
     def get_things_by_sql(self, thing_type, query, bindings=None):
+        '''
+        Use an arbitrary SQL query to select things from the database.
+        Your query should *only* select the id column.
+        '''
         thing_rows = self.sql_select(query, bindings)
         thing_ids = (thing_id for (thing_id,) in thing_rows)
         return self.get_things_by_id(thing_type, thing_ids)
@@ -1283,6 +1289,7 @@ class PDBTagMixin:
             'id': tag_id,
             'name': tagname,
             'description': description,
+            'created': helpers.now(),
             'author_id': author_id,
         }
         self.sql_insert(table='tags', data=data)
@@ -1469,8 +1476,8 @@ class PDBUserMixin:
             'id': user_id,
             'username': username,
             'password': hashed_password,
-            'created': helpers.now(),
             'display_name': display_name,
+            'created': helpers.now(),
         }
         self.sql_insert(table='users', data=data)
 

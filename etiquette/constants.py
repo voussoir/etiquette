@@ -41,7 +41,7 @@ ffmpeg = _load_ffmpeg()
 
 # Database #########################################################################################
 
-DATABASE_VERSION = 16
+DATABASE_VERSION = 17
 DB_VERSION_PRAGMA = f'''
 PRAGMA user_version = {DATABASE_VERSION};
 '''
@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS albums(
     id TEXT PRIMARY KEY NOT NULL,
     title TEXT,
     description TEXT,
+    created INT,
     author_id TEXT,
     FOREIGN KEY(author_id) REFERENCES users(id)
 );
@@ -82,6 +83,7 @@ CREATE TABLE IF NOT EXISTS bookmarks(
     id TEXT PRIMARY KEY NOT NULL,
     title TEXT,
     url TEXT,
+    created INT,
     author_id TEXT,
     FOREIGN KEY(author_id) REFERENCES users(id)
 );
@@ -122,6 +124,7 @@ CREATE TABLE IF NOT EXISTS tags(
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
+    created INT,
     author_id TEXT,
     FOREIGN KEY(author_id) REFERENCES users(id)
 );

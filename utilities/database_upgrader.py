@@ -505,6 +505,73 @@ def upgrade_15_to_16(photodb):
         basename = os.path.basename(filepath)
         photodb.sql_execute('UPDATE photos SET basename = ? WHERE id == ?', [basename, id])
 
+def upgrade_16_to_17(photodb):
+    '''
+    Added the created column to albums, bookmarks, tags.
+    '''
+    m = Migrator(photodb)
+    m.tables['albums']['create'] = '''
+    CREATE TABLE albums(
+        id TEXT PRIMARY KEY NOT NULL,
+        title TEXT,
+        description TEXT,
+        created INT,
+        author_id TEXT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['albums']['transfer'] = '''
+    INSERT INTO albums SELECT
+        id,
+        title,
+        description,
+        0,
+        author_id
+    FROM albums_old;
+    '''
+
+    m.tables['bookmarks']['create'] = '''
+    CREATE TABLE bookmarks(
+        id TEXT PRIMARY KEY NOT NULL,
+        title TEXT,
+        url TEXT,
+        created INT,
+        author_id TEXT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['bookmarks']['transfer'] = '''
+    INSERT INTO bookmarks SELECT
+        id,
+        title,
+        url,
+        0,
+        author_id
+    FROM bookmarks_old;
+    '''
+
+    m.tables['tags']['create'] = '''
+    CREATE TABLE tags(
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        created INT,
+        author_id TEXT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['tags']['transfer'] = '''
+    INSERT INTO tags SELECT
+        id,
+        name,
+        description,
+        0,
+        author_id
+    FROM tags_old;
+    '''
+
+    m.go()
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the
