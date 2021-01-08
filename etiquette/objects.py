@@ -1184,7 +1184,10 @@ class Photo(ObjectBase):
         tag = self.photodb.get_tag(name=tag)
 
         self.photodb.log.info('Removing %s from %s.', tag, self)
-        pairs = {'photoid': self.id, 'tagid': tag.id}
+        pairs = {
+            'photoid': self.id,
+            'tagid': tag.id,
+        }
         self.photodb.sql_delete(table='photo_tag_rel', pairs=pairs)
 
         data = {
@@ -1330,6 +1333,8 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.group_getter_many = self.photodb.get_tags_by_id
 
+        self._cached_synonyms = None
+
     def __lt__(self, other):
         return self.name < other.name
 
@@ -1438,6 +1443,9 @@ class Tag(ObjectBase, GroupableMixin):
         }
         self.photodb.sql_insert(table='tag_synonyms', data=data)
 
+        if self._cached_synonyms is not None:
+            self._cached_synonyms.add(synname)
+
         return synname
 
     @decorators.required_feature('tag.edit')
@@ -1536,11 +1544,15 @@ class Tag(ObjectBase, GroupableMixin):
         self._uncache()
 
     def get_synonyms(self):
+        if self._cached_synonyms is not None:
+            return self._cached_synonyms
+
         syn_rows = self.photodb.sql_select(
             'SELECT name FROM tag_synonyms WHERE mastername == ?',
             [self.name]
         )
         synonyms = set(name for (name,) in syn_rows)
+        self._cached_synonyms = synonyms
         return synonyms
 
     def jsonify(self, include_synonyms=False, minimal=False):
@@ -1601,7 +1613,8 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.photodb.caches['tag_exports'].clear()
         self.photodb.sql_delete(table='tag_synonyms', pairs={'name': synname})
-
+        if self._cached_synonyms is not None:
+            self._cached_synonyms.remove(synname)
         return synname
 
     @decorators.required_feature('tag.edit')
