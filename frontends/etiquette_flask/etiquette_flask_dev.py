@@ -14,6 +14,7 @@ logging.getLogger().addHandler(handler)
 
 import argparse
 import gevent.pywsgi
+import os
 import sys
 
 from voussoirkit import pathclass
@@ -56,7 +57,7 @@ def etiquette_flask_launch(
 
     backend.common.init_photodb(create=create, log_level=LOG_LEVEL)
 
-    message = f'Starting server on port {port}'
+    message = f'Starting server on port {port}, pid={os.getpid()}'
     if use_https:
         message += ' (https)'
     print(message)
