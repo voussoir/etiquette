@@ -26,7 +26,7 @@ def get_user_json(username):
 @site.route('/userid/<user_id>')
 @site.route('/userid/<user_id>.json')
 def get_user_id_redirect(user_id):
-    if request.url.endswith('.json'):
+    if request.path.endswith('.json'):
         user = common.P_user_id(user_id, response_type='json')
     else:
         user = common.P_user_id(user_id, response_type='html')

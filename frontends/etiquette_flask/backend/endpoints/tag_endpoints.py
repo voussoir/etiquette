@@ -20,7 +20,7 @@ def get_tags_specific_redirect(specific_tag):
 @site.route('/tagid/<tag_id>')
 @site.route('/tagid/<tag_id>.json')
 def get_tag_id_redirect(tag_id):
-    if request.url.endswith('.json'):
+    if request.path.endswith('.json'):
         tag = common.P_tag_id(tag_id, response_type='json')
     else:
         tag = common.P_tag_id(tag_id, response_type='html')
