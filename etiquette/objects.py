@@ -523,9 +523,9 @@ class Album(ObjectBase, GroupableMixin):
             'author': self.get_author().jsonify() if self.author_id else None,
         }
         if not minimal:
-            j['photos'] = [photo.jsonify(include_albums=False) for photo in self.get_photos()]
             j['parents'] = [parent.jsonify(minimal=True) for parent in self.get_parents()]
-            j['sub_albums'] = [child.jsonify(minimal=True) for child in self.get_children()]
+            j['children'] = [child.jsonify(minimal=True) for child in self.get_children()]
+            j['photos'] = [photo.jsonify(include_albums=False) for photo in self.get_photos()]
 
         return j
 
