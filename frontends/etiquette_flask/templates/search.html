@@ -1,10 +1,10 @@
 <!DOCTYPE html5>
 <html>
 <head>
-    {% import "photo_card.html" as photo_card %}
-    {% import "album_card.html" as album_card %}
     {% import "header.html" as header %}
-    {% import "tag_object.html" as tag_object %}
+    {% import "album_card.html" as album_card %}
+    {% import "photo_card.html" as photo_card %}
+    {% import "tag_card.html" as tag_card %}
     {% import "clipboard_tray.html" as clipboard_tray %}
     <title>Search</title>
     <meta charset="UTF-8">
@@ -200,7 +200,7 @@
                 {% if search_kwargs[key] %}
                     {% for tag in search_kwargs[key] %}
                         <li class="search_builder_{{tagtype}}_inputted">
-                            {{tag_object.tag_object(tag, link='info', with_alt_description=True)}}<!--
+                            {{tag_card.create_tag_card(tag, link='info', with_alt_description=True)}}<!--
                             --><button class="remove_tag_button red_button"
                             onclick="return remove_searchtag(ul_{{tagtype}}, '{{tag.name}}', inputted_{{tagtype}});"></button>
                         </li>
@@ -327,28 +327,28 @@
         <ul id="tags_on_this_page_list">
             {% for tag in total_tags %}
             <li>
-                {{tag_object.tag_object(
+                {{tag_card.create_tag_card(
                     tag,
                     link=None,
                     onclick="return tags_on_this_page_add_must(event, '" + tag.name + "');",
                     innertext="(+)",
                 )}}
 
-                {{tag_object.tag_object(
+                {{tag_card.create_tag_card(
                     tag,
                     link=None,
                     onclick="return tags_on_this_page_add_may(event, '" + tag.name + "');",
                     innertext="(~)",
                 )}}
 
-                {{tag_object.tag_object(
+                {{tag_card.create_tag_card(
                     tag,
                     link=None,
                     onclick="return tags_on_this_page_add_forbid(event, '" + tag.name + "');",
                     innertext="(x)",
                 )}}
 
-                {{tag_object.tag_object(
+                {{tag_card.create_tag_card(
                     tag,
                     link="info",
                     with_alt_description=True,
@@ -412,7 +412,7 @@ function add_searchtag(ul, value, inputted_list, li_class)
     new_li.className = li_class;
 
     const new_span = document.createElement("span");
-    new_span.className = "tag_object";
+    new_span.className = "tag_card";
     new_span.innerHTML = value;
 
     const new_delbutton = document.createElement("button")
@@ -465,11 +465,11 @@ function remove_searchtag(ul, value, inputted_list)
     //console.log(lis);
     for (const li of lis)
     {
-        const tag_object = li.children[0];
-        if (! tag_object.classList.contains("tag_object"))
+        const tag_card = li.children[0];
+        if (! tag_card.classList.contains("tag_card"))
         {continue}
 
-        const tagname = tag_object.innerHTML;
+        const tagname = tag_card.innerHTML;
         if (tagname != value)
         {continue}
 

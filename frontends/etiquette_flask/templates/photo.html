@@ -2,7 +2,7 @@
 <html>
 <head>
     {% import "header.html" as header %}
-    {% import "tag_object.html" as tag_object %}
+    {% import "tag_card.html" as tag_card %}
     <title>{{photo.basename}} | Photos</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -161,7 +161,7 @@
             {% set tags = photo.get_tags()|sort(attribute='name') %}
             {% for tag in tags %}
             <li>
-                {{tag_object.tag_object(tag, link="info", with_alt_description=True)}}<!--
+                {{tag_card.create_tag_card(tag, link="info", with_alt_description=True)}}<!--
                 --><button
                 class="remove_tag_button red_button"
                 onclick="return remove_photo_tag_form('{{photo.id}}', '{{tag.name}}');">
@@ -305,26 +305,26 @@ function add_photo_tag_callback(response)
         return;
     }
     const this_tags = document.getElementById("this_tags");
-    const tag_objects = this_tags.getElementsByClassName("tag_object");
-    for (const tag_object of tag_objects)
+    const tag_cards = this_tags.getElementsByClassName("tag_card");
+    for (const tag_card of tag_cards)
     {
-        if (tag_object.innerText === response.data.tagname)
+        if (tag_card.innerText === response.data.tagname)
         {
             return;
         }
     }
     const li = document.createElement("li");
-    const tag_object = document.createElement("a");
-    tag_object.className = "tag_object"
-    tag_object.href = "/tag/" + response.data.tagname;
-    tag_object.innerText = response.data.tagname;
+    const tag_card = document.createElement("a");
+    tag_card.className = "tag_card"
+    tag_card.href = "/tag/" + response.data.tagname;
+    tag_card.innerText = response.data.tagname;
     const remove_button = document.createElement("button");
     remove_button.className = "remove_tag_button red_button"
     remove_button.onclick = () => remove_photo_tag_form(PHOTO_ID, response.data.tagname);
-    li.appendChild(tag_object);
+    li.appendChild(tag_card);
     li.appendChild(remove_button);
     this_tags.appendChild(li);
-    sort_tag_objects();
+    sort_tag_cards();
 }
 
 function remove_photo_tag_form(photo_id, tagname)
@@ -340,12 +340,12 @@ function remove_photo_tag_callback(response)
     {
         return;
     }
-    const tag_objects = document.getElementById("this_tags").getElementsByClassName("tag_object");
-    for (const tag_object of tag_objects)
+    const tag_cards = document.getElementById("this_tags").getElementsByClassName("tag_card");
+    for (const tag_card of tag_cards)
     {
-        if (tag_object.innerText === response.data.tagname)
+        if (tag_card.innerText === response.data.tagname)
         {
-            const li = tag_object.parentElement;
+            const li = tag_card.parentElement;
             li.parentElement.removeChild(li);
         }
     }
@@ -456,14 +456,14 @@ function set_searchhidden_callback(response)
 
 // UI //////////////////////////////////////////////////////////////////////////////////////////////
 
-function sort_tag_objects()
+function sort_tag_cards()
 {
     const tag_list = document.getElementById("this_tags");
-    const lis = Array.from(tag_list.children).filter(el => el.getElementsByClassName("tag_object").length);
+    const lis = Array.from(tag_list.children).filter(el => el.getElementsByClassName("tag_card").length);
     function compare(li1, li2)
     {
-        const tag1 = li1.querySelector(".tag_object:last-of-type").innerText;
-        const tag2 = li2.querySelector(".tag_object:last-of-type").innerText;
+        const tag1 = li1.querySelector(".tag_card:last-of-type").innerText;
+        const tag2 = li2.querySelector(".tag_card:last-of-type").innerText;
         return tag1 < tag2 ? -1 : 1;
     }
     lis.sort(compare);

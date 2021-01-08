@@ -1,7 +1,7 @@
 <!--
     tag: The Tag object
     extra_classes:
-        Space-separated string, if you want more than "tag_object".
+        Space-separated string, if you want more than "tag_card".
     innertext:
         A string to use as the innertext.
         Otherwise, will use the name based on the other parameters.
@@ -15,7 +15,7 @@
     with_alt_description:
         True: Include the description in the alt text
 -->
-{%- macro tag_object(
+{%- macro create_tag_card(
     tag,
     extra_classes="",
     innertext=None,
@@ -34,7 +34,7 @@
         None: None,
     }.get(link, link)
 -%}
-{%- set class = ("tag_object" + " " + extra_classes).strip() -%}
+{%- set class = ("tag_card" + " " + extra_classes).strip() -%}
 {%- set title = (with_alt_description and tag.description) or None -%}
 {%- set innertext = innertext_safe or (innertext or tag.name)|e -%}
 {%- set element = "a" if (link or onclick) else "span" -%}

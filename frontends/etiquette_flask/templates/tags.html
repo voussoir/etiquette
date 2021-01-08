@@ -2,7 +2,7 @@
 <html>
 <head>
     {% import "header.html" as header %}
-    {% import "tag_object.html" as tag_object %}
+    {% import "tag_card.html" as tag_card %}
     {% if specific_tag is none %}
         <title>Tags</title>
     {% else %}
@@ -95,7 +95,7 @@ h2, h3
         {% if specific_tag %}
         <div id="hierarchy_self" class="panel">
             <div id="tag_metadata">
-                <h2>{{tag_object.tag_object(
+                <h2>{{tag_card.create_tag_card(
                     specific_tag,
                     link="search",
                     id="name_text",
@@ -129,9 +129,9 @@ h2, h3
             <ul id="parent_list">
             {% for ancestor in specific_tag.get_parents() %}
             <li>
-                {{tag_object.tag_object(ancestor, link="search_musts", innertext="(+)")}}
-                {{tag_object.tag_object(ancestor, link="search_forbids", innertext="(x)")}}
-                {{tag_object.tag_object(ancestor, link="info", innertext=ancestor.name, with_alt_description=True)}}
+                {{tag_card.create_tag_card(ancestor, link="search_musts", innertext="(+)")}}
+                {{tag_card.create_tag_card(ancestor, link="search_forbids", innertext="(x)")}}
+                {{tag_card.create_tag_card(ancestor, link="info", innertext=ancestor.name, with_alt_description=True)}}
             </li>
             {% endfor %}
             </ul>
@@ -148,9 +148,9 @@ h2, h3
             <ul id="tag_list">
             {% for (qualified_name, tag) in tags %}
                 <li>
-                    {{tag_object.tag_object(tag, link="search_musts", innertext="(+)")}}
-                    {{tag_object.tag_object(tag, link="search_forbids", innertext="(x)")}}
-                    {{tag_object.tag_object(tag, link="info", innertext=qualified_name, with_alt_description=True)-}}
+                    {{tag_card.create_tag_card(tag, link="search_musts", innertext="(+)")}}
+                    {{tag_card.create_tag_card(tag, link="search_forbids", innertext="(x)")}}
+                    {{tag_card.create_tag_card(tag, link="info", innertext=qualified_name, with_alt_description=True)-}}
                     {% if specific_tag or '.' in qualified_name -%}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
@@ -181,9 +181,9 @@ h2, h3
                 {% if include_synonyms %}
                 {% for synonym in tag.get_synonyms()|sort %}
                 <li>
-                    {{-tag_object.tag_object(tag, link="search_musts", innertext="(+)")}}
-                    {{tag_object.tag_object(tag, link="search_forbids", innertext="(x)")}}
-                    {{tag_object.tag_object(tag, link='info', innertext=qualified_name + '+' + synonym)-}}
+                    {{-tag_card.create_tag_card(tag, link="search_musts", innertext="(+)")}}
+                    {{tag_card.create_tag_card(tag, link="search_forbids", innertext="(x)")}}
+                    {{tag_card.create_tag_card(tag, link='info', innertext=qualified_name + '+' + synonym)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
                     data-holder-class="confirm_holder_remove_synonym"
@@ -216,11 +216,11 @@ h2, h3
             <ul>
             {% for synonym in synonyms %}
             <li>
-                {{tag_object.tag_object(specific_tag, link="search_musts", innertext="(+)")}}
+                {{tag_card.create_tag_card(specific_tag, link="search_musts", innertext="(+)")}}
 
-                {{tag_object.tag_object(specific_tag, link="search_forbids", innertext="(x)")}}
+                {{tag_card.create_tag_card(specific_tag, link="search_forbids", innertext="(x)")}}
 
-                {{tag_object.tag_object(specific_tag, link=none, innertext=synonym)-}}
+                {{tag_card.create_tag_card(specific_tag, link=none, innertext=synonym)-}}
                 <button
                 class="remove_tag_button red_button button_with_confirm"
                 data-onclick="return remove_specific_synonym_form(event);"
@@ -319,10 +319,10 @@ function add_synonym_form(event)
     api.tags.add_synonym(SPECIFIC_TAG, syn_name, callback);
 }
 
-function tag_object_from_li(li)
+function tag_card_from_li(li)
 {
-    const tag_objects = li.getElementsByClassName("tag_object");
-    return tag_objects[tag_objects.length - 1];
+    const tag_cards = li.getElementsByClassName("tag_card");
+    return tag_cards[tag_cards.length - 1];
 }
 
 function easybake_form()
@@ -349,8 +349,8 @@ function delete_specific_tag_form(event)
 {
     const delete_button = event.target;
     const hierarchy_self = delete_button.closest("#hierarchy_self");
-    const tag_object = tag_object_from_li(hierarchy_self);
-    const tag_name = tag_object.innerText;
+    const tag_card = tag_card_from_li(hierarchy_self);
+    const tag_name = tag_card.innerText;
     return api.tags.delete(tag_name, api.tags.callback_go_to_tags);
 }
 
@@ -358,8 +358,8 @@ function delete_tag_form(event)
 {
     const delete_button = event.target;
     const li = delete_button.closest("li");
-    const tag_object = tag_object_from_li(li);
-    const tag_name = tag_object.innerText.split(".").pop();
+    const tag_card = tag_card_from_li(li);
+    const tag_name = tag_card.innerText.split(".").pop();
     return api.tags.delete(tag_name, tag_action_callback);
 }
 
@@ -367,8 +367,8 @@ function remove_child_form(event)
 {
     const delete_button = event.target;
     const li = delete_button.closest("li");
-    const tag_object = tag_object_from_li(li);
-    const qual_name = tag_object.innerText;
+    const tag_card = tag_card_from_li(li);
+    const qual_name = tag_card.innerText;
     let tag_name;
     let parent_name;
     if (qual_name.indexOf(".") != -1)
@@ -389,8 +389,8 @@ function remove_specific_synonym_form(event)
 {
     const delete_button = event.target;
     const li = delete_button.closest("li");
-    const tag_object = tag_object_from_li(li);
-    const synonym = tag_object.innerText;
+    const tag_card = tag_card_from_li(li);
+    const synonym = tag_card.innerText;
     return api.tags.remove_synonym(SPECIFIC_TAG, synonym, tag_action_callback);
 }
 
@@ -398,8 +398,8 @@ function remove_synonym_form(event)
 {
     const delete_button = event.target;
     const li = delete_button.closest("li");
-    const tag_object = tag_object_from_li(li);
-    const parts = tag_object.innerText.split(".").pop().split("+");
+    const tag_card = tag_card_from_li(li);
+    const parts = tag_card.innerText.split(".").pop().split("+");
     const synonym = parts.pop();
     const tag_name = parts.pop();
     return api.tags.remove_synonym(tag_name, synonym, tag_action_callback);

@@ -165,22 +165,22 @@ is hovered over.
 {
     display: none;
 }
-.tag_object:hover ~ * .remove_tag_button,
-.tag_object:hover ~ .remove_tag_button,
+.tag_card:hover ~ * .remove_tag_button,
+.tag_card:hover ~ .remove_tag_button,
 .remove_tag_button:hover,
 .remove_tag_button_perm:hover
 {
     display:inline;
 }
 
-.tag_object
+.tag_card
 {
     border-radius: 2px;
     padding-left: 2px;
     padding-right: 2px;
 
-    background-color: var(--color_tag_object_bg);
-    color: var(--color_tag_object_fg);
+    background-color: var(--color_tag_card_bg);
+    color: var(--color_tag_card_fg);
 
     font-size: 0.9em;
     text-decoration: none;
