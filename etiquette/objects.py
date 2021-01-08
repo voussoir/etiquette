@@ -3,6 +3,7 @@ This file provides the data objects that should not be instantiated directly,
 but are returned by the PDB accesses.
 '''
 import abc
+import bcrypt
 import os
 import PIL.Image
 import re
@@ -1686,6 +1687,22 @@ class User(ObjectBase):
         }
         self.photodb.sql_update(table='users', pairs=data, where_key='id')
         self._display_name = display_name
+
+    @decorators.required_feature('user.edit')
+    @decorators.transaction
+    def set_password(self, password):
+        if not isinstance(password, bytes):
+            password = password.encode('utf-8')
+
+        self.photodb.assert_valid_password(password)
+        hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
+
+        data = {
+            'id': self.id,
+            'password': hashed_password,
+        }
+        self.photodb.sql_update(table='users', pairs=data, where_key='id')
+        self.hashed_password = hashed_password
 
 class WarningBag:
     def __init__(self):
