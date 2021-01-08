@@ -23,14 +23,14 @@ html
 {
     height: 100vh;
     box-sizing: border-box;
+    color: var(--color_text_normal);
 }
 
 *, *:before, *:after
 {
     box-sizing: inherit;
+    color: inherit;
 }
-
-* { color: var(--color_text_normal); }
 
 body
 {
