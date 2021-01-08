@@ -273,6 +273,7 @@ class PDBCacheManagerMixin:
         try:
             thing = thing_cache[thing_id]
         except KeyError:
+            self.log.loud('Cache miss %s %s.', thing_type, thing_id)
             thing = thing_class(self, db_row)
             thing_cache[thing_id] = thing
         return thing
@@ -384,6 +385,11 @@ class PDBCacheManagerMixin:
                 ids_needed.add(thing_id)
             else:
                 yield thing
+
+        if not ids_needed:
+            return
+
+        self.log.loud('Cache miss %s %s.', thing_type, ids_needed)
 
         ids_needed = list(ids_needed)
         while ids_needed:
