@@ -29,6 +29,19 @@ def get_tag_id_redirect(tag_id):
     url = request.url.replace(url_from, url_to)
     return flask.redirect(url)
 
+@site.route('/tag/<specific_tag_name>.json')
+def get_tag_json(specific_tag_name):
+    specific_tag = common.P_tag(specific_tag_name, response_type='json')
+    if specific_tag.name != specific_tag_name:
+        new_url = f'/tag/{specific_tag.name}.json' + request.query_string.decode('utf-8')
+        return flask.redirect(new_url)
+
+    include_synonyms = request.args.get('synonyms')
+    include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
+
+    response = specific_tag.jsonify(include_synonyms=include_synonyms)
+    return jsonify.make_json_response(response)
+
 @site.route('/tag/<tagname>/edit', methods=['POST'])
 def post_tag_edit(tagname):
     tag = common.P_tag(tagname, response_type='json')
@@ -132,25 +145,13 @@ def get_tags_html(specific_tag_name=None):
     )
     return response
 
-@site.route('/tag/<specific_tag_name>.json')
 @site.route('/tags.json')
-def get_tags_json(specific_tag_name=None):
-    if specific_tag_name is None:
-        specific_tag = None
-    else:
-        specific_tag = common.P_tag(specific_tag_name, response_type='json')
-        if specific_tag.name != specific_tag_name:
-            new_url = request.url.replace('/tag/' + specific_tag_name, '/tag/' + specific_tag.name)
-            return flask.redirect(new_url)
-
+def get_tags_json():
     include_synonyms = request.args.get('synonyms')
     include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
 
-    if specific_tag:
-        response = specific_tag.jsonify(include_synonyms=include_synonyms)
-    else:
-        tags = list(common.P.get_tags())
-        response = [tag.jsonify(include_synonyms=include_synonyms) for tag in tags]
+    tags = list(common.P.get_tags())
+    response = [tag.jsonify(include_synonyms=include_synonyms) for tag in tags]
 
     return jsonify.make_json_response(response)
 
