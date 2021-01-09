@@ -130,6 +130,9 @@ class TagTooShort(EtiquetteException):
 class AlreadySignedIn(EtiquetteException):
     error_message = 'You\'re already signed in.'
 
+class CantDeleteUser(EtiquetteException):
+    error_message = '{} can\'t be deleted because they still have possessions.'
+
 class InvalidPassword(EtiquetteException):
     error_message = 'Password is invalid.'
 

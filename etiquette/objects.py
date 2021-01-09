@@ -1693,6 +1693,42 @@ class User(ObjectBase):
 
         return display_name
 
+    def _uncache(self):
+        self.photodb.caches['user'].remove(self.id)
+
+    @decorators.required_feature('user.edit')
+    @decorators.transaction
+    def delete(self, *, disown_authored_things):
+        '''
+        If disown_authored_things is True, then all of this user's albums,
+        bookmarks, photos, and tags will have their author_id set to None.
+
+        If disown_authored_things is False, and the user has any belongings,
+        exceptions.CantDeleteUser is raised.
+
+        You should delete those objects first. Since each object type has
+        different options while deleting, that functionality is not provided
+        here.
+        '''
+        if disown_authored_things:
+            pairs = {'author_id': (self.id, None)}
+            self.photodb.sql_update(table='albums', pairs=pairs, where_key='author_id')
+            self.photodb.sql_update(table='bookmarks', pairs=pairs, where_key='author_id')
+            self.photodb.sql_update(table='photos', pairs=pairs, where_key='author_id')
+            self.photodb.sql_update(table='tags', pairs=pairs, where_key='author_id')
+        else:
+            fail = (
+                self.has_any_albums() or
+                self.has_any_bookmarks() or
+                self.has_any_photos() or
+                self.has_any_tags()
+            )
+            if fail:
+                raise exceptions.CantDeleteUser(self)
+        self.photodb.sql_delete(table='users', pairs={'id': self.id})
+        self._uncache()
+        self.deleted = True
+
     @property
     def display_name(self):
         if self._display_name is None:
@@ -1735,6 +1771,26 @@ class User(ObjectBase):
             f'SELECT * FROM tags WHERE author_id == ? ORDER BY created {direction}',
             [self.id]
         )
+
+    def has_any_albums(self):
+        query = f'SELECT 1 FROM albums WHERE author_id == ? LIMIT 1'
+        row = self.photodb.sql_select_one(query, [self.id])
+        return row is not None
+
+    def has_any_bookmarks(self):
+        query = f'SELECT 1 FROM bookmarks WHERE author_id == ? LIMIT 1'
+        row = self.photodb.sql_select_one(query, [self.id])
+        return row is not None
+
+    def has_any_photos(self):
+        query = f'SELECT 1 FROM photos WHERE author_id == ? LIMIT 1'
+        row = self.photodb.sql_select_one(query, [self.id])
+        return row is not None
+
+    def has_any_tags(self):
+        query = f'SELECT 1 FROM tags WHERE author_id == ? LIMIT 1'
+        row = self.photodb.sql_select_one(query, [self.id])
+        return row is not None
 
     def jsonify(self):
         j = {
