@@ -1700,6 +1700,42 @@ class User(ObjectBase):
         else:
             return self._display_name
 
+    def get_albums(self, *, direction='asc'):
+        if direction.lower() not in {'asc', 'desc'}:
+            raise ValueError(direction)
+
+        return self.photodb.get_albums_by_sql(
+            f'SELECT * FROM albums WHERE author_id == ? ORDER BY created {direction}',
+            [self.id]
+        )
+
+    def get_bookmarks(self, *, direction='asc'):
+        if direction.lower() not in {'asc', 'desc'}:
+            raise ValueError(direction)
+
+        return self.photodb.get_bookmarks_by_sql(
+            f'SELECT * FROM bookmarks WHERE author_id == ? ORDER BY created {direction}',
+            [self.id]
+        )
+
+    def get_photos(self, *, direction='asc'):
+        if direction.lower() not in {'asc', 'desc'}:
+            raise ValueError(direction)
+
+        return self.photodb.get_photos_by_sql(
+            f'SELECT * FROM photos WHERE author_id == ? ORDER BY created {direction}',
+            [self.id]
+        )
+
+    def get_tags(self, *, direction='asc'):
+        if direction.lower() not in {'asc', 'desc'}:
+            raise ValueError(direction)
+
+        return self.photodb.get_tags_by_sql(
+            f'SELECT * FROM tags WHERE author_id == ? ORDER BY created {direction}',
+            [self.id]
+        )
+
     def jsonify(self):
         j = {
             'type': 'user',
