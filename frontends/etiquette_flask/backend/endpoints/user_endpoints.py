@@ -38,11 +38,12 @@ def get_user_id_redirect(user_id):
 @site.route('/user/<username>/edit', methods=['POST'])
 def post_user_edit(username):
     session = session_manager.get(request)
+
     if not session:
-        return jsonify.make_json_response({}, status=403)
+        return jsonify.make_json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
     user = common.P_user(username, response_type='json')
     if session.user != user:
-        return jsonify.make_json_response({}, status=403)
+        return jsonify.make_json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
 
     display_name = request.form.get('display_name')
     if display_name is not None:

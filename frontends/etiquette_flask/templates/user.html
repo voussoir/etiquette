@@ -103,7 +103,7 @@ function profile_ed_on_save(ed)
         }
         if ("error_type" in response.data)
         {
-            ed.show_error(response.data.error_message);
+            ed.show_error(`${response.data.error_type} ${response.data.error_message}`);
             return;
         }
 
