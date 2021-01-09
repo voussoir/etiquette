@@ -415,11 +415,11 @@ class PDBCacheManagerMixin:
     def get_things_by_sql(self, thing_type, query, bindings=None):
         '''
         Use an arbitrary SQL query to select things from the database.
-        Your query should *only* select the id column.
+        Your query select *, all the columns of the thing's table.
         '''
         thing_rows = self.sql_select(query, bindings)
-        thing_ids = (thing_id for (thing_id,) in thing_rows)
-        return self.get_things_by_id(thing_type, thing_ids)
+        for thing_row in thing_rows:
+            yield self.get_cached_instance(thing_type, thing_row)
 
 ####################################################################################################
 
