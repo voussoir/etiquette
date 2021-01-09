@@ -1,12 +1,17 @@
 <!DOCTYPE html5>
 <html>
 <head>
+    {% import "album_card.html" as album_card %}
+    {% import "bookmark_card.html" as bookmark_card %}
+    {% import "photo_card.html" as photo_card %}
+    {% import "tag_card.html" as tag_card %}
     {% import "header.html" as header %}
     <title class="dynamic_user_display_name">{{user.display_name}}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="/static/css/common.css">
     <link rel="stylesheet" href="/static/css/etiquette.css">
+    <link rel="stylesheet" href="/static/css/cards.css">
     {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
@@ -30,20 +35,52 @@ h2, h3
 <body>
     {{header.make_header(session=session)}}
     <div id="content_body">
-        <div class="panel">
+        <div id="hierarchy_self" class="panel">
             <h2 id="display_name">{{user.display_name}}</h2>
             <p>ID: <a href="/userid/{{user.id}}">{{user.id}}</a></p>
             <p>User since <span title="{{user.created|int|timestamp_to_8601}}">{{user.created|timestamp_to_naturaldate}}.</span></p>
         </div>
-        <div class="panel">
+
+        {% set photos = user.get_photos(direction='desc')|islice(0, 15)|list %}
+        {% if photos %}
+        <div id="hierarchy_photos" class="panel">
             <h3><a href="/search?author={{user.username}}">Photos by <span class="dynamic_user_display_name">{{user.display_name}}</span></a></h3>
-            <iframe
-            class="embedded_search"
-            src="/search_embed?author={{user.username}}&orderby=created-desc&yield_albums=no&limit=10"
-            onload="return common.size_iframe_to_content(this);"
-            >
-            </iframe>
+            {% for photo in photos %}
+            {{photo_card.create_photo_card(photo)}}
+            {% endfor %}
         </div>
+        {% endif %}
+
+        {% set tags = user.get_tags(direction='desc')|islice(0, 100)|list %}
+        {% if tags %}
+        <div id="hierarchy_tags" class="panel">
+            <h3>Tags by <span class="dynamic_user_display_name">{{user.display_name}}</span></h3>
+            {% for tag in tags %}
+            {{tag_card.create_tag_card(tag, with_alt_description=True)}}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% set albums = user.get_albums()|islice(0, 20)|list %}
+        {% if albums %}
+        <div id="hierarchy_albums" class="panel">
+            <h3>Albums by <span class="dynamic_user_display_name">{{user.display_name}}</span></h3>
+            {% for album in albums %}
+            {{album_card.create_album_card(album)}}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% set bookmarks = user.get_bookmarks()|islice(0, 50)|list %}
+        {% if bookmarks %}
+        <div id="hierarchy_bookmarks" class="panel">
+            <h3>Bookmarks by <span class="dynamic_user_display_name">{{user.display_name}}</span></h3>
+            {% for bookmark in bookmarks %}
+            {{bookmark_card.create_bookmark_card(bookmark)}}
+            {% endfor %}
+        </div>
+        {% endif %}
+
     </div>
 </body>
 

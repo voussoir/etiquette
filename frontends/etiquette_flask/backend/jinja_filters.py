@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import jinja2.filters
 
 import voussoirkit.bytestring
@@ -44,6 +45,10 @@ def file_link(photo, short=False):
         return f'/file/{photo.id}{photo.dot_extension}'
     basename = jinja2.filters.do_urlencode(photo.basename)
     return f'/file/{photo.id}/{basename}'
+
+@filter_function
+def islice(gen, start, stop):
+    return itertools.islice(gen, start, stop)
 
 @filter_function
 def timestamp_to_8601(timestamp):
