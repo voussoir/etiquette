@@ -216,6 +216,13 @@ const ALBUM_ID = undefined;
                     {{-album.description-}}
                 </pre>
             </div>
+
+            {% set author = album.get_author() %}
+            {% if author is not none %}
+            <p>Author: <a href="/user/{{author.username}}">{{author.display_name}}</a></p>
+            {% endif %}
+
+            <p>Created on <span title="{{album.created|int|timestamp_to_8601}}">{{album.created|timestamp_to_naturaldate}}.</span></p>
             <button class="green_button editor_toolbox_placeholder">Edit</button>
         </div>
 
