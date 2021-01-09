@@ -59,8 +59,18 @@ function create_bookmark_form()
 
 function delete_bookmark_form(event)
 {
-    const id = event.target.closest(".bookmark_card").dataset.id;
-    api.bookmarks.delete(id, common.refresh_or_alert);
+    const card = event.target.closest(".bookmark_card");
+    const id = card.dataset.id;
+    function callback(response)
+    {
+        if (response.meta.status !== 200)
+        {
+            alert(JSON.stringify(response));
+            return;
+        }
+        card.parentElement.removeChild(card);
+    }
+    api.bookmarks.delete(id, callback);
 }
 
 ed_on_open = undefined;
