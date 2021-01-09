@@ -10,6 +10,7 @@ import sys
 import traceback
 
 from voussoirkit import interactive
+from voussoirkit import pipeable
 from voussoirkit import vlogging
 
 import etiquette
@@ -38,7 +39,13 @@ def photag(photo_id):
 
 def erepl_argparse(args):
     global P
-    P = etiquette.photodb.PhotoDB(create=args.create, log_level=LOG_LEVEL)
+
+    try:
+        P = etiquette.photodb.PhotoDB.closest_photodb(log_level=LOG_LEVEL)
+    except etiquette.exceptions.NoClosestPhotoDB as exc:
+        pipeable.stderr(exc.error_message)
+        pipeable.stderr('Try etiquette_cli init')
+        return 1
 
     if args.exec_statement:
         exec(args.exec_statement)
@@ -62,7 +69,6 @@ def main(argv):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--exec', dest='exec_statement', default=None)
-    parser.add_argument('--dont_create', '--dont-create', '--no-create', dest='create', action='store_false', default=True)
     parser.set_defaults(func=erepl_argparse)
 
     args = parser.parse_args(argv)

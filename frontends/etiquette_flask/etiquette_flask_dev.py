@@ -18,8 +18,10 @@ import os
 import sys
 
 from voussoirkit import pathclass
+from voussoirkit import pipeable
 from voussoirkit import vlogging
 
+import etiquette
 import backend
 
 site = backend.site
@@ -31,7 +33,6 @@ LOG_LEVEL = vlogging.NOTSET
 
 def etiquette_flask_launch(
         *,
-        create,
         localhost_only,
         port,
         use_https,
@@ -55,7 +56,12 @@ def etiquette_flask_launch(
     if localhost_only:
         site.localhost_only = True
 
-    backend.common.init_photodb(create=create, log_level=LOG_LEVEL)
+    try:
+        backend.common.init_photodb(log_level=LOG_LEVEL)
+    except etiquette.exceptions.NoClosestPhotoDB as exc:
+        pipeable.stderr(exc.error_message)
+        pipeable.stderr('Try etiquette_cli init')
+        return 1
 
     message = f'Starting server on port {port}, pid={os.getpid()}'
     if use_https:
@@ -69,7 +75,6 @@ def etiquette_flask_launch(
 
 def etiquette_flask_launch_argparse(args):
     return etiquette_flask_launch(
-        create=args.create,
         localhost_only=args.localhost_only,
         port=args.port,
         use_https=args.use_https,
@@ -82,7 +87,6 @@ def main(argv):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('port', nargs='?', type=int, default=5000)
-    parser.add_argument('--dont_create', '--dont-create', '--no-create', dest='create', action='store_false', default=True)
     parser.add_argument('--https', dest='use_https', action='store_true', default=None)
     parser.add_argument('--localhost_only', '--localhost-only', dest='localhost_only', action='store_true')
     parser.set_defaults(func=etiquette_flask_launch_argparse)

@@ -320,4 +320,4 @@ def send_file(filepath, override_mimetype=None):
 
 def init_photodb(*args, **kwargs):
     global P
-    P = etiquette.photodb.PhotoDB(*args, **kwargs)
+    P = etiquette.photodb.PhotoDB.closest_photodb(*args, **kwargs)

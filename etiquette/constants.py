@@ -252,7 +252,7 @@ ADDITIONAL_MIMETYPES = {
 
 # Photodb ##########################################################################################
 
-DEFAULT_DATADIR = '.\\_etiquette'
+DEFAULT_DATADIR = '_etiquette'
 DEFAULT_DBNAME = 'phototagger.db'
 DEFAULT_CONFIGNAME = 'config.json'
 DEFAULT_THUMBDIR = 'site_thumbnails'

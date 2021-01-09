@@ -1805,7 +1805,7 @@ class PhotoDB(
             self.ephemeral_directory = tempfile.TemporaryDirectory(prefix='etiquette_ephem_')
             data_directory = self.ephemeral_directory.name
         else:
-            data_directory = constants.DEFAULT_DATADIR
+            data_directory = pathclass.cwd().with_child(constants.DEFAULT_DATADIR)
 
         if isinstance(data_directory, str):
             data_directory = helpers.remove_path_badchars(data_directory, allowed=':/\\')
@@ -1879,6 +1879,34 @@ class PhotoDB(
         self.log.debug('Reloading pragmas.')
         self.sql_executescript(constants.DB_PRAGMAS)
         self.sql.commit()
+
+    @classmethod
+    def closest_photodb(cls, *args, **kwargs):
+        '''
+        Starting from the cwd and climbing upwards towards the filesystem root,
+        look for an existing Etiquette data directory and return the PhotoDB
+        object. If none exists, raise exceptions.NoClosestPhotoDB.
+        '''
+        cwd = pathclass.cwd()
+
+        path = cwd
+        while True:
+            if path.with_child(constants.DEFAULT_DATADIR).is_dir:
+                break
+            parent = path.parent
+            if path == parent:
+                raise exceptions.NoClosestPhotoDB(cwd)
+            path = parent
+
+        path = path.with_child(constants.DEFAULT_DATADIR)
+        photodb = cls(
+            path,
+            create=False,
+            *args,
+            **kwargs,
+        )
+        photodb.log.debug('Found closest PhotoDB at %s.', path)
+        return photodb
 
     def __del__(self):
         self.close()

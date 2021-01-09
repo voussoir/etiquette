@@ -192,6 +192,13 @@ class FeatureDisabled(EtiquetteException):
     '''
     error_message = 'This feature has been disabled. Requires {}.'
 
+class NoClosestPhotoDB(EtiquetteException):
+    '''
+    For calls to PhotoDB.closest_photodb where none exists between cwd and
+    drive root.
+    '''
+    error_message = 'There is no PhotoDB in {} or its parents.'
+
 class NoYields(EtiquetteException):
     '''
     For when all of the yield_* arguments have been provided as False, and thus

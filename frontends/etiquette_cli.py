@@ -6,6 +6,7 @@ import sys
 from voussoirkit import betterhelp
 from voussoirkit import interactive
 from voussoirkit import pathclass
+from voussoirkit import pipeable
 from voussoirkit import spinal
 from voussoirkit import stringtools
 from voussoirkit import vlogging
@@ -14,31 +15,19 @@ import etiquette
 
 LOG_LEVEL = vlogging.NOTSET
 
-class CantFindPhotoDB(Exception):
-    pass
 
 photodbs = {}
 
 def find_photodb():
-    path = pathclass.cwd()
+    cwd = pathclass.cwd()
+    try:
+        return photodbs[cwd]
+    except KeyError:
+        pass
 
-    while True:
-        try:
-            return photodbs[path]
-        except KeyError:
-            pass
-        if path.with_child('_etiquette').is_dir:
-            break
-        if path == path.parent:
-            raise CantFindPhotoDB()
-        path = path.parent
-
-    photodb = etiquette.photodb.PhotoDB(
-        path.with_child('_etiquette'),
-        create=False,
-        log_level=LOG_LEVEL,
-    )
-    photodbs[path] = photodb
+    # If this raises, main will catch it.
+    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    photodbs[cwd] = photodb
     return photodb
 
 # HELPERS ##########################################################################################
@@ -780,13 +769,18 @@ def main(argv):
         )
         return args
 
-    return betterhelp.subparser_main(
-        primary_args,
-        parser,
-        main_docstring=DOCSTRING,
-        sub_docstrings=SUB_DOCSTRINGS,
-        args_postprocessor=pp,
-    )
+    try:
+        return betterhelp.subparser_main(
+            primary_args,
+            parser,
+            main_docstring=DOCSTRING,
+            sub_docstrings=SUB_DOCSTRINGS,
+            args_postprocessor=pp,
+        )
+    except etiquette.exceptions.NoClosestPhotoDB as exc:
+        pipeable.stderr(exc.error_message)
+        pipeable.stderr('Try etiquette_cli init')
+        return 1
 
 if __name__ == '__main__':
     raise SystemExit(main(sys.argv[1:]))
