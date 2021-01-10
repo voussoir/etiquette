@@ -41,6 +41,16 @@ class ObjectBase:
         self.photodb = photodb
         self.deleted = False
 
+    def __reinit__(self):
+        '''
+        Reload the row from the database and do __init__ with it.
+        '''
+        row = self.photodb.sql_select_one(f'SELECT * FROM {self.table} WHERE id == ?', [self.id])
+        if row is None:
+            self.deleted = True
+        else:
+            self.__init__(self.photodb, row)
+
     def __eq__(self, other):
         return (
             isinstance(other, type(self)) and
@@ -769,13 +779,6 @@ class Photo(ObjectBase):
             self.simple_mimetype = None
         else:
             self.simple_mimetype = self.mimetype.split('/')[0]
-
-    def __reinit__(self):
-        '''
-        Reload the row from the database and do __init__ with them.
-        '''
-        row = self.photodb.sql_select_one('SELECT * FROM photos WHERE id == ?', [self.id])
-        self.__init__(self.photodb, row)
 
     def __repr__(self):
         return f'Photo:{self.id}'
