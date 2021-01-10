@@ -224,7 +224,7 @@ h2, h3
                 {{tag_card.create_tag_card(specific_tag, link=none, innertext=synonym)-}}
                 <button
                 class="remove_tag_button red_button button_with_confirm"
-                data-onclick="return remove_specific_synonym_form(event);"
+                data-onclick="return remove_synonym_form(event);"
                 data-prompt="Remove Synonym?"
                 data-confirm="Remove"
                 data-confirm-class="remove_tag_button_perm red_button"
@@ -386,23 +386,25 @@ function remove_child_form(event)
     return api.tags.remove_child(parent_name, tag_name, tag_action_callback);
 }
 
-function remove_specific_synonym_form(event)
-{
-    const delete_button = event.target;
-    const li = delete_button.closest("li");
-    const tag_card = tag_card_from_li(li);
-    const synonym = tag_card.innerText;
-    return api.tags.remove_synonym(SPECIFIC_TAG, synonym, tag_action_callback);
-}
-
 function remove_synonym_form(event)
 {
     const delete_button = event.target;
     const li = delete_button.closest("li");
     const tag_card = tag_card_from_li(li);
-    const parts = tag_card.innerText.split(".").pop().split("+");
-    const synonym = parts.pop();
-    const tag_name = parts.pop();
+    const qual_name = tag_card.innerText;
+    let tag_name;
+    let synonym;
+    if (qual_name.indexOf("+") != -1)
+    {
+        const parts = tag_card.innerText.split(".").pop().split("+");
+        synonym = parts.pop();
+        tag_name = parts.pop();
+    }
+    else if (SPECIFIC_TAG)
+    {
+        tag_name = SPECIFIC_TAG;
+        synonym = qual_name;
+    }
     return api.tags.remove_synonym(tag_name, synonym, tag_action_callback);
 }
 
