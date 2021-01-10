@@ -110,7 +110,7 @@ h2, h3
         data-is-input="1"
         data-prompt="Album title"
         data-cancel-class="gray_button"
-        data-onclick="return create_child(event.target.input_source.value);"
+        data-onclick="return create_album_form(event);"
         >
             Create album
         </button>
@@ -172,7 +172,7 @@ const ALBUM_ID = undefined;
         data-is-input="1"
         data-prompt="Album title"
         data-cancel-class="gray_button"
-        data-onclick="return create_child(event.target.input_source.value);"
+        data-onclick="return create_album_form(event);"
         >
             Create child
         </button>
@@ -183,7 +183,7 @@ const ALBUM_ID = undefined;
         data-is-input="1"
         data-prompt="Child ID"
         data-cancel-class="gray_button"
-        data-onclick="return add_child(event.target.input_source.value);"
+        data-onclick="return add_child_form(event);"
         >
             Add child
         </button>
@@ -287,8 +287,9 @@ const ALBUM_ID = undefined;
 <script id="album_individual_script" type="text/javascript">
 const ALBUM_ID = "{{album.id}}";
 
-function add_child(child_id)
+function add_child_form(event)
 {
+    const child_id = event.target.input_source.value;
     if (! child_id.trim())
     {
         return;
@@ -396,8 +397,9 @@ album_autocomplete.on_load_hooks.push(add_album_datalist_on_load);
 
 <script id="album_shared_script" type="text/javascript">
 
-function create_child(title)
+function create_album_form(event)
 {
+    const title = event.target.input_source.value;
     if (! title)
     {
         title = undefined;
