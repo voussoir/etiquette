@@ -44,7 +44,7 @@ def erepl_argparse(args):
         P = etiquette.photodb.PhotoDB.closest_photodb(log_level=LOG_LEVEL)
     except etiquette.exceptions.NoClosestPhotoDB as exc:
         pipeable.stderr(exc.error_message)
-        pipeable.stderr('Try etiquette_cli init')
+        pipeable.stderr('Try `etiquette_cli.py init` to create the database.')
         return 1
 
     if args.exec_statement:

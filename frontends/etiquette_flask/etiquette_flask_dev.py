@@ -60,7 +60,7 @@ def etiquette_flask_launch(
         backend.common.init_photodb(log_level=LOG_LEVEL)
     except etiquette.exceptions.NoClosestPhotoDB as exc:
         pipeable.stderr(exc.error_message)
-        pipeable.stderr('Try etiquette_cli init')
+        pipeable.stderr('Try `etiquette_cli.py init` to create the database.')
         return 1
 
     message = f'Starting server on port {port}, pid={os.getpid()}'

@@ -779,7 +779,7 @@ def main(argv):
         )
     except etiquette.exceptions.NoClosestPhotoDB as exc:
         pipeable.stderr(exc.error_message)
-        pipeable.stderr('Try etiquette_cli init')
+        pipeable.stderr('Try `etiquette_cli.py init` to create the database.')
         return 1
 
 if __name__ == '__main__':
