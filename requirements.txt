@@ -18,4 +18,4 @@ send2trash
 zipstream
 
 # My own variety toolkit.
-voussoirkit>=0.0.46
+voussoirkit>=0.0.60
