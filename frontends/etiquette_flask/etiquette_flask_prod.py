@@ -12,4 +12,4 @@ backend.site.wsgi_app = werkzeug.middleware.proxy_fix.ProxyFix(backend.site.wsgi
 
 site = backend.site
 
-backend.common.init_photodb(create=False)
+backend.common.init_photodb()
