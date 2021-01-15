@@ -418,6 +418,9 @@ add_tag:
     Add a tag to files by a filename glob.
 
     > etiquette_cli.py add_tag tag_name glob_pattern
+
+    Examples:
+    > etiquette_cli.py add_tag wallpaper wall*.jpg
 '''.strip(),
 
 remove_tag='''
@@ -425,6 +428,9 @@ remove_tag:
     Remove a tag from files by a filename glob.
 
     > etiquette_cli.py remove_tag tag_name glob_pattern
+
+    Examples:
+    > etiquette_cli.py remove_tag watchlist spongebob*.mp4
 '''.strip(),
 
 digest='''
@@ -446,6 +452,10 @@ digest:
     --no_recurse:
         Do not recurse into subdirectories. Only create Photos from files in
         the current directory.
+
+    Examples:
+    > etiquette_cli.py digest media --ratelimit 1
+    > etiquette_cli.py digest photos --no-recurse --no-albums --ratelimit 0.25
 '''.strip(),
 
 easybake='''
@@ -629,7 +639,6 @@ tag_breplace:
 
     > etiquette_cli.py tag_breplace replace_from replace_to
 '''.strip(),
-
 )
 
 DOCSTRING = betterhelp.add_previews(DOCSTRING, SUB_DOCSTRINGS)
