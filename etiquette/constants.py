@@ -57,17 +57,6 @@ BEGIN;
 {DB_PRAGMAS}
 {DB_VERSION_PRAGMA}
 ----------------------------------------------------------------------------------------------------
--- users table is defined first because other tables have foreign keys here.
-CREATE TABLE IF NOT EXISTS users(
-    id TEXT PRIMARY KEY NOT NULL,
-    username TEXT NOT NULL COLLATE NOCASE,
-    password BLOB NOT NULL,
-    display_name TEXT,
-    created INT
-);
-CREATE INDEX IF NOT EXISTS index_users_id on users(id);
-CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE);
-----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS albums(
     id TEXT PRIMARY KEY NOT NULL,
     title TEXT,
@@ -131,6 +120,16 @@ CREATE TABLE IF NOT EXISTS tags(
 CREATE INDEX IF NOT EXISTS index_tags_id on tags(id);
 CREATE INDEX IF NOT EXISTS index_tags_name on tags(name);
 CREATE INDEX IF NOT EXISTS index_tags_author_id on tags(author_id);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS users(
+    id TEXT PRIMARY KEY NOT NULL,
+    username TEXT NOT NULL COLLATE NOCASE,
+    password BLOB NOT NULL,
+    display_name TEXT,
+    created INT
+);
+CREATE INDEX IF NOT EXISTS index_users_id on users(id);
+CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE);
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
