@@ -767,10 +767,7 @@ class Photo(ObjectBase):
         self.height = db_row['height']
         self.ratio = db_row['ratio']
 
-        if db_row['thumbnail'] is not None:
-            self.thumbnail = self.photodb.thumbnail_directory.join(db_row['thumbnail'])
-        else:
-            self.thumbnail = None
+        self.thumbnail = self.normalize_thumbnail(db_row['thumbnail'])
 
         self.searchhidden = db_row['searchhidden']
 
@@ -785,6 +782,16 @@ class Photo(ObjectBase):
 
     def __str__(self):
         return f'Photo:{self.id}:{self.basename}'
+
+    def normalize_thumbnail(self, thumbnail):
+        if thumbnail is None:
+            return None
+
+        thumbnail = self.photodb.thumbnail_directory.join(thumbnail)
+        if not thumbnail.is_file:
+            return None
+
+        return thumbnail
 
     @staticmethod
     def normalize_override_filename(override_filename):
