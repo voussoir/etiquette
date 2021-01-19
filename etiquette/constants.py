@@ -41,7 +41,7 @@ ffmpeg = _load_ffmpeg()
 
 # Database #########################################################################################
 
-DATABASE_VERSION = 17
+DATABASE_VERSION = 18
 DB_VERSION_PRAGMA = f'''
 PRAGMA user_version = {DATABASE_VERSION};
 '''
@@ -62,8 +62,10 @@ CREATE TABLE IF NOT EXISTS albums(
     title TEXT,
     description TEXT,
     created INT,
+    thumbnail_photo TEXT,
     author_id TEXT,
-    FOREIGN KEY(author_id) REFERENCES users(id)
+    FOREIGN KEY(author_id) REFERENCES users(id),
+    FOREIGN KEY(thumbnail_photo) REFERENCES photos(id)
 );
 CREATE INDEX IF NOT EXISTS index_albums_id on albums(id);
 CREATE INDEX IF NOT EXISTS index_albums_author_id on albums(author_id);

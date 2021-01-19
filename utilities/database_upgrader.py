@@ -572,6 +572,36 @@ def upgrade_16_to_17(photodb):
 
     m.go()
 
+def upgrade_17_to_18(photodb):
+    '''
+    Added the thumbnail_photo column to albums.
+    '''
+    m = Migrator(photodb)
+    m.tables['albums']['create'] = '''
+    CREATE TABLE albums(
+        id TEXT PRIMARY KEY NOT NULL,
+        title TEXT,
+        description TEXT,
+        created INT,
+        thumbnail_photo TEXT,
+        author_id TEXT,
+        FOREIGN KEY(author_id) REFERENCES users(id),
+        FOREIGN KEY(thumbnail_photo) REFERENCES photos(id)
+    );
+    '''
+    m.tables['albums']['transfer'] = '''
+    INSERT INTO albums SELECT
+        id,
+        title,
+        description,
+        created,
+        NULL,
+        author_id
+    FROM albums_old;
+    '''
+
+    m.go()
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

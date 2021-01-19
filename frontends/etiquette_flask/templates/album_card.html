@@ -19,7 +19,12 @@ draggable=true
     {% else %}
     <a class="album_card_thumbnail" href="/album/{{album.id}}{{viewparam}}">
     {% endif %}
-    <img src="/static/basic_thumbnails/album.png"/>
+    {% if album.thumbnail_photo %}
+    {% set thumbnail_src = "/thumbnail/" + album.thumbnail_photo.id + ".jpg" %}
+    {% else %}
+    {% set thumbnail_src = "/static/basic_thumbnails/album.png" %}
+    {% endif %}
+    <img src="{{thumbnail_src}}"/>
     </a>
 
     <div class="album_card_tools">

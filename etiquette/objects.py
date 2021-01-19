@@ -284,6 +284,7 @@ class Album(ObjectBase, GroupableMixin):
         self.title = self.normalize_title(db_row['title'])
         self.description = self.normalize_description(db_row['description'])
         self.created = db_row['created']
+        self._thumbnail_photo = db_row['thumbnail_photo']
         self.author_id = self.normalize_author_id(db_row['author_id'])
 
         self.group_getter_many = self.photodb.get_albums_by_id
@@ -532,6 +533,7 @@ class Album(ObjectBase, GroupableMixin):
             'description': self.description,
             'title': self.title,
             'created': self.created,
+            'thumbnail_photo': self.thumbnail_photo.id if self._thumbnail_photo else None,
             'author': self.get_author().jsonify() if self.author_id else None,
         }
         if not minimal:
@@ -628,6 +630,16 @@ class Album(ObjectBase, GroupableMixin):
         query = query.format(albumids=albumids)
         total = self.photodb.sql_select_one(query)[0]
         return total
+
+    @property
+    def thumbnail_photo(self):
+        if self._thumbnail_photo is None:
+            return None
+        if isinstance(self._thumbnail_photo, Photo):
+            return self._thumbnail_photo
+        photo = self.photodb.get_photo(self._thumbnail_photo)
+        self._thumbnail_photo = photo
+        return photo
 
     def walk_photos(self):
         yield from self.get_photos()
