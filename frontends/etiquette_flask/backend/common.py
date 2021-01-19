@@ -41,7 +41,6 @@ site.jinja_env.add_extension('jinja2.ext.do')
 site.jinja_env.trim_blocks = True
 site.jinja_env.lstrip_blocks = True
 jinja_filters.register_all(site)
-site.debug = True
 site.localhost_only = False
 
 session_manager = sessions.SessionManager(maxlen=10000)

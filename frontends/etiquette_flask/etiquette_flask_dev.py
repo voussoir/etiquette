@@ -25,6 +25,7 @@ import etiquette
 import backend
 
 site = backend.site
+site.debug = True
 
 HTTPS_DIR = pathclass.Path(__file__).parent.with_child('https')
 LOG_LEVEL = vlogging.NOTSET

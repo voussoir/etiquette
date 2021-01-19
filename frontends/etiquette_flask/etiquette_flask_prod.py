@@ -11,5 +11,6 @@ import backend
 backend.site.wsgi_app = werkzeug.middleware.proxy_fix.ProxyFix(backend.site.wsgi_app)
 
 site = backend.site
+site.debug = False
 
 backend.common.init_photodb()
