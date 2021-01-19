@@ -63,13 +63,17 @@
 }
 .album_card_tools
 {
+    display: none;
     position: absolute;
     right: 4px;
     bottom: 4px;
+    background-color: var(--color_transparency);
+    min-width: max-content;
 }
-.album_card_list .album_card_tools
+.album_card_tools:hover,
+.album_card:hover .album_card_tools
 {
-    display: none;
+    display: initial;
 }
 
 /* ########################################################################## */
