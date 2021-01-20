@@ -1,6 +1,6 @@
 '''
 Do not execute this file directly.
-Use etiquette_flask_launch.py to start the server with gevent.
+Use etiquette_flask_dev.py or etiquette_flask_prod.py.
 '''
 import flask; from flask import request
 import gzip
