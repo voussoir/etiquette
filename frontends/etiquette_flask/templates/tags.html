@@ -2,7 +2,7 @@
 <html>
 <head>
     {% import "header.html" as header %}
-    {% import "tag_card.html" as tag_card %}
+    {% import "cards.html" as cards %}
     {% if specific_tag is none %}
         <title>Tags</title>
     {% else %}
@@ -96,7 +96,7 @@ h2, h3
         {% if specific_tag %}
         <div id="hierarchy_self" class="panel">
             <div id="tag_metadata">
-                <h2>{{tag_card.create_tag_card(
+                <h2>{{cards.create_tag_card(
                     specific_tag,
                     link="search",
                     id="name_text",
@@ -130,9 +130,9 @@ h2, h3
             <ul id="parent_list">
             {% for ancestor in specific_tag.get_parents() %}
             <li>
-                {{tag_card.create_tag_card(ancestor, link="search_musts", innertext="(+)")}}
-                {{tag_card.create_tag_card(ancestor, link="search_forbids", innertext="(x)")}}
-                {{tag_card.create_tag_card(ancestor, link="info", innertext=ancestor.name, with_alt_description=True)}}
+                {{cards.create_tag_card(ancestor, link="search_musts", innertext="(+)")}}
+                {{cards.create_tag_card(ancestor, link="search_forbids", innertext="(x)")}}
+                {{cards.create_tag_card(ancestor, link="info", innertext=ancestor.name, with_alt_description=True)}}
             </li>
             {% endfor %}
             </ul>
@@ -149,9 +149,9 @@ h2, h3
             <ul id="tag_list">
             {% for (qualified_name, tag) in tags %}
                 <li>
-                    {{tag_card.create_tag_card(tag, link="search_musts", innertext="(+)")}}
-                    {{tag_card.create_tag_card(tag, link="search_forbids", innertext="(x)")}}
-                    {{tag_card.create_tag_card(tag, link="info", innertext=qualified_name, with_alt_description=True)-}}
+                    {{cards.create_tag_card(tag, link="search_musts", innertext="(+)")}}
+                    {{cards.create_tag_card(tag, link="search_forbids", innertext="(x)")}}
+                    {{cards.create_tag_card(tag, link="info", innertext=qualified_name, with_alt_description=True)-}}
                     {% if specific_tag or '.' in qualified_name -%}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
@@ -182,9 +182,9 @@ h2, h3
                 {% if include_synonyms %}
                 {% for synonym in tag.get_synonyms()|sort %}
                 <li>
-                    {{-tag_card.create_tag_card(tag, link="search_musts", innertext="(+)")}}
-                    {{tag_card.create_tag_card(tag, link="search_forbids", innertext="(x)")}}
-                    {{tag_card.create_tag_card(tag, link='info', innertext=qualified_name + '+' + synonym)-}}
+                    {{-cards.create_tag_card(tag, link="search_musts", innertext="(+)")}}
+                    {{cards.create_tag_card(tag, link="search_forbids", innertext="(x)")}}
+                    {{cards.create_tag_card(tag, link='info', innertext=qualified_name + '+' + synonym)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
                     data-holder-class="confirm_holder_remove_synonym"
@@ -217,11 +217,11 @@ h2, h3
             <ul>
             {% for synonym in synonyms %}
             <li>
-                {{tag_card.create_tag_card(specific_tag, link="search_musts", innertext="(+)")}}
+                {{cards.create_tag_card(specific_tag, link="search_musts", innertext="(+)")}}
 
-                {{tag_card.create_tag_card(specific_tag, link="search_forbids", innertext="(x)")}}
+                {{cards.create_tag_card(specific_tag, link="search_forbids", innertext="(x)")}}
 
-                {{tag_card.create_tag_card(specific_tag, link=none, innertext=synonym)-}}
+                {{cards.create_tag_card(specific_tag, link=none, innertext=synonym)-}}
                 <button
                 class="remove_tag_button red_button button_with_confirm"
                 data-onclick="return remove_synonym_form(event);"

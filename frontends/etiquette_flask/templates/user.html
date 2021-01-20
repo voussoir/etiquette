@@ -1,11 +1,8 @@
 <!DOCTYPE html5>
 <html>
 <head>
-    {% import "album_card.html" as album_card %}
-    {% import "bookmark_card.html" as bookmark_card %}
-    {% import "photo_card.html" as photo_card %}
-    {% import "tag_card.html" as tag_card %}
     {% import "header.html" as header %}
+    {% import "cards.html" as cards %}
     <title class="dynamic_user_display_name">{{user.display_name}}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -46,7 +43,7 @@ h2, h3
         <div id="hierarchy_photos" class="panel">
             <h3><a href="/search?author={{user.username}}">Photos by <span class="dynamic_user_display_name">{{user.display_name}}</span></a></h3>
             {% for photo in photos %}
-            {{photo_card.create_photo_card(photo)}}
+            {{cards.create_photo_card(photo)}}
             {% endfor %}
         </div>
         {% endif %}
@@ -56,7 +53,7 @@ h2, h3
         <div id="hierarchy_tags" class="panel">
             <h3>Tags by <span class="dynamic_user_display_name">{{user.display_name}}</span></h3>
             {% for tag in tags %}
-            {{tag_card.create_tag_card(tag, with_alt_description=True)}}
+            {{cards.create_tag_card(tag, with_alt_description=True)}}
             {% endfor %}
         </div>
         {% endif %}
@@ -66,7 +63,7 @@ h2, h3
         <div id="hierarchy_albums" class="panel">
             <h3>Albums by <span class="dynamic_user_display_name">{{user.display_name}}</span></h3>
             {% for album in albums %}
-            {{album_card.create_album_card(album)}}
+            {{cards.create_album_card(album)}}
             {% endfor %}
         </div>
         {% endif %}
@@ -76,7 +73,7 @@ h2, h3
         <div id="hierarchy_bookmarks" class="panel">
             <h3>Bookmarks by <span class="dynamic_user_display_name">{{user.display_name}}</span></h3>
             {% for bookmark in bookmarks %}
-            {{bookmark_card.create_bookmark_card(bookmark)}}
+            {{cards.create_bookmark_card(bookmark)}}
             {% endfor %}
         </div>
         {% endif %}

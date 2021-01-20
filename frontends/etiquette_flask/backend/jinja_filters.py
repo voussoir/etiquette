@@ -51,6 +51,12 @@ def islice(gen, start, stop):
     return itertools.islice(gen, start, stop)
 
 @filter_function
+def join_and_trail(l, s):
+    if not l:
+        return ''
+    return s.join(l) + s
+
+@filter_function
 def timestamp_to_8601(timestamp):
     return datetime.datetime.utcfromtimestamp(timestamp).isoformat(' ') + ' UTC'
 

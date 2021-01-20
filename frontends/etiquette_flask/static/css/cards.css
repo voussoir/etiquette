@@ -146,9 +146,9 @@
     position: relative;
     display: grid;
     grid-template:
-        "checkbox filename metadata" auto
-        /auto     1fr      auto;
-
+        "checkbox filename metadata tags" auto
+        /auto     1fr      auto     auto;
+    grid-column-gap: 4px;
     margin: 8px;
     padding: 4px;
 }

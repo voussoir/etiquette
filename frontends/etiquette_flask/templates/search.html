@@ -2,9 +2,7 @@
 <html>
 <head>
     {% import "header.html" as header %}
-    {% import "album_card.html" as album_card %}
-    {% import "photo_card.html" as photo_card %}
-    {% import "tag_card.html" as tag_card %}
+    {% import "cards.html" as cards %}
     {% import "clipboard_tray.html" as clipboard_tray %}
     <title>Search</title>
     <meta charset="UTF-8">
@@ -200,7 +198,7 @@
                 {% if search_kwargs[key] %}
                     {% for tag in search_kwargs[key] %}
                         <li class="search_builder_{{tagtype}}_inputted">
-                            {{tag_card.create_tag_card(tag, link='info', with_alt_description=True)}}<!--
+                            {{cards.create_tag_card(tag, link='info', with_alt_description=True)}}<!--
                             --><button class="remove_tag_button red_button"
                             onclick="return remove_searchtag(ul_{{tagtype}}, '{{tag.name}}', inputted_{{tagtype}});"></button>
                         </li>
@@ -327,28 +325,28 @@
         <ul id="tags_on_this_page_list">
             {% for tag in total_tags %}
             <li>
-                {{tag_card.create_tag_card(
+                {{cards.create_tag_card(
                     tag,
                     link=None,
                     onclick="return tags_on_this_page_add_must(event, '" + tag.name + "');",
                     innertext="(+)",
                 )}}
 
-                {{tag_card.create_tag_card(
+                {{cards.create_tag_card(
                     tag,
                     link=None,
                     onclick="return tags_on_this_page_add_may(event, '" + tag.name + "');",
                     innertext="(~)",
                 )}}
 
-                {{tag_card.create_tag_card(
+                {{cards.create_tag_card(
                     tag,
                     link=None,
                     onclick="return tags_on_this_page_add_forbid(event, '" + tag.name + "');",
                     innertext="(x)",
                 )}}
 
-                {{tag_card.create_tag_card(
+                {{cards.create_tag_card(
                     tag,
                     link="info",
                     with_alt_description=True,
@@ -375,9 +373,9 @@
         <div id="search_results_holder" class="photos_holder">
             {% for result in results %}
                 {% if result.__class__.__name__ == 'Photo' %}
-                {{photo_card.create_photo_card(result, view=search_kwargs["view"])}}
+                {{cards.create_photo_card(result, view=search_kwargs["view"])}}
                 {% elif result.__class__.__name__ == 'Album' %}
-                {{album_card.create_album_card(result, view=search_kwargs["view"])}}
+                {{cards.create_album_card(result, view=search_kwargs["view"])}}
                 {% endif %}
             {% endfor %}
         </div>

@@ -64,7 +64,7 @@ h2, h3
 
 <head>
     {% import "header.html" as header %}
-    {% import "album_card.html" as album_card %}
+    {% import "cards.html" as cards %}
     <title>Albums</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -85,7 +85,7 @@ h2, h3
         <div id="album_list" class="panel">
             <h2>Albums</h2>
             {% for album in albums %}
-            {{album_card.create_album_card(album, view=view, draggable=true)}}
+            {{cards.create_album_card(album, view=view, draggable=true)}}
             {% endfor %}
         </div>
     </div>
@@ -116,8 +116,7 @@ const ALBUM_ID = undefined;
 
 <head>
     {% import "header.html" as header %}
-    {% import "album_card.html" as album_card %}
-    {% import "photo_card.html" as photo_card %}
+    {% import "cards.html" as cards %}
     {% import "clipboard_tray.html" as clipboard_tray %}
     <title>{{album.display_name}} | Albums</title>
     <meta charset="UTF-8">
@@ -221,11 +220,11 @@ const ALBUM_ID = undefined;
             {% if parents %}
                 <h3>{{parents|length}} Parents</h3>
                 {% for parent in parents %}
-                    {{album_card.create_album_card(parent, view=view)}}
+                    {{cards.create_album_card(parent, view=view)}}
                 {% endfor %}
             {% else %}
                 <h3>1 Parent</h3>
-                {{album_card.create_album_card("root", view=view)}}
+                {{cards.create_album_card("root", view=view)}}
             {% endif %}
         </div>
 
@@ -234,7 +233,7 @@ const ALBUM_ID = undefined;
         <div id="hierarchy_children" class="panel">
             <h3>{{sub_albums|length}} Children</h3>
             {% for sub_album in sub_albums|sort(attribute='title') %}
-                {{album_card.create_album_card(sub_album, view=view, unlink_parent=album, draggable=true)}}
+                {{cards.create_album_card(sub_album, view=view, unlink_parent=album, draggable=true)}}
             {% endfor %}
         </div>
         {% endif %}
@@ -245,7 +244,7 @@ const ALBUM_ID = undefined;
             <h3>{{photos|length}} Photos</h3>
             <div id="photo_list">
             {% for photo in photos|sort(attribute='basename', case_sensitive=False) %}
-                {{photo_card.create_photo_card(photo, view=view)}}
+                {{cards.create_photo_card(photo, view=view)}}
             {% endfor %}
             </div>
         </div>

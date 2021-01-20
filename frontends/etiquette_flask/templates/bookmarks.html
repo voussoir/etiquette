@@ -1,8 +1,8 @@
 <!DOCTYPE html5>
 <html>
 <head>
-    {% import "bookmark_card.html" as bookmark_card %}
     {% import "header.html" as header %}
+    {% import "cards.html" as cards %}
     <title>Bookmarks</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -31,7 +31,7 @@
         <div id="bookmark_list">
             <h2>Bookmarks</h2>
             {% for bookmark in bookmarks %}
-            {{bookmark_card.create_bookmark_card(bookmark, add_delete_button=True)}}
+            {{cards.create_bookmark_card(bookmark, add_delete_button=True)}}
             {% endfor %}
 
             <div class="bookmark_card new_bookmark_card">
