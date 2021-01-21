@@ -78,6 +78,13 @@ def post_album_remove_child(album_id):
     response = album.jsonify()
     return jsonify.make_json_response(response)
 
+@site.route('/album/<album_id>/remove_thumbnail_photo', methods=['POST'])
+def post_album_remove_thumbnail_photo(album_id):
+    album = common.P_album(album_id, response_type='json')
+    album.set_thumbnail_photo(None)
+    common.P.commit(message='album remove thumbnail photo endpoint')
+    return jsonify.make_json_response(album.jsonify())
+
 @site.route('/album/<album_id>/refresh_directories', methods=['POST'])
 def post_album_refresh_directories(album_id):
     album = common.P_album(album_id, response_type='json')
