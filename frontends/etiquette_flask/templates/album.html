@@ -7,12 +7,33 @@ h2, h3
 {
     margin-top: 0;
 }
+#hierarchy_self
+{
+    display: grid;
+    grid-template:
+        "metadata thumbnail" auto
+        /1fr      auto;
+}
+#album_metadata
+{
+    grid-area: metadata;
+    word-break: break-word;
+}
+#album_thumbnail
+{
+    grid-area: thumbnail;
+    align-self: center;
+}
+#album_thumbnail img
+{
+    max-height: 150px;
+}
 #album_metadata h2 .editor_input
 {
     font-size: inherit;
     font-weight: inherit;
 }
-#description_text
+#album_metadata #description_text
 {
     font-family: initial;
     padding: 8px;
@@ -129,6 +150,8 @@ const ALBUM_ID = undefined;
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
     <script src="/static/js/album_autocomplete.js"></script>
+    <script src="/static/js/cards.js"></script>
+    <script src="/static/js/contextmenus.js"></script>
     <script src="/static/js/spinner.js"></script>
     <script src="/static/js/editor.js"></script>
     <script src="/static/js/hotkeys.js"></script>
@@ -215,15 +238,20 @@ const ALBUM_ID = undefined;
                 >
                     {{-album.description-}}
                 </pre>
+
+                {% set author = album.get_author() %}
+                {% if author is not none %}
+                <p>Author: <a href="/user/{{author.username}}">{{author.display_name}}</a></p>
+                {% endif %}
+
+                <p>Created on <span title="{{album.created|int|timestamp_to_8601}}">{{album.created|timestamp_to_naturaldate}}.</span></p>
+                <button class="green_button editor_toolbox_placeholder">Edit</button>
+            </div> <!-- #album_metadata -->
+            <div id="album_thumbnail">
+                {%- if album.thumbnail_photo %}
+                <img src="/thumbnail/{{album.thumbnail_photo.id}}.jpg"/>
+                {% endif -%}
             </div>
-
-            {% set author = album.get_author() %}
-            {% if author is not none %}
-            <p>Author: <a href="/user/{{author.username}}">{{author.display_name}}</a></p>
-            {% endif %}
-
-            <p>Created on <span title="{{album.created|int|timestamp_to_8601}}">{{album.created|timestamp_to_naturaldate}}.</span></p>
-            <button class="green_button editor_toolbox_placeholder">Edit</button>
         </div>
 
         <div id="hierarchy_parents" class="panel">
@@ -396,6 +424,30 @@ function add_album_datalist_on_load(datalist)
     input.setAttribute("list", "album_autocomplete_datalist");
 }
 album_autocomplete.on_load_hooks.push(add_album_datalist_on_load);
+
+function add_photo_toolbox_entries()
+{
+    const photo_cards = document.getElementsByClassName("photo_card");
+    for (const photo_card of photo_cards)
+    {
+        const photo_id = photo_card.dataset.id;
+        const toolbox = photo_card.getElementsByClassName("photo_card_tools")[0];
+        const toolbutton = photo_card.getElementsByClassName("photo_card_toolbutton")[0];
+        toolbutton.classList.remove("hidden");
+        const button = document.createElement("button");
+        button.innerText = "Set as Album thumbnail";
+        button.onclick = function(event)
+        {
+            api.albums.set_thumbnail_photo(ALBUM_ID, photo_id, common.refresh_or_alert);
+        }
+        toolbox.appendChild(button);
+    }
+}
+function on_pageload()
+{
+    add_photo_toolbox_entries();
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
 
 {% endif %} {## Shared ############################################################################}
