@@ -100,6 +100,15 @@ function remove_photos(album_id, photo_ids, callback)
     api.albums._add_remove_photos(album_id, photo_ids, "remove", callback);
 }
 
+api.albums.set_thumbnail_photo =
+function set_thumbnail_photo(album_id, photo_id, callback)
+{
+    const url = `/album/${album_id}/set_thumbnail_photo`;
+    const data = new FormData();
+    data.append("photo_id", photo_id);
+    common.post(url, data, callback);
+}
+
 api.albums.callback_follow =
 function callback_follow(response)
 {

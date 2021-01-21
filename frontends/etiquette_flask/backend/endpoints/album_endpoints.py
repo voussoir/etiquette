@@ -89,6 +89,15 @@ def post_album_refresh_directories(album_id):
     common.P.commit(message='refresh album directories endpoint')
     return jsonify.make_json_response({})
 
+@site.route('/album/<album_id>/set_thumbnail_photo', methods=['POST'])
+@decorators.required_fields(['photo_id'], forbid_whitespace=True)
+def post_album_set_thumbnail_photo(album_id):
+    album = common.P_album(album_id, response_type='json')
+    photo = common.P_photo(request.form['photo_id'], response_type='json')
+    album.set_thumbnail_photo(photo)
+    common.P.commit(message='album set thumbnail photo endpoint')
+    return jsonify.make_json_response(album.jsonify())
+
 # Album photo operations ###########################################################################
 
 @site.route('/album/<album_id>/add_photo', methods=['POST'])
