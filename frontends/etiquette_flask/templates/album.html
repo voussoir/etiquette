@@ -156,6 +156,17 @@ const ALBUM_ID = undefined;
             Delete
         </button>
 
+        {% if album.thumbnail_photo %}
+        <button
+        class="red_button button_with_confirm"
+        data-onclick="return remove_thumbnail_photo_form();"
+        data-prompt="Remove?"
+        data-cancel-class="gray_button"
+        >
+            Remove thumbnail
+        </button>
+        {% endif %}
+
         <button
         class="green_button button_with_confirm"
         data-is-input="1"
@@ -294,6 +305,11 @@ function delete_album_form()
 function refresh_associated_directories_form()
 {
     api.albums.refresh_directories(ALBUM_ID, common.refresh_or_alert);
+}
+
+function remove_thumbnail_photo_form()
+{
+    api.albums.remove_thumbnail_photo(ALBUM_ID, common.refresh_or_alert);
 }
 
 function paste_photo_clipboard()
