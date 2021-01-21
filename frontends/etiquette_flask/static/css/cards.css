@@ -141,6 +141,22 @@
 {
     box-shadow: 2px 2px 5px 0px var(--color_dropshadow);
 }
+.photo_card_searchhidden
+{
+    border: 2px dotted var(--color_shadow);
+}
+
+.photo_card_selected::after
+{
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 0; right: 0;
+    pointer-events: none;
+    border: 2px solid blue;
+    background-color: rgba(0, 0, 255, 0.25);
+    border-radius: inherit;
+}
+
 .photo_card_list
 {
     position: relative;
@@ -151,11 +167,6 @@
     grid-column-gap: 4px;
     margin: 8px;
     padding: 4px;
-}
-.photo_card_list .photo_clipboard_selector_checkbox
-{
-    grid-area: checkbox;
-    align-self: center;
 }
 .photo_card_grid
 {
@@ -175,13 +186,20 @@
 
     border-radius: 8px;
 }
+
 .photo_card_grid .photo_clipboard_selector_checkbox
 {
     position:absolute;
     left:5px;
     top:5px;
 }
-.photo_card_thumbnail
+.photo_card_list .photo_clipboard_selector_checkbox
+{
+    grid-area: checkbox;
+    align-self: center;
+}
+
+.photo_card_grid .photo_card_thumbnail
 {
     grid-area: thumbnail;
     align-self: start;
@@ -190,12 +208,13 @@
     width: 100%;
     height: 150px;
 }
-.photo_card_thumbnail img
+.photo_card_grid .photo_card_thumbnail img
 {
     max-width: 100%;
     max-height: 100%;
     margin: auto;
 }
+
 .photo_card_filename
 {
     /*
@@ -215,10 +234,6 @@
     width: 0;
     background-color: inherit;
     word-break: break-word;
-}
-.photo_card_list .photo_card_filename
-{
-    align-self: center;
 }
 .photo_card_grid .photo_card_filename
 {
@@ -240,6 +255,11 @@
     right: 0;
     background-color: inherit;
 }
+.photo_card_list .photo_card_filename
+{
+    align-self: center;
+}
+
 .photo_card_tags
 {
     grid-area: tags;
@@ -251,6 +271,7 @@
 
     cursor: help;
 }
+
 .photo_card_metadata
 {
     grid-area: metadata;
@@ -259,22 +280,6 @@
 
     font-family: monospace;
     font-size: 11px;
-}
-
-.photo_card_searchhidden
-{
-    border: 2px dotted var(--color_shadow);
-}
-
-.photo_card_selected::after
-{
-    content: "";
-    position: absolute;
-    top: 0; bottom: 0; left: 0; right: 0;
-    pointer-events: none;
-    border: 2px solid blue;
-    background-color: rgba(0, 0, 255, 0.25);
-    border-radius: inherit;
 }
 
 /* ########################################################################## */
