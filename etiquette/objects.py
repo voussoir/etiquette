@@ -576,6 +576,28 @@ class Album(ObjectBase, GroupableMixin):
         for photo in remove_photos:
             self._remove_photo(photo)
 
+    @decorators.required_feature('album.edit')
+    @decorators.transaction
+    def set_thumbnail_photo(self, photo):
+        if photo is None:
+            photo_id = None
+        elif isinstance(photo, str):
+            photo = self.photodb.get_photo(photo)
+            photo_id = photo.id
+        elif isinstance(photo, Photo):
+            photo.__reinit__()
+            photo.assert_not_deleted()
+            photo_id = photo.id
+        else:
+            raise TypeError(f'Must be {Photo}, not {type(photo)}.')
+
+        pairs = {
+            'id': self.id,
+            'thumbnail_photo': photo_id,
+        }
+        self.photodb.sql_update(table='albums', pairs=pairs, where_key='id')
+        self._thumbnail_photo = photo
+
     def sum_bytes(self, recurse=True):
         query = stringtools.collapse_whitespace('''
         SELECT SUM(bytes) FROM photos
