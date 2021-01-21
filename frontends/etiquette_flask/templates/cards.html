@@ -150,6 +150,10 @@ class="photo_card photo_card_{{view}} photo_card_unselected {%if photo.searchhid
     {% endif %}{# if grid #}
 
     <span class="photo_card_tags" title="{{tag_names_title}}">{{tag_names_inner}}</span>
+
+    <button class="photo_card_toolbutton hidden" onclick="return cards.photos.show_tools(event);"></button>
+    <div class="photo_card_tools" onclick="event.stopPropagation(); return;">
+    </div>
 </div>
 
 {% endmacro %}
