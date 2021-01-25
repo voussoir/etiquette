@@ -26,7 +26,7 @@ def find_photodb():
         pass
 
     # If this raises, main will catch it.
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    photodb = etiquette.photodb.PhotoDB.closest_photodb(log_level=LOG_LEVEL)
     photodbs[cwd] = photodb
     return photodb
 
