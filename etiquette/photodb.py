@@ -1609,6 +1609,11 @@ class PDBUtilMixin:
             except exceptions.NoSuchPhoto:
                 return
 
+            if photo.real_path.is_file:
+                # Don't relocate the path if this is actually a hardlink, and
+                # both paths are current.
+                return
+
             if photo.bytes != stat.st_size:
                 return
 
