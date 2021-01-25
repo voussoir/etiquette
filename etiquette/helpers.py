@@ -278,15 +278,6 @@ def get_mimetype(filepath):
         mimetype = mimetypes.guess_type(filepath)[0]
     return mimetype
 
-def hash_file(filepath, hasher):
-    bytestream = read_filebytes(filepath)
-    for chunk in bytestream:
-        hasher.update(chunk)
-    return hasher.hexdigest()
-
-def hash_file_md5(filepath):
-    return hash_file(filepath, hasher=hashlib.md5())
-
 def hash_photoset(photos):
     '''
     Given some photos, return a fingerprint string for that particular set.

@@ -1,4 +1,7 @@
+import hashlib
+
 from voussoirkit import cacheclass
+from voussoirkit import spinal
 
 import etiquette
 
@@ -98,7 +101,7 @@ class FileEtag:
 
         if do_refresh:
             self._stored_hash_time = mtime
-            self._stored_hash_value = etiquette.helpers.hash_file_md5(self.filepath)
+            self._stored_hash_value = spinal.hash_file(self.filepath, hash_class=hashlib.md5)
 
         return self._stored_hash_value
 
