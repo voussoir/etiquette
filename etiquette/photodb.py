@@ -110,6 +110,7 @@ class PDBAlbumMixin:
             'title': title,
             'description': description,
             'created': helpers.now(),
+            'thumbnail_photo': None,
             'author_id': author_id,
         }
         self.sql_insert(table='albums', data=data)
