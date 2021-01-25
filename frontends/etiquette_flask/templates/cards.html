@@ -123,10 +123,18 @@ draggable=true
 {% set tag_names_inner = "T" if tag_names_title else "" %}
 
 <div
+id="photo_card_{{photo.id}}"
 data-id="{{photo.id}}"
 class="photo_card photo_card_{{view}} photo_card_unselected {%if photo.searchhidden%}photo_card_searchhidden{%endif%}"
+ondragstart="return cards.photos.drag_start(event);"
+ondragend="return cards.photos.drag_end(event);"
+ondragover="return cards.photos.drag_over(event);"
+ondrop="return cards.photos.drag_drop(event);"
+draggable="true"
 >
-    <div class="photo_card_filename"><a target="_blank" href="/photo/{{photo.id}}">{{photo.basename}}</a></div>
+    <div class="photo_card_filename">
+        <a target="_blank" href="/photo/{{photo.id}}" draggable="false">{{photo.basename}}</a>
+    </div>
 
     <span class="photo_card_metadata">
         {{- metadatas|join_and_trail(", ")|safe -}}
@@ -146,7 +154,9 @@ class="photo_card photo_card_{{view}} photo_card_unselected {%if photo.searchhid
         {% set thumbnail_src = "/static/basic_thumbnails/" + thumbnail_src + ".png" %}
     {% endif -%}{# if thumbnail #}
 
-    <a class="photo_card_thumbnail" target="_blank" href="/photo/{{photo.id}}"><img loading="lazy" src="{{thumbnail_src}}"></a>
+    <a class="photo_card_thumbnail" target="_blank" href="/photo/{{photo.id}}" draggable="false">
+        <img loading="lazy" src="{{thumbnail_src}}" draggable="false">
+    </a>
     {% endif %}{# if grid #}
 
     <span class="photo_card_tags" title="{{tag_names_title}}">{{tag_names_inner}}</span>

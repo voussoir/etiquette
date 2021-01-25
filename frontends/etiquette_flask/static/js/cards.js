@@ -74,6 +74,26 @@ cards.bookmarks = {};
 /******************************************************************************/
 cards.photos = {};
 
+cards.photos.drag_start =
+function drag_start(event)
+{
+}
+
+cards.photos.drag_end =
+function drag_end(event)
+{
+}
+
+cards.photos.drag_over =
+function drag_over(event)
+{
+}
+
+cards.photos.drag_drop =
+function drag_drop(event)
+{
+}
+
 cards.photos.show_tools =
 function show_tools(event)
 {
