@@ -470,12 +470,13 @@ def split_easybake_string(ebstring):
     tagname = tagname.strip('.')
     return (tagname, synonym, rename_to)
 
-def truthystring(s):
+def truthystring(s, fallback=False):
     '''
     If s is already a boolean, int, or None, return a boolean or None.
     If s is a string, return True, False, or None based on the options presented
-    in constants.TRUTHYSTRING_TRUE, constants.TRUTHYSTRING_NONE, or False
-    for all else. Case insensitive.
+    in constants.TRUTHYSTRING_TRUE, TRUTHYSTRING_FALSE, TRUTHYSTRING_NONE where
+    s is treated case-insensitively.
+    If s is not in any of those sets, return the fallback.
     '''
     if s is None:
         return None
@@ -484,11 +485,13 @@ def truthystring(s):
         return bool(s)
 
     if not isinstance(s, str):
-        raise TypeError(f'String should be {bool}, {int}, {str}, or None, not {type(s)}.')
+        return fallback
 
     s = s.lower()
     if s in constants.TRUTHYSTRING_TRUE:
         return True
+    if s in constants.TRUTHYSTRING_FALSE:
+        return False
     if s in constants.TRUTHYSTRING_NONE:
         return None
     return False
