@@ -179,6 +179,28 @@ def add_remove_tag_argparse(args, action):
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
+def delete_argparse(args):
+    photodb = find_photodb()
+
+    need_commit = False
+    if args.photo_id_args or args.photo_search_args:
+        photos = get_photos_from_args(args)
+        for photo in photos:
+            photo.delete()
+            need_commit = True
+
+    if args.album_id_args or args.album_search_args:
+        albums = get_albums_from_args(args)
+        for album in albums:
+            album.delete()
+            need_commit = True
+
+    if not need_commit:
+        return
+
+    if args.autoyes or interactive.getpermission('Commit?'):
+        photodb.commit()
+
 def digest_directory_argparse(args):
     directory = pathclass.Path(args.directory)
     photodb = find_photodb()
@@ -386,6 +408,8 @@ Etiquette CLI
 
 {remove_tag}
 
+{delete}
+
 {digest}
 
 {easybake}
@@ -435,6 +459,18 @@ remove_tag:
 
     Examples:
     > etiquette_cli.py remove_tag watchlist spongebob*.mp4
+'''.strip(),
+
+delete='''
+delete:
+    Remove photos or albums from the database.
+
+    > etiquette_cli.py delete --photos id id id
+    > etiquette_cli.py delete --search searchargs
+    > etiquette_cli.py delete --albums id id id
+    > etiquette_cli.py delete --album-search searchargs
+
+    See search --help for more info about searchargs.
 '''.strip(),
 
 digest='''
@@ -685,6 +721,10 @@ def main(argv):
     p_remove_tag.add_argument('globs', nargs='*')
     p_remove_tag.add_argument('--yes', dest='autoyes', action='store_true')
     p_remove_tag.set_defaults(func=lambda args: add_remove_tag_argparse(args, action='remove'))
+
+    p_delete = subparsers.add_parser('delete')
+    p_delete.add_argument('--yes', dest='autoyes', action='store_true')
+    p_delete.set_defaults(func=delete_argparse)
 
     p_digest = subparsers.add_parser('digest', aliases=['digest_directory', 'digest-directory'])
     p_digest.add_argument('directory')
