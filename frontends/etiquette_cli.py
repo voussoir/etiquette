@@ -420,6 +420,8 @@ Etiquette CLI
 
 {purge_empty_albums}
 
+{relocate}
+
 {search}
 
 {show_associated_directories}
