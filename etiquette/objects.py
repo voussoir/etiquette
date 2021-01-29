@@ -779,7 +779,6 @@ class Photo(ObjectBase):
         db_row = normalize_db_row(db_row, self.table)
 
         self.real_path = db_row['filepath']
-        self.real_path = helpers.remove_path_badchars(self.real_path, allowed=':\\/')
         self.real_path = pathclass.Path(self.real_path)
 
         self.id = db_row['id']

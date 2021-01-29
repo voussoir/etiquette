@@ -407,7 +407,11 @@ def remove_path_badchars(filepath, allowed=''):
     '''
     badchars = stringtools.remove_characters(constants.FILENAME_BADCHARS, allowed)
     filepath = stringtools.remove_characters(filepath, badchars)
-    filepath = stringtools.remove_control_characters(filepath)
+    # Note: This is temporarily disabled until I can improve
+    # remove_control_characters. I want to avoid abusive / totally bogus names
+    # without breaking legitimate uses of control characters such as
+    # left-to-right marks which may appear in e.g. Arabic filenames.
+    # filepath = stringtools.remove_control_characters(filepath)
 
     filepath = filepath.replace('/', os.sep)
     filepath = filepath.replace('\\', os.sep)
