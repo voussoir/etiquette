@@ -7,7 +7,7 @@ I am currently running a demonstration copy of Etiquette at http://etiquette.vou
 
 Etiquette is a tag-based file organization system with a web interface, built with Flask and SQLite3. Tag-based systems solve problems that a traditional folder hierarchy can't: *which folder should a file go in if it equally belongs in both?* and *how do I make my files searchable without littering the filenames themselves with keywords?*
 
-Etiquette is unique because *the tags themselves are hierarchical*. By tagging one of your vacation photos with the `family.parents.dad` tag, it will automatically appear in searches for `family.parents` and `family` as well. A traditional folder system, here called albums, is available to bundle files that always belong together without creating a bespoke tag to represent that bundle. Regardless, the files on disk are never modified.
+Etiquette is unique because the tags themselves are hierarchical. By tagging one of your vacation photos with the `family.parents.dad` tag, it will automatically appear in searches for `family.parents` and `family` as well. A traditional folder system, here called albums, is available to bundle files that always belong together without creating a bespoke tag to represent that bundle. Regardless, the files on disk are never modified.
 
 ### Setting up
 
