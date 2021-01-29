@@ -253,22 +253,26 @@ def export_symlinks_argparse(args):
         )
         total_paths.update(export)
 
-    if args.prune and not args.dry_run:
-        symlinks = set(file for file in spinal.walk_generator(destination) if file.is_link)
-        symlinks = symlinks.difference(total_paths)
-        for old_symlink in symlinks:
-            print(f'Pruning {old_symlink}.')
-            os.remove(old_symlink.absolute_path)
-            if not old_symlink.parent.listdir():
-                os.rmdir(old_symlink.parent.absolute_path)
-        checkdirs = set(spinal.walk_generator(destination, yield_directories=True, yield_files=False))
-        while checkdirs:
-            check = checkdirs.pop()
-            if check not in destination:
-                continue
-            if len(check.listdir()) == 0:
-                os.rmdir(check.absolute_path)
-                checkdirs.add(check.parent)
+    if not args.prune or args.dry_run:
+        return
+
+    symlinks = spinal.walk_generator(destination, yield_directories=True, yield_files=True)
+    symlinks = set(path for path in symlinks if path.is_link)
+    symlinks = symlinks.difference(total_paths)
+    for old_symlink in symlinks:
+        print(f'Pruning {old_symlink}.')
+        os.remove(old_symlink.absolute_path)
+        if not old_symlink.parent.listdir():
+            os.rmdir(old_symlink.parent.absolute_path)
+
+    checkdirs = set(spinal.walk_generator(destination, yield_directories=True, yield_files=False))
+    while checkdirs:
+        check = checkdirs.pop()
+        if check not in destination:
+            continue
+        if len(check.listdir()) == 0:
+            os.rmdir(check.absolute_path)
+            checkdirs.add(check.parent)
 
 def init_argparse(args):
     photodb = etiquette.photodb.PhotoDB(create=True)
