@@ -983,11 +983,13 @@ class Photo(ObjectBase):
                     return_filepath = hopeful_filepath
 
         if return_filepath != self.thumbnail:
-            if return_filepath is not None:
-                return_filepath = return_filepath.absolute_path
+            if return_filepath is None:
+                store_as = None
+            else:
+                store_as = return_filepath.relative_to(self.photodb.thumbnail_directory)
             data = {
                 'id': self.id,
-                'thumbnail': return_filepath,
+                'thumbnail': store_as,
             }
             self.photodb.sql_update(table='photos', pairs=data, where_key='id')
             self.thumbnail = return_filepath
