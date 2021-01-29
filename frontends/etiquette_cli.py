@@ -15,6 +15,10 @@ import etiquette
 
 LOG_LEVEL = vlogging.NOTSET
 
+handler = vlogging.StreamHandler()
+log_format = '{levelname}:etiquette.{module}.{funcName}: {message}'
+handler.setFormatter(vlogging.Formatter(log_format, style='{'))
+vlogging.getLogger().addHandler(handler)
 
 photodbs = {}
 
