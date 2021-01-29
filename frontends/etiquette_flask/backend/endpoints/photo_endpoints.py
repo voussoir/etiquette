@@ -242,10 +242,10 @@ def post_batch_photos_photo_cards():
     # Photo filenames are prevented from having colons, so using it as a split
     # delimiter should be safe.
     template = '''
-    {% import "photo_card.html" as photo_card %}
+    {% import "cards.html" as cards %}
     {% for photo in photos %}
         {{photo.id}}:
-        {{photo_card.create_photo_card(photo)}}
+        {{cards.create_photo_card(photo)}}
         :SPLITME:
     {% endfor %}
     '''
