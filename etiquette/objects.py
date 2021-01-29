@@ -785,8 +785,7 @@ class Photo(ObjectBase):
         self.created = db_row['created']
         self.author_id = self.normalize_author_id(db_row['author_id'])
         self.override_filename = db_row['override_filename']
-        self.extension = db_row['extension']
-        self.tagged_at = db_row['tagged_at']
+        self.extension = self.real_path.extension.no_dot
 
         if self.extension == '':
             self.dot_extension = ''
@@ -801,7 +800,7 @@ class Photo(ObjectBase):
         self.ratio = db_row['ratio']
 
         self.thumbnail = self.normalize_thumbnail(db_row['thumbnail'])
-
+        self.tagged_at = db_row['tagged_at']
         self.searchhidden = db_row['searchhidden']
 
         self.mimetype = helpers.get_mimetype(self.real_path.basename)
