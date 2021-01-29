@@ -235,29 +235,23 @@ def export_symlinks_argparse(args):
 
     total_paths = set()
 
-    albums = []
-    if args.album_id_args:
-        albums.extend(photodb.get_albums_by_id(args.album_id_args))
-    if args.album_search_args:
-        albums.extend(search_by_argparse(args.album_search_args, yield_albums=True))
-    export = export_symlinks_albums(
-        albums,
-        destination,
-        dry_run=args.dry_run,
-    )
-    total_paths.update(export)
+    if args.album_id_args or args.album_search_args:
+        albums = get_albums_from_args(args)
+        export = export_symlinks_albums(
+            albums,
+            destination,
+            dry_run=args.dry_run,
+        )
+        total_paths.update(export)
 
-    photos = []
-    if args.photo_id_args:
-        photos.extend(photodb.get_photos_by_id(args.photo_id_args))
-    if args.photo_search_args:
-        photos.extend(search_by_argparse(args.photo_search_args, yield_photos=True))
-    export = export_symlinks_photos(
-        photos,
-        destination,
-        dry_run=args.dry_run,
-    )
-    total_paths.update(export)
+    if args.photo_id_args or args.photo_search_args:
+        photos = get_photos_from_args(args)
+        export = export_symlinks_photos(
+            photos,
+            destination,
+            dry_run=args.dry_run,
+        )
+        total_paths.update(export)
 
     if args.prune and not args.dry_run:
         symlinks = set(file for file in spinal.walk_generator(destination) if file.is_link)
