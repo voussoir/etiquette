@@ -376,6 +376,31 @@ def normalize_positive_integer(number):
 
     return number
 
+def normalize_sha256(sha256, warning_bag=None):
+    if sha256 is None:
+        return None
+
+    if isinstance(sha256, (tuple, list, set)):
+        pass
+    elif isinstance(sha256, str):
+        sha256 = stringtools.comma_space_split(sha256)
+    else:
+        raise TypeError('sha256 should be the 64 character hexdigest string or a set of them.')
+
+    shas = set(sha256)
+    goodshas = set()
+    for sha in shas:
+        if isinstance(sha, str) and len(sha) == 64:
+            goodshas.add(sha)
+        else:
+            exc = TypeError(f'sha256 should be the 64-character hexdigest string.')
+            if warning_bag is not None:
+                warning_bag.add(exc)
+            else:
+                raise exc
+
+    return goodshas
+
 def normalize_tag_expression(expression):
     if not expression:
         return None

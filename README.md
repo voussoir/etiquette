@@ -1,7 +1,7 @@
 Etiquette
 =========
 
-I am currently running a demonstration copy of Etiquette at http://etiquette.voussoir.net where you can browse around. This is not yet permanent.
+I am currently running a read-only demonstration copy of Etiquette at http://etiquette.voussoir.net where you can browse around.
 
 ### What am I looking at
 
@@ -125,6 +125,28 @@ In order to prevent the accidental creation of Etiquette databases, you must use
 </details>
 
 </details>
+
+### Basic usage
+
+Let's say you store your photos in `D:\Documents\Photos`, and you want to tag the files with Etiquette. You can get started with these steps:
+
+1. Open a Command Prompt / Terminal. Decide where your Etiquette database will be stored, and `cd` to that location. `cd D:\Documents\Photos` is probably fine.
+2. Run `etiquette_cli.py init` to create the database. A folder called `_etiquette` will appear.
+3. Run `etiquette_cli.py digest . --ratelimit 1 --glob-filenames *.jpg` to add the files into the database. You can use `etiquette_cli.py digest --help` to learn about this command.
+4. Run `etiquette_flask_dev.py 5000` to start the webserver on port 5000.
+5. Open your web browser to `localhost:5000` and begin browsing.
+
+### Why does Etiquette hash files?
+
+When adding new files to the database or reloading their metadata, Etiquette will create SHA256 hashes of the files. If you are using Etiquette to organize large media files, this may take a while. I was hesitant to add hashing and incur this slowdown, but the hashes greatly improve Etiquette's ability to detect when a file has been renamed or moved, which is important when you have invested your valuable time into adding tags to them. I hope that the hash time is perceived as a worthwhile tradeoff.
+
+### Maintaining your database with Etiquette CLI
+
+I highly recommend storing batch/bash scripts of your favorite `etiquette_cli` invocations, so that you can quickly sync the database with the state of the disk in the future. Here are some suggestions for what you might like to include in such a script:
+
+- `digest`: Storing all your digest invocations in a single file makes ingesting new files very easy. For your digests, I recommend including `--ratelimit` to stop Photos from having the exact same created timestamp, and `--hash-bytes-per-second` to reduce IO load. In addition, you don't want to forget your favorite `--glob-filenames` patterns.
+- `reload-metadata`: In order for Etiquette's hash-based rename detection to work properly, the file hashes need to be up to date. If you're using Etiquette to track files which are being modified, you may want to get in the habit of reloading metadata regularly. By default, this will only reload metadata for files whose mtime and/or byte size have changed, so it should not be very expensive. You may add `--hash-bytes-per-second` to reduce IO load.
+- `purge-deleted-files` & `purge-empty-albums`: You should only do this after a `digest`, because if a file has been moved / renamed you want the digest to pick up on that before purging it as a dead filepath. The Photo purge should come first, so that an album containing entirely deleted photos will be empty when it comes time for the Album purge.
 
 ### Project stability
 

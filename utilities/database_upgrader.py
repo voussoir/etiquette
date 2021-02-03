@@ -602,6 +602,57 @@ def upgrade_17_to_18(photodb):
 
     m.go()
 
+def upgrade_18_to_19(photodb):
+    m = Migrator(photodb)
+
+    m.tables['photos']['create'] = '''
+    CREATE TABLE photos(
+        id TEXT PRIMARY KEY NOT NULL,
+        filepath TEXT COLLATE NOCASE,
+        basename TEXT COLLATE NOCASE,
+        override_filename TEXT COLLATE NOCASE,
+        extension TEXT COLLATE NOCASE,
+        mtime INT,
+        sha256 TEXT,
+        width INT,
+        height INT,
+        ratio REAL,
+        area INT,
+        duration INT,
+        bytes INT,
+        created INT,
+        thumbnail TEXT,
+        tagged_at INT,
+        author_id TEXT,
+        searchhidden INT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['photos']['transfer'] = '''
+    INSERT INTO photos SELECT
+        id,
+        filepath,
+        basename,
+        override_filename,
+        extension,
+        NULL,
+        NULL,
+        width,
+        height,
+        ratio,
+        area,
+        duration,
+        bytes,
+        created,
+        thumbnail,
+        tagged_at,
+        author_id,
+        searchhidden
+    FROM photos_old;
+    '''
+
+    m.go()
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

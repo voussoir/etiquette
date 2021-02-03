@@ -1,4 +1,5 @@
 import bcrypt
+import hashlib
 import json
 import os
 import random
@@ -439,16 +440,6 @@ class PDBPhotoMixin:
     def get_photo(self, id):
         return self.get_thing_by_id('photo', id)
 
-    def get_photo_by_inode(self, dev, ino):
-        dev_ino = f'{dev},{ino}'
-        query = 'SELECT * FROM photos WHERE dev_ino == ?'
-        bindings = [dev_ino]
-        photo_row = self.sql_select_one(query, bindings)
-        if photo_row is None:
-            raise exceptions.NoSuchPhoto(dev_ino)
-        photo = self.get_cached_instance('photo', photo_row)
-        return photo
-
     def get_photo_by_path(self, filepath):
         filepath = pathclass.Path(filepath)
         query = 'SELECT * FROM photos WHERE filepath == ?'
@@ -484,6 +475,14 @@ class PDBPhotoMixin:
             if count <= 0:
                 break
 
+    def get_photos_by_hash(self, sha256):
+        if not isinstance(sha256, str) or len(sha256) != 64:
+            raise TypeError(f'sha256 shoulbe the 64-character hexdigest string.')
+
+        query = 'SELECT * FROM photos WHERE sha256 == ?'
+        bindings = [sha256]
+        yield from self.get_photos_by_sql(query, bindings)
+
     def get_photos_by_sql(self, query, bindings=None):
         return self.get_things_by_sql('photo', query, bindings)
 
@@ -496,12 +495,24 @@ class PDBPhotoMixin:
             author=None,
             do_metadata=True,
             do_thumbnail=True,
+            hash_kwargs=None,
+            known_hash=None,
             searchhidden=False,
             tags=None,
         ):
         '''
         Given a filepath, determine its attributes and create a new Photo object
         in the database. Tags may be applied now or later.
+
+        hash_kwargs:
+            Additional kwargs passed into spinal.hash_file. Notably, you may
+            wish to set bytes_per_second to keep system load low.
+
+        known_hash:
+            If the sha256 of the file is already known, you may provide it here
+            so it does not need to be recalculated. This is primarily intended
+            for digest_directory since it will look for hash matches first
+            before creating new photos and thus can provide the known hash.
 
         Returns the Photo object.
         '''
@@ -513,6 +524,11 @@ class PDBPhotoMixin:
         self.assert_no_such_photo_by_path(filepath=filepath)
 
         author_id = self.get_user_id_or_none(author)
+
+        if known_hash is None:
+            pass
+        elif not isinstance(known_hash, str) or len(known_hash) != 64:
+            raise TypeError(f'known_hash should be the 64-character sha256 hexdigest string.')
 
         # Ok.
         photo_id = self.generate_id(table='photos')
@@ -529,7 +545,8 @@ class PDBPhotoMixin:
             'author_id': author_id,
             'searchhidden': searchhidden,
             # These will be filled in during the metadata stage.
-            'dev_ino': None,
+            'mtime': None,
+            'sha256': known_hash,
             'bytes': None,
             'width': None,
             'height': None,
@@ -543,7 +560,8 @@ class PDBPhotoMixin:
         photo = self.get_cached_instance('photo', data)
 
         if do_metadata:
-            photo.reload_metadata()
+            hash_kwargs = hash_kwargs or {}
+            photo.reload_metadata(hash_kwargs=hash_kwargs)
         if do_thumbnail:
             photo.generate_thumbnail()
 
@@ -594,6 +612,7 @@ class PDBPhotoMixin:
             has_thumbnail=None,
             is_searchhidden=False,
             mimetype=None,
+            sha256=None,
             tag_musts=None,
             tag_mays=None,
             tag_forbids=None,
@@ -729,6 +748,7 @@ class PDBPhotoMixin:
         has_tags = searchhelpers.normalize_has_tags(has_tags)
         has_thumbnail = searchhelpers.normalize_has_thumbnail(has_thumbnail)
         is_searchhidden = searchhelpers.normalize_is_searchhidden(is_searchhidden)
+        sha256 = searchhelpers.normalize_sha256(sha256)
         mimetype = searchhelpers.normalize_extension(mimetype)
         within_directory = searchhelpers.normalize_within_directory(within_directory, warning_bag=warning_bag)
         yield_albums = searchhelpers.normalize_yield_albums(yield_albums)
@@ -907,6 +927,9 @@ class PDBPhotoMixin:
             wheres.append('searchhidden == 1')
         elif is_searchhidden is False:
             wheres.append('searchhidden == 0')
+
+        if sha256:
+            wheres.append(f'sha256 IN {sqlhelpers.listify(sha256)}')
 
         for column in notnulls:
             wheres.append(column + ' IS NOT NULL')
@@ -1497,9 +1520,12 @@ class PDBUtilMixin:
             *,
             exclude_directories=None,
             exclude_filenames=None,
+            glob_directories=None,
+            glob_filenames=None,
+            hash_kwargs=None,
             make_albums=True,
             natural_sort=True,
-            new_photo_kwargs={},
+            new_photo_kwargs=None,
             new_photo_ratelimit=None,
             recurse=True,
             yield_albums=True,
@@ -1520,6 +1546,10 @@ class PDBUtilMixin:
             A list of basenames or absolute paths of filenames to ignore.
             This list works in addition to, not instead of, the
             digest_exclude_files config value.
+
+        hash_kwargs:
+            Additional kwargs passed into spinal.hash_file. Notably, you may
+            wish to set bytes_per_second to keep system load low.
 
         make_albums:
             If True, every directory that is digested will be turned into an
@@ -1582,9 +1612,14 @@ class PDBUtilMixin:
             return exclude_filenames
 
         def _normalize_new_photo_kwargs(new_photo_kwargs):
-            new_photo_kwargs = new_photo_kwargs.copy()
-            new_photo_kwargs.pop('commit', None)
-            new_photo_kwargs.pop('filepath', None)
+            if new_photo_kwargs is None:
+                new_photo_kwargs = {}
+            else:
+                new_photo_kwargs = new_photo_kwargs.copy()
+                new_photo_kwargs.pop('commit', None)
+                new_photo_kwargs.pop('filepath', None)
+
+            new_photo_kwargs.setdefault('hash_kwargs', hash_kwargs)
             return new_photo_kwargs
 
         def _normalize_new_photo_ratelimit(new_photo_ratelimit):
@@ -1598,43 +1633,63 @@ class PDBUtilMixin:
                 raise TypeError(new_photo_ratelimit)
             return new_photo_ratelimit
 
-        def check_renamed_inode(filepath):
-            stat = filepath.stat
-            (dev, ino) = (stat.st_dev, stat.st_ino)
-            if dev == 0 or ino == 0:
-                return
+        def check_renamed(filepath):
+            '''
+            We'll do our best to determine if this file is actually a rename of
+            a file that's already in the database.
+            '''
+            same_meta = self.get_photos_by_sql(
+                'SELECT * FROM photos WHERE mtime == ? AND bytes == ?',
+                [filepath.stat.st_mtime, filepath.stat.st_size]
+            )
+            same_meta = [photo for photo in same_meta if not photo.real_path.is_file]
+            if len(same_meta) == 1:
+                photo = same_meta[0]
+                self.log.debug('Found mtime+bytesize match %s.', photo)
+                return photo
 
-            try:
-                photo = self.get_photo_by_inode(dev, ino)
-            except exceptions.NoSuchPhoto:
-                return
+            self.log.loud('Hashing file %s to check for rename.', filepath)
+            sha256 = spinal.hash_file(
+                filepath,
+                hash_class=hashlib.sha256, **hash_kwargs,
+            ).hexdigest()
 
-            if photo.real_path.is_file:
-                # Don't relocate the path if this is actually a hardlink, and
-                # both paths are current.
-                return
+            same_hash = self.get_photos_by_hash(sha256)
+            same_hash = [photo for photo in same_hash if not photo.real_path.is_file]
 
-            if photo.bytes != stat.st_size:
-                return
+            # fwiw, I'm not checking byte size since it's a hash match.
+            if len(same_hash) > 1:
+                same_hash = [photo for photo in same_hash if photo.mtime == filepath.stat.st_mtime]
+            if len(same_hash) == 1:
+                return same_hash[0]
 
-            photo.relocate(filepath.absolute_path)
-            return photo
+            # Although we did not find a match, we can still benefit from our
+            # hash work by passing this as the known_hash to new_photo.
+            return {'sha256': sha256}
 
-        def create_or_fetch_photo(filepath, new_photo_kwargs):
+        def create_or_fetch_photo(filepath):
             '''
             Given a filepath, find the corresponding Photo object if it exists,
             otherwise create it and then return it.
             '''
             try:
                 photo = self.get_photo_by_path(filepath)
+                return photo
             except exceptions.NoSuchPhoto:
-                photo = None
-            if not photo:
-                photo = check_renamed_inode(filepath)
-            if not photo:
-                photo = self.new_photo(filepath.absolute_path, **new_photo_kwargs)
-                if new_photo_ratelimit is not None:
-                    new_photo_ratelimit.limit()
+                pass
+
+            result = check_renamed(filepath)
+            if isinstance(result, objects.Photo):
+                result.relocate(filepath.absolute_path)
+                return result
+            elif isinstance(result, dict) and 'sha256' in result:
+                sha256 = result['sha256']
+            else:
+                sha256 = None
+
+            photo = self.new_photo(filepath, known_hash=sha256, **new_photo_kwargs)
+            if new_photo_ratelimit is not None:
+                new_photo_ratelimit.limit()
 
             return photo
 
@@ -1672,6 +1727,7 @@ class PDBUtilMixin:
         directory = _normalize_directory(directory)
         exclude_directories = _normalize_exclude_directories(exclude_directories)
         exclude_filenames = _normalize_exclude_filenames(exclude_filenames)
+        hash_kwargs = hash_kwargs or {}
         new_photo_kwargs = _normalize_new_photo_kwargs(new_photo_kwargs)
         new_photo_ratelimit = _normalize_new_photo_ratelimit(new_photo_ratelimit)
 
@@ -1682,6 +1738,8 @@ class PDBUtilMixin:
             directory,
             exclude_directories=exclude_directories,
             exclude_filenames=exclude_filenames,
+            glob_directories=glob_directories,
+            glob_filenames=glob_filenames,
             recurse=recurse,
             yield_style='nested',
         )
@@ -1690,7 +1748,15 @@ class PDBUtilMixin:
             if natural_sort:
                 files = sorted(files, key=lambda f: helpers.natural_sorter(f.basename))
 
-            photos = [create_or_fetch_photo(file, new_photo_kwargs=new_photo_kwargs) for file in files]
+            photos = [create_or_fetch_photo(file) for file in files]
+
+            # Note, this means that empty folders will not get an Album.
+            # At this time this behavior is intentional. Furthermore, due to
+            # the glob/exclude rules, we don't want albums being created if
+            # they don't contain any files of interest, even if they do contain
+            # other files.
+            if not photos:
+                continue
 
             if yield_photos:
                 yield from photos

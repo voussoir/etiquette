@@ -4,6 +4,7 @@ but are returned by the PDB accesses.
 '''
 import abc
 import bcrypt
+import hashlib
 import os
 import PIL.Image
 import re
@@ -786,6 +787,8 @@ class Photo(ObjectBase):
         self.author_id = self.normalize_author_id(db_row['author_id'])
         self.override_filename = db_row['override_filename']
         self.extension = self.real_path.extension.no_dot
+        self.mtime = db_row['mtime']
+        self.sha256 = db_row['sha256']
 
         if self.extension == '':
             self.dot_extension = ''
@@ -1144,14 +1147,15 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.reload_metadata')
     @decorators.transaction
-    def reload_metadata(self):
+    def reload_metadata(self, hash_kwargs=None):
         '''
         Load the file's height, width, etc as appropriate for this type of file.
         '''
         self.photodb.log.info('Reloading metadata for %s.', self)
 
+        self.mtime = None
+        self.sha256 = None
         self.bytes = None
-        self.dev_ino = None
         self.width = None
         self.height = None
         self.area = None
@@ -1160,10 +1164,8 @@ class Photo(ObjectBase):
 
         if self.real_path.is_file:
             stat = self.real_path.stat
+            self.mtime = stat.st_mtime
             self.bytes = stat.st_size
-            (dev, ino) = (stat.st_dev, stat.st_ino)
-            if dev and ino:
-                self.dev_ino = f'{dev},{ino}'
 
         if self.bytes is None:
             pass
@@ -1181,15 +1183,20 @@ class Photo(ObjectBase):
             self.area = self.width * self.height
             self.ratio = round(self.width / self.height, 2)
 
+        hash_kwargs = hash_kwargs or {}
+        sha256 = spinal.hash_file(self.real_path, hash_class=hashlib.sha256, **hash_kwargs)
+        self.sha256 = sha256.hexdigest()
+
         data = {
             'id': self.id,
+            'mtime': self.mtime,
+            'sha256': self.sha256,
             'width': self.width,
             'height': self.height,
             'area': self.area,
             'ratio': self.ratio,
             'duration': self.duration,
             'bytes': self.bytes,
-            'dev_ino': self.dev_ino,
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
 

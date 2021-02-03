@@ -145,6 +145,7 @@ def search_by_argparse(args, yield_albums=False, yield_photos=False):
         has_tags=args.has_tags,
         has_thumbnail=args.has_thumbnail,
         is_searchhidden=args.is_searchhidden,
+        sha256=args.sha256,
         mimetype=args.mimetype,
         tag_musts=args.tag_musts,
         tag_mays=args.tag_mays,
@@ -202,18 +203,34 @@ def delete_argparse(args):
         photodb.commit()
 
 def digest_directory_argparse(args):
-    directory = pathclass.Path(args.directory)
+    directories = pipeable.input(args.directory, strip=True, skip_blank=True)
+    directories = [pathclass.Path(d) for d in directories]
+    for directory in directories:
+        directory.assert_is_directory()
+
     photodb = find_photodb()
-    digest = photodb.digest_directory(
-        directory,
-        make_albums=args.make_albums,
-        recurse=args.recurse,
-        new_photo_ratelimit=args.ratelimit,
-        yield_albums=True,
-        yield_photos=True,
-    )
-    for result in digest:
-        print(result)
+    need_commit = False
+
+    for directory in directories:
+        digest = photodb.digest_directory(
+            directory,
+            exclude_directories=args.exclude_directories,
+            exclude_filenames=args.exclude_filenames,
+            glob_directories=args.glob_directories,
+            glob_filenames=args.glob_filenames,
+            hash_kwargs={'bytes_per_second': args.hash_bytes_per_second},
+            make_albums=args.make_albums,
+            new_photo_ratelimit=args.ratelimit,
+            recurse=args.recurse,
+            yield_albums=True,
+            yield_photos=True,
+        )
+        for result in digest:
+            # print(result)
+            need_commit = True
+
+    if not need_commit:
+        return
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
@@ -305,6 +322,45 @@ def purge_empty_albums_argparse(args):
 
     for deleted in photodb.purge_empty_albums(albums):
         print(deleted)
+
+    if args.autoyes or interactive.getpermission('Commit?'):
+        photodb.commit()
+
+def reload_metadata_argparse(args):
+    photodb = find_photodb()
+
+    if args.photo_id_args or args.photo_search_args:
+        photos = get_photos_from_args(args)
+    else:
+        photos = search_in_cwd(yield_photos=True, yield_albums=False)
+
+    hash_kwargs = {
+        'bytes_per_second': args.hash_bytes_per_second,
+        'callback_progress': spinal.callback_progress_v1,
+    }
+
+    need_commit = False
+    try:
+        for photo in photos:
+            if not photo.real_path.is_file:
+                continue
+
+            need_reload = (
+                args.force or
+                photo.mtime != photo.real_path.stat.st_mtime or
+                photo.bytes != photo.real_path.stat.st_size
+            )
+
+            if not need_reload:
+                continue
+            photo.reload_metadata(hash_kwargs=hash_kwargs)
+            need_commit = True
+            photodb.commit()
+    except KeyboardInterrupt:
+        pass
+
+    if not need_commit:
+        return
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
@@ -420,6 +476,8 @@ Etiquette CLI
 
 {purge_empty_albums}
 
+{reload_metadata}
+
 {relocate}
 
 {search}
@@ -480,9 +538,27 @@ digest:
     > etiquette_cli.py digest directory <flags>
 
     flags:
+    --exclude_directories A B C:
+        Any directories matching any pattern of A, B, C... will be skipped.
+        These patterns may be absolute paths like 'D:\temp', plain names like
+        'thumbnails' or glob patterns like 'build_*'.
+
+    --exclude_filenames A B C:
+        Any filenames matching any pattern of A, B, C... will be skipped.
+        These patterns may be absolute paths like 'D:\somewhere\config.json',
+        plain names like 'thumbs.db' or glob patterns like '*.temp'.
+
+    --glob_directories A B C:
+        Only directories matching any pattern of A, B, C... will be digested.
+        These patterns may be plain names or glob patterns like '2021*'
+
+    --glob_filenames A B C:
+        Only filenames matching any pattern of A, B, C... will be digested.
+        These patterns may be plain names or glob patterns like '*.jpg'
+
     --no_albums:
-        Do not create any albums the directories. By default, albums are created
-        and nested to match the directory structure.
+        Do not create any albums. By default, albums are created and nested to
+        match the directory structure.
 
     --ratelimit X:
         Limit the ingest of new Photos to only one per X seconds. This can be
@@ -496,6 +572,7 @@ digest:
     Examples:
     > etiquette_cli.py digest media --ratelimit 1
     > etiquette_cli.py digest photos --no-recurse --no-albums --ratelimit 0.25
+    > etiquette_cli.py digest . --glob-filenames *.jpg --exclude-filenames thumb*
 '''.strip(),
 
 easybake='''
@@ -546,6 +623,8 @@ purge_deleted_files:
     Delete any Photo objects whose file no longer exists on disk.
 
     > etiquette_cli.py purge_deleted_files
+    > etiquette_cli.py purge_deleted_files id id id
+    > etiquette_cli.py purge_deleted_files searchargs
 '''.strip(),
 
 purge_empty_albums='''
@@ -555,7 +634,34 @@ purge_empty_albums:
     Consider running purge_deleted_files first, so that albums containing
     deleted files will get cleared out and then caught by this function.
 
+    With no args, all albums will be checked.
+    Or you can pass specific album ids. (searchargs is not available since
+    albums only appear in search results when a matching photo is found, and
+    we're looking for albums with no photos!)
+
     > etiquette_cli.py purge_empty_albums
+    > etiquette_cli.py purge_empty_albums id id id
+'''.strip(),
+
+reload_metadata='''
+reload_metadata:
+    Reload photos' metadata by reading the files from disk.
+
+    With no args, all files under the cwd will be reloaded.
+    Or, you can pass specific photo ids or searchargs.
+
+    > etiquette_cli.py reload_metadata
+    > etiquette_cli.py reload_metadata id id id
+    > etiquette_cli.py reload_metadata searchargs
+
+    flags:
+    --force:
+        By default, we wil skip any files that have the same mtime and byte
+        size as before. You can pass --force to always reload.
+
+    --hash_bytes_per_second:
+        A string like "10mb" to limit the speed of file hashing for the purpose
+        of reducing system load.
 '''.strip(),
 
 relocate='''
@@ -618,6 +724,9 @@ search:
 
     --mimetype A,B,C:
         Photo with any mimetype of A, B, C...
+
+    --sha256 A,B,C:
+        Photo with any sha256 of A, B, C...
 
     --tag_musts A,B,C:
         Photo must have all tags A and B and C...
@@ -728,9 +837,14 @@ def main(argv):
 
     p_digest = subparsers.add_parser('digest', aliases=['digest_directory', 'digest-directory'])
     p_digest.add_argument('directory')
+    p_digest.add_argument('--exclude_directories', '--exclude-directories', nargs='+', default=None)
+    p_digest.add_argument('--exclude_filenames', '--exclude-filenames', nargs='+', default=None)
+    p_digest.add_argument('--glob_directories', '--glob-directories', nargs='+', default=None)
+    p_digest.add_argument('--glob_filenames', '--glob-filenames', nargs='+', default=None)
     p_digest.add_argument('--no_albums', '--no-albums', dest='make_albums', action='store_false', default=True)
     p_digest.add_argument('--ratelimit', dest='ratelimit', type=float, default=0.2)
     p_digest.add_argument('--no_recurse', '--no-recurse', dest='recurse', action='store_false', default=True)
+    p_digest.add_argument('--hash_bytes_per_second', '--hash-bytes-per-second', default=None)
     p_digest.add_argument('--yes', dest='autoyes', action='store_true')
     p_digest.set_defaults(func=digest_directory_argparse)
 
@@ -756,6 +870,12 @@ def main(argv):
     p_purge_empty_albums.add_argument('--yes', dest='autoyes', action='store_true')
     p_purge_empty_albums.set_defaults(func=purge_empty_albums_argparse)
 
+    p_reload_metadata = subparsers.add_parser('reload_metadata', aliases=['reload-metadata'])
+    p_reload_metadata.add_argument('--hash_bytes_per_second', '--hash-bytes-per-second', default=None)
+    p_reload_metadata.add_argument('--force', action='store_true')
+    p_reload_metadata.add_argument('--yes', dest='autoyes', action='store_true')
+    p_reload_metadata.set_defaults(func=reload_metadata_argparse)
+
     p_relocate = subparsers.add_parser('relocate')
     p_relocate.add_argument('photo_id')
     p_relocate.add_argument('filepath')
@@ -777,6 +897,7 @@ def main(argv):
     p_search.add_argument('--has_tags', '--has-tags', dest='has_tags', default=None)
     p_search.add_argument('--has_thumbnail', '--has-thumbnail', dest='has_thumbnail', default=None)
     p_search.add_argument('--is_searchhidden', '--is-searchhidden', dest='is_searchhidden', default=False)
+    p_search.add_argument('--sha256', default=None)
     p_search.add_argument('--mimetype', dest='mimetype', default=None)
     p_search.add_argument('--tag_musts', '--tag-musts', dest='tag_musts', default=None)
     p_search.add_argument('--tag_mays', '--tag-mays', dest='tag_mays', default=None)

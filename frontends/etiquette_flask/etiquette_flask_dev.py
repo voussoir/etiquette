@@ -64,7 +64,7 @@ def etiquette_flask_launch(
         pipeable.stderr('Try `etiquette_cli.py init` to create the database.')
         return 1
 
-    message = f'Starting server on port {port}, pid={os.getpid()}'
+    message = f'Starting server on port {port}, pid={os.getpid()}.'
     if use_https:
         message += ' (https)'
     print(message)
