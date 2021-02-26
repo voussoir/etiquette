@@ -78,7 +78,8 @@ site.route = decorate_and_route
 @site.before_request
 def before_request():
     ip = request.remote_addr
-    if site.localhost_only and ip != '127.0.0.1':
+    request.is_localhost = ip == '127.0.0.1'
+    if site.localhost_only and not request.is_localhost:
         flask.abort(403)
 
 gzip_minimum_size = 500 * bytestring.BYTE
@@ -213,6 +214,7 @@ def render_template(request, template_name, **kwargs):
 
     response = flask.render_template(
         template_name,
+        request=request,
         session=session,
         theme=theme,
         **kwargs,
