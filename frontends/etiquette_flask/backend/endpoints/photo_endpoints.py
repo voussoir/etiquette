@@ -1,4 +1,5 @@
 import flask; from flask import request
+import os
 import traceback
 import urllib.parse
 
@@ -210,6 +211,19 @@ def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
     common.P.commit('photo set searchhidden core')
 
     return jsonify.make_json_response({})
+
+@site.route('/photo/<photo_id>/show_in_folder', methods=['POST'])
+def post_photo_show_in_folder(photo_id):
+    if not request.is_localhost:
+        flask.abort(403)
+
+    photo = common.P_photo(photo_id, response_type='json')
+    if os.name == 'nt':
+        command = f'start explorer.exe /select,"{photo.real_path.absolute_path}"'
+        os.system(command)
+        return jsonify.make_json_response({})
+
+    flask.abort(501)
 
 @site.route('/batch/photos/set_searchhidden', methods=['POST'])
 @decorators.required_fields(['photo_ids'], forbid_whitespace=True)

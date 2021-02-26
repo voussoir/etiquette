@@ -117,6 +117,13 @@ function set_thumbnail_photo(album_id, photo_id, callback)
     common.post(url, data, callback);
 }
 
+api.albums.show_in_folder =
+function show_in_folder(album_id, callback)
+{
+    const url = `/album/${album_id}/show_in_folder`;
+    common.post(url, null, callback);
+}
+
 api.albums.callback_follow =
 function callback_follow(response)
 {
@@ -303,6 +310,13 @@ api.photos.unset_searchhidden =
 function unset_searchhidden(photo_id, callback)
 {
     const url = `/photo/${photo_id}/unset_searchhidden`;
+    common.post(url, null, callback);
+}
+
+api.photos.show_in_folder =
+function show_in_folder(photo_id, callback)
+{
+    const url = `/photo/${photo_id}/show_in_folder`;
     common.post(url, null, callback);
 }
 

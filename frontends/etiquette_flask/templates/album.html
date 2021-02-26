@@ -226,6 +226,10 @@ const ALBUM_ID = undefined;
         >
             Refresh directories
         </button>
+
+        {% if request.is_localhost and associated_directories|length == 1 %}
+        <button id="show_in_folder_button" onclick="return show_in_folder_form();">Show in folder</button>
+        {% endif %}
     </div>
 
     <div id="left">
@@ -407,6 +411,20 @@ const rename_ed = new editor.Editor(
     rename_ed_on_open,
     rename_ed_on_save,
 );
+
+function show_in_folder_form()
+{
+    api.albums.show_in_folder(ALBUM_ID, show_in_folder_callback);
+}
+
+function show_in_folder_callback(response)
+{
+    if (response.meta.status !== 200)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
+}
 
 function add_album_datalist_on_load(datalist)
 {

@@ -189,7 +189,10 @@
                 <li>Duration: {{photo.duration_string}}</li>
                 <li>Overall Bitrate: {{photo.bitrate|int}} kbps</li>
             {% endif %}
-            <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="return refresh_metadata_form();">refresh metadata</button></li>
+            <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="return refresh_metadata_form();">Refresh metadata</button></li>
+            {% if request.is_localhost %}
+            <li><button id="show_in_folder_button" onclick="return show_in_folder_form();">Show in folder</button></li>
+            {% endif %}
             <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as original filename</a></li>
             <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
             <li>
@@ -447,6 +450,20 @@ function set_searchhidden_form()
 }
 
 function set_searchhidden_callback(response)
+{
+    if (response.meta.status !== 200)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
+}
+
+function show_in_folder_form()
+{
+    api.photos.show_in_folder(PHOTO_ID, show_in_folder_callback);
+}
+
+function show_in_folder_callback(response)
 {
     if (response.meta.status !== 200)
     {

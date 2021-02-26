@@ -1,4 +1,5 @@
 import flask; from flask import request
+import os
 import time
 import urllib.parse
 
@@ -172,6 +173,24 @@ def post_album_edit(album_id):
     album.edit(title=title, description=description, commit=True)
     response = album.jsonify(minimal=True)
     return jsonify.make_json_response(response)
+
+@site.route('/album/<album_id>/show_in_folder', methods=['POST'])
+def post_album_show_in_folder(album_id):
+    if not request.is_localhost:
+        flask.abort(403)
+
+    album = common.P_album(album_id, response_type='json')
+    directories = album.get_associated_directories()
+    if len(directories) != 1:
+        flask.abort(400)
+    directory = directories.pop()
+
+    if os.name == 'nt':
+        command = f'start explorer.exe "{directory.absolute_path}"'
+        os.system(command)
+        return jsonify.make_json_response({})
+
+    flask.abort(501)
 
 # Album listings ###################################################################################
 
