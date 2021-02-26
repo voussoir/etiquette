@@ -806,11 +806,7 @@ class Photo(ObjectBase):
         self.tagged_at = db_row['tagged_at']
         self.searchhidden = db_row['searchhidden']
 
-        self.mimetype = helpers.get_mimetype(self.real_path.basename)
-        if self.mimetype is None:
-            self.simple_mimetype = None
-        else:
-            self.simple_mimetype = self.mimetype.split('/')[0]
+        self._assign_mimetype()
 
     def __repr__(self):
         return f'Photo:{self.id}'
@@ -839,6 +835,21 @@ class Photo(ObjectBase):
             raise ValueError(f'"{override_filename}" is not valid.')
 
         return cleaned
+
+    def _assign_mimetype(self):
+        # This function is defined separately because it is a derivative
+        # property of the file's basename and needs to be recalculated after
+        # file renames. However, I decided not to write it as a @property
+        # because that would require either wasted computation or using private
+        # self._mimetype vars to help memoize, which needs to be None-capable.
+        # So although I normally like using @property, this is less lines of
+        # code and less indirection really.
+        self.mimetype = helpers.get_mimetype(self.real_path.basename)
+
+        if self.mimetype is None:
+            self.simple_mimetype = None
+        else:
+            self.simple_mimetype = self.mimetype.split('/')[0]
 
     def _uncache(self):
         self.photodb.caches['photo'].remove(self.id)
@@ -1227,6 +1238,7 @@ class Photo(ObjectBase):
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
         self.real_path = new_filepath
+        self._assign_mimetype()
         self._uncache()
 
     @decorators.required_feature('photo.add_remove_tag')
@@ -1317,6 +1329,7 @@ class Photo(ObjectBase):
         }
         self.photodb.sql_update(table='photos', pairs=data, where_key='id')
         self.real_path = new_path
+        self._assign_mimetype()
 
         if new_path.normcase == old_path.normcase:
             # If they are equivalent but differently cased, just rename.
