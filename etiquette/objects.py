@@ -1447,8 +1447,8 @@ class Tag(ObjectBase, GroupableMixin):
     def _uncache(self):
         self.photodb.caches['tag'].remove(self.id)
 
-    def _add_child(self, member):
-        ret = super()._add_child(member)
+    def __add_child(self, member):
+        ret = super().add_child(member)
         if ret is BAIL:
             return BAIL
 
@@ -1471,19 +1471,23 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def add_child(self, *args, **kwargs):
-        ret = super().add_child(*args, **kwargs)
+    def add_child(self, member):
+        ret = self.__add_child(member)
         if ret is BAIL:
-            return
+            return BAIL
+
         self.photodb.caches['tag_exports'].clear()
         return ret
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def add_children(self, *args, **kwargs):
-        ret = super().add_children(*args, **kwargs)
-        if ret is BAIL:
-            return
+    def add_children(self, members):
+        bail = True
+        for member in members:
+            bail = (self.__add_child(member) is BAIL) and bail
+        if bail:
+            return BAIL
+
         self.photodb.caches['tag_exports'].clear()
         return ret
 
