@@ -1267,7 +1267,8 @@ class Photo(ObjectBase):
         self.photodb.log.info('Removing %s from %s.', tags, self)
         query = f'''
         DELETE FROM photo_tag_rel
-        WHERE tagid IN {sqlhelpers.listify(tag.id for tag in tags)}
+        WHERE photoid == "{self.id}"
+        AND tagid IN {sqlhelpers.listify(tag.id for tag in tags)}
         '''
         self.photodb.sql_execute(query)
 
