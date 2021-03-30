@@ -104,7 +104,6 @@ CREATE TABLE IF NOT EXISTS photos(
 );
 CREATE INDEX IF NOT EXISTS index_photos_id on photos(id);
 CREATE INDEX IF NOT EXISTS index_photos_filepath on photos(filepath COLLATE NOCASE);
-CREATE INDEX IF NOT EXISTS index_photos_dev_ino on photos(dev_ino);
 CREATE INDEX IF NOT EXISTS index_photos_override_filename on
     photos(override_filename COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS index_photos_created on photos(created);
