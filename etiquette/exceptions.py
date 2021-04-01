@@ -33,7 +33,7 @@ class EtiquetteException(Exception, metaclass=ErrorTypeAdder):
         self.args = (self.error_message, args, kwargs)
 
     def __str__(self):
-        return self.error_type + '\n' + self.error_message
+        return f'{self.error_type}: {self.error_message}'
 
     def jsonify(self):
         j = {
