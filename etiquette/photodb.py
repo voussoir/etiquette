@@ -1138,7 +1138,7 @@ class PDBSQLMixin:
         if bindings is None:
             bindings = []
         cur = self.sql.cursor()
-        self.log.loud(f'{query} {bindings}')
+        self.log.loud('%s %s', query, bindings)
         cur.execute(query, bindings)
         return cur
 
