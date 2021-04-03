@@ -3,12 +3,11 @@ Do not execute this file directly.
 Use etiquette_flask_dev.py or etiquette_flask_prod.py.
 '''
 import flask; from flask import request
-import gzip
-import io
 import mimetypes
 import traceback
 
 from voussoirkit import bytestring
+from voussoirkit import flasktools
 from voussoirkit import pathclass
 
 import etiquette
@@ -82,54 +81,11 @@ def before_request():
     if site.localhost_only and not request.is_localhost:
         flask.abort(403)
 
-gzip_minimum_size = 500 * bytestring.BYTE
-gzip_maximum_size = 5 * bytestring.MIBIBYTE
-gzip_level = 3
-def should_gzip(response):
-    if response.direct_passthrough:
-        return False
 
-    if response.status_code < 200:
-        return False
-
-    if response.status_code >= 300:
-        return False
-
-    content_length = response.headers.get('Content-Length', None)
-    if content_length is not None and int(content_length) > gzip_maximum_size:
-        return False
-
-    if content_length is not None and int(content_length) < gzip_minimum_size:
-        return False
-
-    if 'Content-Encoding' in response.headers:
-        return False
-
-    accept_encoding = request.headers.get('Accept-Encoding', '')
-    if 'gzip' not in accept_encoding.lower():
-        return False
-
-    content_type = response.headers.get('Content-Type', '')
-    if not (content_type.startswith('application/json') or content_type.startswith('text/')):
-        return False
-
-    return True
 
 @site.after_request
 def after_request(response):
-    if not should_gzip(response):
-        return response
-
-    ###
-
-    gzip_buffer = io.BytesIO()
-    gzip_file = gzip.GzipFile(mode='wb', compresslevel=gzip_level, fileobj=gzip_buffer)
-    gzip_file.write(response.get_data())
-    gzip_file.close()
-    response.set_data(gzip_buffer.getvalue())
-    response.headers['Content-Encoding'] = 'gzip'
-    response.headers['Content-Length'] = len(response.get_data())
-
+    response = flasktools.gzip_response(request, response)
     return response
 
 # P functions ######################################################################################
