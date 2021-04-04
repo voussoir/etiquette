@@ -275,6 +275,8 @@ def send_file(filepath, override_mimetype=None):
 
 ####################################################################################################
 
+# These functions will be called by the launcher, flask_dev, flask_prod.
+
 def init_photodb(*args, **kwargs):
     global P
     P = etiquette.photodb.PhotoDB.closest_photodb(*args, **kwargs)
