@@ -100,8 +100,7 @@ h2, h3
                     specific_tag,
                     link="search",
                     id="name_text",
-                    )}}
-                </h2>
+                )}}</h2>
 
                 <pre
                 id="description_text"
@@ -121,7 +120,7 @@ h2, h3
             >
             Delete
             </button>
-        </div>
+        </div> <!-- hierarchy_self -->
 
         {% set parents = specific_tag.get_parents() %}
         {% if parents %}
@@ -136,7 +135,7 @@ h2, h3
             </li>
             {% endfor %}
             </ul>
-        </div>
+        </div> <!-- hierarchy_parents -->
         {% endif %} <!-- if parents -->
         {% endif %} <!-- if specific tag -->
 
@@ -245,7 +244,7 @@ h2, h3
                  --><button id="add_synonym_button" class="green_button" onclick="return add_synonym_form(event);">Add synonym</button>
             </li>
             </ul>
-        </div>
+        </div> <!-- hierarchy_synonyms -->
         {% endif %} <!-- if specific tag and include synonyms -->
 
         {% if specific_tag %}
@@ -257,7 +256,7 @@ h2, h3
             onload="return common.size_iframe_to_content(this);"
             >
             </iframe>
-        </div>
+        </div> <!-- hierarchy_recentphotos -->
         {% endif %} <!-- if specific tag -->
     </div>
 </div>
@@ -271,8 +270,7 @@ const easybake_button = document.getElementById('easybake_button');
 const message_area = document.getElementById('message_area');
 common.bind_box_to_button(easybake_input, easybake_button, false);
 
-common.bind_box_to_button(document.getElementById("add_child_input"), document.getElementById("add_child_button"));
-common.bind_box_to_button(document.getElementById("add_synonym_input"), document.getElementById("add_synonym_button"));
+// BUTTON HANDLERS
 
 function add_child_form(event)
 {
@@ -513,6 +511,17 @@ var search_filter_box = document.getElementById("search_filter");
 search_filter_box.addEventListener("keyup", search_filter_hook);
 
 {% if specific_tag is not none %}
+common.bind_box_to_button(
+    document.getElementById("add_child_input"),
+    document.getElementById("add_child_button")
+);
+common.bind_box_to_button(
+    document.getElementById("add_synonym_input"),
+    document.getElementById("add_synonym_button")
+);
+
+// SPECIFIC TAG RENAME EDITOR //////////////////////////////////////////////////////////////////////
+
 rename_ed_on_open = undefined;
 
 function rename_ed_on_save(ed)
