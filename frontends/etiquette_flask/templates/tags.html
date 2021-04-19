@@ -146,12 +146,17 @@ h2, h3
             {% else %}
             <h2>{{tag_count}} Tags</h2>
             {% endif %}
+
+            <div id="filter_box_holder">
+                <input disabled class="enable_on_pageload entry_with_tagname_replacements" type="text" id="search_filter" placeholder="filter"/>
+            </div>
+
             <ul id="tag_list">
             {% for (qualified_name, tag) in tags %}
                 <li>
-                    {{cards.create_tag_card(tag, link="search_musts", innertext="(+)")}}
-                    {{cards.create_tag_card(tag, link="search_forbids", innertext="(x)")}}
-                    {{cards.create_tag_card(tag, link="info", innertext=qualified_name, with_alt_description=True)-}}
+                    {{cards.create_tag_card(tag, link="search_musts", extra_classes="must_shortcut", innertext="(+)")}}
+                    {{cards.create_tag_card(tag, link="search_forbids", extra_classes="forbid_shortcut", innertext="(x)")}}
+                    {{cards.create_tag_card(tag, link="info", extra_classes="main_card", innertext=qualified_name, with_alt_description=True)-}}
                     {% if specific_tag or '.' in qualified_name -%}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
@@ -182,9 +187,9 @@ h2, h3
                 {% if include_synonyms %}
                 {% for synonym in tag.get_synonyms()|sort %}
                 <li>
-                    {{-cards.create_tag_card(tag, link="search_musts", innertext="(+)")}}
-                    {{cards.create_tag_card(tag, link="search_forbids", innertext="(x)")}}
-                    {{cards.create_tag_card(tag, link='info', innertext=qualified_name + '+' + synonym)-}}
+                    {{-cards.create_tag_card(tag, link="search_musts", extra_classes="must_shortcut", innertext="(+)")}}
+                    {{cards.create_tag_card(tag, link="search_forbids", extra_classes="forbid_shortcut", innertext="(x)")}}
+                    {{cards.create_tag_card(tag, link='info', extra_classes="main_card", innertext=qualified_name + '+' + synonym)-}}
                     <button
                     class="remove_tag_button red_button button_with_confirm"
                     data-holder-class="confirm_holder_remove_synonym"
@@ -464,6 +469,48 @@ function tag_action_callback(response)
         common.create_message_bubble(message_area, message_positivity, message_text, 8000);
     }
 }
+
+// FILTER BOX //////////////////////////////////////////////////////////////////////////////////////
+
+var search_filter_wait_for_typing;
+
+var search_filter_hook = function(event)
+{
+    clearTimeout(search_filter_wait_for_typing);
+    search_filter_wait_for_typing = setTimeout(function()
+    {
+        filter_tag_cards(search_filter_box.value);
+    }, 200);
+}
+
+function filter_tag_cards(search_term)
+{
+    search_term = search_term.toLocaleLowerCase();
+    let tag_list = document.getElementById("tag_list");
+    tag_list.classList.add("hidden");
+    Array.from(tag_list.children).forEach(function(tag_li)
+    {
+        console.log(tag_li);
+        let tag_card = tag_li.getElementsByClassName("main_card")[0];
+        if (tag_card === undefined)
+        {
+            // On specific tag pages, the add_child input is also here.
+            return;
+        }
+        if (search_term !== "" && tag_card.innerText.indexOf(search_term) === -1)
+        {
+            tag_li.classList.add("hidden");
+        }
+        else
+        {
+            tag_li.classList.remove("hidden");
+        }
+    });
+    tag_list.classList.remove("hidden");
+}
+
+var search_filter_box = document.getElementById("search_filter");
+search_filter_box.addEventListener("keyup", search_filter_hook);
 
 {% if specific_tag is not none %}
 rename_ed_on_open = undefined;
