@@ -374,7 +374,6 @@ function add_remove_photo_tag_callback(response)
     else
     {
         const tagname = response.data.tagname;
-        let action;
         message_positivity = "message_positive";
         if (response.meta.request_url.includes("add_tag"))
         {
