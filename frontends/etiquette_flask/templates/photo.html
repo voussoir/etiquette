@@ -257,6 +257,18 @@
         {% if photo.simple_mimetype == "video" %}
         <button id="generate_thumbnail_button" class="green_button button_with_spinner" onclick="return generate_thumbnail_for_video_form();">Capture thumbnail</button>
         {% endif %}
+
+        <button
+        class="green_button button_with_confirm"
+        data-holder-id="copy_other_photo_tags_holder"
+        data-is-input="1"
+        data-prompt="Other photo ID"
+        data-cancel-class="gray_button"
+        data-onclick="return copy_other_photo_tags_form(event);"
+        >
+            Copy tags from other photo
+        </button>
+
         <button
         class="red_button button_with_confirm"
         data-onclick="return delete_photo_form();"
@@ -329,6 +341,16 @@ function add_photo_tag_callback(response)
     li.appendChild(remove_button);
     this_tags.appendChild(li);
     sort_tag_cards();
+}
+
+function copy_other_photo_tags_form(event)
+{
+    const other_photo = event.target.input_source.value;
+    if (! other_photo.trim())
+    {
+        return;
+    }
+    api.photos.copy_tags(PHOTO_ID, other_photo, common.refresh_or_alert);
 }
 
 function remove_photo_tag_form(photo_id, tagname)

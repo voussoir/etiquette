@@ -110,6 +110,18 @@ def post_photo_add_tag(photo_id):
     )
     return response
 
+@site.route('/photo/<photo_id>/copy_tags', methods=['POST'])
+@decorators.required_fields(['other_photo'], forbid_whitespace=True)
+def post_photo_copy_tags(photo_id):
+    '''
+    Copy the tags from another photo.
+    '''
+    photo = common.P_photo(photo_id, response_type='json')
+    other = common.P_photo(request.form['other_photo'], response_type='json')
+    photo.copy_tags(other)
+    common.P.commit('photo copy tags')
+    return jsonify.make_json_response([tag.jsonify(minimal=True) for tag in photo.get_tags()])
+
 @site.route('/photo/<photo_id>/remove_tag', methods=['POST'])
 @decorators.required_fields(['tagname'], forbid_whitespace=True)
 def post_photo_remove_tag(photo_id):

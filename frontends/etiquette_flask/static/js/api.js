@@ -239,6 +239,15 @@ function batch_unset_searchhidden(photo_ids, callback)
     common.post(url, data, callback);
 }
 
+api.photos.copy_tags =
+function copy_tags(photo_id, other_photo, callback)
+{
+    const url = `/photo/${photo_id}/copy_tags`;
+    const data = new FormData();
+    data.append("other_photo", other_photo);
+    common.post(url, data, callback)
+}
+
 api.photos.delete =
 function _delete(photo_id, delete_file, callback)
 {
