@@ -534,6 +534,7 @@ class Album(ObjectBase, GroupableMixin):
             'description': self.description,
             'title': self.title,
             'created': self.created,
+            'display_name': self.display_name,
             'thumbnail_photo': self.thumbnail_photo.id if self._thumbnail_photo else None,
             'author': self.get_author().jsonify() if self.author_id else None,
         }
@@ -764,6 +765,7 @@ class Bookmark(ObjectBase):
             'url': self.url,
             'created': self.created,
             'title': self.title,
+            'display_name': self.display_name,
         }
         return j
 
