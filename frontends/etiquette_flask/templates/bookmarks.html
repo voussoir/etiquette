@@ -34,7 +34,7 @@
             {{cards.create_bookmark_card(bookmark, add_delete_button=True)}}
             {% endfor %}
 
-            <div class="bookmark_card new_bookmark_card">
+            <div id="new_bookmark_card" class="bookmark_card">
                 <input id="new_bookmark_title" type="text" placeholder="title (optional)">
                 <input id="new_bookmark_url" type="text" placeholder="url">
                 <div class="bookmark_toolbox">
@@ -112,31 +112,36 @@ function ed_on_save(ed)
 
 ed_on_cancel = undefined;
 
+function create_editor(bookmark_card)
+{
+    const ed_elements = [
+        {
+            "id": "title",
+            "element": bookmark_card.getElementsByClassName("bookmark_title")[0],
+            "placeholder": "title (optional)",
+            "empty_text": bookmark_card.dataset.id,
+            "autofocus": true,
+        },
+        {
+            "id": "url",
+            "element": bookmark_card.getElementsByClassName("bookmark_url")[0],
+            "placeholder": "url",
+        },
+    ];
+    ed = new editor.Editor(ed_elements, ed_on_open, ed_on_save, ed_on_cancel);
+    ed.misc_data["bookmark_id"] = bookmark_card.dataset.id;
+}
+
 function create_editors()
 {
     const cards = document.getElementsByClassName("bookmark_card");
     for (const card of cards)
     {
-        if (card.classList.contains("new_bookmark_card"))
+        if (card.id == "new_bookmark_card")
         {
             continue;
         }
-        const ed_elements = [
-            {
-                "id": "title",
-                "element": card.getElementsByClassName("bookmark_title")[0],
-                "placeholder": "title (optional)",
-                "empty_text": card.dataset.id,
-                "autofocus": true,
-            },
-            {
-                "id": "url",
-                "element": card.getElementsByClassName("bookmark_url")[0],
-                "placeholder": "url",
-            },
-        ];
-        ed = new editor.Editor(ed_elements, ed_on_open, ed_on_save, ed_on_cancel);
-        ed.misc_data["bookmark_id"] = card.dataset.id;
+        create_editor(card);
     }
 }
 
