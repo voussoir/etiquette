@@ -1639,7 +1639,7 @@ class PDBUtilMixin:
             a file that's already in the database.
             '''
             same_meta = self.get_photos_by_sql(
-                'SELECT * FROM photos WHERE mtime == ? AND bytes == ?',
+                'SELECT * FROM photos WHERE mtime != 0 AND mtime == ? AND bytes == ?',
                 [filepath.stat.st_mtime, filepath.stat.st_size]
             )
             same_meta = [photo for photo in same_meta if not photo.real_path.is_file]
