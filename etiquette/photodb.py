@@ -1967,7 +1967,7 @@ class PhotoDB(
                 break
             parent = path.parent
             if path == parent:
-                raise exceptions.NoClosestPhotoDB(cwd)
+                raise exceptions.NoClosestPhotoDB(cwd.absolute_path)
             path = parent
 
         path = path.with_child(constants.DEFAULT_DATADIR)

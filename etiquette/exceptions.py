@@ -203,7 +203,7 @@ class NoClosestPhotoDB(EtiquetteException):
     For calls to PhotoDB.closest_photodb where none exists between cwd and
     drive root.
     '''
-    error_message = 'There is no PhotoDB in {} or its parents.'
+    error_message = 'There is no PhotoDB in "{}" or its parents.'
 
 class NoYields(EtiquetteException):
     '''
