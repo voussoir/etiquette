@@ -1203,7 +1203,7 @@ class PDBTagMixin:
 
     def get_all_tag_names(self):
         '''
-        Return a list containing the names of all tags as strings.
+        Return a set containing the names of all tags as strings.
         Useful for when you don't want the overhead of actual Tag objects.
         '''
         return self.get_cached_tag_export(self._get_all_tag_names)
