@@ -454,6 +454,17 @@ def tag_breplace_argparse(args):
             tag.add_synonym(tag_name)
     photodb.commit()
 
+def tag_list_argparse(args):
+    photodb = find_photodb()
+    tags = photodb.get_all_tag_names()
+    synonyms = photodb.get_all_synonyms()
+    keys = sorted(tags.union(synonyms.keys()))
+    for key in keys:
+        if key in synonyms:
+            print(f'{key}={synonyms[key]}')
+        else:
+            print(key)
+
 DOCSTRING = '''
 Etiquette CLI
 =============
@@ -489,6 +500,8 @@ Etiquette CLI
 {unset_searchhidden}
 
 {tag_breplace}
+
+{tag_list}
 
 At any time, you may add --silent, --quiet, --debug, --loud to change logging.
 
@@ -788,6 +801,13 @@ tag_breplace:
 
     > etiquette_cli.py tag_breplace replace_from replace_to
 '''.strip(),
+
+tag_list='''
+tag_list:
+    Show all tags in the database.
+
+    > etiquette_cli.py tag_list
+'''
 )
 
 DOCSTRING = betterhelp.add_previews(DOCSTRING, SUB_DOCSTRINGS)
@@ -927,6 +947,9 @@ def main(argv):
     p_tag_breplace.add_argument('--regex', dest='regex', action='store_true')
     p_tag_breplace.add_argument('--yes', dest='autoyes', action='store_true')
     p_tag_breplace.set_defaults(func=tag_breplace_argparse)
+
+    p_tag_list = subparsers.add_parser('tag_list', aliases=['tag-list'])
+    p_tag_list.set_defaults(func=tag_list_argparse)
 
     ##
 
