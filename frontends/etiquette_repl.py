@@ -10,6 +10,7 @@ import sys
 import traceback
 
 from voussoirkit import interactive
+from voussoirkit import pathclass
 from voussoirkit import pipeable
 from voussoirkit import vlogging
 
@@ -41,7 +42,7 @@ def erepl_argparse(args):
     global P
 
     try:
-        P = etiquette.photodb.PhotoDB.closest_photodb(log_level=LOG_LEVEL)
+        P = etiquette.photodb.PhotoDB.closest_photodb(pathclass.cwd(), log_level=LOG_LEVEL)
     except etiquette.exceptions.NoClosestPhotoDB as exc:
         pipeable.stderr(exc.error_message)
         pipeable.stderr('Try `etiquette_cli.py init` to create the database.')

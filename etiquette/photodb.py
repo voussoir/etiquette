@@ -1953,21 +1953,20 @@ class PhotoDB(
         self.sql.commit()
 
     @classmethod
-    def closest_photodb(cls, *args, **kwargs):
+    def closest_photodb(cls, path, *args, **kwargs):
         '''
         Starting from the cwd and climbing upwards towards the filesystem root,
         look for an existing Etiquette data directory and return the PhotoDB
         object. If none exists, raise exceptions.NoClosestPhotoDB.
         '''
-        cwd = pathclass.cwd()
+        starting = path
 
-        path = cwd
         while True:
             if path.with_child(constants.DEFAULT_DATADIR).is_dir:
                 break
             parent = path.parent
             if path == parent:
-                raise exceptions.NoClosestPhotoDB(cwd.absolute_path)
+                raise exceptions.NoClosestPhotoDB(starting.absolute_path)
             path = parent
 
         path = path.with_child(constants.DEFAULT_DATADIR)

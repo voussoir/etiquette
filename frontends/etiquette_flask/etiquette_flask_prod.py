@@ -6,6 +6,8 @@ gunicorn etiquette_flask_prod:site --bind "0.0.0.0:PORT" --access-logfile "-"
 '''
 import werkzeug.middleware.proxy_fix
 
+from voussoirkit import pathclass
+
 import backend
 
 backend.site.wsgi_app = werkzeug.middleware.proxy_fix.ProxyFix(backend.site.wsgi_app)
@@ -13,4 +15,4 @@ backend.site.wsgi_app = werkzeug.middleware.proxy_fix.ProxyFix(backend.site.wsgi
 site = backend.site
 site.debug = False
 
-backend.common.init_photodb()
+backend.common.init_photodb(path=pathclass.cwd())
