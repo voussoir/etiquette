@@ -273,7 +273,7 @@ def export_symlinks_argparse(args):
     if not args.prune or args.dry_run:
         return
 
-    symlinks = spinal.walk_generator(destination, yield_directories=True, yield_files=True)
+    symlinks = spinal.walk(destination, yield_directories=True, yield_files=True)
     symlinks = set(path for path in symlinks if path.is_link)
     symlinks = symlinks.difference(total_paths)
     for old_symlink in symlinks:
@@ -282,7 +282,7 @@ def export_symlinks_argparse(args):
         if not old_symlink.parent.listdir():
             os.rmdir(old_symlink.parent.absolute_path)
 
-    checkdirs = set(spinal.walk_generator(destination, yield_directories=True, yield_files=False))
+    checkdirs = set(spinal.walk(destination, yield_directories=True, yield_files=False))
     while checkdirs:
         check = checkdirs.pop()
         if check not in destination:
