@@ -811,7 +811,7 @@ tag_list:
     Show all tags in the database.
 
     > etiquette_cli.py tag_list
-'''
+'''.strip(),
 )
 
 DOCSTRING = betterhelp.add_previews(DOCSTRING, SUB_DOCSTRINGS)
