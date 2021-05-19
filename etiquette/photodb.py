@@ -636,7 +636,8 @@ class PDBPhotoMixin:
 
         TAGS AND FILTERS
         author:
-            A list of User objects, or usernames, or user ids.
+            A list of User objects or usernames, or a string of comma-separated
+            usernames.
 
         created:
             A hyphen_range string respresenting min and max. Or just a number
