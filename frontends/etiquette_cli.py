@@ -541,7 +541,7 @@ delete:
     > etiquette_cli.py delete --albums id id id
     > etiquette_cli.py delete --album-search searchargs
 
-    See search --help for more info about searchargs.
+    See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
 
 digest='''
@@ -621,7 +621,7 @@ export_symlinks:
         In the destination directory, any existing symlinks whose target no
         longer exists will be deleted.
 
-    See search --help for more info about searchargs.
+    See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
 
 init='''
@@ -638,6 +638,8 @@ purge_deleted_files:
     > etiquette_cli.py purge_deleted_files
     > etiquette_cli.py purge_deleted_files id id id
     > etiquette_cli.py purge_deleted_files searchargs
+
+    See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
 
 purge_empty_albums='''
@@ -675,6 +677,8 @@ reload_metadata:
     --hash_bytes_per_second X:
         A string like "10mb" to limit the speed of file hashing for the purpose
         of reducing system load.
+
+    See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
 
 relocate='''
@@ -772,7 +776,7 @@ show_associated_directories:
     > etiquette_cli.py show_associated_directories --albums id id id
     > etiquette_cli.py show_associated_directories --album-search searchargs
 
-    See search --help for more info about searchargs.
+    See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
 
 set_searchhidden='''
@@ -782,7 +786,7 @@ set_searchhidden:
     > etiquette_cli.py set_searchhidden --photos id id id
     > etiquette_cli.py set_searchhidden --search searchargs
 
-    See search --help for more info about searchargs.
+    See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
 
 unset_searchhidden='''
@@ -792,7 +796,7 @@ unset_searchhidden:
     > etiquette_cli.py unset_searchhidden --photos id id id
     > etiquette_cli.py unset_searchhidden --search searchargs
 
-    See search --help for more info about searchargs.
+    See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
 
 tag_breplace='''
