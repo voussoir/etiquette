@@ -27,6 +27,11 @@ p:last-of-type
     margin-bottom: 0;
 }
 
+#header #logout_button
+{
+    color: var(--color_text_link);
+}
+
 .header_element:hover
 {
     background-color: var(--color_secondary);
