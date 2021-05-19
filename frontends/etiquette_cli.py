@@ -611,7 +611,7 @@ export_symlinks:
     > etiquette_cli.py export_symlinks --destination directory --album-search searchargs
 
     flags:
-    --destination:
+    --destination X:
         A path to a directory into which the symlinks will be placed.
 
     --dry:
@@ -672,7 +672,7 @@ reload_metadata:
         By default, we wil skip any files that have the same mtime and byte
         size as before. You can pass --force to always reload.
 
-    --hash_bytes_per_second:
+    --hash_bytes_per_second X:
         A string like "10mb" to limit the speed of file hashing for the purpose
         of reducing system load.
 '''.strip(),
