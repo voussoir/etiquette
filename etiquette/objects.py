@@ -1085,6 +1085,7 @@ class Photo(ObjectBase):
             'filename': self.basename,
             'mimetype': self.mimetype,
             'searchhidden': bool(self.searchhidden),
+            'simple_mimetype': self.simple_mimetype,
         }
         if include_albums:
             j['albums'] = [album.jsonify(minimal=True) for album in self.get_containing_albums()]
