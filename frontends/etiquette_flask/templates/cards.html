@@ -138,7 +138,7 @@ draggable="true"
 
     <span class="photo_card_metadata">
         {{- metadatas|join_and_trail(", ")|safe -}}
-        <a target="_blank" href="{{photo|file_link}}">{{photo.bytestring}}</a>
+        <a target="_blank" href="{{photo|file_link}}">{{photo.bytes_string}}</a>
     </span>
 
     {% if view == "grid" %}

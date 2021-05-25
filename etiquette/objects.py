@@ -905,7 +905,7 @@ class Photo(ObjectBase):
             return None
 
     @property
-    def bytestring(self):
+    def bytes_string(self):
         if self.bytes is not None:
             return bytestring.bytestring(self.bytes)
         return '??? b'
@@ -1079,7 +1079,7 @@ class Photo(ObjectBase):
             'bytes': self.bytes,
             'duration_string': self.duration_string,
             'duration': self.duration,
-            'bytes_string': self.bytestring,
+            'bytes_string': self.bytes_string,
             'has_thumbnail': bool(self.thumbnail),
             'created': self.created,
             'filename': self.basename,
