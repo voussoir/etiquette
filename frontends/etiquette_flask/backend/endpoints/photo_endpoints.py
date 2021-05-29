@@ -257,6 +257,21 @@ def post_batch_photos_unset_searchhidden():
 def get_clipboard_page():
     return common.render_template(request, 'clipboard.html')
 
+@site.route('/batch/photos', methods=['POST'])
+@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
+def post_batch_photos():
+    '''
+    Return a list of photo.jsonify() for each requested photo id.
+    '''
+    photo_ids = request.form['photo_ids']
+
+    photo_ids = stringtools.comma_space_split(photo_ids)
+    photos = list(common.P_photos(photo_ids, response_type='json'))
+
+    photos = [photo.jsonify() for photo in photos]
+    response = jsonify.make_json_response(photos)
+    return response
+
 @site.route('/batch/photos/photo_card', methods=['POST'])
 @decorators.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_photo_cards():

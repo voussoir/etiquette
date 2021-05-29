@@ -111,6 +111,144 @@ function create(bookmark, add_delete_button)
 /******************************************************************************/
 cards.photos = {};
 
+cards.photos.MIMETYPE_THUMBNAILS = {
+    "svg": "svg",
+
+    "application/zip": "archive",
+    "application/x-tar": "archive",
+
+    "archive": "archive",
+    "audio": "audio",
+    "image": "image",
+    "video": "video",
+    "text": "txt",
+};
+
+cards.photos.file_link =
+function file_link(photo, short)
+{
+    if (short)
+    {
+        return `/file/${photo.id}${photo.dot_extension}`;
+    }
+    const basename = escape(photo.filename);
+    return `/file/${photo.id}/${basename}`;
+}
+
+cards.photos.create =
+function create(photo, view)
+{
+    if (view !== "list" && view !== "grid")
+    {
+        view = "grid";
+    }
+
+    const photo_card = document.createElement("div");
+    photo_card.id = `photo_card_${photo.id}`;
+    photo_card.dataset.id = photo.id;
+    photo_card.className = `photo_card photo_card_${view} photo_card_unselected`
+    if (photo.searchhidden)
+    {
+        photo_card.classList.add("photo_card_searchhidden");
+    }
+    photo_card.ondragstart = "return cards.photos.drag_start(event);";
+    photo_card.ondragend = "return cards.photos.drag_end(event);";
+    photo_card.ondragover = "return cards.photos.drag_over(event);";
+    photo_card.ondrop = "return cards.photos.drag_drop(event);";
+    photo_card.draggable = true;
+
+    const photo_card_filename = document.createElement("div");
+    photo_card_filename.className = "photo_card_filename";
+    const filename_link = document.createElement("a");
+    filename_link.target = "_blank";
+    filename_link.href = `/photo/${photo.id}`;
+    filename_link.draggable = false;
+    filename_link.innerText = photo.filename;
+    photo_card_filename.appendChild(filename_link);
+    photo_card.appendChild(photo_card_filename);
+
+    const photo_card_metadata = document.createElement("span");
+    photo_card_metadata.className = "photo_card_metadata";
+    const metadatas = [];
+    if (photo.width)
+    {
+        metadatas.push(`${photo.width}&times;${photo.height}`);
+    }
+    if (photo.duration)
+    {
+        metadatas.push(`${photo.duration_string}`);
+    }
+    photo_card_metadata.innerHTML = common.join_and_trail(metadatas, ", ");
+    const filesize_file_link = document.createElement("a");
+    filesize_file_link.href = cards.photos.file_link(photo);
+    filesize_file_link.target = "_blank";
+    filesize_file_link.draggable = false;
+    filesize_file_link.innerText = photo.bytes_string;
+    photo_card_metadata.append(filesize_file_link);
+    photo_card.appendChild(photo_card_metadata);
+
+    if (view == "grid")
+    {
+        let thumbnail_src;
+        if (photo.has_thumbnail)
+        {
+            thumbnail_src = `/thumbnail/${photo.id}.jpg`;
+        }
+        else
+        {
+            thumbnail_src =
+            cards.photos.MIMETYPE_THUMBNAILS[photo.extension] ||
+            cards.photos.MIMETYPE_THUMBNAILS[photo.mimetype] ||
+            cards.photos.MIMETYPE_THUMBNAILS[photo.simple_mimetype] ||
+            "other";
+            thumbnail_src = `/static/basic_thumbnails/${thumbnail_src}.png`;
+        }
+
+        const photo_card_thumbnail = document.createElement("a");
+        photo_card_thumbnail.className = "photo_card_thumbnail";
+        photo_card_thumbnail.target = "_blank";
+        photo_card_thumbnail.href = `/photo/${photo.id}`;
+        photo_card_thumbnail.draggable = false;
+        const thumbnail_img = document.createElement("img");
+        thumbnail_img.loading = "lazy";
+        thumbnail_img.src = thumbnail_src;
+        thumbnail_img.draggable = false;
+        photo_card_thumbnail.appendChild(thumbnail_img);
+        photo_card.appendChild(photo_card_thumbnail);
+    }
+
+    let tag_names_title = [];
+    let tag_names_inner = "";
+    for (const tag of photo.tags)
+    {
+        tag_names_title.push(tag.name);
+        tag_names_inner = "T";
+    }
+    const photo_card_tags = document.createElement("span");
+    photo_card_tags.className = "photo_card_tags";
+    photo_card_tags.title = tag_names_title.join(",");
+    photo_card_tags.innerText = tag_names_inner;
+    photo_card.appendChild(photo_card_tags);
+
+    const toolbutton = document.createElement("button");
+    toolbutton.className = "photo_card_toolbutton hidden";
+    toolbutton.onclick = "return cards.photos.show_tools(event);";
+    photo_card.appendChild(toolbutton);
+
+    const photo_card_tools = document.createElement("div");
+    photo_card_tools.className = "photo_card_tools";
+    photo_card_tools.onclick = "event.stopPropagation(); return;";
+    photo_card.appendChild(photo_card_tools);
+
+    if (photo_clipboard)
+    {
+        const clipboard_checkbox = photo_clipboard.give_checkbox(photo_card);
+        photo_clipboard.apply_check(clipboard_checkbox);
+    }
+
+    return photo_card;
+}
+
 cards.photos.drag_start =
 function drag_start(event)
 {
