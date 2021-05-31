@@ -187,7 +187,7 @@ def delete_argparse(args):
     if args.photo_id_args or args.photo_search_args:
         photos = get_photos_from_args(args)
         for photo in photos:
-            photo.delete()
+            photo.delete(delete_file=args.delete_file)
             need_commit = True
 
     if args.album_id_args or args.album_search_args:
@@ -536,6 +536,12 @@ delete='''
 delete:
     Remove photos or albums from the database.
 
+    flags:
+    --delete_file:
+        Delete the file from disk after committing.
+        Your config.json file's recycle_instead_of_delete will influence this.
+        Without this flag, photos are removed from the db but remain on disk.
+
     > etiquette_cli.py delete --photos id id id
     > etiquette_cli.py delete --search searchargs
     > etiquette_cli.py delete --albums id id id
@@ -856,6 +862,7 @@ def main(argv):
     p_remove_tag.set_defaults(func=lambda args: add_remove_tag_argparse(args, action='remove'))
 
     p_delete = subparsers.add_parser('delete')
+    p_delete.add_argument('--delete_file', '--delete-file', action='store_true')
     p_delete.add_argument('--yes', dest='autoyes', action='store_true')
     p_delete.set_defaults(func=delete_argparse)
 
