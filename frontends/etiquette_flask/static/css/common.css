@@ -82,6 +82,7 @@ pre
     display: flex;
     flex-direction: row;
 
+    height: 18px;
     margin: 8px;
     background-color: var(--color_transparency);
 }
