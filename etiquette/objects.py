@@ -930,7 +930,7 @@ class Photo(ObjectBase):
         self.photodb.sql_delete(table='album_photo_rel', pairs={'photoid': self.id})
         self.photodb.sql_delete(table='photos', pairs={'id': self.id})
 
-        if delete_file:
+        if delete_file and self.real_path.exists:
             path = self.real_path.absolute_path
             if self.photodb.config['recycle_instead_of_delete']:
                 self.photodb.log.debug('Recycling %s.', path)
