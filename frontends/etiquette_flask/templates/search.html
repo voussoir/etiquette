@@ -534,13 +534,12 @@ function simplify_tagnames(tags)
     return new_tags;
 }
 
-function submit_search()
+function build_search_params()
 {
     /*
-    Gather up all the form data and tags and compose the search URL
+    Gather up all the form data and tags and compose the URL parameters.
     */
-    let url = window.location.origin + "/search";
-    let parameters = [];
+    const parameters = new URLSearchParams();
 
     // If the user has left any text in the tag boxes, but not hit Enter on
     // them, then they will not be in the `inputted_` lists and would get
@@ -550,32 +549,30 @@ function submit_search()
     add_searchtag_from_box(input_forbids, inputted_forbids, "search_builder_forbids_inputted");
 
     let has_tag_params = false;
-    const musts = simplify_tagnames(inputted_musts).map(encodeURIComponent).join(",");
-    if (musts) {parameters.push("tag_musts=" + musts); has_tag_params = true;}
+    const musts = simplify_tagnames(inputted_musts).join(",");
+    if (musts) {parameters.set("tag_musts", musts); has_tag_params = true;}
 
-    const mays = simplify_tagnames(inputted_mays).map(encodeURIComponent).join(",");
-    if (mays) {parameters.push("tag_mays=" + mays); has_tag_params = true;}
+    const mays = simplify_tagnames(inputted_mays).join(",");
+    if (mays) {parameters.set("tag_mays", mays); has_tag_params = true;}
 
-    const forbids = simplify_tagnames(inputted_forbids).map(encodeURIComponent).join(",");
-    if (forbids) {parameters.push("tag_forbids=" + forbids); has_tag_params = true;}
+    const forbids = simplify_tagnames(inputted_forbids).join(",");
+    if (forbids) {parameters.set("tag_forbids", forbids); has_tag_params = true;}
 
     const expression = document.getElementsByName("tag_expression")[0].value;
     if (expression)
     {
         //expression = expression.replace(new RegExp(" ", 'g'), "-");
-        parameters.push("tag_expression=" + encodeURIComponent(expression));
+        parameters.set("tag_expression", expression);
         has_tag_params = true;
     }
 
     const basic_inputs = document.getElementsByClassName("basic_param");
     for (const basic_input of basic_inputs)
     {
-        const boxname = basic_input.name;
-        const box = document.getElementsByName(boxname)[0];
-        let value = box.value;
+        let value = basic_input.value;
         value = value.split("&").join("%26");
         console.log(value);
-        if (PARAM_DEFAULTS[boxname] == value)
+        if (PARAM_DEFAULTS[basic_input.name] == value)
         {
             // Don't clutter url with default values.
             continue;
@@ -584,7 +581,7 @@ function submit_search()
         {
             continue;
         }
-        parameters.push(boxname + "=" + value);
+        parameters.set(basic_input.name, value);
     }
 
     const orderby_rows = document.getElementsByClassName("search_builder_orderby_li");
@@ -606,19 +603,25 @@ function submit_search()
     if (orderby_params && orderby_params != "created-desc")
     {
         // Don't clutter url with default of created-desc
-        parameters.push("orderby=" + orderby_params);
+        parameters.set("orderby", orderby_params);
     }
 
-    if (parameters.length > 0)
+    return parameters;
+}
+
+function submit_search()
+{
+    const parameters = build_search_params().toString();
+    let url = window.location.origin + "/search";
+    if (parameters !== "")
     {
-        parameters = parameters.join("&");
-        parameters = "?" + parameters;
-        url = url + parameters;
+        url += "?" + parameters.toString();
     }
     console.log(url);
     window.location.href = url;
     return false;
 }
+
 function tags_on_this_page_add_must(event, tagname)
 {
     add_searchtag(
