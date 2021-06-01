@@ -164,7 +164,7 @@
 
 {% macro create_orderby_li(selected_column, selected_sorter) %}
 <li class="search_builder_orderby_li">
-    <select onchange="return orderby_hide_direction_hook(event);">
+    <select class="select_orderby_column" onchange="return orderby_hide_direction_hook(event);">
         <option value="created" {{"selected" if selected_column=="created" else ""}}>Creation date</option>
         <option value="basename" {{"selected" if selected_column=="basename" else ""}}>Filename</option>
         <option value="area" {{"selected" if selected_column=="area" else ""}}>Area</option>
@@ -177,7 +177,7 @@
         <option value="tagged_at" {{"selected" if selected_column=="tagged_at" else ""}}>Recently tagged</option>
         <option value="random" {{"selected" if selected_column=="random" else ""}}>Random</option>
     </select>
-    <select {% if selected_column=="random" %}class="hidden"{% endif %}>
+    <select class="select_orderby_direction" {% if selected_column=="random" %}class="hidden"{% endif %}>
         <option value="desc" {{"selected" if selected_sorter=="desc" else ""}} >Descending</option>
         <option value="asc"  {{"selected" if selected_sorter=="asc" else ""}}  >Ascending</option>
     </select>
@@ -398,6 +398,9 @@ const PARAM_DEFAULTS = {
     'yield_albums': 'yes',
     'yield_photos': 'yes'
 }
+
+const MAX_ORDERBY_ULS = document.getElementsByClassName("select_orderby_column")[0].children.length;
+
 function add_searchtag(ul, value, inputted_list, li_class)
 {
     console.log("adding " + value);
@@ -484,13 +487,12 @@ function add_new_orderby()
 {
     /* Called by the green + button */
     const ul = document.getElementById("search_builder_orderby_ul");
-    const lis = ul.children;
-    if (lis.length >= 9)
+    const lis = ul.getElementsByClassName("search_builder_orderby_li");
+    if (lis.length >= MAX_ORDERBY_ULS)
     {
-        /* 9 because there are only 9 sortable properties */
         return;
     }
-    prev_li = lis[lis.length - 2];
+    prev_li = lis[lis.length - 1];
     const new_li = prev_li.cloneNode(true);
     ul.insertBefore(new_li, prev_li.nextSibling);
 }
