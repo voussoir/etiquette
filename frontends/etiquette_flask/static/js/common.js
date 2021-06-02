@@ -85,14 +85,19 @@ function _request(method, url, callback)
     */
     const request = new XMLHttpRequest();
     const response = {
-        "meta": {"completed": false, "status": 0},
+        "meta": {
+            "completed": false,
+            "status": 0,
+            "json_ok": false,
+            "request_url": url,
+        },
     };
 
     request.onreadystatechange = function()
     {
         /*
         readystate values:
-        0 UNSENT
+        0 UNSENT / ABORTED
         1 OPENED
         2 HEADERS_RECEIVED
         3 LOADING
@@ -105,7 +110,6 @@ function _request(method, url, callback)
             {return;}
 
         response.meta.status = request.status;
-        response.meta.request_url = url;
 
         if (request.status != 0)
         {
