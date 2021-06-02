@@ -612,7 +612,7 @@ function build_search_params()
 function submit_search()
 {
     const parameters = build_search_params().toString();
-    let url = window.location.origin + "/search";
+    let url = "/search";
     if (parameters !== "")
     {
         url += "?" + parameters.toString();
