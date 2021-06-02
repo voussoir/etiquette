@@ -136,6 +136,7 @@ function get(url, callback)
 {
     request = common._request("GET", url, callback);
     request.send();
+    return request;
 }
 
 common.post =
@@ -146,6 +147,7 @@ function post(url, data, callback)
     */
     request = common._request("POST", url, callback);
     request.send(data);
+    return request;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
