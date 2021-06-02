@@ -308,6 +308,18 @@ function remove_tag(photo_id, tagname, callback)
     return common.post(url, data, callback);
 }
 
+api.photos.search =
+function search(parameters, callback)
+{
+    parameters = parameters.toString();
+    let url = "/search.json";
+    if (parameters !== "" )
+    {
+        url += "?" + parameters;
+    }
+    return common.get(url, callback)
+}
+
 api.photos.set_searchhidden =
 function set_searchhidden(photo_id, callback)
 {
