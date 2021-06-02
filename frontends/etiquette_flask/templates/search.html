@@ -702,7 +702,7 @@ const inputted_forbids = [];
     {% endif %}
 {% endfor %}
 
-document.getElementById("search_go_button");
+const search_go_button = document.getElementById("search_go_button");
 input_musts.addEventListener("keyup", tag_input_hook_musts);
 common.bind_box_to_button(input_musts, search_go_button, true);
 
