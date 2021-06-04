@@ -303,8 +303,14 @@ def purge_deleted_files_argparse(args):
     else:
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
 
+    need_commit = False
+
     for deleted in photodb.purge_deleted_files(photos):
+        need_commit = True
         print(deleted)
+
+    if not need_commit:
+        return
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
@@ -320,8 +326,14 @@ def purge_empty_albums_argparse(args):
     else:
         albums = photodb.get_albums_within_directory(pathclass.cwd())
 
+    need_commit = False
+
     for deleted in photodb.purge_empty_albums(albums):
+        need_commit = True
         print(deleted)
+
+    if not need_commit:
+        return
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
