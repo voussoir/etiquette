@@ -654,7 +654,7 @@ purge_deleted_files:
     Delete any Photo objects whose file no longer exists on disk.
 
     > etiquette_cli.py purge_deleted_files
-    > etiquette_cli.py purge_deleted_files id id id
+    > etiquette_cli.py purge_deleted_files --photos id id id
     > etiquette_cli.py purge_deleted_files searchargs
 
     See etiquette_cli.py search --help for more info about searchargs.
@@ -673,7 +673,7 @@ purge_empty_albums:
     we're looking for albums with no photos!)
 
     > etiquette_cli.py purge_empty_albums
-    > etiquette_cli.py purge_empty_albums id id id
+    > etiquette_cli.py purge_empty_albums --albums id id id
 '''.strip(),
 
 reload_metadata='''
@@ -684,7 +684,7 @@ reload_metadata:
     Or, you can pass specific photo ids or searchargs.
 
     > etiquette_cli.py reload_metadata
-    > etiquette_cli.py reload_metadata id id id
+    > etiquette_cli.py reload_metadata --photos id id id
     > etiquette_cli.py reload_metadata searchargs
 
     flags:
