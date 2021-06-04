@@ -647,6 +647,7 @@ function on_pageload()
 {
     autofocus_add_tag_box();
     photo_clipboard.apply_check(document.getElementById("clipboard_checkbox"));
+    photo_clipboard.register_hotkeys();
 }
 document.addEventListener("DOMContentLoaded", on_pageload);
 </script>

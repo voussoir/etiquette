@@ -464,6 +464,7 @@ function add_photo_toolbox_entries()
 }
 function on_pageload()
 {
+    photo_clipboard.register_hotkeys();
     add_photo_toolbox_entries();
 }
 document.addEventListener("DOMContentLoaded", on_pageload);

@@ -400,5 +400,11 @@ function unset_searchhidden_form()
     const photo_ids = Array.from(photo_clipboard.clipboard);
     api.photos.batch_unset_searchhidden(photo_ids, set_unset_searchhidden_callback);
 }
+
+function on_pageload()
+{
+    photo_clipboard.register_hotkeys();
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
 </html>

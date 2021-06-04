@@ -389,6 +389,15 @@ function on_storage_event()
     photo_clipboard.update_pagestate();
 }
 
+photo_clipboard.register_hotkeys =
+function register_hotkeys()
+{
+    hotkeys.register_hotkey("ctrl a", photo_clipboard.select_all_photos, "Select all photos.");
+    hotkeys.register_hotkey("ctrl d", photo_clipboard.unselect_all_photos, "Deselect all photos.");
+    hotkeys.register_hotkey("c", photo_clipboard.clipboard_tray_collapse_toggle, "Toggle clipboard tray.");
+    hotkeys.register_hotkey("shift c", photo_clipboard.open_full_clipboard_tab, "Open full clipboard page.");
+}
+
 photo_clipboard.update_pagestate =
 function update_pagestate()
 {
@@ -404,10 +413,6 @@ photo_clipboard.on_pageload =
 function on_pageload()
 {
     window.addEventListener("storage", photo_clipboard.on_storage_event, false);
-    hotkeys.register_hotkey("ctrl a", photo_clipboard.select_all_photos, "Select all photos.");
-    hotkeys.register_hotkey("ctrl d", photo_clipboard.unselect_all_photos, "Deselect all photos.");
-    hotkeys.register_hotkey("c", photo_clipboard.clipboard_tray_collapse_toggle, "Toggle clipboard tray.");
-    hotkeys.register_hotkey("shift c", photo_clipboard.open_full_clipboard_tab, "Open full clipboard page.");
     photo_clipboard.ingest_toolbox_items();
     photo_clipboard.load_clipboard();
     photo_clipboard.update_pagestate();

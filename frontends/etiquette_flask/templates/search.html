@@ -713,5 +713,11 @@ input_forbids.addEventListener("keyup", tag_input_hook_forbids);
 common.bind_box_to_button(input_forbids, search_go_button, true);
 
 common.bind_box_to_button(input_expression, search_go_button);
+
+function on_pageload()
+{
+    photo_clipboard.register_hotkeys();
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
 </html>
