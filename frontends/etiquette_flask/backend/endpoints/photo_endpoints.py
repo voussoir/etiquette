@@ -549,3 +549,10 @@ def get_search_json():
         tag.jsonify(minimal=True) for tag in search_results['total_tags']
     ]
     return jsonify.make_json_response(search_results)
+
+# Swipe ############################################################################################
+
+@site.route('/swipe')
+def get_swipe():
+    response = common.render_template(request, 'swipe.html')
+    return response

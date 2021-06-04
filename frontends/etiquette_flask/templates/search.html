@@ -318,6 +318,7 @@
                 <option value="list"  {{"selected" if search_kwargs['view']=="list" else ""}}>List</option>
             </select>
             <button type="submit" id="search_go_button" class="green_button" value="">Search</button>
+            <button type="button" id="swipe_go_button" class="green_button" value="" onclick="return submit_swipe();">Swipe UI</button>
         </form>
         {% if total_tags %}
         <h4>Tags on this page:</h4>
@@ -613,6 +614,19 @@ function submit_search()
 {
     const parameters = build_search_params().toString();
     let url = "/search";
+    if (parameters !== "")
+    {
+        url += "?" + parameters.toString();
+    }
+    console.log(url);
+    window.location.href = url;
+    return false;
+}
+
+function submit_swipe()
+{
+    const parameters = build_search_params().toString();
+    let url = "/swipe";
     if (parameters !== "")
     {
         url += "?" + parameters.toString();

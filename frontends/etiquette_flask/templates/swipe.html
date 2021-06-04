@@ -1,0 +1,542 @@
+<!DOCTYPE html5>
+<html>
+<head>
+    {% import "header.html" as header %}
+    {% import "clipboard_tray.html" as clipboard_tray %}
+    <title>Swipe</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/etiquette.css">
+    <link rel="stylesheet" href="/static/css/cards.css">
+    <link rel="stylesheet" href="/static/css/clipboard_tray.css">
+    {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/cards.js"></script>
+    <script src="/static/js/hotkeys.js"></script>
+    <script src="/static/js/photo_clipboard.js"></script>
+    <script src="/static/js/spinner.js"></script>
+    <script src="/static/js/tag_autocomplete.js"></script>
+
+<style>
+#content_body
+{
+    display: grid;
+    grid-template:
+        "photo_viewer right" 1fr
+        "upcoming_area right" auto
+        "button_bar button_bar" auto
+        /1fr 300px;
+    /* header=18+8+8 + content_body margin-bottom=8 */
+    height: calc(100vh - 42px);
+}
+#right
+{
+    display: grid;
+    grid-template:
+        "name_tag" auto
+        "message_area" 1fr
+        / auto;
+    grid-row-gap: 8px;
+}
+#name_tag
+{
+    grid-area: name_tag;
+    word-break: break-word;
+}
+#upcoming_area
+{
+    grid-area: upcoming_area;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    overflow: hidden;
+    min-height: 0;
+}
+#message_area
+{
+    grid-area: message_area;
+}
+#photo_viewer
+{
+    grid-area: photo_viewer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+}
+#photo_viewer img
+{
+    min-height: 0;
+    max-height: 100%;
+}
+#button_bar
+{
+    grid-area: button_bar;
+    display: flex;
+    height: 100px;
+}
+#button_bar > .action_button
+{
+    flex: 1;
+}
+#button_bar select,
+#button_bar input
+{
+    background-color: white;
+}
+</style>
+</head>
+
+<body>
+{{header.make_header(session=session)}}
+<div id="content_body">
+<div id="right" class="panel">
+    <a id="name_tag" target="_blank">Swipe!</a>
+    <div id="message_area">
+    </div>
+</div>
+<div id="photo_viewer">
+    <img id="photo_viewer_img" onload="return onload_img(event);" src=""/>
+</div>
+<div id="upcoming_area">
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+    <img class="upcoming_img" src="" width="75px" height="75px"/>
+</div>
+<div id="button_bar" class="panel">
+    <button class="action_button red_button" data-action-index="left">
+        &larr;
+        <select class="action_select">
+            <option value="do_nothing">Do nothing</option>
+            <option value="add_clipboard">Add to clipboard</option>
+            <option value="add_tag">Add tag</option>
+            <option value="remove_tag">Remove tag</option>
+        </select>
+        <input type="text" class="action_tag_input hidden entry_with_tagname_replacements" list="tag_autocomplete_datalist"/>
+    </button>
+    <button class="action_button yellow_button" data-action-index="down">Do nothing</button>
+    <button class="action_button green_button" data-action-index="right">
+        <select class="action_select">
+            <option value="do_nothing">Do nothing</option>
+            <option value="add_clipboard">Add to clipboard</option>
+            <option value="add_tag">Add tag</option>
+            <option value="remove_tag">Remove tag</option>
+        </select>
+        <input type="text" class="action_tag_input hidden entry_with_tagname_replacements" list="tag_autocomplete_datalist"/>
+        &rarr;
+    </button>
+</div>
+</div>
+{{clipboard_tray.clipboard_tray()}}
+</body>
+
+<script type="text/javascript">
+const original_search_params = Array.from(new URLSearchParams(window.location.search));
+
+const name_tag = document.getElementById("name_tag");
+const message_area = document.getElementById("message_area");
+const photo_viewer_img = document.getElementById("photo_viewer_img");
+const upcoming_imgs = document.getElementsByClassName("upcoming_img");
+
+const action_map = {};
+for (button of document.getElementsByClassName("action_button"))
+{
+    action_map[button.dataset.actionIndex] = {
+        "action": "do_nothing",
+        "tag": null,
+        "button": button,
+        "tag_input": button.getElementsByClassName("action_tag_input")[0],
+    };
+}
+
+const photo_queue = [];
+const rewind_queue = [];
+const REWIND_QUEUE_LENGTH = 15;
+
+let current_photo = null;
+let SEARCH_LIMIT = 100;
+let current_search_offset = 0;
+let waiting_for_img = false;
+let pending_search_request = null;
+
+// STATE ///////////////////////////////////////////////////////////////////////////////////////////
+
+function get_more_photos()
+{
+    // Prevents multiple calls from requesting duplicate ranges.
+    if (pending_search_request !== null)
+    {
+        return;
+    }
+    function callback(response)
+    {
+        pending_search_request = null;
+        if (! response.meta.json_ok)
+        {
+            alert(JSON.stringify(response));
+            return;
+        }
+        if (response.data.error_type)
+        {
+            alert(response.data.error_type + "\n" + response.data.error_message);
+            return;
+        }
+        const need_show_photo = photo_queue.length === 0;
+        const results = response.data.results;
+        console.log("Got " + results.length + " more photos.");
+        photo_queue.push(...results);
+
+        if (results.length === 0)
+        {
+            if (current_search_offset === 0)
+            {
+                console.log("Search results seem to be exhausted.");
+                return;
+            }
+            current_search_offset = 0;
+        }
+        else
+        {
+            current_search_offset += results.length;
+        }
+        waiting_for_more_photos = false;
+
+        if (need_show_photo)
+        {
+            show_next_photo();
+        }
+    }
+    console.log("Requesting more photos.");
+    const search_params = modify_search_params();
+    pending_search_request = api.photos.search(search_params, callback);
+}
+
+function modify_search_params()
+{
+    const search_params = new URLSearchParams();
+
+    let extra_musts = [];
+    let extra_forbids = [];
+
+    for (action_index in action_map)
+    {
+        const action = action_map[action_index]["action"];
+        const tag = action_map[action_index]["tag"];
+        if (action === "remove_tag")
+        {
+            extra_must.push(tag);
+        }
+        if (action === "add_tag")
+        {
+            extra_forbids.push(tag);
+        }
+    }
+
+    extra_musts = extra_musts.join(",");
+    extra_forbids = extra_forbids.join(",");
+
+    let had_musts = false;
+    let had_forbids = false;
+    for ([key, value] of original_search_params)
+    {
+        if (key === "limit" || key === "offset" || key === "yield_albums" || key === "yield_photos")
+        {
+            continue;
+        }
+        if (key === "tag_musts")
+        {
+            value = value + "," + extra_musts;
+        }
+        if (key === "tag_forbids")
+        {
+            value = value + "," + extra_forbids;
+        }
+        search_params.set(key, value);
+    }
+    if (! had_musts && extra_musts.length > 0)
+    {
+        search_params.set("tag_musts", extra_musts);
+    }
+    if (! had_forbids && extra_forbids.length > 0)
+    {
+        search_params.set("tag_forbids", extra_forbids);
+    }
+    search_params.set("yield_albums", "no");
+    search_params.set("yield_photos", "yes");
+    search_params.set("limit", SEARCH_LIMIT);
+    search_params.set("offset", current_search_offset);
+    console.log("Updated search params " + search_params.toString());
+    return search_params;
+}
+
+function onload_img(event)
+{
+    waiting_for_img = false;
+}
+
+function reset_swipe()
+{
+    current_photo = null;
+    photo_queue.length = 0;
+    rewind_queue.length = 0;
+    if (pending_search_request !== null)
+    {
+        pending_search_request.abort();
+        pending_search_request = null;
+    }
+    current_search_offset = 0;
+    get_more_photos();
+}
+
+// ACTION PROCESSING ///////////////////////////////////////////////////////////////////////////////
+
+function add_remove_tag_callback(response)
+{
+    if (! response.meta.json_ok)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
+    let message_text;
+    let message_positivity;
+    let abort;
+    if ("error_type" in response.data)
+    {
+        message_positivity = "message_negative";
+        message_text = response.data.error_message;
+        abort = true;
+    }
+    else
+    {
+        const tagname = response.data.tagname;
+        message_positivity = "message_positive";
+        if (response.meta.request_url.includes("add_tag"))
+        {
+            message_text = "Added tag " + tagname;
+        }
+        else if (response.meta.request_url.includes("remove_tag"))
+        {
+            message_text = "Removed tag " + tagname;
+        }
+        abort = false;
+    }
+    common.create_message_bubble(message_area, message_positivity, message_text, 8000);
+    return abort;
+}
+
+function process_current_photo(action, action_tag)
+{
+    if (current_photo === null)
+    {
+        return;
+    }
+    console.log("Doing " + action + " to " + current_photo.id);
+    if (action === "do_nothing")
+    {
+        ;
+    }
+    if (action === "add_clipboard")
+    {
+        photo_clipboard.clipboard.add(current_photo.id);
+        setTimeout(() => photo_clipboard.save_clipboard(), 0);
+    }
+    if (action === "add_tag")
+    {
+        if (action_tag === null)
+        {
+            return;
+        }
+        api.photos.add_tag(current_photo.id, action_tag, add_remove_tag_callback);
+    }
+    if (action === "remove_tag")
+    {
+        if (action_tag === null)
+        {
+            return;
+        }
+        api.photos.remove_tag(current_photo.id, action_tag, add_remove_tag_callback);
+    }
+    show_next_photo();
+}
+
+// UI //////////////////////////////////////////////////////////////////////////////////////////////
+
+function step_previous_photo()
+{
+    const rewind_photo = rewind_queue.shift();
+    if (rewind_photo === undefined)
+    {
+        return;
+    }
+    if (current_photo !== null)
+    {
+        photo_queue.unshift(current_photo);
+    }
+    current_photo = rewind_photo;
+}
+
+function step_next_photo()
+{
+    if (current_photo !== null)
+    {
+        rewind_queue.unshift(current_photo);
+        rewind_queue.length = REWIND_QUEUE_LENGTH;
+    }
+    if (photo_queue.length == 0)
+    {
+        current_photo = null;
+        get_more_photos();
+        return;
+    }
+    current_photo = photo_queue.shift();
+    if (photo_queue.length < 20)
+    {
+        get_more_photos();
+    }
+}
+function show_previous_photo()
+{
+    step_previous_photo();
+    show_current_photo();
+}
+
+function show_next_photo()
+{
+    step_next_photo();
+    show_current_photo();
+}
+
+function show_current_photo()
+{
+    if (current_photo === null)
+    {
+        return;
+    }
+
+    name_tag.innerText = current_photo.filename;
+    name_tag.href = "/photo/" + current_photo.id;
+    if (current_photo.has_thumbnail)
+    {
+        photo_viewer_img.src = "/thumbnail/" + current_photo.id + ".jpg";
+        waiting_for_img = true;
+    }
+    else
+    {
+        photo_viewer_img.src = "";
+    }
+
+    for (let index = 0; index < upcoming_imgs.length; index += 1)
+    {
+        upcoming_photo = photo_queue[index];
+        if (upcoming_photo !== undefined && upcoming_photo.has_thumbnail)
+        {
+            upcoming_imgs[index].src = "/thumbnail/" + upcoming_photo.id + ".jpg";
+        }
+        else
+        {
+            upcoming_imgs[index].src = "";
+        }
+    }
+}
+
+// UI - EVENT HANDLERS /////////////////////////////////////////////////////////////////////////////
+
+function onchange_action_select(event)
+{
+    const select = event.target;
+    const button = select.closest("button");
+    const action = select.value;
+    const action_index = button.dataset.actionIndex;
+    action_map[action_index]["action"] = action;
+
+    const input = action_map[action_index]["tag_input"];
+    if (action === "add_tag" || action === "remove_tag")
+    {
+        input.classList.remove("hidden");
+    }
+    else
+    {
+        action_map[action_index]["tag"] = null;
+        input.value = "";
+        input.classList.add("hidden");
+    }
+}
+
+function onchange_action_tag(event)
+{
+    const input = event.target;
+    const button = input.closest("button");
+    const action_index = button.dataset.actionIndex;
+    action_map[action_index]["tag"] = input.value;
+}
+
+function onclick_button(event)
+{
+    if (waiting_for_img)
+    {
+        return;
+    }
+    const button = event.target;
+    const action_index = button.dataset.actionIndex;
+    const action = action_map[action_index]["action"];
+    const tag = action_map[action_index]["tag"];
+    process_current_photo(action, tag);
+    return false;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function on_pageload()
+{
+    hotkeys.register_hotkey("arrowleft", ()=>action_map["left"]["button"].click(), "Push the left button");
+    hotkeys.register_hotkey("arrowdown", ()=>action_map["down"]["button"].click(), "Push the middle button");
+    hotkeys.register_hotkey("arrowright", ()=>action_map["right"]["button"].click(), "Push the right button");
+    hotkeys.register_hotkey("arrowup", show_previous_photo, "Show the previous photo");
+    show_next_photo();
+    for (const button of document.getElementsByClassName("action_button"))
+    {
+        button.addEventListener("click", onclick_button);
+    }
+    for (const button of document.getElementsByClassName("action_select"))
+    {
+        button.addEventListener("change", onchange_action_select);
+        button.addEventListener("click", (event)=>{event.stopPropagation(); false});
+    }
+    for (const button of document.getElementsByClassName("action_tag_input"))
+    {
+        button.addEventListener("change", onchange_action_tag);
+        button.addEventListener("click", (event)=>{event.stopPropagation(); false});
+    }
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
+</script>
+</html>
