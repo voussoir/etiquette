@@ -73,7 +73,7 @@ function hotkeys_listener(event)
 {
     if (hotkeys.should_prevent_hotkey(event)) { return; }
     identifier = hotkeys.hotkey_identifier(event.key, event.ctrlKey, event.shiftKey, event.altKey);
-    console.log(identifier);
+    //console.log(identifier);
     if (identifier in hotkeys.HOTKEYS)
     {
         hotkeys.HOTKEYS[identifier]["action"]();
