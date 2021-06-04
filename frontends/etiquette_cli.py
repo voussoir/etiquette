@@ -291,6 +291,28 @@ def export_symlinks_argparse(args):
             os.rmdir(check.absolute_path)
             checkdirs.add(check.parent)
 
+def generate_thumbnail_argparse(args):
+    photodb = find_photodb()
+
+    if args.photo_id_args or args.photo_search_args:
+        photos = get_photos_from_args(args)
+    else:
+        photos = search_in_cwd(yield_photos=True, yield_albums=False)
+
+    need_commit = False
+    try:
+        for photo in photos:
+            photo.generate_thumbnail()
+            need_commit = True
+    except KeyboardInterrupt:
+        pass
+
+    if not need_commit:
+        return
+
+    if args.autoyes or interactive.getpermission('Commit?'):
+        photodb.commit()
+
 def init_argparse(args):
     photodb = etiquette.photodb.PhotoDB(create=True)
     photodb.commit()
@@ -492,6 +514,8 @@ Etiquette CLI
 
 {export_symlinks}
 
+{generate_thumbnail}
+
 {init}
 
 {purge_deleted_files}
@@ -637,6 +661,20 @@ export_symlinks:
     --prune:
         In the destination directory, any existing symlinks whose target no
         longer exists will be deleted.
+
+    See etiquette_cli.py search --help for more info about searchargs.
+'''.strip(),
+
+generate_thumbnail='''
+generate_thumbnail:
+    Generate thumbnails for photos.
+
+    With no args, all files under the cwd will be thumbnailed.
+    Or, you can pass specific photo ids or searchargs.
+
+    > etiquette_cli.py generate_thumbnail
+    > etiquette_cli.py generate_thumbnail --photos id id id
+    > etiquette_cli.py generate_thumbnail searchargs
 
     See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
@@ -900,6 +938,10 @@ def main(argv):
     p_export_symlinks.add_argument('--dry', dest='dry_run', action='store_true')
     p_export_symlinks.add_argument('--prune', dest='prune', action='store_true')
     p_export_symlinks.set_defaults(func=export_symlinks_argparse)
+
+    p_generate_thumbnail = subparsers.add_parser('generate_thumbnail', aliases=['generate-thumbnail'])
+    p_generate_thumbnail.add_argument('--yes', dest='autoyes', action='store_true')
+    p_generate_thumbnail.set_defaults(func=generate_thumbnail_argparse)
 
     p_init = subparsers.add_parser('init', aliases=['create'])
     p_init.set_defaults(func=init_argparse)
