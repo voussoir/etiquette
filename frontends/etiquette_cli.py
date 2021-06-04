@@ -367,7 +367,6 @@ def reload_metadata_argparse(args):
                 continue
             photo.reload_metadata(hash_kwargs=hash_kwargs)
             need_commit = True
-            photodb.commit()
     except KeyboardInterrupt:
         pass
 
