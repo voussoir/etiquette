@@ -219,17 +219,24 @@ function on_photo_select(event)
 photo_clipboard.select_all_photos =
 function select_all_photos()
 {
-    const photo_divs = Array.from(document.getElementsByClassName("photo_card"));
-    for (const photo_div of photo_divs)
+    const checkboxes = Array.from(document.getElementsByClassName("photo_clipboard_selector_checkbox"));
+    for (const checkbox of checkboxes)
     {
-        photo_clipboard.clipboard.add(photo_div.dataset.id);
-        photo_div.classList.remove("photo_card_unselected");
-        photo_div.classList.add("photo_card_selected");
-        const checkbox = photo_div.getElementsByClassName("photo_clipboard_selector_checkbox")[0];
-        if (checkbox)
+        /*
+        On pages where the checkbox appears outside of a photo card, like
+        /photo/id, the checkbox will have data-photo-id. But when it is in a
+        card, we are sure that the photo_card's data-id will be reliable.
+        */
+        let photo_id = checkbox.dataset.photoId;
+        const photo_card = checkbox.closest(".photo_card");
+        if (photo_card)
         {
-            checkbox.checked = true;
+            photo_card.classList.remove("photo_card_unselected");
+            photo_card.classList.add("photo_card_selected");
+            photo_id = photo_card.dataset.id;
         }
+        photo_clipboard.clipboard.add(photo_id);
+        checkbox.checked = true;
     }
     photo_clipboard.previous_photo_select = null;
     setTimeout(() => photo_clipboard.save_clipboard(), 0);
@@ -238,17 +245,24 @@ function select_all_photos()
 photo_clipboard.unselect_all_photos =
 function unselect_all_photos()
 {
-    const photo_divs = Array.from(document.getElementsByClassName("photo_card"));
-    for (const photo_div of photo_divs)
+    const checkboxes = Array.from(document.getElementsByClassName("photo_clipboard_selector_checkbox"));
+    for (const checkbox of checkboxes)
     {
-        photo_clipboard.clipboard.delete(photo_div.dataset.id);
-        photo_div.classList.remove("photo_card_selected");
-        photo_div.classList.add("photo_card_unselected");
-        const checkbox = photo_div.getElementsByClassName("photo_clipboard_selector_checkbox")[0];
-        if (checkbox)
+        /*
+        On pages where the checkbox appears outside of a photo card, like
+        /photo/id, the checkbox will have data-photo-id. But when it is in a
+        card, we are sure that the photo_card's data-id will be reliable.
+        */
+        let photo_id = checkbox.dataset.photoId;
+        const photo_card = checkbox.closest(".photo_card");
+        if (photo_card)
         {
-            checkbox.checked = false;
+            photo_card.classList.remove("photo_card_selected");
+            photo_card.classList.add("photo_card_unselected");
+            photo_id = photo_card.dataset.id;
         }
+        photo_clipboard.clipboard.delete(photo_id);
+        checkbox.checked = false;
     }
     photo_clipboard.previous_photo_select = null;
     setTimeout(() => photo_clipboard.save_clipboard(), 0);
