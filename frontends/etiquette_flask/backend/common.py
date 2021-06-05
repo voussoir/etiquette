@@ -174,7 +174,7 @@ def render_template(request, template_name, **kwargs):
         **kwargs,
     )
 
-    if not isinstance(response, sessions.RESPONSE_TYPES):
+    if not isinstance(response, flasktools.RESPONSE_TYPES):
         response = flask.Response(response)
 
     if new_theme is None:

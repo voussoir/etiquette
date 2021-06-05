@@ -1,22 +1,20 @@
 import flask; from flask import request
 import functools
-import werkzeug.wrappers
 import werkzeug.datastructures
 
 from voussoirkit import cacheclass
+from voussoirkit import flasktools
 from voussoirkit import passwordy
 
 import etiquette
 
 SESSION_MAX_AGE = 86400
-REQUEST_TYPES = (flask.Request, werkzeug.wrappers.Request, werkzeug.local.LocalProxy)
-RESPONSE_TYPES = (flask.Response, werkzeug.wrappers.Response)
 
 def _generate_token(length=32):
     return passwordy.random_hex(length=length)
 
 def _normalize_token(token):
-    if isinstance(token, REQUEST_TYPES):
+    if isinstance(token, flasktools.REQUEST_TYPES):
         request = token
         token = request.cookies.get('etiquette_session', None)
         if token is None:
@@ -81,7 +79,7 @@ class SessionManager:
                 session.maintain()
 
             response = function(*args, **kwargs)
-            if not isinstance(response, RESPONSE_TYPES):
+            if not isinstance(response, flasktools.RESPONSE_TYPES):
                 response = flask.Response(response)
 
             # Send the token back to the client
