@@ -65,6 +65,7 @@ def decorate_and_route(*route_args, **route_kwargs):
         # Since a function might have multiple routes, we may be seeing the
         # same one multiple times. The _fully_decorated will track that.
         if not hasattr(endpoint, '_fully_decorated'):
+            endpoint = flasktools.ensure_response_type(endpoint)
             endpoint = decorators.catch_etiquette_exception(endpoint)
             endpoint = session_manager.give_token(endpoint)
 

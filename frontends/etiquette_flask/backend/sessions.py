@@ -79,8 +79,6 @@ class SessionManager:
                 session.maintain()
 
             response = function(*args, **kwargs)
-            if not isinstance(response, flasktools.RESPONSE_TYPES):
-                response = flask.Response(response)
 
             # Send the token back to the client
             # but only if the endpoint didn't manually set the cookie.
