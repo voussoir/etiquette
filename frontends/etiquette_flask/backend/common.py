@@ -81,8 +81,6 @@ def before_request():
     if site.localhost_only and not request.is_localhost:
         flask.abort(403)
 
-
-
 @site.after_request
 def after_request(response):
     response = flasktools.gzip_response(request, response)
