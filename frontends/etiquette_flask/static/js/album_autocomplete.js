@@ -54,6 +54,6 @@ function get_all_albums_callback(response)
 album_autocomplete.on_pageload =
 function on_pageload()
 {
-    setTimeout(api.albums.get_all_albums(album_autocomplete.get_all_albums_callback), 0);
+    setTimeout(() => api.albums.get_all_albums(album_autocomplete.get_all_albums_callback), 0);
 }
 document.addEventListener("DOMContentLoaded", album_autocomplete.on_pageload);
