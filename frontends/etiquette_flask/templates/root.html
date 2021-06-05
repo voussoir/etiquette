@@ -21,13 +21,13 @@ body
     margin: 0;
 }
 body > #motd,
-body > div,
+body > #theme_links,
 body > .nice_link
 {
     width: 90%;
     max-width: 600px;
 }
-body > div
+#theme_links
 {
     display: grid;
     grid-auto-flow: column;
@@ -77,7 +77,7 @@ body > div
     {% else %}
     <a class="nice_link" href="/login">Log in</a>
     {% endif %}
-    <div>
+    <div id="theme_links">
         <a class="nice_link" href="/?theme=turquoise">Turquoise</a>
         <a class="nice_link" href="/?theme=slate">Slate</a>
         <a class="nice_link" href="/?theme=pearl">Pearl</a>
