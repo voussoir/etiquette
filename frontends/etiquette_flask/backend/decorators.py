@@ -1,8 +1,10 @@
 import flask; from flask import request
 import functools
 import time
+import werkzeug.datastructures
 
 from voussoirkit import dotdict
+from voussoirkit import flasktools
 from voussoirkit import passwordy
 from voussoirkit import sentinel
 
@@ -105,6 +107,28 @@ def catch_etiquette_exception(function):
             response = exc.jsonify()
             response = jsonify.make_json_response(response, status=status)
             flask.abort(response)
+    return wrapped
+
+def give_theme_cookie(function):
+    @functools.wraps(function)
+    def wrapped(*args, **kwargs):
+        old_theme = request.cookies.get('etiquette_theme', None)
+        new_theme = request.args.get('theme', None)
+        theme = new_theme or old_theme or 'slate'
+
+        request.cookies = werkzeug.datastructures.MultiDict(request.cookies)
+        request.cookies['etiquette_theme'] = theme
+
+        response = function(*args, **kwargs)
+
+        if new_theme is None:
+            pass
+        elif new_theme == '':
+            response.set_cookie('etiquette_theme', value='', expires=0)
+        elif new_theme != old_theme:
+            response.set_cookie('etiquette_theme', value=new_theme, expires=2147483647)
+
+        return response
     return wrapped
 
 def required_fields(fields, forbid_whitespace=False):

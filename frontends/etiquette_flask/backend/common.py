@@ -66,6 +66,7 @@ def decorate_and_route(*route_args, **route_kwargs):
         # same one multiple times. The _fully_decorated will track that.
         if not hasattr(endpoint, '_fully_decorated'):
             endpoint = flasktools.ensure_response_type(endpoint)
+            endpoint = decorators.give_theme_cookie(endpoint)
             endpoint = decorators.catch_etiquette_exception(endpoint)
             endpoint = session_manager.give_token(endpoint)
 
@@ -162,10 +163,7 @@ def back_url():
 
 def render_template(request, template_name, **kwargs):
     session = session_manager.get(request)
-
-    old_theme = request.cookies.get('etiquette_theme', None)
-    new_theme = request.args.get('theme', None)
-    theme = new_theme or old_theme or 'slate'
+    theme = request.cookies.get('etiquette_theme', None)
 
     response = flask.render_template(
         template_name,
@@ -174,17 +172,6 @@ def render_template(request, template_name, **kwargs):
         theme=theme,
         **kwargs,
     )
-
-    if not isinstance(response, flasktools.RESPONSE_TYPES):
-        response = flask.Response(response)
-
-    if new_theme is None:
-        pass
-    elif new_theme == '':
-        response.set_cookie('etiquette_theme', value='', expires=0)
-    elif new_theme != old_theme:
-        response.set_cookie('etiquette_theme', value=new_theme, expires=2147483647)
-
     return response
 
 def send_file(filepath, override_mimetype=None):
