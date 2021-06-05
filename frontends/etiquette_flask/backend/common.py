@@ -78,8 +78,7 @@ site.route = decorate_and_route
 
 @site.before_request
 def before_request():
-    ip = request.remote_addr
-    request.is_localhost = ip == '127.0.0.1'
+    request.is_localhost = (request.remote_addr == '127.0.0.1')
     if site.localhost_only and not request.is_localhost:
         flask.abort(403)
 
