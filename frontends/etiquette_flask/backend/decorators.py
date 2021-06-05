@@ -105,7 +105,7 @@ def catch_etiquette_exception(function):
             else:
                 status = 400
             response = exc.jsonify()
-            response = jsonify.make_json_response(response, status=status)
+            response = flasktools.make_json_response(response, status=status)
             flask.abort(response)
     return wrapped
 
@@ -153,7 +153,7 @@ def required_fields(fields, forbid_whitespace=False):
                         'error_type': 'MISSING_FIELDS',
                         'error_message': 'Required fields: %s' % ', '.join(fields),
                     }
-                    response = jsonify.make_json_response(response, status=400)
+                    response = flasktools.make_json_response(response, status=400)
                     return response
 
             return function(*args, **kwargs)
