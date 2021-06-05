@@ -197,7 +197,7 @@ def post_album_show_in_folder(album_id):
 @site.route('/all_albums.json')
 @decorators.cached_endpoint(max_age=15)
 def get_all_album_names():
-    all_albums = {album.display_name: album.id for album in common.P.get_albums()}
+    all_albums = {album.id: album.display_name for album in common.P.get_albums()}
     response = {'albums': all_albums}
     return jsonify.make_json_response(response)
 

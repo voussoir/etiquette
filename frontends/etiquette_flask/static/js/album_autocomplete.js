@@ -21,9 +21,9 @@ function init_datalist()
     document.body.appendChild(datalist);
 
     const fragment = document.createDocumentFragment();
-    for (const album_name in album_autocomplete.albums)
+    for (const album_id in album_autocomplete.albums)
     {
-        const album_id = album_autocomplete.albums[album_name];
+        const album_name = album_autocomplete.albums[album_id];
         const option = document.createElement("option");
         option.value = album_id;
         option.innerText = album_name;
