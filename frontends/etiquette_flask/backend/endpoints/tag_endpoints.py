@@ -99,7 +99,7 @@ def post_tag_remove_synonym(tagname):
 # Tag listings #####################################################################################
 
 @site.route('/all_tags.json')
-@decorators.cached_endpoint(max_age=0)
+@decorators.cached_endpoint(max_age=15)
 def get_all_tag_names():
     all_tags = list(common.P.get_all_tag_names())
     all_synonyms = common.P.get_all_synonyms()

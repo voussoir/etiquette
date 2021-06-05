@@ -4,10 +4,13 @@ import time
 
 from voussoirkit import dotdict
 from voussoirkit import passwordy
+from voussoirkit import sentinel
 
 import etiquette
 
 from . import jsonify
+
+NOT_CACHED = sentinel.Sentinel('not cached', truthyness=False)
 
 def cached_endpoint(max_age):
     '''
@@ -29,12 +32,19 @@ def cached_endpoint(max_age):
     the previous return value (still using 200 or 304 as appropriate for the
     client's provided etag).
 
+    With max_age=0, the function will be run every time to check if the value
+    has changed, but if it hasn't changed then we can still send a 304 response,
+    saving bandwidth.
+
     An example use case would be large-sized data dumps that don't need to be
     precisely up to date every time.
     '''
+    if max_age < 0:
+        raise ValueError(f'max_age should be positive, not {max_age}.')
+
     state = dotdict.DotDict({
         'max_age': max_age,
-        'stored_value': None,
+        'stored_value': NOT_CACHED,
         'stored_etag': None,
         'headers': {'ETag': None, 'Cache-Control': f'max-age={max_age}'},
         'last_run': 0,
@@ -42,7 +52,12 @@ def cached_endpoint(max_age):
 
     def wrapper(function):
         def get_value(*args, **kwargs):
-            if state.max_age and (time.time() - state.last_run) > state.max_age:
+            can_bail = (
+                state.stored_value is not NOT_CACHED and
+                state.max_age != 0 and
+                (time.time() - state.last_run) < state.max_age
+            )
+            if can_bail:
                 return state.stored_value
 
             value = function(*args, **kwargs)

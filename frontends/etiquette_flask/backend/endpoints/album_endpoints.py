@@ -195,7 +195,7 @@ def post_album_show_in_folder(album_id):
 # Album listings ###################################################################################
 
 @site.route('/all_albums.json')
-@decorators.cached_endpoint(max_age=0)
+@decorators.cached_endpoint(max_age=15)
 def get_all_album_names():
     all_albums = {album.display_name: album.id for album in common.P.get_albums()}
     response = {'albums': all_albums}
