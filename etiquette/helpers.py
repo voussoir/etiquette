@@ -208,7 +208,7 @@ def generate_image_thumbnail(filepath, width, height):
     if not os.path.isfile(filepath):
         raise FileNotFoundError(filepath)
     image = PIL.Image.open(filepath)
-    image = imagetools.rotate_by_exif(image)
+    (image, exif) = imagetools.rotate_by_exif(image)
     (image_width, image_height) = image.size
     (new_width, new_height) = imagetools.fit_into_bounds(
         image_width=image_width,
