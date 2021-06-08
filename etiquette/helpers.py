@@ -328,18 +328,6 @@ def is_xor(*args):
     '''
     return [bool(a) for a in args].count(True) == 1
 
-def natural_sorter(x):
-    '''
-    Used for sorting files in 'natural' order instead of lexicographic order,
-    so that you get 1 2 3 4 5 6 7 8 9 10 11 12 13 ...
-    instead of 1 10 11 12 13 2 3 4 5 ...
-    Thank you Mark Byers
-    http://stackoverflow.com/a/11150413
-    '''
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
-    return alphanum_key(x)
-
 def now(timestamp=True):
     '''
     Return the current UTC timestamp or datetime object.

@@ -17,6 +17,7 @@ from voussoirkit import pathclass
 from voussoirkit import ratelimiter
 from voussoirkit import spinal
 from voussoirkit import sqlhelpers
+from voussoirkit import stringtools
 from voussoirkit import vlogging
 
 from . import constants
@@ -1569,7 +1570,7 @@ class PDBUtilMixin:
             same order that the files are listed when natural sorted. This is
             essentially an aesthetic preference, that when you are viewing the
             photos sorted by timestamp they are also natural sorted.
-            See helpers.natural_sorter.
+            See stringtools.natural_sorter.
 
         new_photo_kwargs:
             A dict of kwargs to pass into every call of new_photo.
@@ -1747,7 +1748,7 @@ class PDBUtilMixin:
 
         for (current_directory, subdirectories, files) in walk_generator:
             if natural_sort:
-                files = sorted(files, key=lambda f: helpers.natural_sorter(f.basename))
+                files = sorted(files, key=lambda f: stringtools.natural_sorter(f.basename))
 
             photos = [create_or_fetch_photo(file) for file in files]
 
