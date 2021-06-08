@@ -10,7 +10,6 @@ import etiquette
 
 from .. import common
 from .. import decorators
-from .. import jsonify
 
 site = common.site
 session_manager = common.session_manager

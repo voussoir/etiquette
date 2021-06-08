@@ -10,8 +10,6 @@ from voussoirkit import sentinel
 
 import etiquette
 
-from . import jsonify
-
 NOT_CACHED = sentinel.Sentinel('not cached', truthyness=False)
 
 def cached_endpoint(max_age):

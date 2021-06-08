@@ -15,7 +15,6 @@ import etiquette
 from . import client_caching
 from . import decorators
 from . import jinja_filters
-from . import jsonify
 from . import sessions
 
 # Flask init #######################################################################################
