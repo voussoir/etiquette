@@ -45,7 +45,7 @@
 .album_card_thumbnail img
 {
     max-width: 100%;
-    max-height: 100%;
+    max-height: 150px;
     margin: auto;
 }
 .album_card_list .album_card_thumbnail
@@ -212,7 +212,7 @@
 .photo_card_grid .photo_card_thumbnail img
 {
     max-width: 100%;
-    max-height: 100%;
+    max-height: 150px;
     margin: auto;
 }
 
