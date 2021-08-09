@@ -1381,8 +1381,7 @@ class PDBUserMixin:
         '''
         length = self.config['id_length']
         for retry in range(20):
-            user_id = (random.choice(constants.USER_ID_CHARACTERS) for x in range(length))
-            user_id = ''.join(user_id)
+            user_id = ''.join(random.choices(constants.USER_ID_CHARACTERS, k=length))
 
             user_exists = self.sql_select_one('SELECT 1 FROM users WHERE id == ?', [user_id])
             if user_exists is None:
