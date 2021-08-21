@@ -246,7 +246,6 @@ def easybake_argparse(args):
         photodb.commit()
 
 def export_symlinks_argparse(args):
-    photodb = find_photodb()
     destination = pathclass.Path(args.destination)
     destination.makedirs(exist_ok=True)
 
@@ -594,12 +593,12 @@ digest:
     flags:
     --exclude_directories A B C:
         Any directories matching any pattern of A, B, C... will be skipped.
-        These patterns may be absolute paths like 'D:\temp', plain names like
+        These patterns may be absolute paths like 'D:\\temp', plain names like
         'thumbnails' or glob patterns like 'build_*'.
 
     --exclude_filenames A B C:
         Any filenames matching any pattern of A, B, C... will be skipped.
-        These patterns may be absolute paths like 'D:\somewhere\config.json',
+        These patterns may be absolute paths like 'D:\\somewhere\\config.json',
         plain names like 'thumbs.db' or glob patterns like '*.temp'.
 
     --glob_directories A B C:

@@ -1,5 +1,4 @@
 import flask; from flask import request
-import time
 
 from voussoirkit import flasktools
 

@@ -57,7 +57,8 @@ def flat_dict(tags, include_synonyms=True):
     for equaling the main tag versus existing in the rest of the subtree.
     '''
     result = {}
-    def recur(tag):
+
+    def recurse(tag):
         try:
             return result[tag]
         except KeyError:
@@ -67,7 +68,7 @@ def flat_dict(tags, include_synonyms=True):
         my_result.add(tag)
 
         for child in tag.get_children():
-            my_result.update(recur(child))
+            my_result.update(recurse(child))
 
         result[tag] = my_result
 
@@ -77,7 +78,7 @@ def flat_dict(tags, include_synonyms=True):
         return my_result
 
     for tag in tags:
-        recur(tag)
+        recurse(tag)
 
     return result
 

@@ -188,7 +188,8 @@ def upgrade_6_to_7(photodb):
     Most of the indices were renamed.
     '''
     photodb.sql_execute('BEGIN')
-    indices = photodb.sql_select('SELECT name FROM sqlite_master WHERE type == "index" AND name NOT LIKE "sqlite_%"')
+    query = 'SELECT name FROM sqlite_master WHERE type == "index" AND name NOT LIKE "sqlite_%"'
+    indices = photodb.sql_select(query)
     indices = [name for (name,) in indices]
     for index in indices:
         photodb.sql_execute(f'DROP INDEX {index}')

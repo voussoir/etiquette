@@ -3,8 +3,6 @@ import hashlib
 from voussoirkit import cacheclass
 from voussoirkit import spinal
 
-import etiquette
-
 class FileEtagManager:
     '''
     The FileEtagManager serves ETag and Cache-Control headers for disk files to

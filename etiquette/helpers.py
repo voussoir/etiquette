@@ -7,7 +7,6 @@ import hashlib
 import mimetypes
 import os
 import PIL.Image
-import re
 import zipstream
 
 from voussoirkit import bytestring

@@ -357,8 +357,8 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def add_child(self, *args, **kwargs):
-        return super().add_child(*args, **kwargs)
+    def add_child(self, member):
+        return super().add_child(member)
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
@@ -1308,7 +1308,11 @@ class Photo(ObjectBase):
 
         new_path.assert_not_exists()
 
-        self.photodb.log.info('Renaming file "%s" -> "%s".', old_path.absolute_path, new_path.absolute_path)
+        self.photodb.log.info(
+            'Renaming file "%s" -> "%s".',
+            old_path.absolute_path,
+            new_path.absolute_path,
+        )
 
         new_path.parent.makedirs(exist_ok=True)
 
@@ -1476,7 +1480,7 @@ class Tag(ObjectBase, GroupableMixin):
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def add_child(self, member):
-        ret = self.__add_child(member)
+        ret = super().add_child(member)
         if ret is BAIL:
             return BAIL
 
@@ -1486,10 +1490,8 @@ class Tag(ObjectBase, GroupableMixin):
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def add_children(self, members):
-        bail = True
-        for member in members:
-            bail = (self.__add_child(member) is BAIL) and bail
-        if bail:
+        ret = super().add_children(members)
+        if ret is BAIL:
             return BAIL
 
         self.photodb.caches['tag_exports'].clear()

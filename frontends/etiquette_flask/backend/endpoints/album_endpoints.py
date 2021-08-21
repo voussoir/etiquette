@@ -1,6 +1,5 @@
 import flask; from flask import request
 import os
-import time
 import urllib.parse
 
 from voussoirkit import flasktools

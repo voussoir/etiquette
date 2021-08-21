@@ -964,8 +964,8 @@ class PDBPhotoMixin:
         query = f'{"-" * 80}\n{query}\n{"-" * 80}'
 
         self.log.debug('\n%s %s', query, bindings)
-        #explain = self.sql_execute('EXPLAIN QUERY PLAN ' + query, bindings)
-        #print('\n'.join(str(x) for x in explain.fetchall()))
+        # explain = self.sql_execute('EXPLAIN QUERY PLAN ' + query, bindings)
+        # print('\n'.join(str(x) for x in explain.fetchall()))
         generator = self.sql_select(query, bindings)
         seen_albums = set()
         results_received = 0
