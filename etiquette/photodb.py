@@ -134,13 +134,13 @@ class PDBAlbumMixin:
     def purge_deleted_associated_directories(self, albums=None):
         directories = self.sql_select('SELECT DISTINCT directory FROM album_associated_directories')
         directories = (pathclass.Path(directory) for (directory,) in directories)
-        directories = [directory.absolute_path for directory in directories if not directory.exists]
+        directories = [directory for directory in directories if not directory.is_dir]
         if not directories:
             return
         self.log.info('Purging associated directories %s.', directories)
-        directories = sqlhelpers.listify(directories)
 
-        query = f'DELETE FROM album_associated_directories WHERE directory in {directories}'
+        d_query = sqlhelpers.listify(directory.absolute_path for directory in directories)
+        query = f'DELETE FROM album_associated_directories WHERE directory in {d_query}'
         if albums is not None:
             album_ids = sqlhelpers.listify(a.id for a in albums)
             query += f' AND albumid IN {album_ids}'
