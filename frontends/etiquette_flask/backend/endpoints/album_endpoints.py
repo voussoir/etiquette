@@ -3,6 +3,7 @@ import os
 import urllib.parse
 
 from voussoirkit import flasktools
+from voussoirkit import gentools
 from voussoirkit import stringtools
 
 import etiquette
@@ -92,7 +93,7 @@ def post_album_refresh_directories(album_id):
         if not directory.is_dir:
             continue
         digest = common.P.digest_directory(directory, new_photo_ratelimit=0.1)
-        etiquette.helpers.run_generator(digest)
+        gentools.run(digest)
     common.P.commit(message='refresh album directories endpoint')
     return flasktools.make_json_response({})
 

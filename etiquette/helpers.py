@@ -405,10 +405,6 @@ def remove_path_badchars(filepath, allowed=''):
     filepath = filepath.replace('\\', os.sep)
     return filepath
 
-def run_generator(g):
-    for x in g:
-        pass
-
 def slice_before(li, item):
     index = li.index(item)
     return li[:index]
