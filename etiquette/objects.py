@@ -10,6 +10,7 @@ import PIL.Image
 import re
 import send2trash
 import traceback
+import typing
 
 from voussoirkit import bytestring
 from voussoirkit import gentools
@@ -27,7 +28,12 @@ from . import helpers
 
 BAIL = sentinel.Sentinel('BAIL')
 
-def normalize_db_row(db_row, table):
+def normalize_db_row(db_row, table) -> dict:
+    '''
+    Raises KeyError if table is not one of the recognized tables.
+
+    Raises TypeError if db_row is not the right type.
+    '''
     if isinstance(db_row, dict):
         return db_row
 
@@ -69,7 +75,12 @@ class ObjectBase:
         return hash(self.id)
 
     @staticmethod
-    def normalize_author_id(author_id):
+    def normalize_author_id(author_id) -> typing.Optional[str]:
+        '''
+        Raises TypeError if author_id is not the right type.
+
+        Raises ValueError if author_id contains invalid characters.
+        '''
         if author_id is None:
             return None
 
@@ -85,10 +96,14 @@ class ObjectBase:
 
         return author_id
 
-    def assert_not_deleted(self):
+    def assert_not_deleted(self) -> None:
+        '''
+        Raises exceptions.DeletedObject if this object is deleted.
+        '''
         if self.deleted:
             raise exceptions.DeletedObject(self)
 
+    # Will add -> User when forward references are supported by Python.
     def get_author(self):
         '''
         Return the User who created this object, or None if it is unassigned.
@@ -101,7 +116,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
     group_getter_many = None
     group_table = None
 
-    def __lift_children(self):
+    def _lift_children(self):
         '''
         If this object has parents, the parents adopt all of its children.
         Otherwise, this object is at the root level, so the parental
@@ -117,7 +132,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         for parent in parents:
             parent.add_children(children)
 
-    def __add_child(self, member):
+    def _add_child(self, member):
         self.assert_same_type(member)
 
         if member == self:
@@ -140,24 +155,28 @@ class GroupableMixin(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def add_child(self, member):
-        return self.__add_child(member)
+        return self._add_child(member)
 
     @abc.abstractmethod
     def add_children(self, members):
         bail = True
         for member in members:
-            bail = (self.__add_child(member) is BAIL) and bail
+            bail = (self._add_child(member) is BAIL) and bail
         if bail:
             return BAIL
 
-    def assert_same_type(self, other):
+    def assert_same_type(self, other) -> None:
+        '''
+        Raise TypeError if other is not the same type as self, or if other is
+        associated with a different etiquette.PhotoDB object.
+        '''
         if not isinstance(other, type(self)):
             raise TypeError(f'Object must be of type {type(self)}, not {type(other)}.')
         if self.photodb != other.photodb:
             raise TypeError(f'Objects must belong to the same PhotoDB.')
 
     @abc.abstractmethod
-    def delete(self, *, delete_children=False):
+    def delete(self, *, delete_children=False) -> None:
         '''
         Delete this object's relationships to other groupables.
         Any unique / specific deletion methods should be written within the
@@ -174,7 +193,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
             for child in self.get_children():
                 child.delete(delete_children=True)
         else:
-            self.__lift_children()
+            self._lift_children()
 
         # Note that this part comes after the deletion of children to prevent
         # issues of recursion.
@@ -182,7 +201,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         self._uncache()
         self.deleted = True
 
-    def get_children(self):
+    def get_children(self) -> set:
         child_rows = self.photodb.sql_select(
             f'SELECT memberid FROM {self.group_table} WHERE parentid == ?',
             [self.id]
@@ -191,42 +210,42 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         children = set(self.group_getter_many(child_ids))
         return children
 
-    def get_parents(self):
+    def get_parents(self) -> set:
         query = f'SELECT parentid FROM {self.group_table} WHERE memberid == ?'
         parent_rows = self.photodb.sql_select(query, [self.id])
         parent_ids = (parent_id for (parent_id,) in parent_rows)
         parents = set(self.group_getter_many(parent_ids))
         return parents
 
-    def has_ancestor(self, ancestor):
+    def has_ancestor(self, ancestor) -> bool:
         return ancestor in self.walk_parents()
 
-    def has_any_child(self):
+    def has_any_child(self) -> bool:
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? LIMIT 1'
         row = self.photodb.sql_select_one(query, [self.id])
         return row is not None
 
-    def has_any_parent(self):
+    def has_any_parent(self) -> bool:
         query = f'SELECT 1 FROM {self.group_table} WHERE memberid == ? LIMIT 1'
         row = self.photodb.sql_select_one(query, [self.id])
         return row is not None
 
-    def has_child(self, member):
+    def has_child(self, member) -> bool:
         self.assert_same_type(member)
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? AND memberid == ?'
         row = self.photodb.sql_select_one(query, [self.id, member.id])
         return row is not None
 
-    def has_descendant(self, descendant):
+    def has_descendant(self, descendant) -> bool:
         return self in descendant.walk_parents()
 
-    def has_parent(self, parent):
+    def has_parent(self, parent) -> bool:
         self.assert_same_type(parent)
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? AND memberid == ?'
         row = self.photodb.sql_select_one(query, [parent.id, self.id])
         return row is not None
 
-    def __remove_child(self, member):
+    def _remove_child(self, member):
         if not self.has_child(member):
             return BAIL
 
@@ -240,17 +259,17 @@ class GroupableMixin(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def remove_child(self, member):
-        return self.__remove_child(member)
+        return self._remove_child(member)
 
     @abc.abstractmethod
     def remove_children(self, members):
         bail = True
         for member in members:
-            bail = (self.__remove_child(member) is BAIL) and bail
+            bail = (self._remove_child(member) is BAIL) and bail
         if bail:
             return BAIL
 
-    def walk_children(self):
+    def walk_children(self) -> typing.Iterable:
         '''
         Yield self and all descendants.
         '''
@@ -258,7 +277,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         for child in self.get_children():
             yield from child.walk_children()
 
-    def walk_parents(self):
+    def walk_parents(self) -> typing.Iterable:
         '''
         Yield all ancestors, but not self, in no particular order.
         '''
@@ -300,7 +319,10 @@ class Album(ObjectBase, GroupableMixin):
             return f'Album:{self.id}'
 
     @staticmethod
-    def normalize_description(description):
+    def normalize_description(description) -> str:
+        '''
+        Raises TypeError if description is not a string or None.
+        '''
         if description is None:
             return ''
 
@@ -312,7 +334,10 @@ class Album(ObjectBase, GroupableMixin):
         return description
 
     @staticmethod
-    def normalize_title(title):
+    def normalize_title(title) -> str:
+        '''
+        Raises TypeError if title is not a string or None.
+        '''
         if title is None:
             return ''
 
@@ -341,23 +366,35 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def add_associated_directory(self, path):
+    def add_associated_directory(self, path) -> None:
         '''
         Add a directory from which this album will pull files during rescans.
         These relationships are not unique and multiple albums can associate
         with the same directory if desired.
+
+        Raises ValueError if path is not a directory.
         '''
         self._add_associated_directory(path)
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def add_associated_directories(self, paths):
+    def add_associated_directories(self, paths) -> None:
+        '''
+        Add multiple associated directories.
+
+        Raises ValueError if any path is not a directory.
+        '''
         for path in paths:
             self._add_associated_directory(path)
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
     def add_child(self, member):
+        '''
+        Raises exceptions.CantGroupSelf if member is self.
+
+        Raises exceptions.RecursiveGrouping if member is an ancestor of self.
+        '''
         return super().add_child(member)
 
     @decorators.required_feature('album.edit')
@@ -372,7 +409,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def add_photo(self, photo):
+    def add_photo(self, photo) -> None:
         if self.has_photo(photo):
             return
 
@@ -380,7 +417,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def add_photos(self, photos):
+    def add_photos(self, photos) -> None:
         existing_photos = set(self.get_photos())
         photos = set(photos)
         new_photos = photos.difference(existing_photos)
@@ -393,7 +430,7 @@ class Album(ObjectBase, GroupableMixin):
 
     # Photo.add_tag already has @required_feature
     @decorators.transaction
-    def add_tag_to_all(self, tag, *, nested_children=True):
+    def add_tag_to_all(self, tag, *, nested_children=True) -> None:
         '''
         Add this tag to every photo in the album. Saves you from having to
         write the for-loop yourself.
@@ -413,7 +450,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def delete(self, *, delete_children=False):
+    def delete(self, *, delete_children=False) -> None:
         self.photodb.log.info('Deleting %s.', self)
         GroupableMixin.delete(self, delete_children=delete_children)
         self.photodb.sql_delete(table='album_associated_directories', pairs={'albumid': self.id})
@@ -423,7 +460,7 @@ class Album(ObjectBase, GroupableMixin):
         self.deleted = True
 
     @property
-    def display_name(self):
+    def display_name(self) -> str:
         if self.title:
             return self.title
         else:
@@ -431,7 +468,7 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def edit(self, title=None, description=None):
+    def edit(self, title=None, description=None) -> None:
         '''
         Change the title or description. Leave None to keep current value.
         '''
@@ -454,13 +491,13 @@ class Album(ObjectBase, GroupableMixin):
         self.description = description
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         if self.title:
             return f'{self.id} - {self.title}'
         else:
             return self.id
 
-    def get_associated_directories(self):
+    def get_associated_directories(self) -> set[pathclass.Path]:
         directory_rows = self.photodb.sql_select(
             'SELECT directory FROM album_associated_directories WHERE albumid == ?',
             [self.id]
@@ -468,7 +505,7 @@ class Album(ObjectBase, GroupableMixin):
         directories = set(pathclass.Path(directory) for (directory,) in directory_rows)
         return directories
 
-    def get_photos(self):
+    def get_photos(self) -> set:
         photo_rows = self.photodb.sql_select(
             'SELECT photoid FROM album_photo_rel WHERE albumid == ?',
             [self.id]
@@ -477,7 +514,7 @@ class Album(ObjectBase, GroupableMixin):
         photos = set(self.photodb.get_photos_by_id(photo_ids))
         return photos
 
-    def has_any_associated_directory(self):
+    def has_any_associated_directory(self) -> bool:
         '''
         Return True if this album has at least 1 associated directory.
         '''
@@ -487,7 +524,7 @@ class Album(ObjectBase, GroupableMixin):
         )
         return row is not None
 
-    def has_any_photo(self, recurse=False):
+    def has_any_photo(self, recurse=False) -> bool:
         '''
         Return True if this album contains at least 1 photo.
 
@@ -505,14 +542,14 @@ class Album(ObjectBase, GroupableMixin):
             return self.has_any_subalbum_photo()
         return False
 
-    def has_any_subalbum_photo(self):
+    def has_any_subalbum_photo(self) -> bool:
         '''
         Return True if any descendent album has any photo, ignoring whether
         this particular album itself has photos.
         '''
         return any(child.has_any_photo(recurse=True) for child in self.get_children())
 
-    def has_associated_directory(self, path):
+    def has_associated_directory(self, path) -> bool:
         path = pathclass.Path(path)
         row = self.photodb.sql_select_one(
             'SELECT 1 FROM album_associated_directories WHERE albumid == ? AND directory == ?',
@@ -520,14 +557,14 @@ class Album(ObjectBase, GroupableMixin):
         )
         return row is not None
 
-    def has_photo(self, photo):
+    def has_photo(self, photo) -> bool:
         row = self.photodb.sql_select_one(
             'SELECT 1 FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
             [self.id, photo.id]
         )
         return row is not None
 
-    def jsonify(self, minimal=False):
+    def jsonify(self, minimal=False) -> dict:
         j = {
             'type': 'album',
             'id': self.id,
@@ -562,12 +599,12 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def remove_photo(self, photo):
+    def remove_photo(self, photo) -> None:
         self._remove_photo(photo)
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def remove_photos(self, photos):
+    def remove_photos(self, photos) -> None:
         existing_photos = set(self.get_photos())
         photos = set(photos)
         remove_photos = photos.intersection(existing_photos)
@@ -580,7 +617,12 @@ class Album(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('album.edit')
     @decorators.transaction
-    def set_thumbnail_photo(self, photo):
+    def set_thumbnail_photo(self, photo) -> None:
+        '''
+        Raises TypeError if photo is not a Photo.
+
+        Raises exceptions.DeletedObject if self.deleted.
+        '''
         if photo is None:
             photo_id = None
         elif isinstance(photo, str):
@@ -600,7 +642,10 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.sql_update(table='albums', pairs=pairs, where_key='id')
         self._thumbnail_photo = photo
 
-    def sum_bytes(self, recurse=True):
+    def sum_bytes(self, recurse=True) -> int:
+        '''
+        Return the total number of bytes of all photos in this album.
+        '''
         query = stringtools.collapse_whitespace('''
         SELECT SUM(bytes) FROM photos
         WHERE photos.id IN (
@@ -618,7 +663,13 @@ class Album(ObjectBase, GroupableMixin):
         total = self.photodb.sql_select_one(query)[0]
         return total
 
-    def sum_children(self, recurse=True):
+    def sum_children(self, recurse=True) -> int:
+        '''
+        Return the total number of child albums in this album.
+
+        This method may be preferable to len(album.get_children()) because it
+        performs the counting in the database instead of creating Album objects.
+        '''
         if recurse:
             walker = self.walk_children()
             # First yield is itself.
@@ -634,11 +685,12 @@ class Album(ObjectBase, GroupableMixin):
         total = self.photodb.sql_select_one(query, bindings)[0]
         return total
 
-    def sum_photos(self, recurse=True):
+    def sum_photos(self, recurse=True) -> int:
         '''
-        If all you need is the number of photos in the album, this method is
-        preferable to len(album.get_photos()) because it performs the counting
-        in the database instead of creating the Photo objects.
+        Return the total number of photos in this album.
+
+        This method may be preferable to len(album.get_photos()) because it
+        performs the counting in the database instead of creating Photo objects.
         '''
         query = stringtools.collapse_whitespace('''
         SELECT COUNT(photoid)
@@ -655,6 +707,7 @@ class Album(ObjectBase, GroupableMixin):
         total = self.photodb.sql_select_one(query)[0]
         return total
 
+    # Will add -> Photo when forward references are supported by Python.
     @property
     def thumbnail_photo(self):
         if self._thumbnail_photo is None:
@@ -665,7 +718,7 @@ class Album(ObjectBase, GroupableMixin):
         self._thumbnail_photo = photo
         return photo
 
-    def walk_photos(self):
+    def walk_photos(self) -> typing.Iterable:
         yield from self.get_photos()
         children = self.walk_children()
         # The first yield is itself
@@ -690,7 +743,10 @@ class Bookmark(ObjectBase):
         return f'Bookmark:{self.id}'
 
     @staticmethod
-    def normalize_title(title):
+    def normalize_title(title) -> str:
+        '''
+        Raises TypeError if title is not a string or None.
+        '''
         if title is None:
             return ''
 
@@ -702,7 +758,12 @@ class Bookmark(ObjectBase):
         return title
 
     @staticmethod
-    def normalize_url(url):
+    def normalize_url(url) -> str:
+        '''
+        Raises TypeError if url is not a string or None.
+
+        Raises ValueError if url is invalid.
+        '''
         if url is None:
             return ''
 
@@ -721,13 +782,13 @@ class Bookmark(ObjectBase):
 
     @decorators.required_feature('bookmark.edit')
     @decorators.transaction
-    def delete(self):
+    def delete(self) -> None:
         self.photodb.sql_delete(table='bookmarks', pairs={'id': self.id})
         self._uncache()
         self.deleted = True
 
     @property
-    def display_name(self):
+    def display_name(self) -> str:
         if self.title:
             return self.title
         else:
@@ -735,7 +796,7 @@ class Bookmark(ObjectBase):
 
     @decorators.required_feature('bookmark.edit')
     @decorators.transaction
-    def edit(self, title=None, url=None):
+    def edit(self, title=None, url=None) -> None:
         '''
         Change the title or URL. Leave None to keep current.
         '''
@@ -757,7 +818,7 @@ class Bookmark(ObjectBase):
         self.title = title
         self.url = url
 
-    def jsonify(self):
+    def jsonify(self) -> dict:
         j = {
             'type': 'bookmark',
             'id': self.id,
@@ -816,7 +877,7 @@ class Photo(ObjectBase):
     def __str__(self):
         return f'Photo:{self.id}:{self.basename}'
 
-    def normalize_thumbnail(self, thumbnail):
+    def normalize_thumbnail(self, thumbnail) -> pathclass.Path:
         if thumbnail is None:
             return None
 
@@ -827,9 +888,18 @@ class Photo(ObjectBase):
         return thumbnail
 
     @staticmethod
-    def normalize_override_filename(override_filename):
+    def normalize_override_filename(override_filename) -> typing.Optional[str]:
+        '''
+        Raises TypeError if override_filename is not a string or None.
+
+        Raises ValueError if override_filename does not contain any valid
+        characters remaining after invalid path chars are removed.
+        '''
         if override_filename is None:
             return None
+
+        if not isinstance(override_filename, str):
+            raise TypeError(f'URL must be {str}, not {type(override_filename)}.')
 
         cleaned = helpers.remove_path_badchars(override_filename)
         cleaned = cleaned.strip()
@@ -856,6 +926,7 @@ class Photo(ObjectBase):
     def _uncache(self):
         self.photodb.caches['photo'].remove(self.id)
 
+    # Will add -> Tag when forward references are supported by Python.
     @decorators.required_feature('photo.add_remove_tag')
     @decorators.transaction
     def add_tag(self, tag):
@@ -894,25 +965,25 @@ class Photo(ObjectBase):
         return tag
 
     @property
-    def basename(self):
+    def basename(self) -> str:
         return self.override_filename or self.real_path.basename
 
     @property
-    def bitrate(self):
+    def bitrate(self) -> typing.Optional[float]:
         if self.duration and self.bytes is not None:
             return (self.bytes / 128) / self.duration
         else:
             return None
 
     @property
-    def bytes_string(self):
+    def bytes_string(self) -> str:
         if self.bytes is not None:
             return bytestring.bytestring(self.bytes)
         return '??? b'
 
     # Photo.add_tag already has @required_feature add_remove_tag
     @decorators.transaction
-    def copy_tags(self, other_photo):
+    def copy_tags(self, other_photo) -> None:
         '''
         Take all of the tags owned by other_photo and apply them to this photo.
         '''
@@ -921,7 +992,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def delete(self, *, delete_file=False):
+    def delete(self, *, delete_file=False) -> None:
         '''
         Delete the Photo and its relation to any tags and albums.
         '''
@@ -953,14 +1024,14 @@ class Photo(ObjectBase):
         self.deleted = True
 
     @property
-    def duration_string(self):
+    def duration_string(self) -> typing.Optional[str]:
         if self.duration is None:
             return None
         return hms.seconds_to_hms(self.duration)
 
     @decorators.required_feature('photo.generate_thumbnail')
     @decorators.transaction
-    def generate_thumbnail(self, **special):
+    def generate_thumbnail(self, **special) -> pathclass.Path:
         '''
         special:
             For videos, you can provide a `timestamp` to take the thumbnail at.
@@ -1015,7 +1086,7 @@ class Photo(ObjectBase):
         self.__reinit__()
         return self.thumbnail
 
-    def get_containing_albums(self):
+    def get_containing_albums(self) -> set[Album]:
         '''
         Return the albums of which this photo is a member.
         '''
@@ -1027,7 +1098,7 @@ class Photo(ObjectBase):
         albums = set(self.photodb.get_albums_by_id(album_ids))
         return albums
 
-    def get_tags(self):
+    def get_tags(self) -> set:
         '''
         Return the tags assigned to this Photo.
         '''
@@ -1039,13 +1110,15 @@ class Photo(ObjectBase):
         tags = set(self.photodb.get_tags_by_id(tag_ids))
         return tags
 
+    # Will add -> Tag/False when forward references are supported.
     def has_tag(self, tag, *, check_children=True):
         '''
         Return the Tag object if this photo contains that tag.
         Otherwise return False.
 
         check_children:
-            If True, children of the requested tag are accepted.
+            If True, children of the requested tag are accepted. That is,
+            a photo with family.parents can be said to have the 'family' tag.
         '''
         tag = self.photodb.get_tag(name=tag)
 
@@ -1066,7 +1139,7 @@ class Photo(ObjectBase):
 
         return tag_by_id[rel_row[0]]
 
-    def jsonify(self, include_albums=True, include_tags=True):
+    def jsonify(self, include_albums=True, include_tags=True) -> dict:
         j = {
             'type': 'photo',
             'id': self.id,
@@ -1095,7 +1168,7 @@ class Photo(ObjectBase):
 
         return j
 
-    def make_thumbnail_filepath(self):
+    def make_thumbnail_filepath(self) -> pathclass.Path:
         '''
         Create the filepath that should be the location of our thumbnail.
         '''
@@ -1110,7 +1183,7 @@ class Photo(ObjectBase):
 
     # Photo.rename_file already has @required_feature
     @decorators.transaction
-    def move_file(self, directory):
+    def move_file(self, directory) -> None:
         directory = pathclass.Path(directory)
         directory.assert_is_directory()
         new_path = directory.with_child(self.real_path.basename)
@@ -1161,7 +1234,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.reload_metadata')
     @decorators.transaction
-    def reload_metadata(self, hash_kwargs=None):
+    def reload_metadata(self, hash_kwargs=None) -> None:
         '''
         Load the file's height, width, etc as appropriate for this type of file.
         '''
@@ -1218,13 +1291,20 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def relocate(self, new_filepath):
+    def relocate(self, new_filepath) -> None:
         '''
         Point the Photo object to a different filepath.
 
-        DOES NOT MOVE THE FILE, only acknowledges a move that was performed
-        outside of the system.
+        This method DOES NOT MOVE THE FILE. It updates the database to reflect
+        a move that was performed outside of the system.
+
         To rename or move the file, use `rename_file`.
+
+        Raises FileNotFoundError if the supposed new_filepath is not actually
+        a file.
+
+        Raises exceptions.PhotoExists if new_filepath is already associated
+        with another photo in the database.
         '''
         new_filepath = pathclass.Path(new_filepath)
         if not new_filepath.is_file:
@@ -1246,7 +1326,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.add_remove_tag')
     @decorators.transaction
-    def remove_tag(self, tag):
+    def remove_tag(self, tag) -> None:
         tag = self.photodb.get_tag(name=tag)
 
         self.photodb.log.info('Removing %s from %s.', tag, self)
@@ -1264,7 +1344,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.add_remove_tag')
     @decorators.transaction
-    def remove_tags(self, tags):
+    def remove_tags(self, tags) -> None:
         tags = [self.photodb.get_tag(name=tag) for tag in tags]
 
         self.photodb.log.info('Removing %s from %s.', tags, self)
@@ -1283,13 +1363,21 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def rename_file(self, new_filename, *, move=False):
+    def rename_file(self, new_filename, *, move=False) -> None:
         '''
         Rename the file on the disk as well as in the database.
 
         move:
             If True, allow the file to be moved into another directory.
             Otherwise, the rename must be local.
+
+        Raises ValueError if new_filename includes a path to a directory that
+        is not the file's current directory, and move is False.
+
+        Raises ValueError if new_filename is the same as the current path.
+
+        Raises pathclass.Exists if new_filename leads to a file that already
+        exists.
         '''
         old_path = self.real_path
         old_path.correct_case()
@@ -1362,7 +1450,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def set_override_filename(self, new_filename):
+    def set_override_filename(self, new_filename) -> None:
         new_filename = self.normalize_override_filename(new_filename)
 
         data = {
@@ -1376,7 +1464,7 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.edit')
     @decorators.transaction
-    def set_searchhidden(self, searchhidden):
+    def set_searchhidden(self, searchhidden) -> None:
         data = {
             'id': self.id,
             'searchhidden': bool(searchhidden),
@@ -1417,7 +1505,10 @@ class Tag(ObjectBase, GroupableMixin):
         return f'Tag:{self.name}'
 
     @staticmethod
-    def normalize_description(description):
+    def normalize_description(description) -> str:
+        '''
+        Raises TypeError if description is not a string or None.
+        '''
         if description is None:
             return ''
 
@@ -1429,7 +1520,13 @@ class Tag(ObjectBase, GroupableMixin):
         return description
 
     @staticmethod
-    def normalize_name(name, min_length=None, max_length=None):
+    def normalize_name(name, min_length=None, max_length=None) -> str:
+        '''
+        Raises exceptions.TagTooShort if shorter than min_length.
+
+        Raises exceptions.TagTooLong if longer than max_length after invalid
+        characters are removed.
+        '''
         original_name = name
         # if valid_chars is None:
         #     valid_chars = constants.DEFAULT_CONFIGURATION['tag']['valid_chars']
@@ -1455,8 +1552,8 @@ class Tag(ObjectBase, GroupableMixin):
     def _uncache(self):
         self.photodb.caches['tag'].remove(self.id)
 
-    def __add_child(self, member):
-        ret = super().add_child(member)
+    def _add_child(self, member):
+        ret = super()._add_child(member)
         if ret is BAIL:
             return BAIL
 
@@ -1480,6 +1577,11 @@ class Tag(ObjectBase, GroupableMixin):
     @decorators.required_feature('tag.edit')
     @decorators.transaction
     def add_child(self, member):
+        '''
+        Raises exceptions.CantGroupSelf if member is self.
+
+        Raises exceptions.RecursiveGrouping if member is an ancestor of self.
+        '''
         ret = super().add_child(member)
         if ret is BAIL:
             return BAIL
@@ -1499,7 +1601,14 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def add_synonym(self, synname):
+    def add_synonym(self, synname) -> str:
+        '''
+        Raises any exceptions from photodb.normalize_tagname.
+
+        Raises exceptions.CantSynonymSelf if synname is the tag's name.
+
+        Raises exceptions.TagExists if synname resolves to an existing tag.
+        '''
         synname = self.photodb.normalize_tagname(synname)
 
         if synname == self.name:
@@ -1524,7 +1633,7 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def convert_to_synonym(self, mastertag):
+    def convert_to_synonym(self, mastertag) -> None:
         '''
         Convert this tag into a synonym for a different tag.
         All photos which possess the current tag will have it replaced with the
@@ -1587,7 +1696,7 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def delete(self, *, delete_children=False):
+    def delete(self, *, delete_children=False) -> None:
         self.photodb.log.info('Deleting %s.', self)
         super().delete(delete_children=delete_children)
         self.photodb.sql_delete(table='photo_tag_rel', pairs={'tagid': self.id})
@@ -1599,7 +1708,7 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def edit(self, description=None):
+    def edit(self, description=None) -> None:
         '''
         Change the description. Leave None to keep current value.
         '''
@@ -1617,7 +1726,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         self._uncache()
 
-    def get_synonyms(self):
+    def get_synonyms(self) -> set[str]:
         if self._cached_synonyms is not None:
             return self._cached_synonyms
 
@@ -1629,7 +1738,7 @@ class Tag(ObjectBase, GroupableMixin):
         self._cached_synonyms = synonyms
         return synonyms
 
-    def jsonify(self, include_synonyms=False, minimal=False):
+    def jsonify(self, include_synonyms=False, minimal=False) -> dict:
         j = {
             'type': 'tag',
             'id': self.id,
@@ -1653,6 +1762,7 @@ class Tag(ObjectBase, GroupableMixin):
         ret = super().remove_child(*args, **kwargs)
         if ret is BAIL:
             return
+
         self.photodb.caches['tag_exports'].clear()
         return ret
 
@@ -1662,16 +1772,23 @@ class Tag(ObjectBase, GroupableMixin):
         ret = super().remove_children(*args, **kwargs)
         if ret is BAIL:
             return
+
         self.photodb.caches['tag_exports'].clear()
         return ret
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def remove_synonym(self, synname):
+    def remove_synonym(self, synname) -> str:
         '''
         Delete a synonym.
+
         This will have no effect on photos or other synonyms because
         they always resolve to the master tag before application.
+
+        Raises any exceptions from photodb.normalize_tagname.
+
+        Raises exceptions.NoSuchSynonym if that synname does not exist or is
+        not a synonym of this tag.
         '''
         synname = self.photodb.normalize_tagname(synname)
         if synname == self.name:
@@ -1693,12 +1810,18 @@ class Tag(ObjectBase, GroupableMixin):
 
     @decorators.required_feature('tag.edit')
     @decorators.transaction
-    def rename(self, new_name, *, apply_to_synonyms=True):
+    def rename(self, new_name, *, apply_to_synonyms=True) -> None:
         '''
         Rename the tag. Does not affect its relation to Photos or tag groups.
+
+        Raises any exceptions from photodb.normalize_tagname.
+
+        Raises exceptions.TagExists if new_name is already an existing
+        tag or synonym.
         '''
         new_name = self.photodb.normalize_tagname(new_name)
         old_name = self.name
+
         if new_name == old_name:
             return
 
@@ -1750,7 +1873,12 @@ class User(ObjectBase):
         return f'User:{self.username}'
 
     @staticmethod
-    def normalize_display_name(display_name, max_length=None):
+    def normalize_display_name(display_name, max_length=None) -> typing.Optional[str]:
+        '''
+        Raises TypeError if display_name is not a string or None.
+
+        Raises exceptions.DisplayNameTooLong if longer than max_length.
+        '''
         if display_name is None:
             return None
 
@@ -1772,13 +1900,13 @@ class User(ObjectBase):
 
     @decorators.required_feature('user.edit')
     @decorators.transaction
-    def delete(self, *, disown_authored_things):
+    def delete(self, *, disown_authored_things) -> None:
         '''
-        If disown_authored_things is True, then all of this user's albums,
+        If disown_authored_things is True then all of this user's albums,
         bookmarks, photos, and tags will have their author_id set to None.
 
-        If disown_authored_things is False, and the user has any belongings,
-        exceptions.CantDeleteUser is raised.
+        If disown_authored_things is False and the user has any belongings,
+        raises exceptions.CantDeleteUser.
 
         You should delete those objects first. Since each object type has
         different options while deleting, that functionality is not provided
@@ -1804,13 +1932,16 @@ class User(ObjectBase):
         self.deleted = True
 
     @property
-    def display_name(self):
+    def display_name(self) -> str:
         if self._display_name is None:
             return self.username
         else:
             return self._display_name
 
-    def get_albums(self, *, direction='asc'):
+    def get_albums(self, *, direction='asc') -> typing.Iterable[Album]:
+        '''
+        Raises ValueError if direction is not asc or desc.
+        '''
         if direction.lower() not in {'asc', 'desc'}:
             raise ValueError(direction)
 
@@ -1819,7 +1950,10 @@ class User(ObjectBase):
             [self.id]
         )
 
-    def get_bookmarks(self, *, direction='asc'):
+    def get_bookmarks(self, *, direction='asc') -> typing.Iterable[Bookmark]:
+        '''
+        Raises ValueError if direction is not asc or desc.
+        '''
         if direction.lower() not in {'asc', 'desc'}:
             raise ValueError(direction)
 
@@ -1828,7 +1962,10 @@ class User(ObjectBase):
             [self.id]
         )
 
-    def get_photos(self, *, direction='asc'):
+    def get_photos(self, *, direction='asc') -> typing.Iterable[Photo]:
+        '''
+        Raises ValueError if direction is not asc or desc.
+        '''
         if direction.lower() not in {'asc', 'desc'}:
             raise ValueError(direction)
 
@@ -1837,7 +1974,10 @@ class User(ObjectBase):
             [self.id]
         )
 
-    def get_tags(self, *, direction='asc'):
+    def get_tags(self, *, direction='asc') -> typing.Iterable[Tag]:
+        '''
+        Raises ValueError if direction is not asc or desc.
+        '''
         if direction.lower() not in {'asc', 'desc'}:
             raise ValueError(direction)
 
@@ -1846,27 +1986,27 @@ class User(ObjectBase):
             [self.id]
         )
 
-    def has_any_albums(self):
+    def has_any_albums(self) -> bool:
         query = f'SELECT 1 FROM albums WHERE author_id == ? LIMIT 1'
         row = self.photodb.sql_select_one(query, [self.id])
         return row is not None
 
-    def has_any_bookmarks(self):
+    def has_any_bookmarks(self) -> bool:
         query = f'SELECT 1 FROM bookmarks WHERE author_id == ? LIMIT 1'
         row = self.photodb.sql_select_one(query, [self.id])
         return row is not None
 
-    def has_any_photos(self):
+    def has_any_photos(self) -> bool:
         query = f'SELECT 1 FROM photos WHERE author_id == ? LIMIT 1'
         row = self.photodb.sql_select_one(query, [self.id])
         return row is not None
 
-    def has_any_tags(self):
+    def has_any_tags(self) -> bool:
         query = f'SELECT 1 FROM tags WHERE author_id == ? LIMIT 1'
         row = self.photodb.sql_select_one(query, [self.id])
         return row is not None
 
-    def jsonify(self):
+    def jsonify(self) -> dict:
         j = {
             'type': 'user',
             'id': self.id,
@@ -1878,7 +2018,7 @@ class User(ObjectBase):
 
     @decorators.required_feature('user.edit')
     @decorators.transaction
-    def set_display_name(self, display_name):
+    def set_display_name(self, display_name) -> None:
         display_name = self.normalize_display_name(
             display_name,
             max_length=self.photodb.config['user']['max_display_name_length'],
@@ -1893,7 +2033,7 @@ class User(ObjectBase):
 
     @decorators.required_feature('user.edit')
     @decorators.transaction
-    def set_password(self, password):
+    def set_password(self, password) -> None:
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
 
@@ -1911,5 +2051,5 @@ class WarningBag:
     def __init__(self):
         self.warnings = set()
 
-    def add(self, warning):
+    def add(self, warning) -> None:
         self.warnings.add(warning)

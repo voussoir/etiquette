@@ -7,6 +7,7 @@ import hashlib
 import mimetypes
 import os
 import PIL.Image
+import typing
 import zipstream
 
 from voussoirkit import bytestring
@@ -123,7 +124,7 @@ def album_photos_as_filename_map(
 
     return arcnames
 
-def checkerboard_image(color_1, color_2, image_size, checker_size):
+def checkerboard_image(color_1, color_2, image_size, checker_size) -> PIL.Image:
     '''
     Generate a PIL Image with a checkerboard pattern.
 
@@ -200,10 +201,10 @@ def decollide_names(things, namer):
                 final[thing] = myname
     return final
 
-def dict_to_tuple(d):
+def dict_to_tuple(d) -> tuple:
     return tuple(sorted(d.items()))
 
-def generate_image_thumbnail(filepath, width, height):
+def generate_image_thumbnail(filepath, width, height) -> PIL.Image:
     if not os.path.isfile(filepath):
         raise FileNotFoundError(filepath)
     image = PIL.Image.open(filepath)
@@ -234,7 +235,7 @@ def generate_image_thumbnail(filepath, width, height):
     image = image.convert('RGB')
     return image
 
-def generate_video_thumbnail(filepath, outfile, width, height, **special):
+def generate_video_thumbnail(filepath, outfile, width, height, **special) -> PIL.Image:
     if not os.path.isfile(filepath):
         raise FileNotFoundError(filepath)
     probe = constants.ffmpeg.probe(filepath)
@@ -267,7 +268,7 @@ def generate_video_thumbnail(filepath, outfile, width, height, **special):
     )
     return True
 
-def get_mimetype(filepath):
+def get_mimetype(filepath) -> typing.Optional[str]:
     '''
     Extension to mimetypes.guess_type which uses my
     constants.ADDITIONAL_MIMETYPES.
@@ -278,7 +279,7 @@ def get_mimetype(filepath):
         mimetype = mimetypes.guess_type(filepath)[0]
     return mimetype
 
-def hash_photoset(photos):
+def hash_photoset(photos) -> str:
     '''
     Given some photos, return a fingerprint string for that particular set.
     '''
@@ -290,7 +291,7 @@ def hash_photoset(photos):
 
     return hasher.hexdigest()
 
-def hyphen_range(s):
+def hyphen_range(s) -> tuple:
     '''
     Given a string like '1-3', return numbers (1, 3) representing lower
     and upper bounds.
@@ -319,9 +320,9 @@ def hyphen_range(s):
     if low is not None and high is not None and low > high:
         raise exceptions.OutOfOrder(range=s, min=low, max=high)
 
-    return low, high
+    return (low, high)
 
-def is_xor(*args):
+def is_xor(*args) -> bool:
     '''
     Return True if and only if one arg is truthy.
     '''
@@ -336,7 +337,7 @@ def now(timestamp=True):
         return n.timestamp()
     return n
 
-def parse_unit_string(s):
+def parse_unit_string(s) -> typing.Union[int, float, None]:
     '''
     Try to parse the string as an int, float, or bytestring, or hms.
     '''
@@ -357,7 +358,12 @@ def parse_unit_string(s):
     else:
         return bytestring.parsebytes(s)
 
-def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=bytestring.MIBIBYTE):
+def read_filebytes(
+        filepath,
+        range_min=0,
+        range_max=None,
+        chunk_size=bytestring.MIBIBYTE,
+    ) -> typing.Iterable[bytes]:
     '''
     Yield chunks of bytes from the file between the endpoints.
     '''
@@ -373,19 +379,15 @@ def read_filebytes(filepath, range_min=0, range_max=None, chunk_size=bytestring.
     with f:
         f.seek(range_min)
         while sent_amount < range_span:
-            chunk = f.read(chunk_size)
-            if len(chunk) == 0:
-                break
-
             needed = range_span - sent_amount
-            if len(chunk) >= needed:
-                yield chunk[:needed]
+            chunk = f.read(min(needed, chunk_size))
+            if len(chunk) == 0:
                 break
 
             yield chunk
             sent_amount += len(chunk)
 
-def remove_path_badchars(filepath, allowed=''):
+def remove_path_badchars(filepath, allowed='') -> str:
     '''
     Remove the bad characters seen in constants.FILENAME_BADCHARS, except
     those which you explicitly permit.
@@ -409,15 +411,18 @@ def slice_before(li, item):
     index = li.index(item)
     return li[:index]
 
-def split_easybake_string(ebstring):
+def split_easybake_string(ebstring) -> tuple[str, str, str]:
     '''
     Given an easybake string, return (tagname, synonym, rename_to), where
     tagname may be a full qualified name, and at least one of
     synonym or rename_to will be None since both are not posible at once.
 
-    'languages.python' -> ('languages.python', None, None)
-    'languages.python+py' -> ('languages.python', 'py', None)
-    'languages.python=bestlang' -> ('languages.python', None, 'bestlang')
+    >>> split_easybake_string('languages.python')
+    ('languages.python', None, None)
+    >>> split_easybake_string('languages.python+py')
+    ('languages.python', 'py', None)
+    >>> split_easybake_string('languages.python=bestlang')
+    ('languages.python', None, 'bestlang')
     '''
     ebstring = ebstring.strip()
     ebstring = ebstring.strip('.+=')
@@ -454,7 +459,7 @@ def split_easybake_string(ebstring):
     tagname = tagname.strip('.')
     return (tagname, synonym, rename_to)
 
-def truthystring(s, fallback=False):
+def truthystring(s, fallback=False) -> typing.Union[bool, None]:
     '''
     If s is already a boolean, int, or None, return a boolean or None.
     If s is a string, return True, False, or None based on the options presented
@@ -480,7 +485,7 @@ def truthystring(s, fallback=False):
         return None
     return False
 
-def zip_album(album, recursive=True):
+def zip_album(album, recursive=True) -> zipstream.ZipFile:
     '''
     Given an album, return a zipstream zipfile that contains the album's
     photos (recursive = include children's photos) organized into folders
@@ -521,7 +526,7 @@ def zip_album(album, recursive=True):
 
     return zipfile
 
-def zip_photos(photos):
+def zip_photos(photos) -> zipstream.ZipFile:
     '''
     Given some photos, return a zipstream zipfile that contains the files.
     '''
