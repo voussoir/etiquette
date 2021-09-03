@@ -5,7 +5,6 @@ from voussoirkit import flasktools
 import etiquette
 
 from .. import common
-from .. import decorators
 
 site = common.site
 session_manager = common.session_manager
@@ -45,7 +44,7 @@ def get_bookmarks_json():
 # Bookmark create and delete #######################################################################
 
 @site.route('/bookmarks/create_bookmark', methods=['POST'])
-@decorators.required_fields(['url'], forbid_whitespace=True)
+@flasktools.required_fields(['url'], forbid_whitespace=True)
 def post_bookmark_create():
     url = request.form['url']
     title = request.form.get('title', None)

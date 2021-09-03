@@ -5,7 +5,6 @@ from voussoirkit import flasktools
 import etiquette
 
 from .. import common
-from .. import decorators
 
 site = common.site
 session_manager = common.session_manager
@@ -57,7 +56,7 @@ def post_tag_edit(tagname):
     return response
 
 @site.route('/tag/<tagname>/add_child', methods=['POST'])
-@decorators.required_fields(['child_name'], forbid_whitespace=True)
+@flasktools.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_add_child(tagname):
     parent = common.P_tag(tagname, response_type='json')
     child = common.P_tag(request.form['child_name'], response_type='json')
@@ -66,7 +65,7 @@ def post_tag_add_child(tagname):
     return flasktools.make_json_response(response)
 
 @site.route('/tag/<tagname>/add_synonym', methods=['POST'])
-@decorators.required_fields(['syn_name'], forbid_whitespace=True)
+@flasktools.required_fields(['syn_name'], forbid_whitespace=True)
 def post_tag_add_synonym(tagname):
     syn_name = request.form['syn_name']
 
@@ -77,7 +76,7 @@ def post_tag_add_synonym(tagname):
     return flasktools.make_json_response(response)
 
 @site.route('/tag/<tagname>/remove_child', methods=['POST'])
-@decorators.required_fields(['child_name'], forbid_whitespace=True)
+@flasktools.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_remove_child(tagname):
     parent = common.P_tag(tagname, response_type='json')
     child = common.P_tag(request.form['child_name'], response_type='json')
@@ -86,7 +85,7 @@ def post_tag_remove_child(tagname):
     return flasktools.make_json_response(response)
 
 @site.route('/tag/<tagname>/remove_synonym', methods=['POST'])
-@decorators.required_fields(['syn_name'], forbid_whitespace=True)
+@flasktools.required_fields(['syn_name'], forbid_whitespace=True)
 def post_tag_remove_synonym(tagname):
     syn_name = request.form['syn_name']
 
@@ -99,7 +98,7 @@ def post_tag_remove_synonym(tagname):
 # Tag listings #####################################################################################
 
 @site.route('/all_tags.json')
-@decorators.cached_endpoint(max_age=15)
+@flasktools.cached_endpoint(max_age=15)
 def get_all_tag_names():
     all_tags = list(common.P.get_all_tag_names())
     all_synonyms = common.P.get_all_synonyms()
@@ -158,7 +157,7 @@ def get_tags_json():
 # Tag create and delete ############################################################################
 
 @site.route('/tags/create_tag', methods=['POST'])
-@decorators.required_fields(['name'], forbid_whitespace=True)
+@flasktools.required_fields(['name'], forbid_whitespace=True)
 def post_tag_create():
     name = request.form['name']
     description = request.form.get('description', None)
@@ -168,7 +167,7 @@ def post_tag_create():
     return flasktools.make_json_response(response)
 
 @site.route('/tags/easybake', methods=['POST'])
-@decorators.required_fields(['easybake_string'], forbid_whitespace=True)
+@flasktools.required_fields(['easybake_string'], forbid_whitespace=True)
 def post_tag_easybake():
     easybake_string = request.form['easybake_string']
 

@@ -9,7 +9,6 @@ from voussoirkit import stringtools
 import etiquette
 
 from .. import common
-from .. import decorators
 
 site = common.site
 session_manager = common.session_manager
@@ -57,7 +56,7 @@ def get_album_zip(album_id):
     return flask.Response(streamed_zip, headers=outgoing_headers)
 
 @site.route('/album/<album_id>/add_child', methods=['POST'])
-@decorators.required_fields(['child_id'], forbid_whitespace=True)
+@flasktools.required_fields(['child_id'], forbid_whitespace=True)
 def post_album_add_child(album_id):
     album = common.P_album(album_id, response_type='json')
 
@@ -69,7 +68,7 @@ def post_album_add_child(album_id):
     return flasktools.make_json_response(response)
 
 @site.route('/album/<album_id>/remove_child', methods=['POST'])
-@decorators.required_fields(['child_id'], forbid_whitespace=True)
+@flasktools.required_fields(['child_id'], forbid_whitespace=True)
 def post_album_remove_child(album_id):
     album = common.P_album(album_id, response_type='json')
 
@@ -98,7 +97,7 @@ def post_album_refresh_directories(album_id):
     return flasktools.make_json_response({})
 
 @site.route('/album/<album_id>/set_thumbnail_photo', methods=['POST'])
-@decorators.required_fields(['photo_id'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_id'], forbid_whitespace=True)
 def post_album_set_thumbnail_photo(album_id):
     album = common.P_album(album_id, response_type='json')
     photo = common.P_photo(request.form['photo_id'], response_type='json')
@@ -109,7 +108,7 @@ def post_album_set_thumbnail_photo(album_id):
 # Album photo operations ###########################################################################
 
 @site.route('/album/<album_id>/add_photo', methods=['POST'])
-@decorators.required_fields(['photo_id'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_id'], forbid_whitespace=True)
 def post_album_add_photo(album_id):
     '''
     Add a photo or photos to this album.
@@ -123,7 +122,7 @@ def post_album_add_photo(album_id):
     return flasktools.make_json_response(response)
 
 @site.route('/album/<album_id>/remove_photo', methods=['POST'])
-@decorators.required_fields(['photo_id'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_id'], forbid_whitespace=True)
 def post_album_remove_photo(album_id):
     '''
     Remove a photo or photos from this album.
@@ -195,7 +194,7 @@ def post_album_show_in_folder(album_id):
 # Album listings ###################################################################################
 
 @site.route('/all_albums.json')
-@decorators.cached_endpoint(max_age=15)
+@flasktools.cached_endpoint(max_age=15)
 def get_all_album_names():
     all_albums = {album.id: album.display_name for album in common.P.get_albums()}
     response = {'albums': all_albums}

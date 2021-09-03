@@ -10,7 +10,6 @@ from voussoirkit import stringtools
 import etiquette
 
 from .. import common
-from .. import decorators
 from .. import helpers
 
 site = common.site
@@ -98,7 +97,7 @@ def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
     return flasktools.make_json_response(response)
 
 @site.route('/photo/<photo_id>/add_tag', methods=['POST'])
-@decorators.required_fields(['tagname'], forbid_whitespace=True)
+@flasktools.required_fields(['tagname'], forbid_whitespace=True)
 def post_photo_add_tag(photo_id):
     '''
     Add a tag to this photo.
@@ -111,7 +110,7 @@ def post_photo_add_tag(photo_id):
     return response
 
 @site.route('/photo/<photo_id>/copy_tags', methods=['POST'])
-@decorators.required_fields(['other_photo'], forbid_whitespace=True)
+@flasktools.required_fields(['other_photo'], forbid_whitespace=True)
 def post_photo_copy_tags(photo_id):
     '''
     Copy the tags from another photo.
@@ -123,7 +122,7 @@ def post_photo_copy_tags(photo_id):
     return flasktools.make_json_response([tag.jsonify(minimal=True) for tag in photo.get_tags()])
 
 @site.route('/photo/<photo_id>/remove_tag', methods=['POST'])
-@decorators.required_fields(['tagname'], forbid_whitespace=True)
+@flasktools.required_fields(['tagname'], forbid_whitespace=True)
 def post_photo_remove_tag(photo_id):
     '''
     Remove a tag from this photo.
@@ -136,7 +135,7 @@ def post_photo_remove_tag(photo_id):
     return response
 
 @site.route('/batch/photos/add_tag', methods=['POST'])
-@decorators.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
 def post_batch_photos_add_tag():
     response = post_photo_add_remove_tag_core(
         photo_ids=request.form['photo_ids'],
@@ -146,7 +145,7 @@ def post_batch_photos_add_tag():
     return response
 
 @site.route('/batch/photos/remove_tag', methods=['POST'])
-@decorators.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
 def post_batch_photos_remove_tag():
     response = post_photo_add_remove_tag_core(
         photo_ids=request.form['photo_ids'],
@@ -194,7 +193,7 @@ def post_photo_refresh_metadata(photo_id):
     return response
 
 @site.route('/batch/photos/refresh_metadata', methods=['POST'])
-@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_refresh_metadata():
     response = post_photo_refresh_metadata_core(photo_ids=request.form['photo_ids'])
     return response
@@ -238,14 +237,14 @@ def post_photo_show_in_folder(photo_id):
     flask.abort(501)
 
 @site.route('/batch/photos/set_searchhidden', methods=['POST'])
-@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_set_searchhidden():
     photo_ids = request.form['photo_ids']
     response = post_batch_photos_searchhidden_core(photo_ids=photo_ids, searchhidden=True)
     return response
 
 @site.route('/batch/photos/unset_searchhidden', methods=['POST'])
-@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_unset_searchhidden():
     photo_ids = request.form['photo_ids']
     response = post_batch_photos_searchhidden_core(photo_ids=photo_ids, searchhidden=False)
@@ -258,7 +257,7 @@ def get_clipboard_page():
     return common.render_template(request, 'clipboard.html')
 
 @site.route('/batch/photos', methods=['POST'])
-@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos():
     '''
     Return a list of photo.jsonify() for each requested photo id.
@@ -273,7 +272,7 @@ def post_batch_photos():
     return response
 
 @site.route('/batch/photos/photo_card', methods=['POST'])
-@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_photo_cards():
     photo_ids = request.form['photo_ids']
 
@@ -328,7 +327,7 @@ def get_batch_photos_download_zip(zip_token):
     return flask.Response(streamed_zip, headers=outgoing_headers)
 
 @site.route('/batch/photos/download_zip', methods=['POST'])
-@decorators.required_fields(['photo_ids'], forbid_whitespace=True)
+@flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_download_zip():
     '''
     Initiating file downloads via POST requests is a bit clunky and unreliable,

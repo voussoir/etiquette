@@ -5,7 +5,6 @@ from voussoirkit import flasktools
 import etiquette
 
 from .. import common
-from .. import decorators
 from .. import sessions
 
 site = common.site
@@ -67,7 +66,7 @@ def get_login():
     return response
 
 @site.route('/login', methods=['POST'])
-@decorators.required_fields(['username', 'password'])
+@flasktools.required_fields(['username', 'password'])
 def post_login():
     session = session_manager.get(request)
     if session.user:
@@ -107,7 +106,7 @@ def get_register():
     return flask.redirect('/login')
 
 @site.route('/register', methods=['POST'])
-@decorators.required_fields(['username', 'password_1', 'password_2'])
+@flasktools.required_fields(['username', 'password_1', 'password_2'])
 def post_register():
     session = session_manager.get(request)
     if session.user:
