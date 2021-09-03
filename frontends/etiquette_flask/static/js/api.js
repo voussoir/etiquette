@@ -14,12 +14,10 @@ function _add_remove_photos(album_id, photo_ids, add_or_remove, callback)
     else
         { throw `should be 'add' or 'remove', not ${add_or_remove}.`; }
 
-    const data = new FormData();
-
     if (Array.isArray(photo_ids))
         { photo_ids = photo_ids.join(","); }
-    data.append("photo_id", photo_ids);
 
+    const data = {"photo_id": photo_ids};
     return common.post(url, data, callback);
 }
 
@@ -27,8 +25,7 @@ api.albums.add_child =
 function add_child(album_id, child_id, callback)
 {
     const url = `/album/${album_id}/add_child`;
-    const data = new FormData();
-    data.append("child_id", child_id);
+    const data = {"child_id": child_id};
     return common.post(url, data, callback);
 }
 
@@ -42,15 +39,7 @@ api.albums.create =
 function create(title, parent_id, callback)
 {
     const url = "/albums/create_album";
-    const data = new FormData();
-    if (title !== undefined)
-    {
-        data.append("title", title);
-    }
-    if (parent_id !== undefined)
-    {
-        data.append("parent_id", parent_id);
-    }
+    const data = {"title": title, "parent_id": parent_id};
     return common.post(url, data, callback);
 }
 
@@ -72,9 +61,7 @@ api.albums.edit =
 function edit(album_id, title, description, callback)
 {
     const url = `/album/${album_id}/edit`;
-    const data = new FormData();
-    data.append("title", title);
-    data.append("description", description);
+    const data = {"title": title, "description": description};
     return common.post(url, data, callback);
 }
 
@@ -89,8 +76,7 @@ api.albums.remove_child =
 function remove_child(album_id, child_id, callback)
 {
     const url = `/album/${album_id}/remove_child`;
-    const data = new FormData();
-    data.append("child_id", child_id);
+    const data = {"child_id": child_id};
     return common.post(url, data, callback);
 }
 
@@ -104,7 +90,7 @@ api.albums.remove_thumbnail_photo =
 function remove_thumbnail_photo(album_id, callback)
 {
     const url = `/album/${album_id}/remove_thumbnail_photo`;
-    const data = new FormData();
+    const data = {};
     return common.post(url, data, callback);
 }
 
@@ -112,8 +98,7 @@ api.albums.set_thumbnail_photo =
 function set_thumbnail_photo(album_id, photo_id, callback)
 {
     const url = `/album/${album_id}/set_thumbnail_photo`;
-    const data = new FormData();
-    data.append("photo_id", photo_id);
+    const data = {"photo_id": photo_id};
     return common.post(url, data, callback);
 }
 
@@ -153,13 +138,7 @@ api.bookmarks.create =
 function create(b_url, title, callback)
 {
     const url = "/bookmarks/create_bookmark";
-    const data = new FormData();
-    data.append("url", b_url.trim());
-    title = title.trim();
-    if (title)
-    {
-        data.append("title", title);
-    }
+    const data = {"url": b_url.trim(), "title": title};
     return common.post(url, data, callback);
 }
 
@@ -167,16 +146,15 @@ api.bookmarks.delete =
 function _delete(bookmark_id, callback)
 {
     const url = `/bookmark/${bookmark_id}/delete`;
-    return common.post(url, null, callback);
+    const data = {};
+    return common.post(url, data, callback);
 }
 
 api.bookmarks.edit =
 function edit(bookmark_id, title, b_url, callback)
 {
     const url = `/bookmark/${bookmark_id}/edit`;
-    const data = new FormData();
-    data.append("title", title.trim());
-    data.append("url", b_url.trim());
+    const data = {"title": title.trim(), "url": b_url.trim()};
     return common.post(url, data, callback);
 }
 
@@ -187,8 +165,7 @@ api.photos.add_tag =
 function add_tag(photo_id, tagname, callback)
 {
     const url = `/photo/${photo_id}/add_tag`;
-    const data = new FormData();
-    data.append("tagname", tagname);
+    const data = {"tagname": tagname};
     return common.post(url, data, callback);
 }
 
@@ -196,9 +173,7 @@ api.photos.batch_add_tag =
 function batch_add_tag(photo_ids, tagname, callback)
 {
     const url = "/batch/photos/add_tag";
-    const data = new FormData();
-    data.append("photo_ids", photo_ids.join(","));
-    data.append("tagname", tagname);
+    const data = {"photo_ids": photo_ids.join(","), "tagname": tagname};
     return common.post(url, data, add_remove_tag_callback);
 }
 
@@ -206,8 +181,7 @@ api.photos.batch_refresh_metadata =
 function batch_refresh_metadata(photo_ids, callback)
 {
     const url = "/batch/photos/refresh_metadata";
-    const data = new FormData();
-    data.append("photo_ids", photo_ids.join(","));
+    const data = {"photo_ids": photo_ids.join(",")};
     return common.post(url, data, callback);
 }
 
@@ -215,9 +189,7 @@ api.photos.batch_remove_tag =
 function batch_remove_tag(photo_ids, tagname, callback)
 {
     const url = "/batch/photos/remove_tag";
-    const data = new FormData();
-    data.append("photo_ids", photo_ids.join(","));
-    data.append("tagname", tagname);
+    const data = {"photo_ids": photo_ids.join(","), "tagname": tagname};
     return common.post(url, data, add_remove_tag_callback);
 }
 
@@ -225,8 +197,7 @@ api.photos.batch_set_searchhidden =
 function batch_set_searchhidden(photo_ids, callback)
 {
     const url = "/batch/photos/set_searchhidden";
-    const data = new FormData();
-    data.append("photo_ids", photo_ids.join(","));
+    const data = {"photo_ids": photo_ids.join(",")};
     return common.post(url, data, callback);
 }
 
@@ -234,8 +205,7 @@ api.photos.batch_unset_searchhidden =
 function batch_unset_searchhidden(photo_ids, callback)
 {
     const url = "/batch/photos/unset_searchhidden";
-    const data = new FormData();
-    data.append("photo_ids", photo_ids.join(","));
+    const data = {"photo_ids": photo_ids.join(",")};
     return common.post(url, data, callback);
 }
 
@@ -243,8 +213,7 @@ api.photos.copy_tags =
 function copy_tags(photo_id, other_photo, callback)
 {
     const url = `/photo/${photo_id}/copy_tags`;
-    const data = new FormData();
-    data.append("other_photo", other_photo);
+    const data = {"other_photo": other_photo};
     return common.post(url, data, callback)
 }
 
@@ -252,8 +221,7 @@ api.photos.delete =
 function _delete(photo_id, delete_file, callback)
 {
     const url = `/photo/${photo_id}/delete`;
-    const data = new FormData();
-    data.append("delete_file", delete_file);
+    const data = {"delete_file": delete_file};
     return common.post(url, data, callback);
 }
 
@@ -261,11 +229,7 @@ api.photos.generate_thumbnail =
 function generate_thumbnail(photo_id, special, callback)
 {
     const url = `/photo/${photo_id}/generate_thumbnail`
-    const data = new FormData();
-    for (x in special)
-    {
-        data.append(x, special[x]);
-    }
+    const data = special;
     return common.post(url, data, callback);
 }
 
@@ -273,8 +237,7 @@ api.photos.get_download_zip_token =
 function get_download_zip_token(photo_ids, callback)
 {
     const url = "/batch/photos/download_zip";
-    const data = new FormData();
-    data.append("photo_ids", photo_ids.join(","));
+    const data = {"photo_ids": photo_ids.join(",")};
     return common.post(url, data, callback);
 }
 
@@ -303,8 +266,7 @@ api.photos.remove_tag =
 function remove_tag(photo_id, tagname, callback)
 {
     const url = `/photo/${photo_id}/remove_tag`;
-    const data = new FormData();
-    data.append("tagname", tagname);
+    const data = {"tagname": tagname};
     return common.post(url, data, callback);
 }
 
@@ -359,8 +321,7 @@ api.tags.add_child =
 function add_child(tag_name, child_name, callback)
 {
     const url = `/tag/${tag_name}/add_child`;
-    const data = new FormData();
-    data.append("child_name", child_name);
+    const data = {"child_name": child_name};
     return common.post(url, data, callback);
 }
 
@@ -368,8 +329,7 @@ api.tags.add_synonym =
 function add_synonym(tag_name, syn_name, callback)
 {
     const url = `/tag/${tag_name}/add_synonym`;
-    const data = new FormData();
-    data.append("syn_name", syn_name);
+    const data = {"syn_name": syn_name};
     return common.post(url, data, callback);
 }
 
@@ -377,9 +337,7 @@ api.tags.create =
 function create(name, description, callback)
 {
     const url = `/tags/create_tag`;
-    const data = new FormData();
-    data.append("name", name);
-    data.append("description", description);
+    const data = {"name": name, "description": description};
     return common.post(url, data, callback);
 }
 
@@ -394,8 +352,7 @@ api.tags.easybake =
 function easybake(easybake_string, callback)
 {
     const url = "/tags/easybake";
-    const data = new FormData();
-    data.append("easybake_string", easybake_string);
+    const data = {"easybake_string": easybake_string};
     return common.post(url, data, callback);
 }
 
@@ -403,9 +360,7 @@ api.tags.edit =
 function edit(tag_name, name, description, callback)
 {
     const url = `/tag/${tag_name}/edit`;
-    const data = new FormData();
-    data.append("name", name);
-    data.append("description", description);
+    const data = {"name": name, "description": description};
     return common.post(url, data, callback);
 }
 
@@ -420,8 +375,7 @@ api.tags.remove_child =
 function remove_child(tag_name, child_name, callback)
 {
     const url = `/tag/${tag_name}/remove_child`;
-    const data = new FormData();
-    data.append("child_name", child_name);
+    const data = {"child_name": child_name};
     return common.post(url, data, callback);
 }
 
@@ -429,8 +383,7 @@ api.tags.remove_synonym =
 function remove_synonym(tag_name, syn_name, callback)
 {
     const url = `/tag/${tag_name}/remove_synonym`;
-    const data = new FormData();
-    data.append("syn_name", syn_name);
+    const data = {"syn_name": syn_name};
     return common.post(url, data, callback);
 }
 
@@ -452,8 +405,7 @@ api.users.edit =
 function edit(username, display_name, callback)
 {
     const url = `/user/${username}/edit`;
-    const data = new FormData();
-    data.append("display_name", display_name);
+    const data = {"display_name": display_name};
     return common.post(url, data, callback);
 }
 
@@ -461,9 +413,7 @@ api.users.login =
 function login(username, password, callback)
 {
     const url = "/login";
-    const data = new FormData();
-    data.append("username", username);
-    data.append("password", password);
+    const data = {"username": username, "password": password};
     return common.post(url, data, callback);
 }
 
@@ -478,10 +428,11 @@ api.users.register =
 function register(username, display_name, password_1, password_2, callback)
 {
     const url = "/register";
-    const data = new FormData();
-    data.append("username", username);
-    data.append("display_name", display_name);
-    data.append("password_1", password_1);
-    data.append("password_2", password_2);
+    const data = {
+        "username": username,
+        "display_name": display_name,
+        "password_1": password_1,
+        "password_2": password_2,
+    };
     return common.post(url, data, callback);
 }

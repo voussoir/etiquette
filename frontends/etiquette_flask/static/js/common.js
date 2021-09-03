@@ -55,6 +55,25 @@ function refresh_or_alert(response)
 // HTTP ////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+common.formdata =
+function formdata(data)
+{
+    fd = new FormData();
+    for (let [key, value] of Object.entries(data))
+    {
+        if (value === undefined)
+        {
+            continue;
+        }
+        if (value === null)
+        {
+            value = '';
+        }
+        fd.append(key, value);
+    }
+    return fd;
+}
+
 common._request =
 function _request(method, url, callback)
 {
@@ -143,8 +162,18 @@ common.post =
 function post(url, data, callback)
 {
     /*
-    `data`: a FormData object which you have already filled with values.
+    `data`:
+        a FormData object which you have already filled with values, or a
+        dictionary from which a FormData will be made, using common.formdata.
     */
+    if (data instanceof FormData || data === null)
+    {
+        ;
+    }
+    else
+    {
+        data = common.formdata(data);
+    }
     request = common._request("POST", url, callback);
     request.send(data);
     return request;
