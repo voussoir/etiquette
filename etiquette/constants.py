@@ -226,9 +226,6 @@ You can\'t order "{column}" by "{direction}". Defaulting to descending.
 # Janitorial stuff #################################################################################
 
 FILENAME_BADCHARS = '\\/:*?<>|"'
-TRUTHYSTRING_TRUE = {s.lower() for s in ('1', 'true', 't', 'yes', 'y', 'on')}
-TRUTHYSTRING_FALSE = {s.lower() for s in ('0', 'false', 'f', 'no', 'n', 'off')}
-TRUTHYSTRING_NONE = {s.lower() for s in ('null', 'none')}
 
 USER_ID_CHARACTERS = string.digits + string.ascii_uppercase
 

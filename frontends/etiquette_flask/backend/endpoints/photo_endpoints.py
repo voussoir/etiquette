@@ -37,10 +37,10 @@ def get_file(photo_id, basename=None):
     photo = common.P.get_photo(photo_id)
 
     do_download = request.args.get('download', False)
-    do_download = etiquette.helpers.truthystring(do_download)
+    do_download = stringtools.truthystring(do_download)
 
     use_original_filename = request.args.get('original_filename', False)
-    use_original_filename = etiquette.helpers.truthystring(use_original_filename)
+    use_original_filename = stringtools.truthystring(use_original_filename)
 
     if do_download:
         if use_original_filename:
@@ -73,7 +73,7 @@ def post_photo_delete(photo_id):
     print(photo_id)
     photo = common.P_photo(photo_id, response_type='json')
     delete_file = request.form.get('delete_file', False)
-    delete_file = etiquette.helpers.truthystring(delete_file)
+    delete_file = stringtools.truthystring(delete_file)
     photo.delete(delete_file=delete_file, commit=True)
     return flasktools.make_json_response({})
 

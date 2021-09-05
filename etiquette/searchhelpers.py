@@ -193,21 +193,21 @@ def normalize_filename(filename_terms):
 
 def normalize_has_tags(has_tags):
     '''
-    See etiquette.helpers.truthystring.
+    See voussoirkit.stringtools.truthystring.
     '''
-    return helpers.truthystring(has_tags)
+    return stringtools.truthystring(has_tags, None)
 
 def normalize_has_thumbnail(has_thumbnail):
     '''
-    See etiquette.helpers.truthystring.
+    See voussoirkit.stringtools.truthystring.
     '''
-    return helpers.truthystring(has_thumbnail)
+    return stringtools.truthystring(has_thumbnail, None)
 
 def normalize_is_searchhidden(is_searchhidden):
     '''
-    See etiquette.helpers.truthystring.
+    See voussoirkit.stringtools.truthystring.
     '''
-    return helpers.truthystring(is_searchhidden)
+    return stringtools.truthystring(is_searchhidden, None)
 
 def _limit_offset(number, warning_bag):
     if number is None:
@@ -447,15 +447,15 @@ def normalize_within_directory(paths, warning_bag=None):
 
 def normalize_yield_albums(yield_albums):
     '''
-    See etiquette.helpers.truthystring.
+    See voussoirkit.stringtools.truthystring.
     '''
-    return helpers.truthystring(yield_albums)
+    return stringtools.truthystring(yield_albums, None)
 
 def normalize_yield_photos(yield_photos):
     '''
-    See etiquette.helpers.truthystring.
+    See voussoirkit.stringtools.truthystring.
     '''
-    return helpers.truthystring(yield_photos)
+    return stringtools.truthystring(yield_photos, None)
 
 EXIST_FORMAT = '''
 {operator} (

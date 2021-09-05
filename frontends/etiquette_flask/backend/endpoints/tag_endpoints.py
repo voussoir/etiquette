@@ -1,6 +1,7 @@
 import flask; from flask import request
 
 from voussoirkit import flasktools
+from voussoirkit import stringtools
 
 import etiquette
 
@@ -36,7 +37,7 @@ def get_tag_json(specific_tag_name):
         return flask.redirect(new_url)
 
     include_synonyms = request.args.get('synonyms')
-    include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
+    include_synonyms = include_synonyms is None or stringtools.truthystring(include_synonyms)
 
     response = specific_tag.jsonify(include_synonyms=include_synonyms)
     return flasktools.make_json_response(response)
@@ -117,7 +118,7 @@ def get_tags_html(specific_tag_name=None):
             return flask.redirect(new_url)
 
     include_synonyms = request.args.get('include_synonyms')
-    include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
+    include_synonyms = include_synonyms is None or stringtools.truthystring(include_synonyms)
 
     if specific_tag is None:
         tags = common.P.get_root_tags()
@@ -147,7 +148,7 @@ def get_tags_html(specific_tag_name=None):
 @site.route('/tags.json')
 def get_tags_json():
     include_synonyms = request.args.get('synonyms')
-    include_synonyms = include_synonyms is None or etiquette.helpers.truthystring(include_synonyms)
+    include_synonyms = include_synonyms is None or stringtools.truthystring(include_synonyms)
 
     tags = list(common.P.get_tags())
     response = [tag.jsonify(include_synonyms=include_synonyms) for tag in tags]

@@ -459,32 +459,6 @@ def split_easybake_string(ebstring) -> tuple[str, str, str]:
     tagname = tagname.strip('.')
     return (tagname, synonym, rename_to)
 
-def truthystring(s, fallback=False) -> typing.Union[bool, None]:
-    '''
-    If s is already a boolean, int, or None, return a boolean or None.
-    If s is a string, return True, False, or None based on the options presented
-    in constants.TRUTHYSTRING_TRUE, TRUTHYSTRING_FALSE, TRUTHYSTRING_NONE where
-    s is treated case-insensitively.
-    If s is not in any of those sets, return the fallback.
-    '''
-    if s is None:
-        return None
-
-    if isinstance(s, (bool, int)):
-        return bool(s)
-
-    if not isinstance(s, str):
-        return fallback
-
-    s = s.lower()
-    if s in constants.TRUTHYSTRING_TRUE:
-        return True
-    if s in constants.TRUTHYSTRING_FALSE:
-        return False
-    if s in constants.TRUTHYSTRING_NONE:
-        return None
-    return False
-
 def zip_album(album, recursive=True) -> zipstream.ZipFile:
     '''
     Given an album, return a zipstream zipfile that contains the album's

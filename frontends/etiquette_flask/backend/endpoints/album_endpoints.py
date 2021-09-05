@@ -37,7 +37,7 @@ def get_album_zip(album_id):
     album = common.P_album(album_id, response_type='html')
 
     recursive = request.args.get('recursive', True)
-    recursive = etiquette.helpers.truthystring(recursive)
+    recursive = stringtools.truthystring(recursive)
 
     streamed_zip = etiquette.helpers.zip_album(album, recursive=recursive)
 
@@ -152,7 +152,7 @@ def post_album_add_tag(album_id):
         response = exc.jsonify()
         return flasktools.make_json_response(response, status=404)
     recursive = request.form.get('recursive', False)
-    recursive = etiquette.helpers.truthystring(recursive)
+    recursive = stringtools.truthystring(recursive)
     album.add_tag_to_all(tag, nested_children=recursive, commit=True)
     response['action'] = 'add_tag'
     response['tagname'] = tag.name
