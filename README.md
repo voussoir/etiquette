@@ -3,13 +3,13 @@ Etiquette
 
 I am currently running a read-only demonstration copy of Etiquette at https://etiquette.voussoir.net where you can browse around.
 
-### What am I looking at
+## What am I looking at
 
 Etiquette is a tag-based file organization system with a web interface, built with Flask and SQLite3. Tag-based systems solve problems that a traditional folder hierarchy can't: *which folder should a file go in if it equally belongs in both?* and *how do I make my files searchable without littering the filenames themselves with keywords?*
 
 Etiquette is unique because the tags themselves are hierarchical. By tagging one of your vacation photos with the `family.parents.dad` tag, it will automatically appear in searches for `family.parents` and `family` as well. A traditional folder system, here called albums, is available to bundle files that always belong together without creating a bespoke tag to represent that bundle. Regardless, the files on disk are never modified.
 
-### Setting up
+## Setting up
 
 <details><summary><strong>Click to view setup instructions</strong></summary>
 
@@ -56,7 +56,7 @@ Normally, Python packages use a setup.py to do this automatically. But I like ru
 </details>
 </details>
 
-### Running
+## Running
 
 <details><summary><strong>Click to view run instructions</strong></summary>
 
@@ -126,7 +126,7 @@ In order to prevent the accidental creation of Etiquette databases, you must use
 
 </details>
 
-### Basic usage
+## Basic usage
 
 Let's say you store your photos in `D:\Documents\Photos`, and you want to tag the files with Etiquette. You can get started with these steps:
 
@@ -136,11 +136,11 @@ Let's say you store your photos in `D:\Documents\Photos`, and you want to tag th
 4. Run `etiquette_flask_dev.py 5000` to start the webserver on port 5000.
 5. Open your web browser to `localhost:5000` and begin browsing.
 
-### Why does Etiquette hash files?
+## Why does Etiquette hash files?
 
 When adding new files to the database or reloading their metadata, Etiquette will create SHA256 hashes of the files. If you are using Etiquette to organize large media files, this may take a while. I was hesitant to add hashing and incur this slowdown, but the hashes greatly improve Etiquette's ability to detect when a file has been renamed or moved, which is important when you have invested your valuable time into adding tags to them. I hope that the hash time is perceived as a worthwhile tradeoff.
 
-### Maintaining your database with Etiquette CLI
+## Maintaining your database with Etiquette CLI
 
 I highly recommend storing batch/bash scripts of your favorite `etiquette_cli` invocations, so that you can quickly sync the database with the state of the disk in the future. Here are some suggestions for what you might like to include in such a script:
 
@@ -148,11 +148,11 @@ I highly recommend storing batch/bash scripts of your favorite `etiquette_cli` i
 - `reload-metadata`: In order for Etiquette's hash-based rename detection to work properly, the file hashes need to be up to date. If you're using Etiquette to track files which may be modified, you may want to get in the habit of reloading metadata regularly. By default, this will only reload metadata for files whose mtime and/or byte size have changed, so it should not be very expensive. You may add `--hash-bytes-per-second` to reduce IO load.
 - `purge-deleted-files` & `purge-empty-albums`: You should only do this after a `digest`, because if a file has been moved / renamed you want the digest to pick up on that before purging it as a dead filepath. The Photo purge should come first, so that an album containing entirely deleted photos will be empty when it comes time for the Album purge.
 
-### Project stability
+## Project stability
 
 You may notice that Etiquette doesn't have a version number anywhere. That's because I don't think it's ready for one. I am using this project to learn and practice, and breaking changes are very common.
 
-### Project structure
+## Project structure
 
 Here is a brief overview of the project to help you learn your way around:
 
@@ -173,7 +173,8 @@ Here is a brief overview of the project to help you learn your way around:
 - `utilities`  
     For other scripts that will be used with etiquette databases, but are not part of the library itself.
 
-### To do list
+## To do list
+
 - Make the wording between "new", "create", "add"; and "remove", "delete" more consistent.
 - User account system, permission levels, private pages.
 - Ability to access user photos by user's ID, not just username.
@@ -194,7 +195,8 @@ Here is a brief overview of the project to help you learn your way around:
 - Serve RSS/Atom forms of search results.
 - Caching!! I want more caching of photo's tags and albums, album's children and photos, tag's children, etc. At the moment I don't trust myself to implement it correctly with respect to deletion, relationship changes, and the possibility of two object instances (like an album holding on to a photo, but the photo itself falls out of photodb's get_cached_instance cache, then later a new instance of the photo is created, modified, deleted...)
 
-### To do list: User permissions
+## To do list: User permissions
+
 Here are some thoughts about the kinds of features that need to exist within the permission system. I don't know how I'll actually manage it just yet. Possibly a `permissions` table in the database with `user_id | permission` where `permission` is some reliably-formatted string.
 
 - Preventing logged out users from viewing any page except root and /login.
