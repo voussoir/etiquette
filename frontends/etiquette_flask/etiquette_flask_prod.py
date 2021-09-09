@@ -8,7 +8,7 @@ import werkzeug.middleware.proxy_fix
 
 from voussoirkit import pathclass
 
-import backend
+from etiquette_flask import backend
 
 backend.site.wsgi_app = werkzeug.middleware.proxy_fix.ProxyFix(backend.site.wsgi_app)
 

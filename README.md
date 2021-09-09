@@ -104,7 +104,9 @@ In order to prevent the accidental creation of Etiquette databases, you must use
 
 2. To run non-daemonized, on a specific port, with logging to the terminal, I use:
 
-       gunicorn etiquette_flask_prod:site --bind "0.0.0.0:PORT" --access-logfile "-"
+    ```
+    ~/cmd/python ~/cmd/gunicorn_py etiquette_flask.etiquette_flask_prod:site --bind "0.0.0.0:6667" --access-logfile "-" --access-logformat "%(h)s | %(t)s | %(r)s | %(s)s %(b)s"
+    ```
 
 </details>
 
