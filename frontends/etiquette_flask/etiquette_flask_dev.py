@@ -1,8 +1,22 @@
 '''
+etiquette_flask_dev
+===================
 This file is the gevent launcher for local / development use.
 
-Simply run it on the command line:
-python etiquette_flask_dev.py [port]
+> etiquette_flask_dev port <flags>
+
+port:
+    Port number on which to run the server. Default 5000.
+
+--https:
+    If this flag is not passed, HTTPS will automatically be enabled if the port
+    is 443. You can pass this flag to enable HTTPS on other ports.
+    We expect to find etiquette.key and etiquette.crt in
+    frontends/etiquette_flask/https.
+
+--localhost-only:
+    If this flag is passed, only localhost will be able to access the server.
+    Other users on the LAN will be blocked.
 '''
 import gevent.monkey; gevent.monkey.patch_all()
 
@@ -11,6 +25,7 @@ import gevent.pywsgi
 import os
 import sys
 
+from voussoirkit import betterhelp
 from voussoirkit import pathclass
 from voussoirkit import vlogging
 
@@ -85,8 +100,7 @@ def main(argv):
     parser.add_argument('--localhost_only', '--localhost-only', dest='localhost_only', action='store_true')
     parser.set_defaults(func=etiquette_flask_launch_argparse)
 
-    args = parser.parse_args(argv)
-    return args.func(args)
+    return betterhelp.single_main(argv, parser, __doc__)
 
 if __name__ == '__main__':
     raise SystemExit(main(sys.argv[1:]))
