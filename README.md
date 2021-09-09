@@ -13,56 +13,35 @@ Etiquette is unique because the tags themselves are hierarchical. By tagging one
 
 <details><summary><strong>Click to view setup instructions</strong></summary>
 
-First, use `pip install -r requirements.txt`. If you think you may have an older version of my voussoirkit, I'd also recommend `pip install voussoirkit --upgrade`.
-
 As you'll see below, Etiquette has a core backend package and multiple frontends that use it. These frontend applications will use `import etiquette` to access the backend code. Therefore, the `etiquette` package needs to be in the right place for Python to find it for `import`.
 
-Normally, Python packages use a setup.py to do this automatically. But I like running directly out of the git repository so I haven't made a setup.py yet.
+1. Run `pip install -r requirements.txt --upgrade`.
 
-<details><summary><strong>Setting up via symlink</strong></summary>
+2. Make a new folder somewhere on your computer, and add this folder to your `PYTHONPATH` environment variable. For example, I might use `D:\pythonpath` or `~/pythonpath`. Close and re-open your Command Prompt / Terminal so it reloads the environment variables.
 
-- The repository you're looking at right now is `D:\Git\Etiquette` or `/Git/Etiquette`. The toplevel `etiquette` folder is the main package. We want this package to be a child of our existing lib directory. So, we're going to put a symlink inside our Python lib folder that actually points to the code folder in this repository.
-- The easiest way to find your lib path is `python -c "import os; print(os)"`. You should see something like `<module 'os' from 'C:\Python36\Lib\os.py'>` or `<module 'os' from '/usr/local/lib/python3.6/os.py'>`
-- Make the junction or symlink:
+3. Add a symlink to the etiquette folder into that folder:
 
-  Windows: `mklink /J fakepath realpath`  
-  for example `mklink /J "C:\Python36\Lib\etiquette" "D:\Git\Etiquette\etiquette"`
+    The repository you are looking at now is `D:\Git\Etiquette` or `~/Git/Etiquette`. You can see the folder called `etiquette`.
 
-  Linux: `ln --symbolic realpath fakepath`  
-  for example `ln --symbolic "/Git/Etiquette/etiquette" "/usr/local/lib/python3.6/etiquette"`
+    Windows: `mklink /d fakepath realpath`  
+    for example `mklink /d "D:\pythonpath\etiquette" "D:\Git\Etiquette\etiquette"`
 
-- Run `python -c "import etiquette; print(etiquette)"` to confirm. You should see something like `<module 'etiquette' from 'C:\Python36\Lib\etiquette\__init__.py'>` or `<module 'etiquette' from '/usr/local/lib/python3.6/etiquette/__init__.py'>`
+    Linux: `ln --symbolic realpath fakepath`  
+    for example `ln --symbolic "~/Git/Etiquette/etiquette" "~/pythonpath/etiquette"`
 
-</details>
+4. Run `python -c "import etiquette; print(etiquette)"` to confirm.
 
-<details><summary><strong>Setting up via pythonpath</strong></summary>
-
-- The repository you're looking at right now is `D:\Git\Etiquette` or `/Git/Etiquette`. The toplevel `etiquette` folder is the main package.
-- The PYTHONPATH environment variable contains a list of directories that *contain* the packages you need to import, not the packages themselves. Therefore we want to add the repository's path, because it contains the package.
-- Set the pythonpath:
-
-  Windows: `set "PYTHONPATH=%PYTHONPATH%;D:\Git\Etiquette"`  
-  Note the semicolon to delimit paths.  
-  This only applies to the current cmd session. To make it permanent, use Windows's Environment Variable editor or the `setx` command. The editor is easier to use.
-
-  Linux: `PYTHONPATH="$PYTHONPATH:/Git/Etiquette"`  
-  Note the colon to delimit paths.  
-  This only applies to the current terminal session. To make it permanent, add the export to your bashrc.
-
-- Run `echo %PYTHONPATH%` or `echo $PYTHONPATH` to confirm.
-- Close your terminal and re-open it so that it uses the new environment variables.
-- Run `python -c "import etiquette; print(etiquette)"` to confirm. You should see something like `<module 'etiquette' from 'D:\Git\Etiquette\etiquette\__init__.py'>` or `<module 'etiquette' from '/Git/Etiquette/etiquette/__init__.py'>`.
-
-</details>
 </details>
 
 ## Running
 
-<details><summary><strong>Click to view run instructions</strong></summary>
+<details>
+<summary><strong>Click to view run instructions</strong></summary>
 
 In order to prevent the accidental creation of Etiquette databases, you must use `etiquette_cli.py init` to create your database.
 
-<details><summary><strong>Running Etiquette CLI</strong></summary>
+<details>
+<summary><strong>Running Etiquette CLI</strong></summary>
 
 - Run `python etiquette_cli.py` to launch the script. You should see a help message describing each of the commands.
 
@@ -78,7 +57,8 @@ In order to prevent the accidental creation of Etiquette databases, you must use
 
 </details>
 
-<details><summary><strong>Running Etiquette Flask locally</strong></summary>
+<details>
+<summary><strong>Running Etiquette Flask locally</strong></summary>
 
 - Run `python etiquette_flask_dev.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
 
@@ -94,13 +74,18 @@ In order to prevent the accidental creation of Etiquette databases, you must use
 
 </details>
 
-<details><summary><strong>Running Etiquette Flask with Gunicorn</strong></summary>
+<details>
+<summary><strong>Running Etiquette Flask with Gunicorn</strong></summary>
 
-1. Use the PYTHONPATH technique to make both `etiquette` and the flask `backend` importable. You already know that the frontend code imports the backend code. But now, gunicorn needs to import the frontend code! And the server relies on static files which are relative to the code's location. So, the symlink technique doesn't work very well here, and PYTHONPATH is preferred.
+You already know that the frontend code imports the backend code. But now, gunicorn needs to import the frontend code.
 
-   Remember that the Pythonpath points to directories that *contain* the packages you need to import, not to the packages themselves. Therefore we point to the etiquette and etiquette_flask directories.
+1. Add a symlink to the `frontends/etiquette_flask` folder into the folder you added to your `PYTHONPATH` earlier.
 
-       PYTHONPATH="$PYTHONPATH:/Git/Etiquette:/Git/Etiquette/frontends/etiquette_flask
+    Windows: `mklink /d fakepath realpath`  
+    for example `mklink /d "D:\pythonpath\etiquette_flask" "D:\Git\Etiquette\frontends\etiquette_flask"`
+
+    Linux: `ln --symbolic realpath fakepath`  
+    for example `ln --symbolic "~/Git/Etiquette/frontends/etiquette_flask" "~/pythonpath/etiquette_flask"`
 
 2. To run non-daemonized, on a specific port, with logging to the terminal, I use:
 
@@ -110,7 +95,8 @@ In order to prevent the accidental creation of Etiquette databases, you must use
 
 </details>
 
-<details><summary><strong>Running Etiquette REPL</strong></summary>
+<details>
+<summary><strong>Running Etiquette REPL</strong></summary>
 
 - Run `python etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 
@@ -125,7 +111,6 @@ In order to prevent the accidental creation of Etiquette databases, you must use
 - In practice, I have a shortcut file on my PATH which runs this command.
 
 </details>
-
 </details>
 
 ## Basic usage
