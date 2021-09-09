@@ -6,20 +6,15 @@ python etiquette_flask_dev.py [port]
 '''
 import gevent.monkey; gevent.monkey.patch_all()
 
-import logging
-handler = logging.StreamHandler()
-log_format = '{levelname}:etiquette.{module}.{funcName}: {message}'
-handler.setFormatter(logging.Formatter(log_format, style='{'))
-logging.getLogger().addHandler(handler)
-
 import argparse
 import gevent.pywsgi
 import os
 import sys
 
 from voussoirkit import pathclass
-from voussoirkit import pipeable
 from voussoirkit import vlogging
+
+log = vlogging.getLogger(__name__, 'etiquette_flask_dev')
 
 import etiquette
 import backend
@@ -28,7 +23,6 @@ site = backend.site
 site.debug = True
 
 HTTPS_DIR = pathclass.Path(__file__).parent.with_child('https')
-LOG_LEVEL = vlogging.NOTSET
 
 ####################################################################################################
 
@@ -58,21 +52,22 @@ def etiquette_flask_launch(
         site.localhost_only = True
 
     try:
-        backend.common.init_photodb(path=pathclass.cwd(), log_level=LOG_LEVEL)
+        backend.common.init_photodb(path=pathclass.cwd())
     except etiquette.exceptions.NoClosestPhotoDB as exc:
-        pipeable.stderr(exc.error_message)
-        pipeable.stderr('Try `etiquette_cli.py init` to create the database.')
+        log.error(exc.error_message)
+        log.error('Try `etiquette_cli.py init` to create the database.')
         return 1
 
     message = f'Starting server on port {port}, pid={os.getpid()}.'
     if use_https:
         message += ' (https)'
-    print(message)
+    log.info(message)
 
     try:
         http.serve_forever()
     except KeyboardInterrupt:
-        pass
+        log.info('Goodbye')
+        return 0
 
 def etiquette_flask_launch_argparse(args):
     return etiquette_flask_launch(
@@ -81,10 +76,8 @@ def etiquette_flask_launch_argparse(args):
         use_https=args.use_https,
     )
 
+@vlogging.main_decorator
 def main(argv):
-    global LOG_LEVEL
-    (LOG_LEVEL, argv) = vlogging.get_level_by_argv(argv)
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument('port', nargs='?', type=int, default=5000)

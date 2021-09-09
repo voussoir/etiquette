@@ -1840,7 +1840,6 @@ class PhotoDB(
             *,
             create=True,
             ephemeral=False,
-            log_level=vlogging.NOTSET,
             skip_version_check=False,
         ):
         '''
@@ -1890,7 +1889,6 @@ class PhotoDB(
 
         # LOGGING
         self.log = vlogging.getLogger(f'{__name__}:{self.data_directory.absolute_path}')
-        self.log.setLevel(log_level)
 
         # DATABASE
         if self.ephemeral:
