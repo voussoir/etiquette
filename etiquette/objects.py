@@ -1063,11 +1063,10 @@ class Photo(ObjectBase):
                     height=self.photodb.config['thumbnail_height'],
                     **special
                 )
-            except Exception:
-                traceback.print_exc()
-            else:
                 if success:
                     return_filepath = hopeful_filepath
+            except Exception:
+                self.photodb.log.warning(traceback.format_exc())
 
         if return_filepath != self.thumbnail:
             if return_filepath is None:
