@@ -13,13 +13,6 @@ from voussoirkit import vlogging
 
 import etiquette
 
-LOG_LEVEL = vlogging.NOTSET
-
-handler = vlogging.StreamHandler()
-log_format = '{levelname}:etiquette.{module}.{funcName}: {message}'
-handler.setFormatter(vlogging.Formatter(log_format, style='{'))
-vlogging.getLogger().addHandler(handler)
-
 photodbs = {}
 
 def find_photodb():
@@ -30,7 +23,7 @@ def find_photodb():
         pass
 
     # If this raises, main will catch it.
-    photodb = etiquette.photodb.PhotoDB.closest_photodb(cwd, log_level=LOG_LEVEL)
+    photodb = etiquette.photodb.PhotoDB.closest_photodb(cwd)
     photodbs[cwd] = photodb
     return photodb
 
@@ -870,10 +863,8 @@ tag_list:
 
 DOCSTRING = betterhelp.add_previews(DOCSTRING, SUB_DOCSTRINGS)
 
+@vlogging.main_decorator
 def main(argv):
-    global LOG_LEVEL
-    (LOG_LEVEL, argv) = vlogging.get_level_by_argv(argv)
-
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers()
 
