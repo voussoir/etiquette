@@ -541,22 +541,30 @@ TO SEE DETAILS ON EACH COMMAND, RUN
 SUB_DOCSTRINGS = dict(
 add_tag='''
 add_tag:
-    Add a tag to files by a filename glob.
+    Add a tag to photos by a filename glob or by search results.
 
-    > etiquette_cli.py add_tag tag_name glob_pattern
+    > etiquette_cli.py add_tag tag_name glob_patterns
+    > etiquette_cli.py add_tag tag_name --search searchargs
 
     Examples:
-    > etiquette_cli.py add_tag wallpaper wall*.jpg
+    > etiquette_cli.py add_tag wallpaper wall*.jpg wall*.png
+    > etiquette_cli.py add_tag author.author_voussoir --search --tag-forbids author
+
+    See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
 
 remove_tag='''
 remove_tag:
-    Remove a tag from files by a filename glob.
+    Remove a tag from photos by a filename glob or by search results.
 
-    > etiquette_cli.py remove_tag tag_name glob_pattern
+    > etiquette_cli.py remove_tag tag_name glob_patterns
+    > etiquette_cli.py remove_tag tag_name --search searchargs
 
     Examples:
     > etiquette_cli.py remove_tag watchlist spongebob*.mp4
+    > etiquette_cli.py remove_tag watchlist --search --tag-musts directed_by_michael_bay
+
+    See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
 
 delete='''
@@ -667,6 +675,9 @@ generate_thumbnail:
     > etiquette_cli.py generate_thumbnail
     > etiquette_cli.py generate_thumbnail --photos id id id
     > etiquette_cli.py generate_thumbnail searchargs
+
+    Examples:
+    > etiquette_cli.py generate_thumbnail --search --has-thumbnail no
 
     See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
