@@ -1,9 +1,3 @@
-import logging
-handler = logging.StreamHandler()
-log_format = '{levelname}:etiquette.{module}.{funcName}: {message}'
-handler.setFormatter(logging.Formatter(log_format, style='{'))
-logging.getLogger().addHandler(handler)
-
 import argparse
 import code
 import sys
@@ -15,8 +9,6 @@ from voussoirkit import pipeable
 from voussoirkit import vlogging
 
 import etiquette
-
-LOG_LEVEL = vlogging.NOTSET
 
 def easytagger():
     while True:
@@ -42,7 +34,7 @@ def erepl_argparse(args):
     global P
 
     try:
-        P = etiquette.photodb.PhotoDB.closest_photodb(pathclass.cwd(), log_level=LOG_LEVEL)
+        P = etiquette.photodb.PhotoDB.closest_photodb(pathclass.cwd())
     except etiquette.exceptions.NoClosestPhotoDB as exc:
         pipeable.stderr(exc.error_message)
         pipeable.stderr('Try `etiquette_cli.py init` to create the database.')
@@ -63,10 +55,8 @@ def erepl_argparse(args):
             if interactive.getpermission():
                 break
 
+@vlogging.main_decorator
 def main(argv):
-    global LOG_LEVEL
-    (LOG_LEVEL, argv) = vlogging.get_level_by_argv(argv)
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--exec', dest='exec_statement', default=None)
