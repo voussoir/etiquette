@@ -71,6 +71,9 @@ class NoSuchUser(NoSuch):
 
 # EXISTS ###########################################################################################
 
+# The following inits store a copy of the object so that the exception catcher
+# can do something with it. It's not related to the string formatting.
+
 class Exists(EtiquetteException):
     pass
 
@@ -159,14 +162,6 @@ class Unauthorized(EtiquetteException):
 
 class WrongLogin(EtiquetteException):
     error_message = 'Wrong username-password combination.'
-
-# SQL ERRORS #######################################################################################
-
-class BadSQL(EtiquetteException):
-    pass
-
-class BadTable(BadSQL):
-    error_message = 'Table "{}" does not exist.'
 
 # GENERAL ERRORS ###################################################################################
 

@@ -20,6 +20,10 @@ from voussoirkit import sentinel
 from voussoirkit import spinal
 from voussoirkit import sqlhelpers
 from voussoirkit import stringtools
+from voussoirkit import vlogging
+from voussoirkit import worms
+
+log = vlogging.getLogger(__name__)
 
 from . import constants
 from . import decorators
@@ -28,51 +32,13 @@ from . import helpers
 
 BAIL = sentinel.Sentinel('BAIL')
 
-def normalize_db_row(db_row, table) -> dict:
-    '''
-    Raises KeyError if table is not one of the recognized tables.
-
-    Raises TypeError if db_row is not the right type.
-    '''
-    if isinstance(db_row, dict):
-        return db_row
-
-    if isinstance(db_row, (list, tuple)):
-        return dict(zip(constants.SQL_COLUMNS[table], db_row))
-
-    raise TypeError(f'db_row should be {dict}, {list}, or {tuple}, not {type(db_row)}.')
-
-class ObjectBase:
+class ObjectBase(worms.Object):
     def __init__(self, photodb):
-        super().__init__()
+        super().__init__(photodb)
         self.photodb = photodb
+        # Used by decorators.required_feature.
+        self._photodb = photodb
         self.deleted = False
-
-    def __reinit__(self):
-        '''
-        Reload the row from the database and do __init__ with it.
-        '''
-        row = self.photodb.sql_select_one(f'SELECT * FROM {self.table} WHERE id == ?', [self.id])
-        if row is None:
-            self.deleted = True
-        else:
-            self.__init__(self.photodb, row)
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, type(self)) and
-            self.photodb == other.photodb and
-            self.id == other.id
-        )
-
-    def __format__(self, formcode):
-        if formcode == 'r':
-            return repr(self)
-        else:
-            return str(self)
-
-    def __hash__(self):
-        return hash(self.id)
 
     @staticmethod
     def normalize_author_id(author_id) -> typing.Optional[str]:
@@ -126,7 +92,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         if not children:
             return
 
-        self.photodb.sql_delete(table=self.group_table, pairs={'parentid': self.id})
+        self.photodb.delete(table=self.group_table, pairs={'parentid': self.id})
 
         parents = self.get_parents()
         for parent in parents:
@@ -141,7 +107,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         if self.has_child(member):
             return BAIL
 
-        self.photodb.log.info('Adding child %s to %s.', member, self)
+        log.info('Adding child %s to %s.', member, self)
 
         for my_ancestor in self.walk_parents():
             if my_ancestor == member:
@@ -151,7 +117,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
             'parentid': self.id,
             'memberid': member.id,
         }
-        self.photodb.sql_insert(table=self.group_table, data=data)
+        self.photodb.insert(table=self.group_table, data=data)
 
     @abc.abstractmethod
     def add_child(self, member):
@@ -197,23 +163,21 @@ class GroupableMixin(metaclass=abc.ABCMeta):
 
         # Note that this part comes after the deletion of children to prevent
         # issues of recursion.
-        self.photodb.sql_delete(table=self.group_table, pairs={'memberid': self.id})
+        self.photodb.delete(table=self.group_table, pairs={'memberid': self.id})
         self._uncache()
         self.deleted = True
 
     def get_children(self) -> set:
-        child_rows = self.photodb.sql_select(
+        child_ids = self.photodb.select_column(
             f'SELECT memberid FROM {self.group_table} WHERE parentid == ?',
             [self.id]
         )
-        child_ids = (child_id for (child_id,) in child_rows)
         children = set(self.group_getter_many(child_ids))
         return children
 
     def get_parents(self) -> set:
         query = f'SELECT parentid FROM {self.group_table} WHERE memberid == ?'
-        parent_rows = self.photodb.sql_select(query, [self.id])
-        parent_ids = (parent_id for (parent_id,) in parent_rows)
+        parent_ids = self.photodb.select_column(query, [self.id])
         parents = set(self.group_getter_many(parent_ids))
         return parents
 
@@ -222,18 +186,18 @@ class GroupableMixin(metaclass=abc.ABCMeta):
 
     def has_any_child(self) -> bool:
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? LIMIT 1'
-        row = self.photodb.sql_select_one(query, [self.id])
+        row = self.photodb.select_one(query, [self.id])
         return row is not None
 
     def has_any_parent(self) -> bool:
         query = f'SELECT 1 FROM {self.group_table} WHERE memberid == ? LIMIT 1'
-        row = self.photodb.sql_select_one(query, [self.id])
+        row = self.photodb.select_one(query, [self.id])
         return row is not None
 
     def has_child(self, member) -> bool:
         self.assert_same_type(member)
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? AND memberid == ?'
-        row = self.photodb.sql_select_one(query, [self.id, member.id])
+        row = self.photodb.select_one(query, [self.id, member.id])
         return row is not None
 
     def has_descendant(self, descendant) -> bool:
@@ -242,20 +206,20 @@ class GroupableMixin(metaclass=abc.ABCMeta):
     def has_parent(self, parent) -> bool:
         self.assert_same_type(parent)
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? AND memberid == ?'
-        row = self.photodb.sql_select_one(query, [parent.id, self.id])
+        row = self.photodb.select_one(query, [parent.id, self.id])
         return row is not None
 
     def _remove_child(self, member):
         if not self.has_child(member):
             return BAIL
 
-        self.photodb.log.info('Removing child %s from %s.', member, self)
+        log.info('Removing child %s from %s.', member, self)
 
         pairs = {
             'parentid': self.id,
             'memberid': member.id,
         }
-        self.photodb.sql_delete(table=self.group_table, pairs=pairs)
+        self.photodb.delete(table=self.group_table, pairs=pairs)
 
     @abc.abstractmethod
     def remove_child(self, member):
@@ -295,10 +259,11 @@ class GroupableMixin(metaclass=abc.ABCMeta):
 class Album(ObjectBase, GroupableMixin):
     table = 'albums'
     group_table = 'album_group_rel'
+    no_such_exception = exceptions.NoSuchAlbum
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        db_row = normalize_db_row(db_row, self.table)
+        db_row = self.photodb.normalize_db_row(db_row, self.table)
 
         self.id = db_row['id']
         self.title = self.normalize_title(db_row['title'])
@@ -349,7 +314,7 @@ class Album(ObjectBase, GroupableMixin):
         return title
 
     def _uncache(self):
-        self.photodb.caches['album'].remove(self.id)
+        self.photodb.caches[Album].remove(self.id)
 
     def _add_associated_directory(self, path):
         path = pathclass.Path(path)
@@ -360,12 +325,12 @@ class Album(ObjectBase, GroupableMixin):
         if self.has_associated_directory(path):
             return
 
-        self.photodb.log.info('Adding directory "%s" to %s.', path.absolute_path, self)
+        log.info('Adding directory "%s" to %s.', path.absolute_path, self)
         data = {'albumid': self.id, 'directory': path.absolute_path}
-        self.photodb.sql_insert(table='album_associated_directories', data=data)
+        self.photodb.insert(table='album_associated_directories', data=data)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def add_associated_directory(self, path) -> None:
         '''
         Add a directory from which this album will pull files during rescans.
@@ -377,7 +342,7 @@ class Album(ObjectBase, GroupableMixin):
         self._add_associated_directory(path)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def add_associated_directories(self, paths) -> None:
         '''
         Add multiple associated directories.
@@ -388,7 +353,7 @@ class Album(ObjectBase, GroupableMixin):
             self._add_associated_directory(path)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def add_child(self, member):
         '''
         Raises exceptions.CantGroupSelf if member is self.
@@ -398,17 +363,17 @@ class Album(ObjectBase, GroupableMixin):
         return super().add_child(member)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def add_children(self, *args, **kwargs):
         return super().add_children(*args, **kwargs)
 
     def _add_photo(self, photo):
-        self.photodb.log.info('Adding photo %s to %s.', photo, self)
+        log.info('Adding photo %s to %s.', photo, self)
         data = {'albumid': self.id, 'photoid': photo.id}
-        self.photodb.sql_insert(table='album_photo_rel', data=data)
+        self.photodb.insert(table='album_photo_rel', data=data)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def add_photo(self, photo) -> None:
         if self.has_photo(photo):
             return
@@ -416,7 +381,7 @@ class Album(ObjectBase, GroupableMixin):
         self._add_photo(photo)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def add_photos(self, photos) -> None:
         existing_photos = set(self.get_photos())
         photos = set(photos)
@@ -429,7 +394,7 @@ class Album(ObjectBase, GroupableMixin):
             self._add_photo(photo)
 
     # Photo.add_tag already has @required_feature
-    @decorators.transaction
+    @worms.transaction
     def add_tag_to_all(self, tag, *, nested_children=True) -> None:
         '''
         Add this tag to every photo in the album. Saves you from having to
@@ -449,13 +414,13 @@ class Album(ObjectBase, GroupableMixin):
             photo.add_tag(tag)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def delete(self, *, delete_children=False) -> None:
-        self.photodb.log.info('Deleting %s.', self)
+        log.info('Deleting %s.', self)
         GroupableMixin.delete(self, delete_children=delete_children)
-        self.photodb.sql_delete(table='album_associated_directories', pairs={'albumid': self.id})
-        self.photodb.sql_delete(table='album_photo_rel', pairs={'albumid': self.id})
-        self.photodb.sql_delete(table='albums', pairs={'id': self.id})
+        self.photodb.delete(table='album_associated_directories', pairs={'albumid': self.id})
+        self.photodb.delete(table='album_photo_rel', pairs={'albumid': self.id})
+        self.photodb.delete(table=Album, pairs={'id': self.id})
         self._uncache()
         self.deleted = True
 
@@ -467,7 +432,7 @@ class Album(ObjectBase, GroupableMixin):
             return self.id
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def edit(self, title=None, description=None) -> None:
         '''
         Change the title or description. Leave None to keep current value.
@@ -486,7 +451,7 @@ class Album(ObjectBase, GroupableMixin):
             'title': title,
             'description': description,
         }
-        self.photodb.sql_update(table='albums', pairs=data, where_key='id')
+        self.photodb.update(table=Album, pairs=data, where_key='id')
         self.title = title
         self.description = description
 
@@ -498,19 +463,18 @@ class Album(ObjectBase, GroupableMixin):
             return self.id
 
     def get_associated_directories(self) -> set[pathclass.Path]:
-        directory_rows = self.photodb.sql_select(
+        directories = self.photodb.select_column(
             'SELECT directory FROM album_associated_directories WHERE albumid == ?',
             [self.id]
         )
-        directories = set(pathclass.Path(directory) for (directory,) in directory_rows)
+        directories = set(pathclass.Path(d) for d in directories)
         return directories
 
     def get_photos(self) -> set:
-        photo_rows = self.photodb.sql_select(
+        photo_ids = self.photodb.select_column(
             'SELECT photoid FROM album_photo_rel WHERE albumid == ?',
             [self.id]
         )
-        photo_ids = (photo_id for (photo_id,) in photo_rows)
         photos = set(self.photodb.get_photos_by_id(photo_ids))
         return photos
 
@@ -518,7 +482,7 @@ class Album(ObjectBase, GroupableMixin):
         '''
         Return True if this album has at least 1 associated directory.
         '''
-        row = self.photodb.sql_select_one(
+        row = self.photodb.select_one(
             'SELECT 1 FROM album_associated_directories WHERE albumid == ?',
             [self.id]
         )
@@ -532,7 +496,7 @@ class Album(ObjectBase, GroupableMixin):
             If True, photos in child albums satisfy.
             If False, only consider this album.
         '''
-        row = self.photodb.sql_select_one(
+        row = self.photodb.select_one(
             'SELECT 1 FROM album_photo_rel WHERE albumid == ? LIMIT 1',
             [self.id]
         )
@@ -551,14 +515,14 @@ class Album(ObjectBase, GroupableMixin):
 
     def has_associated_directory(self, path) -> bool:
         path = pathclass.Path(path)
-        row = self.photodb.sql_select_one(
+        row = self.photodb.select_one(
             'SELECT 1 FROM album_associated_directories WHERE albumid == ? AND directory == ?',
             [self.id, path.absolute_path]
         )
         return row is not None
 
     def has_photo(self, photo) -> bool:
-        row = self.photodb.sql_select_one(
+        row = self.photodb.select_one(
             'SELECT 1 FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
             [self.id, photo.id]
         )
@@ -583,27 +547,27 @@ class Album(ObjectBase, GroupableMixin):
         return j
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def remove_child(self, *args, **kwargs):
         return super().remove_child(*args, **kwargs)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def remove_children(self, *args, **kwargs):
         return super().remove_children(*args, **kwargs)
 
     def _remove_photo(self, photo):
-        self.photodb.log.info('Removing photo %s from %s.', photo, self)
+        log.info('Removing photo %s from %s.', photo, self)
         pairs = {'albumid': self.id, 'photoid': photo.id}
-        self.photodb.sql_delete(table='album_photo_rel', pairs=pairs)
+        self.photodb.delete(table='album_photo_rel', pairs=pairs)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def remove_photo(self, photo) -> None:
         self._remove_photo(photo)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def remove_photos(self, photos) -> None:
         existing_photos = set(self.get_photos())
         photos = set(photos)
@@ -616,7 +580,7 @@ class Album(ObjectBase, GroupableMixin):
             self._remove_photo(photo)
 
     @decorators.required_feature('album.edit')
-    @decorators.transaction
+    @worms.transaction
     def set_thumbnail_photo(self, photo) -> None:
         '''
         Raises TypeError if photo is not a Photo.
@@ -639,7 +603,7 @@ class Album(ObjectBase, GroupableMixin):
             'id': self.id,
             'thumbnail_photo': photo_id,
         }
-        self.photodb.sql_update(table='albums', pairs=pairs, where_key='id')
+        self.photodb.update(table=Album, pairs=pairs, where_key='id')
         self._thumbnail_photo = photo
 
     def sum_bytes(self, recurse=True) -> int:
@@ -660,7 +624,7 @@ class Album(ObjectBase, GroupableMixin):
 
         albumids = sqlhelpers.listify(albumids)
         query = query.format(albumids=albumids)
-        total = self.photodb.sql_select_one(query)[0]
+        total = self.photodb.select_one(query)[0]
         return total
 
     def sum_children(self, recurse=True) -> int:
@@ -682,7 +646,7 @@ class Album(ObjectBase, GroupableMixin):
         WHERE parentid == ?
         ''')
         bindings = [self.id]
-        total = self.photodb.sql_select_one(query, bindings)[0]
+        total = self.photodb.select_one(query, bindings)[0]
         return total
 
     def sum_photos(self, recurse=True) -> int:
@@ -704,7 +668,7 @@ class Album(ObjectBase, GroupableMixin):
 
         albumids = sqlhelpers.listify(albumids)
         query = query.format(albumids=albumids)
-        total = self.photodb.sql_select_one(query)[0]
+        total = self.photodb.select_one(query)[0]
         return total
 
     # Will add -> Photo when forward references are supported by Python.
@@ -728,10 +692,11 @@ class Album(ObjectBase, GroupableMixin):
 
 class Bookmark(ObjectBase):
     table = 'bookmarks'
+    no_such_exception = exceptions.NoSuchBookmark
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        db_row = normalize_db_row(db_row, self.table)
+        db_row = self.photodb.normalize_db_row(db_row, self.table)
 
         self.id = db_row['id']
         self.title = self.normalize_title(db_row['title'])
@@ -778,12 +743,12 @@ class Bookmark(ObjectBase):
         return url
 
     def _uncache(self):
-        self.photodb.caches['bookmark'].remove(self.id)
+        self.photodb.caches[Bookmark].remove(self.id)
 
     @decorators.required_feature('bookmark.edit')
-    @decorators.transaction
+    @worms.transaction
     def delete(self) -> None:
-        self.photodb.sql_delete(table='bookmarks', pairs={'id': self.id})
+        self.photodb.delete(table=Bookmark, pairs={'id': self.id})
         self._uncache()
         self.deleted = True
 
@@ -795,7 +760,7 @@ class Bookmark(ObjectBase):
             return self.id
 
     @decorators.required_feature('bookmark.edit')
-    @decorators.transaction
+    @worms.transaction
     def edit(self, title=None, url=None) -> None:
         '''
         Change the title or URL. Leave None to keep current.
@@ -814,7 +779,7 @@ class Bookmark(ObjectBase):
             'title': title,
             'url': url,
         }
-        self.photodb.sql_update(table='bookmarks', pairs=data, where_key='id')
+        self.photodb.update(table=Bookmark, pairs=data, where_key='id')
         self.title = title
         self.url = url
 
@@ -837,10 +802,11 @@ class Photo(ObjectBase):
     Photos are not the actual image data, just the database entry.
     '''
     table = 'photos'
+    no_such_exception = exceptions.NoSuchPhoto
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        db_row = normalize_db_row(db_row, self.table)
+        db_row = self.photodb.normalize_db_row(db_row, self.table)
 
         self.real_path = db_row['filepath']
         self.real_path = pathclass.Path(self.real_path)
@@ -924,11 +890,11 @@ class Photo(ObjectBase):
             self.simple_mimetype = self.mimetype.split('/')[0]
 
     def _uncache(self):
-        self.photodb.caches['photo'].remove(self.id)
+        self.photodb.caches[Photo].remove(self.id)
 
     # Will add -> Tag when forward references are supported by Python.
     @decorators.required_feature('photo.add_remove_tag')
-    @decorators.transaction
+    @worms.transaction
     def add_tag(self, tag):
         tag = self.photodb.get_tag(name=tag)
 
@@ -940,27 +906,27 @@ class Photo(ObjectBase):
         # keep our current one.
         existing = self.has_tag(tag, check_children=True)
         if existing:
-            self.photodb.log.debug('Preferring existing %s over %s.', existing, tag)
+            log.debug('Preferring existing %s over %s.', existing, tag)
             return existing
 
         # If the new tag is more specific, remove our current one for it.
         for parent in tag.walk_parents():
             if self.has_tag(parent, check_children=False):
-                self.photodb.log.debug('Preferring new %s over %s.', tag, parent)
+                log.debug('Preferring new %s over %s.', tag, parent)
                 self.remove_tag(parent)
 
-        self.photodb.log.info('Applying %s to %s.', tag, self)
+        log.info('Applying %s to %s.', tag, self)
 
         data = {
             'photoid': self.id,
             'tagid': tag.id
         }
-        self.photodb.sql_insert(table='photo_tag_rel', data=data)
+        self.photodb.insert(table='photo_tag_rel', data=data)
         data = {
             'id': self.id,
             'tagged_at': helpers.now(),
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+        self.photodb.update(table=Photo, pairs=data, where_key='id')
 
         return tag
 
@@ -982,7 +948,7 @@ class Photo(ObjectBase):
         return '??? b'
 
     # Photo.add_tag already has @required_feature add_remove_tag
-    @decorators.transaction
+    @worms.transaction
     def copy_tags(self, other_photo) -> None:
         '''
         Take all of the tags owned by other_photo and apply them to this photo.
@@ -991,23 +957,23 @@ class Photo(ObjectBase):
             self.add_tag(tag)
 
     @decorators.required_feature('photo.edit')
-    @decorators.transaction
+    @worms.transaction
     def delete(self, *, delete_file=False) -> None:
         '''
         Delete the Photo and its relation to any tags and albums.
         '''
-        self.photodb.log.info('Deleting %s.', self)
-        self.photodb.sql_delete(table='photo_tag_rel', pairs={'photoid': self.id})
-        self.photodb.sql_delete(table='album_photo_rel', pairs={'photoid': self.id})
-        self.photodb.sql_delete(table='photos', pairs={'id': self.id})
+        log.info('Deleting %s.', self)
+        self.photodb.delete(table='photo_tag_rel', pairs={'photoid': self.id})
+        self.photodb.delete(table='album_photo_rel', pairs={'photoid': self.id})
+        self.photodb.delete(table=Photo, pairs={'id': self.id})
 
         if delete_file and self.real_path.exists:
             path = self.real_path.absolute_path
             if self.photodb.config['recycle_instead_of_delete']:
-                self.photodb.log.debug('Recycling %s.', path)
+                log.debug('Recycling %s.', path)
                 action = send2trash.send2trash
             else:
-                self.photodb.log.debug('Deleting %s.', path)
+                log.debug('Deleting %s.', path)
                 action = os.remove
 
             self.photodb.on_commit_queue.append({
@@ -1030,7 +996,7 @@ class Photo(ObjectBase):
         return hms.seconds_to_hms(self.duration)
 
     @decorators.required_feature('photo.generate_thumbnail')
-    @decorators.transaction
+    @worms.transaction
     def generate_thumbnail(self, **special) -> pathclass.Path:
         '''
         special:
@@ -1040,7 +1006,7 @@ class Photo(ObjectBase):
         return_filepath = None
 
         if self.simple_mimetype == 'image':
-            self.photodb.log.info('Thumbnailing %s.', self.real_path.absolute_path)
+            log.info('Thumbnailing %s.', self.real_path.absolute_path)
             try:
                 image = helpers.generate_image_thumbnail(
                     self.real_path.absolute_path,
@@ -1054,7 +1020,7 @@ class Photo(ObjectBase):
                 return_filepath = hopeful_filepath
 
         elif self.simple_mimetype == 'video' and constants.ffmpeg:
-            self.photodb.log.info('Thumbnailing %s.', self.real_path.absolute_path)
+            log.info('Thumbnailing %s.', self.real_path.absolute_path)
             try:
                 success = helpers.generate_video_thumbnail(
                     self.real_path.absolute_path,
@@ -1066,7 +1032,7 @@ class Photo(ObjectBase):
                 if success:
                     return_filepath = hopeful_filepath
             except Exception:
-                self.photodb.log.warning(traceback.format_exc())
+                log.warning(traceback.format_exc())
 
         if return_filepath != self.thumbnail:
             if return_filepath is None:
@@ -1077,7 +1043,7 @@ class Photo(ObjectBase):
                 'id': self.id,
                 'thumbnail': store_as,
             }
-            self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+            self.photodb.update(table=Photo, pairs=data, where_key='id')
             self.thumbnail = return_filepath
 
         self._uncache()
@@ -1089,11 +1055,10 @@ class Photo(ObjectBase):
         '''
         Return the albums of which this photo is a member.
         '''
-        album_rows = self.photodb.sql_select(
+        album_ids = self.photodb.select_column(
             'SELECT albumid FROM album_photo_rel WHERE photoid == ?',
             [self.id]
         )
-        album_ids = (album_id for (album_id,) in album_rows)
         albums = set(self.photodb.get_albums_by_id(album_ids))
         return albums
 
@@ -1101,11 +1066,10 @@ class Photo(ObjectBase):
         '''
         Return the tags assigned to this Photo.
         '''
-        tag_rows = self.photodb.sql_select(
+        tag_ids = self.photodb.select_column(
             'SELECT tagid FROM photo_tag_rel WHERE photoid == ?',
             [self.id]
         )
-        tag_ids = (tag_id for (tag_id,) in tag_rows)
         tags = set(self.photodb.get_tags_by_id(tag_ids))
         return tags
 
@@ -1128,7 +1092,7 @@ class Photo(ObjectBase):
 
         tag_by_id = {t.id: t for t in tag_options}
         tag_option_ids = sqlhelpers.listify(tag_by_id)
-        rel_row = self.photodb.sql_select_one(
+        rel_row = self.photodb.select_one(
             f'SELECT tagid FROM photo_tag_rel WHERE photoid == ? AND tagid IN {tag_option_ids}',
             [self.id]
         )
@@ -1181,7 +1145,7 @@ class Photo(ObjectBase):
         return hopeful_filepath
 
     # Photo.rename_file already has @required_feature
-    @decorators.transaction
+    @worms.transaction
     def move_file(self, directory) -> None:
         directory = pathclass.Path(directory)
         directory.assert_is_directory()
@@ -1232,12 +1196,12 @@ class Photo(ObjectBase):
         self.duration = probe.audio.duration
 
     @decorators.required_feature('photo.reload_metadata')
-    @decorators.transaction
+    @worms.transaction
     def reload_metadata(self, hash_kwargs=None) -> None:
         '''
         Load the file's height, width, etc as appropriate for this type of file.
         '''
-        self.photodb.log.info('Reloading metadata for %s.', self)
+        log.info('Reloading metadata for %s.', self)
 
         self.mtime = None
         self.sha256 = None
@@ -1284,12 +1248,12 @@ class Photo(ObjectBase):
             'duration': self.duration,
             'bytes': self.bytes,
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+        self.photodb.update(table=Photo, pairs=data, where_key='id')
 
         self._uncache()
 
     @decorators.required_feature('photo.edit')
-    @decorators.transaction
+    @worms.transaction
     def relocate(self, new_filepath) -> None:
         '''
         Point the Photo object to a different filepath.
@@ -1311,57 +1275,57 @@ class Photo(ObjectBase):
 
         self.photodb.assert_no_such_photo_by_path(filepath=new_filepath)
 
-        self.photodb.log.info('Relocating %s to "%s".', self, new_filepath.absolute_path)
+        log.info('Relocating %s to "%s".', self, new_filepath.absolute_path)
         data = {
             'id': self.id,
             'filepath': new_filepath.absolute_path,
             'basename': new_filepath.basename,
             'extension': new_filepath.extension.no_dot,
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+        self.photodb.update(table=Photo, pairs=data, where_key='id')
         self.real_path = new_filepath
         self._assign_mimetype()
         self._uncache()
 
     @decorators.required_feature('photo.add_remove_tag')
-    @decorators.transaction
+    @worms.transaction
     def remove_tag(self, tag) -> None:
         tag = self.photodb.get_tag(name=tag)
 
-        self.photodb.log.info('Removing %s from %s.', tag, self)
+        log.info('Removing %s from %s.', tag, self)
         pairs = {
             'photoid': self.id,
             'tagid': tag.id,
         }
-        self.photodb.sql_delete(table='photo_tag_rel', pairs=pairs)
+        self.photodb.delete(table='photo_tag_rel', pairs=pairs)
 
         data = {
             'id': self.id,
             'tagged_at': helpers.now(),
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+        self.photodb.update(table=Photo, pairs=data, where_key='id')
 
     @decorators.required_feature('photo.add_remove_tag')
-    @decorators.transaction
+    @worms.transaction
     def remove_tags(self, tags) -> None:
         tags = [self.photodb.get_tag(name=tag) for tag in tags]
 
-        self.photodb.log.info('Removing %s from %s.', tags, self)
+        log.info('Removing %s from %s.', tags, self)
         query = f'''
         DELETE FROM photo_tag_rel
         WHERE photoid == "{self.id}"
         AND tagid IN {sqlhelpers.listify(tag.id for tag in tags)}
         '''
-        self.photodb.sql_execute(query)
+        self.photodb.execute(query)
 
         data = {
             'id': self.id,
             'tagged_at': helpers.now(),
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+        self.photodb.update(table=Photo, pairs=data, where_key='id')
 
     @decorators.required_feature('photo.edit')
-    @decorators.transaction
+    @worms.transaction
     def rename_file(self, new_filename, *, move=False) -> None:
         '''
         Rename the file on the disk as well as in the database.
@@ -1395,7 +1359,7 @@ class Photo(ObjectBase):
 
         new_path.assert_not_exists()
 
-        self.photodb.log.info(
+        log.info(
             'Renaming file "%s" -> "%s".',
             old_path.absolute_path,
             new_path.absolute_path,
@@ -1422,7 +1386,7 @@ class Photo(ObjectBase):
             'basename': new_path.basename,
             'extension': new_path.extension.no_dot,
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+        self.photodb.update(table=Photo, pairs=data, where_key='id')
         self.real_path = new_path
         self._assign_mimetype()
 
@@ -1448,7 +1412,7 @@ class Photo(ObjectBase):
         self.__reinit__()
 
     @decorators.required_feature('photo.edit')
-    @decorators.transaction
+    @worms.transaction
     def set_override_filename(self, new_filename) -> None:
         new_filename = self.normalize_override_filename(new_filename)
 
@@ -1456,19 +1420,19 @@ class Photo(ObjectBase):
             'id': self.id,
             'override_filename': new_filename,
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+        self.photodb.update(table=Photo, pairs=data, where_key='id')
         self.override_filename = new_filename
 
         self.__reinit__()
 
     @decorators.required_feature('photo.edit')
-    @decorators.transaction
+    @worms.transaction
     def set_searchhidden(self, searchhidden) -> None:
         data = {
             'id': self.id,
             'searchhidden': bool(searchhidden),
         }
-        self.photodb.sql_update(table='photos', pairs=data, where_key='id')
+        self.photodb.update(table=Photo, pairs=data, where_key='id')
         self.searchhidden = searchhidden
 
 class Tag(ObjectBase, GroupableMixin):
@@ -1477,10 +1441,11 @@ class Tag(ObjectBase, GroupableMixin):
     '''
     table = 'tags'
     group_table = 'tag_group_rel'
+    no_such_exception = exceptions.NoSuchTag
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        db_row = normalize_db_row(db_row, self.table)
+        db_row = self.photodb.normalize_db_row(db_row, self.table)
 
         self.id = db_row['id']
         # Do not pass the name through the normalizer. It may be grandfathered
@@ -1549,7 +1514,7 @@ class Tag(ObjectBase, GroupableMixin):
         return name
 
     def _uncache(self):
-        self.photodb.caches['tag'].remove(self.id)
+        self.photodb.caches[Tag].remove(self.id)
 
     def _add_child(self, member):
         ret = super()._add_child(member)
@@ -1574,7 +1539,7 @@ class Tag(ObjectBase, GroupableMixin):
             photo.remove_tags(ancestors)
 
     @decorators.required_feature('tag.edit')
-    @decorators.transaction
+    @worms.transaction
     def add_child(self, member):
         '''
         Raises exceptions.CantGroupSelf if member is self.
@@ -1589,7 +1554,7 @@ class Tag(ObjectBase, GroupableMixin):
         return ret
 
     @decorators.required_feature('tag.edit')
-    @decorators.transaction
+    @worms.transaction
     def add_children(self, members):
         ret = super().add_children(members)
         if ret is BAIL:
@@ -1599,7 +1564,7 @@ class Tag(ObjectBase, GroupableMixin):
         return ret
 
     @decorators.required_feature('tag.edit')
-    @decorators.transaction
+    @worms.transaction
     def add_synonym(self, synname) -> str:
         '''
         Raises any exceptions from photodb.normalize_tagname.
@@ -1615,7 +1580,7 @@ class Tag(ObjectBase, GroupableMixin):
 
         self.photodb.assert_no_such_tag(name=synname)
 
-        self.photodb.log.info('New synonym %s of %s.', synname, self.name)
+        log.info('New synonym %s of %s.', synname, self.name)
 
         self.photodb.caches['tag_exports'].clear()
 
@@ -1623,7 +1588,7 @@ class Tag(ObjectBase, GroupableMixin):
             'name': synname,
             'mastername': self.name,
         }
-        self.photodb.sql_insert(table='tag_synonyms', data=data)
+        self.photodb.insert(table='tag_synonyms', data=data)
 
         if self._cached_synonyms is not None:
             self._cached_synonyms.add(synname)
@@ -1631,7 +1596,7 @@ class Tag(ObjectBase, GroupableMixin):
         return synname
 
     @decorators.required_feature('tag.edit')
-    @decorators.transaction
+    @worms.transaction
     def convert_to_synonym(self, mastertag) -> None:
         '''
         Convert this tag into a synonym for a different tag.
@@ -1650,7 +1615,7 @@ class Tag(ObjectBase, GroupableMixin):
         data = {
             'mastername': (self.name, mastertag.name),
         }
-        self.photodb.sql_update(table='tag_synonyms', pairs=data, where_key='mastername')
+        self.photodb.update(table='tag_synonyms', pairs=data, where_key='mastername')
 
         # Because these were two separate tags, perhaps in separate trees, it
         # is possible for a photo to have both at the moment.
@@ -1671,8 +1636,7 @@ class Tag(ObjectBase, GroupableMixin):
         )
         '''
         bindings = [self.id, mastertag.id]
-        photo_rows = self.photodb.sql_execute(query, bindings)
-        replace_photoids = [photo_id for (photo_id,) in photo_rows]
+        replace_photoids = list(self.photodb.select_column(query, bindings))
 
         # For those photos that only had the syn, simply replace with master.
         if replace_photoids:
@@ -1683,7 +1647,7 @@ class Tag(ObjectBase, GroupableMixin):
             AND photoid IN {sqlhelpers.listify(replace_photoids)}
             '''
             bindings = [mastertag.id, self.id]
-            self.photodb.sql_execute(query, bindings)
+            self.photodb.execute(query, bindings)
 
         # For photos that have the old tag and DO already have the new one,
         # don't worry because the old rels will be deleted when the tag is
@@ -1694,19 +1658,19 @@ class Tag(ObjectBase, GroupableMixin):
         mastertag.add_synonym(self.name)
 
     @decorators.required_feature('tag.edit')
-    @decorators.transaction
+    @worms.transaction
     def delete(self, *, delete_children=False) -> None:
-        self.photodb.log.info('Deleting %s.', self)
+        log.info('Deleting %s.', self)
         super().delete(delete_children=delete_children)
-        self.photodb.sql_delete(table='photo_tag_rel', pairs={'tagid': self.id})
-        self.photodb.sql_delete(table='tag_synonyms', pairs={'mastername': self.name})
-        self.photodb.sql_delete(table='tags', pairs={'id': self.id})
+        self.photodb.delete(table='photo_tag_rel', pairs={'tagid': self.id})
+        self.photodb.delete(table='tag_synonyms', pairs={'mastername': self.name})
+        self.photodb.delete(table=Tag, pairs={'id': self.id})
         self.photodb.caches['tag_exports'].clear()
         self._uncache()
         self.deleted = True
 
     @decorators.required_feature('tag.edit')
-    @decorators.transaction
+    @worms.transaction
     def edit(self, description=None) -> None:
         '''
         Change the description. Leave None to keep current value.
@@ -1720,7 +1684,7 @@ class Tag(ObjectBase, GroupableMixin):
             'id': self.id,
             'description': description,
         }
-        self.photodb.sql_update(table='tags', pairs=data, where_key='id')
+        self.photodb.update(table=Tag, pairs=data, where_key='id')
         self.description = description
 
         self._uncache()
@@ -1729,11 +1693,11 @@ class Tag(ObjectBase, GroupableMixin):
         if self._cached_synonyms is not None:
             return self._cached_synonyms
 
-        syn_rows = self.photodb.sql_select(
+        synonyms = self.photodb.select_column(
             'SELECT name FROM tag_synonyms WHERE mastername == ?',
             [self.name]
         )
-        synonyms = set(name for (name,) in syn_rows)
+        synonyms = set(synonyms)
         self._cached_synonyms = synonyms
         return synonyms
 
@@ -1756,7 +1720,7 @@ class Tag(ObjectBase, GroupableMixin):
         return j
 
     @decorators.required_feature('tag.edit')
-    @decorators.transaction
+    @worms.transaction
     def remove_child(self, *args, **kwargs):
         ret = super().remove_child(*args, **kwargs)
         if ret is BAIL:
@@ -1766,7 +1730,7 @@ class Tag(ObjectBase, GroupableMixin):
         return ret
 
     @decorators.required_feature('tag.edit')
-    @decorators.transaction
+    @worms.transaction
     def remove_children(self, *args, **kwargs):
         ret = super().remove_children(*args, **kwargs)
         if ret is BAIL:
@@ -1776,7 +1740,7 @@ class Tag(ObjectBase, GroupableMixin):
         return ret
 
     @decorators.required_feature('tag.edit')
-    @decorators.transaction
+    @worms.transaction
     def remove_synonym(self, synname) -> str:
         '''
         Delete a synonym.
@@ -1793,7 +1757,7 @@ class Tag(ObjectBase, GroupableMixin):
         if synname == self.name:
             raise exceptions.NoSuchSynonym(synname)
 
-        syn_exists = self.photodb.sql_select_one(
+        syn_exists = self.photodb.select_one(
             'SELECT 1 FROM tag_synonyms WHERE mastername == ? AND name == ?',
             [self.name, synname]
         )
@@ -1802,13 +1766,13 @@ class Tag(ObjectBase, GroupableMixin):
             raise exceptions.NoSuchSynonym(synname)
 
         self.photodb.caches['tag_exports'].clear()
-        self.photodb.sql_delete(table='tag_synonyms', pairs={'name': synname})
+        self.photodb.delete(table='tag_synonyms', pairs={'name': synname})
         if self._cached_synonyms is not None:
             self._cached_synonyms.remove(synname)
         return synname
 
     @decorators.required_feature('tag.edit')
-    @decorators.transaction
+    @worms.transaction
     def rename(self, new_name, *, apply_to_synonyms=True) -> None:
         '''
         Rename the tag. Does not affect its relation to Photos or tag groups.
@@ -1837,13 +1801,13 @@ class Tag(ObjectBase, GroupableMixin):
             'id': self.id,
             'name': new_name,
         }
-        self.photodb.sql_update(table='tags', pairs=data, where_key='id')
+        self.photodb.update(table=Tag, pairs=data, where_key='id')
 
         if apply_to_synonyms:
             data = {
                 'mastername': (old_name, new_name),
             }
-            self.photodb.sql_update(table='tag_synonyms', pairs=data, where_key='mastername')
+            self.photodb.update(table='tag_synonyms', pairs=data, where_key='mastername')
 
         self.name = new_name
         self._uncache()
@@ -1853,10 +1817,11 @@ class User(ObjectBase):
     A dear friend of ours.
     '''
     table = 'users'
+    no_such_exception = exceptions.NoSuchUser
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        db_row = normalize_db_row(db_row, self.table)
+        db_row = self.photodb.normalize_db_row(db_row, self.table)
 
         self.id = db_row['id']
         self.username = db_row['username']
@@ -1895,10 +1860,10 @@ class User(ObjectBase):
         return display_name
 
     def _uncache(self):
-        self.photodb.caches['user'].remove(self.id)
+        self.photodb.caches[User].remove(self.id)
 
     @decorators.required_feature('user.edit')
-    @decorators.transaction
+    @worms.transaction
     def delete(self, *, disown_authored_things) -> None:
         '''
         If disown_authored_things is True then all of this user's albums,
@@ -1913,10 +1878,10 @@ class User(ObjectBase):
         '''
         if disown_authored_things:
             pairs = {'author_id': (self.id, None)}
-            self.photodb.sql_update(table='albums', pairs=pairs, where_key='author_id')
-            self.photodb.sql_update(table='bookmarks', pairs=pairs, where_key='author_id')
-            self.photodb.sql_update(table='photos', pairs=pairs, where_key='author_id')
-            self.photodb.sql_update(table='tags', pairs=pairs, where_key='author_id')
+            self.photodb.update(table=Album, pairs=pairs, where_key='author_id')
+            self.photodb.update(table=Bookmark, pairs=pairs, where_key='author_id')
+            self.photodb.update(table=Photo, pairs=pairs, where_key='author_id')
+            self.photodb.update(table=Tag, pairs=pairs, where_key='author_id')
         else:
             fail = (
                 self.has_any_albums() or
@@ -1926,7 +1891,7 @@ class User(ObjectBase):
             )
             if fail:
                 raise exceptions.CantDeleteUser(self)
-        self.photodb.sql_delete(table='users', pairs={'id': self.id})
+        self.photodb.delete(table='users', pairs={'id': self.id})
         self._uncache()
         self.deleted = True
 
@@ -1987,22 +1952,22 @@ class User(ObjectBase):
 
     def has_any_albums(self) -> bool:
         query = f'SELECT 1 FROM albums WHERE author_id == ? LIMIT 1'
-        row = self.photodb.sql_select_one(query, [self.id])
+        row = self.photodb.select_one(query, [self.id])
         return row is not None
 
     def has_any_bookmarks(self) -> bool:
         query = f'SELECT 1 FROM bookmarks WHERE author_id == ? LIMIT 1'
-        row = self.photodb.sql_select_one(query, [self.id])
+        row = self.photodb.select_one(query, [self.id])
         return row is not None
 
     def has_any_photos(self) -> bool:
         query = f'SELECT 1 FROM photos WHERE author_id == ? LIMIT 1'
-        row = self.photodb.sql_select_one(query, [self.id])
+        row = self.photodb.select_one(query, [self.id])
         return row is not None
 
     def has_any_tags(self) -> bool:
         query = f'SELECT 1 FROM tags WHERE author_id == ? LIMIT 1'
-        row = self.photodb.sql_select_one(query, [self.id])
+        row = self.photodb.select_one(query, [self.id])
         return row is not None
 
     def jsonify(self) -> dict:
@@ -2016,7 +1981,7 @@ class User(ObjectBase):
         return j
 
     @decorators.required_feature('user.edit')
-    @decorators.transaction
+    @worms.transaction
     def set_display_name(self, display_name) -> None:
         display_name = self.normalize_display_name(
             display_name,
@@ -2027,11 +1992,11 @@ class User(ObjectBase):
             'id': self.id,
             'display_name': display_name,
         }
-        self.photodb.sql_update(table='users', pairs=data, where_key='id')
+        self.photodb.update(table='users', pairs=data, where_key='id')
         self._display_name = display_name
 
     @decorators.required_feature('user.edit')
-    @decorators.transaction
+    @worms.transaction
     def set_password(self, password) -> None:
         if not isinstance(password, bytes):
             password = password.encode('utf-8')
@@ -2043,7 +2008,7 @@ class User(ObjectBase):
             'id': self.id,
             'password': hashed_password,
         }
-        self.photodb.sql_update(table='users', pairs=data, where_key='id')
+        self.photodb.update(table='users', pairs=data, where_key='id')
         self.hashed_password = hashed_password
 
 class WarningBag:

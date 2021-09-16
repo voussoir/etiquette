@@ -3,7 +3,6 @@ import hashlib
 import json
 import os
 import random
-import re
 import sqlite3
 import tempfile
 import time
@@ -13,13 +12,15 @@ import typing
 from voussoirkit import cacheclass
 from voussoirkit import configlayers
 from voussoirkit import expressionmatch
-from voussoirkit import passwordy
 from voussoirkit import pathclass
 from voussoirkit import ratelimiter
 from voussoirkit import spinal
 from voussoirkit import sqlhelpers
 from voussoirkit import stringtools
 from voussoirkit import vlogging
+from voussoirkit import worms
+
+log = vlogging.getLogger(__name__)
 
 from . import constants
 from . import decorators
@@ -36,16 +37,16 @@ class PDBAlbumMixin:
         super().__init__()
 
     def get_album(self, id) -> objects.Album:
-        return self.get_thing_by_id('album', id)
+        return self.get_object_by_id(objects.Album, id)
 
     def get_album_count(self) -> int:
-        return self.sql_select_one('SELECT COUNT(id) FROM albums')[0]
+        return self.select_one('SELECT COUNT(id) FROM albums')[0]
 
     def get_albums(self) -> typing.Iterable[objects.Album]:
-        return self.get_things(thing_type='album')
+        return self.get_objects(objects.Album)
 
     def get_albums_by_id(self, ids) -> typing.Iterable[objects.Album]:
-        return self.get_things_by_id('album', ids)
+        return self.get_objects_by_id(objects.Album, ids)
 
     def get_albums_by_path(self, directory) -> typing.Iterable[objects.Album]:
         '''
@@ -55,12 +56,11 @@ class PDBAlbumMixin:
         directory = pathclass.Path(directory)
         query = 'SELECT albumid FROM album_associated_directories WHERE directory == ?'
         bindings = [directory.absolute_path]
-        album_rows = self.sql_select(query, bindings)
-        album_ids = (album_id for (album_id,) in album_rows)
+        album_ids = self.select_column(query, bindings)
         return self.get_albums_by_id(album_ids)
 
     def get_albums_by_sql(self, query, bindings=None) -> typing.Iterable[objects.Album]:
-        return self.get_things_by_sql('album', query, bindings)
+        return self.get_objects_by_sql(objects.Album, query, bindings)
 
     def get_albums_within_directory(self, directory) -> typing.Iterable[objects.Album]:
         # This function is something of a stopgap measure since `search` only
@@ -71,11 +71,10 @@ class PDBAlbumMixin:
         directory.assert_is_directory()
         pattern = directory.absolute_path.rstrip(os.sep)
         pattern = f'{pattern}{os.sep}%'
-        album_rows = self.sql_select(
+        album_ids = self.select_column(
             'SELECT DISTINCT albumid FROM album_associated_directories WHERE directory LIKE ?',
             [pattern]
         )
-        album_ids = (album_id for (album_id,) in album_rows)
         albums = self.get_albums_by_id(album_ids)
         return albums
 
@@ -83,10 +82,10 @@ class PDBAlbumMixin:
         '''
         Yield Albums that have no parent.
         '''
-        return self.get_root_things('album')
+        return self.get_root_objects(objects.Album)
 
     @decorators.required_feature('album.new')
-    @decorators.transaction
+    @worms.transaction
     def new_album(
             self,
             title=None,
@@ -106,7 +105,7 @@ class PDBAlbumMixin:
 
         # Ok.
         album_id = self.generate_id(table='albums')
-        self.log.info('New Album: %s %s.', album_id, title)
+        log.info('New Album: %s %s.', album_id, title)
 
         data = {
             'id': album_id,
@@ -116,9 +115,9 @@ class PDBAlbumMixin:
             'thumbnail_photo': None,
             'author_id': author_id,
         }
-        self.sql_insert(table='albums', data=data)
+        self.insert(table=objects.Album, data=data)
 
-        album = self.get_cached_instance('album', data)
+        album = self.get_cached_instance(objects.Album, data)
 
         associated_directories = associated_directories or ()
         if isinstance(associated_directories, str):
@@ -131,24 +130,25 @@ class PDBAlbumMixin:
 
         return album
 
-    @decorators.transaction
+    @worms.transaction
     def purge_deleted_associated_directories(self, albums=None) -> typing.Iterable[pathclass.Path]:
-        directories = self.sql_select('SELECT DISTINCT directory FROM album_associated_directories')
-        directories = (pathclass.Path(directory) for (directory,) in directories)
-        directories = [directory for directory in directories if not directory.is_dir]
+        query = 'SELECT DISTINCT directory FROM album_associated_directories'
+        directories = self.select_column(query)
+        directories = (pathclass.Path(d) for d in directories)
+        directories = [d for d in directories if not d.is_dir]
         if not directories:
             return
-        self.log.info('Purging associated directories %s.', directories)
+        log.info('Purging associated directories %s.', directories)
 
-        d_query = sqlhelpers.listify(directory.absolute_path for directory in directories)
+        d_query = sqlhelpers.listify(d.absolute_path for d in directories)
         query = f'DELETE FROM album_associated_directories WHERE directory in {d_query}'
         if albums is not None:
             album_ids = sqlhelpers.listify(a.id for a in albums)
             query += f' AND albumid IN {album_ids}'
-        self.sql_execute(query)
+        self.execute(query)
         yield from directories
 
-    @decorators.transaction
+    @worms.transaction
     def purge_empty_albums(self, albums=None) -> typing.Iterable[objects.Album]:
         if albums is None:
             to_check = set(self.get_albums())
@@ -173,22 +173,22 @@ class PDBBookmarkMixin:
         super().__init__()
 
     def get_bookmark(self, id) -> objects.Bookmark:
-        return self.get_thing_by_id('bookmark', id)
+        return self.get_object_by_id(objects.Bookmark, id)
 
     def get_bookmark_count(self) -> int:
-        return self.sql_select_one('SELECT COUNT(id) FROM bookmarks')[0]
+        return self.select_one('SELECT COUNT(id) FROM bookmarks')[0]
 
     def get_bookmarks(self) -> typing.Iterable[objects.Bookmark]:
-        return self.get_things(thing_type='bookmark')
+        return self.get_objects(objects.Bookmark)
 
     def get_bookmarks_by_id(self, ids) -> typing.Iterable[objects.Bookmark]:
-        return self.get_things_by_id('bookmark', ids)
+        return self.get_objects_by_id(objects.Bookmark, ids)
 
     def get_bookmarks_by_sql(self, query, bindings=None) -> typing.Iterable[objects.Bookmark]:
-        return self.get_things_by_sql('bookmark', query, bindings)
+        return self.get_objects_by_sql(objects.Bookmark, query, bindings)
 
     @decorators.required_feature('bookmark.new')
-    @decorators.transaction
+    @worms.transaction
     def new_bookmark(self, url, title=None, *, author=None) -> objects.Bookmark:
         # These might raise exceptions.
         title = objects.Bookmark.normalize_title(title)
@@ -197,7 +197,7 @@ class PDBBookmarkMixin:
 
         # Ok.
         bookmark_id = self.generate_id(table='bookmarks')
-        self.log.info('New Bookmark: %s %s %s.', bookmark_id, title, url)
+        log.info('New Bookmark: %s %s %s.', bookmark_id, title, url)
 
         data = {
             'id': bookmark_id,
@@ -206,224 +206,37 @@ class PDBBookmarkMixin:
             'created': helpers.now(),
             'author_id': author_id,
         }
-        self.sql_insert(table='bookmarks', data=data)
+        self.insert(table=objects.Bookmark, data=data)
 
-        bookmark = self.get_cached_instance('bookmark', data)
+        bookmark = self.get_cached_instance(objects.Bookmark, data)
 
         return bookmark
 
 ####################################################################################################
 
-class PDBCacheManagerMixin:
-    _THING_CLASSES = {
-        'album':
-        {
-            'class': objects.Album,
-            'exception': exceptions.NoSuchAlbum,
-        },
-        'bookmark':
-        {
-            'class': objects.Bookmark,
-            'exception': exceptions.NoSuchBookmark,
-        },
-        'photo':
-        {
-            'class': objects.Photo,
-            'exception': exceptions.NoSuchPhoto,
-        },
-        'tag':
-        {
-            'class': objects.Tag,
-            'exception': exceptions.NoSuchTag,
-        },
-        'user':
-        {
-            'class': objects.User,
-            'exception': exceptions.NoSuchUser,
-        }
-    }
-
+class PDBGroupableMixin:
     def __init__(self):
         super().__init__()
 
-    def clear_all_caches(self) -> None:
-        self.caches['album'].clear()
-        self.caches['bookmark'].clear()
-        self.caches['photo'].clear()
-        self.caches['tag'].clear()
-        self.caches['tag_exports'].clear()
-        self.caches['user'].clear()
-
-    def get_cached_instance(self, thing_type, db_row):
+    def get_root_objects(self, object_class):
         '''
-        Check if there is already an instance in the cache and return that.
-        Otherwise, a new instance is created, cached, and returned.
-
-        Note that in order to call this method you have to already have a
-        db_row which means performing some select. If you only have the ID,
-        use get_thing_by_id, as there may already be a cached instance to save
-        you the select.
+        For Groupable types, yield objects which have no parent.
         '''
-        thing_map = self._THING_CLASSES[thing_type]
-
-        thing_class = thing_map['class']
-        thing_table = thing_class.table
-        thing_cache = self.caches[thing_type]
-
-        if isinstance(db_row, dict):
-            thing_id = db_row['id']
-        else:
-            thing_index = constants.SQL_INDEX[thing_table]
-            thing_id = db_row[thing_index['id']]
-
-        try:
-            thing = thing_cache[thing_id]
-        except KeyError:
-            self.log.loud('Cache miss %s %s.', thing_type, thing_id)
-            thing = thing_class(self, db_row)
-            thing_cache[thing_id] = thing
-        return thing
-
-    def get_cached_tag_export(self, function, **kwargs):
-        if isinstance(function, str):
-            function = getattr(tag_export, function)
-        if 'tags' in kwargs:
-            kwargs['tags'] = tuple(kwargs['tags'])
-        key = (function.__name__,) + helpers.dict_to_tuple(kwargs)
-        try:
-            exp = self.caches['tag_exports'][key]
-            return exp
-        except KeyError:
-            exp = function(**kwargs)
-            if isinstance(exp, types.GeneratorType):
-                exp = tuple(exp)
-            self.caches['tag_exports'][key] = exp
-            return exp
-
-    def get_root_things(self, thing_type):
-        '''
-        For Groupable types, yield things which have no parent.
-        '''
-        thing_map = self._THING_CLASSES[thing_type]
-
-        thing_class = thing_map['class']
-        thing_table = thing_class.table
-        group_table = thing_class.group_table
+        object_table = object_class.table
+        group_table = object_class.group_table
 
         query = f'''
-        SELECT * FROM {thing_table}
+        SELECT * FROM {object_table}
         WHERE NOT EXISTS (
             SELECT 1 FROM {group_table}
-            WHERE memberid == {thing_table}.id
+            WHERE memberid == {object_table}.id
         )
         '''
 
-        rows = self.sql_select(query)
+        rows = self.select(query)
         for row in rows:
-            thing = self.get_cached_instance(thing_type, row)
-            yield thing
-
-    def get_thing_by_id(self, thing_type, thing_id):
-        '''
-        This method will first check the cache to see if there is already an
-        instance with that ID, in which case we don't need to perform any SQL
-        select. If it is not in the cache, then a new instance is created,
-        cached, and returned.
-        '''
-        thing_map = self._THING_CLASSES[thing_type]
-
-        thing_class = thing_map['class']
-        if isinstance(thing_id, thing_class):
-            # This could be used to check if your old reference to an object is
-            # still in the cache, or re-select it from the db to make sure it
-            # still exists and re-cache.
-            # Probably an uncommon need but... no harm I think.
-            thing_id = thing_id.id
-
-        thing_cache = self.caches[thing_type]
-        try:
-            return thing_cache[thing_id]
-        except KeyError:
-            pass
-
-        query = f'SELECT * FROM {thing_class.table} WHERE id == ?'
-        bindings = [thing_id]
-        thing_row = self.sql_select_one(query, bindings)
-        if thing_row is None:
-            raise thing_map['exception'](thing_id)
-        thing = thing_class(self, thing_row)
-        thing_cache[thing_id] = thing
-        return thing
-
-    def get_things(self, thing_type):
-        '''
-        Yield things, unfiltered, in whatever order they appear in the database.
-        '''
-        thing_map = self._THING_CLASSES[thing_type]
-        table = thing_map['class'].table
-        query = f'SELECT * FROM {table}'
-
-        things = self.sql_select(query)
-        for thing_row in things:
-            thing = self.get_cached_instance(thing_type, thing_row)
-            yield thing
-
-    def get_things_by_id(self, thing_type, thing_ids):
-        '''
-        Given multiple IDs, this method will find which ones are in the cache
-        and which ones need to be selected from the db.
-        This is better than calling get_thing_by_id in a loop because we can
-        use a single SQL select to get batches of up to 999 items.
-
-        Note: The order of the output will most likely not match the order of
-        the input, because we first pull items from the cache before requesting
-        the rest from the database.
-        '''
-        thing_map = self._THING_CLASSES[thing_type]
-        thing_class = thing_map['class']
-        thing_cache = self.caches[thing_type]
-
-        ids_needed = set()
-        for thing_id in thing_ids:
-            try:
-                thing = thing_cache[thing_id]
-            except KeyError:
-                ids_needed.add(thing_id)
-            else:
-                yield thing
-
-        if not ids_needed:
-            return
-
-        self.log.loud('Cache miss %s %s.', thing_type, ids_needed)
-
-        ids_needed = list(ids_needed)
-        while ids_needed:
-            # SQLite3 has a limit of 999 ? in a query, so we must batch them.
-            id_batch = ids_needed[:999]
-            ids_needed = ids_needed[999:]
-
-            qmarks = ','.join('?' * len(id_batch))
-            qmarks = f'({qmarks})'
-            query = f'SELECT * FROM {thing_class.table} WHERE id IN {qmarks}'
-            more_things = self.sql_select(query, id_batch)
-            for thing_row in more_things:
-                # Normally we would call `get_cached_instance` instead of
-                # constructing here. But we already know for a fact that this
-                # object is not in the cache because it made it past the
-                # previous loop.
-                thing = thing_class(self, db_row=thing_row)
-                thing_cache[thing.id] = thing
-                yield thing
-
-    def get_things_by_sql(self, thing_type, query, bindings=None):
-        '''
-        Use an arbitrary SQL query to select things from the database.
-        Your query select *, all the columns of the thing's table.
-        '''
-        thing_rows = self.sql_select(query, bindings)
-        for thing_row in thing_rows:
-            yield self.get_cached_instance(thing_type, thing_row)
+            instance = self.get_cached_instance(object_class, row)
+            yield instance
 
 ####################################################################################################
 
@@ -440,23 +253,26 @@ class PDBPhotoMixin:
             raise exceptions.PhotoExists(existing)
 
     def get_photo(self, id) -> objects.Photo:
-        return self.get_thing_by_id('photo', id)
+        return self.get_object_by_id(objects.Photo, id)
 
     def get_photo_by_path(self, filepath) -> objects.Photo:
         filepath = pathclass.Path(filepath)
         query = 'SELECT * FROM photos WHERE filepath == ?'
         bindings = [filepath.absolute_path]
-        photo_row = self.sql_select_one(query, bindings)
+        photo_row = self.select_one(query, bindings)
         if photo_row is None:
             raise exceptions.NoSuchPhoto(filepath)
-        photo = self.get_cached_instance('photo', photo_row)
+        photo = self.get_cached_instance(objects.Photo, photo_row)
         return photo
 
     def get_photo_count(self) -> int:
-        return self.sql_select_one('SELECT COUNT(id) FROM photos')[0]
+        return self.select_one('SELECT COUNT(id) FROM photos')[0]
+
+    def get_photos(self) -> typing.Iterable[objects.Photo]:
+        return self.get_objects(objects.Photo)
 
     def get_photos_by_id(self, ids) -> typing.Iterable[objects.Photo]:
-        return self.get_things_by_id('photo', ids)
+        return self.get_objects_by_id(objects.Photo, ids)
 
     def get_photos_by_recent(self, count=None) -> typing.Iterable[objects.Photo]:
         '''
@@ -466,9 +282,9 @@ class PDBPhotoMixin:
             return
 
         query = 'SELECT * FROM photos ORDER BY created DESC'
-        photo_rows = self.sql_select(query)
+        photo_rows = self.select(query)
         for photo_row in photo_rows:
-            photo = self.get_cached_instance('photo', photo_row)
+            photo = self.get_cached_instance(objects.Photo, photo_row)
             yield photo
 
             if count is None:
@@ -486,10 +302,10 @@ class PDBPhotoMixin:
         yield from self.get_photos_by_sql(query, bindings)
 
     def get_photos_by_sql(self, query, bindings=None) -> typing.Iterable[objects.Photo]:
-        return self.get_things_by_sql('photo', query, bindings)
+        return self.get_objects_by_sql(objects.Photo, query, bindings)
 
     @decorators.required_feature('photo.new')
-    @decorators.transaction
+    @worms.transaction
     def new_photo(
             self,
             filepath,
@@ -534,7 +350,7 @@ class PDBPhotoMixin:
 
         # Ok.
         photo_id = self.generate_id(table='photos')
-        self.log.info('New Photo: %s %s.', photo_id, filepath.absolute_path)
+        log.info('New Photo: %s %s.', photo_id, filepath.absolute_path)
 
         data = {
             'id': photo_id,
@@ -557,9 +373,9 @@ class PDBPhotoMixin:
             'duration': None,
             'thumbnail': None,
         }
-        self.sql_insert(table='photos', data=data)
+        self.insert(table=objects.Photo, data=data)
 
-        photo = self.get_cached_instance('photo', data)
+        photo = self.get_cached_instance(objects.Photo, data)
 
         if do_metadata:
             hash_kwargs = hash_kwargs or {}
@@ -574,7 +390,7 @@ class PDBPhotoMixin:
 
         return photo
 
-    @decorators.transaction
+    @worms.transaction
     def purge_deleted_files(self, photos=None) -> typing.Iterable[objects.Photo]:
         '''
         Delete Photos whose corresponding file on disk is missing.
@@ -625,8 +441,8 @@ class PDBPhotoMixin:
             offset=None,
             orderby=None,
             warning_bag=None,
-            give_back_parameters=False,
 
+            give_back_parameters=False,
             yield_albums=True,
             yield_photos=True,
         ):
@@ -723,16 +539,20 @@ class PDBPhotoMixin:
             back to you as the final object.
             Without the bag, exceptions may be raised.
 
+        YIELD OPTIONS
         give_back_parameters:
             If True, the generator's first yield will be a dictionary of all the
             cleaned up, normalized parameters. The user may have given us loads
             of trash, so we should show them the formatting we want.
 
         yield_albums:
-            If True, albums which contain photos matching the search will also
-            be returned.
+            If True, albums which contain photos matching the search
+            will be yielded.
+
+        yield_photos:
+            If True, photos matching the search will be yielded.
         '''
-        start_time = time.time()
+        start_time = time.perf_counter()
 
         maximums = {}
         minimums = {}
@@ -964,14 +784,14 @@ class PDBPhotoMixin:
 
         query = f'{"-" * 80}\n{query}\n{"-" * 80}'
 
-        self.log.debug('\n%s %s', query, bindings)
-        # explain = self.sql_execute('EXPLAIN QUERY PLAN ' + query, bindings)
+        log.debug('\n%s %s', query, bindings)
+        # explain = self.execute('EXPLAIN QUERY PLAN ' + query, bindings)
         # print('\n'.join(str(x) for x in explain.fetchall()))
-        generator = self.sql_select(query, bindings)
+        generator = self.select(query, bindings)
         seen_albums = set()
         results_received = 0
         for row in generator:
-            photo = self.get_cached_instance('photo', row)
+            photo = self.get_cached_instance(objects.Photo, row)
 
             if mimetype and photo.simple_mimetype not in mimetype:
                 continue
@@ -1008,181 +828,8 @@ class PDBPhotoMixin:
         if warning_bag and warning_bag.warnings:
             yield warning_bag
 
-        end_time = time.time()
-        self.log.debug('Search took %s.', end_time - start_time)
-
-####################################################################################################
-
-class PDBSQLMixin:
-    def __init__(self):
-        super().__init__()
-        self.on_commit_queue = []
-        self.on_rollback_queue = []
-        self.savepoints = []
-        self._cached_sql_tables = None
-
-    def assert_table_exists(self, table) -> None:
-        if not self._cached_sql_tables:
-            self._cached_sql_tables = self.get_sql_tables()
-        if table not in self._cached_sql_tables:
-            raise exceptions.BadTable(table)
-
-    def commit(self, message=None) -> None:
-        if message is not None:
-            self.log.debug('Committing - %s.', message)
-
-        while len(self.on_commit_queue) > 0:
-            task = self.on_commit_queue.pop(-1)
-            if isinstance(task, str):
-                # savepoints.
-                continue
-            args = task.get('args', [])
-            kwargs = task.get('kwargs', {})
-            action = task['action']
-            try:
-                action(*args, **kwargs)
-            except Exception as exc:
-                self.log.debug(f'{action} raised {repr(exc)}.')
-                self.rollback()
-                raise
-
-        self.savepoints.clear()
-        self.sql.commit()
-
-    def get_sql_tables(self) -> set[str]:
-        query = 'SELECT name FROM sqlite_master WHERE type = "table"'
-        table_rows = self.sql_select(query)
-        tables = set(name for (name,) in table_rows)
-        return tables
-
-    def release_savepoint(self, savepoint, allow_commit=False) -> None:
-        '''
-        Releasing a savepoint removes that savepoint from the timeline, so that
-        you can no longer roll back to it. Then your choices are to commit
-        everything, or roll back to a previous point. If you release the
-        earliest savepoint, the database will commit.
-        '''
-        if savepoint not in self.savepoints:
-            self.log.warn('Tried to release nonexistent savepoint %s.', savepoint)
-            return
-
-        is_commit = savepoint == self.savepoints[0]
-        if is_commit and not allow_commit:
-            self.log.debug('Not committing %s without allow_commit=True.', savepoint)
-            return
-
-        if is_commit:
-            # We want to perform the on_commit_queue so let's use our commit
-            # method instead of allowing sql's release to commit.
-            self.commit()
-        else:
-            self.sql_execute(f'RELEASE "{savepoint}"')
-            self.savepoints = helpers.slice_before(self.savepoints, savepoint)
-
-    def rollback(self, savepoint=None) -> None:
-        '''
-        Given a savepoint, roll the database back to the moment before that
-        savepoint was created. Keep in mind that a @transaction savepoint is
-        always created *before* the method actually does anything.
-
-        If no savepoint is provided then rollback the entire transaction.
-        '''
-        if savepoint is not None and savepoint not in self.savepoints:
-            self.log.warn('Tried to restore nonexistent savepoint %s.', savepoint)
-            return
-
-        if len(self.savepoints) == 0:
-            self.log.debug('Nothing to roll back.')
-            return
-
-        while len(self.on_rollback_queue) > 0:
-            task = self.on_rollback_queue.pop(-1)
-            if task == savepoint:
-                break
-            if isinstance(task, str):
-                # Intermediate savepoints.
-                continue
-            args = task.get('args', [])
-            kwargs = task.get('kwargs', {})
-            task['action'](*args, **kwargs)
-
-        if savepoint is not None:
-            self.log.debug('Rolling back to %s.', savepoint)
-            self.sql_execute(f'ROLLBACK TO "{savepoint}"')
-            self.savepoints = helpers.slice_before(self.savepoints, savepoint)
-            self.on_commit_queue = helpers.slice_before(self.on_commit_queue, savepoint)
-
-        else:
-            self.log.debug('Rolling back.')
-            self.sql_execute('ROLLBACK')
-            self.savepoints.clear()
-            self.on_commit_queue.clear()
-
-    def savepoint(self, message=None) -> str:
-        savepoint_id = passwordy.random_hex(length=16)
-        if message:
-            self.log.log(5, 'Savepoint %s for %s.', savepoint_id, message)
-        else:
-            self.log.log(5, 'Savepoint %s.', savepoint_id)
-        query = f'SAVEPOINT "{savepoint_id}"'
-        self.sql_execute(query)
-        self.savepoints.append(savepoint_id)
-        self.on_commit_queue.append(savepoint_id)
-        self.on_rollback_queue.append(savepoint_id)
-        return savepoint_id
-
-    def sql_delete(self, table, pairs) -> None:
-        self.assert_table_exists(table)
-        (qmarks, bindings) = sqlhelpers.delete_filler(pairs)
-        query = f'DELETE FROM {table} {qmarks}'
-        self.sql_execute(query, bindings)
-
-    def sql_execute(self, query, bindings=[]) -> sqlite3.Cursor:
-        if bindings is None:
-            bindings = []
-        cur = self.sql.cursor()
-        self.log.loud('%s %s', query, bindings)
-        cur.execute(query, bindings)
-        return cur
-
-    def sql_executescript(self, script) -> None:
-        '''
-        The problem with Python's default executescript is that it executes a
-        COMMIT before running your script. If I wanted a commit I'd write one!
-        '''
-        lines = re.split(r';(:?\n|$)', script)
-        lines = (line.strip() for line in lines)
-        lines = (line for line in lines if line)
-        cur = self.sql.cursor()
-        for line in lines:
-            self.log.loud(line)
-            cur.execute(line)
-
-    def sql_insert(self, table, data) -> None:
-        self.assert_table_exists(table)
-        column_names = constants.SQL_COLUMNS[table]
-        (qmarks, bindings) = sqlhelpers.insert_filler(column_names, data)
-
-        query = f'INSERT INTO {table} VALUES({qmarks})'
-        self.sql_execute(query, bindings)
-
-    def sql_select(self, query, bindings=None) -> typing.Iterable:
-        cur = self.sql_execute(query, bindings)
-        while True:
-            fetch = cur.fetchone()
-            if fetch is None:
-                break
-            yield fetch
-
-    def sql_select_one(self, query, bindings=None):
-        cur = self.sql_execute(query, bindings)
-        return cur.fetchone()
-
-    def sql_update(self, table, pairs, where_key) -> None:
-        self.assert_table_exists(table)
-        (qmarks, bindings) = sqlhelpers.update_filler(pairs, where_key=where_key)
-        query = f'UPDATE {table} {qmarks}'
-        self.sql_execute(query, bindings)
+        end_time = time.perf_counter()
+        log.debug('Search took %s.', end_time - start_time)
 
 ####################################################################################################
 
@@ -1200,8 +847,7 @@ class PDBTagMixin:
 
     def _get_all_tag_names(self):
         query = 'SELECT name FROM tags'
-        tag_rows = self.sql_select(query)
-        names = set(name for (name,) in tag_rows)
+        names = set(self.select_column(query))
         return names
 
     def get_all_tag_names(self) -> set[str]:
@@ -1213,7 +859,7 @@ class PDBTagMixin:
 
     def _get_all_synonyms(self):
         query = 'SELECT name, mastername FROM tag_synonyms'
-        syn_rows = self.sql_select(query)
+        syn_rows = self.select(query)
         synonyms = {syn: tag for (syn, tag) in syn_rows}
         return synonyms
 
@@ -1223,11 +869,27 @@ class PDBTagMixin:
         '''
         return self.get_cached_tag_export(self._get_all_synonyms)
 
+    def get_cached_tag_export(self, function, **kwargs):
+        if isinstance(function, str):
+            function = getattr(tag_export, function)
+        if 'tags' in kwargs:
+            kwargs['tags'] = tuple(kwargs['tags'])
+        key = (function.__name__,) + helpers.dict_to_tuple(kwargs)
+        try:
+            exp = self.caches['tag_exports'][key]
+            return exp
+        except KeyError:
+            exp = function(**kwargs)
+            if isinstance(exp, types.GeneratorType):
+                exp = tuple(exp)
+            self.caches['tag_exports'][key] = exp
+            return exp
+
     def get_root_tags(self) -> typing.Iterable[objects.Tag]:
         '''
         Yield Tags that have no parent.
         '''
-        return self.get_root_things('tag')
+        return self.get_root_objects(objects.Tag)
 
     def get_tag(self, name=None, id=None) -> objects.Tag:
         '''
@@ -1242,7 +904,7 @@ class PDBTagMixin:
             return self.get_tag_by_name(name)
 
     def get_tag_by_id(self, id) -> objects.Tag:
-        return self.get_thing_by_id('tag', thing_id=id)
+        return self.get_object_by_id(objects.Tag, id)
 
     def get_tag_by_name(self, tagname) -> objects.Tag:
         if isinstance(tagname, objects.Tag):
@@ -1262,39 +924,39 @@ class PDBTagMixin:
 
         while True:
             # Return if it's a toplevel...
-            tag_row = self.sql_select_one('SELECT * FROM tags WHERE name == ?', [tagname])
+            tag_row = self.select_one('SELECT * FROM tags WHERE name == ?', [tagname])
             if tag_row is not None:
                 break
 
             # ...or resolve the synonym and try again.
             query = 'SELECT mastername FROM tag_synonyms WHERE name == ?'
             bindings = [tagname]
-            name_row = self.sql_select_one(query, bindings)
+            name_row = self.select_one(query, bindings)
             if name_row is None:
                 # was not a master tag or synonym
                 raise exceptions.NoSuchTag(tagname)
             tagname = name_row[0]
 
-        tag = self.get_cached_instance('tag', tag_row)
+        tag = self.get_cached_instance(objects.Tag, tag_row)
         return tag
 
     def get_tag_count(self) -> int:
-        return self.sql_select_one('SELECT COUNT(id) FROM tags')[0]
+        return self.select_one('SELECT COUNT(id) FROM tags')[0]
 
     def get_tags(self) -> typing.Iterable[objects.Tag]:
         '''
         Yield all Tags in the database.
         '''
-        return self.get_things(thing_type='tag')
+        return self.get_objects(objects.Tag)
 
     def get_tags_by_id(self, ids) -> typing.Iterable[objects.Tag]:
-        return self.get_things_by_id('tag', ids)
+        return self.get_objects_by_id(objects.Tag, ids)
 
     def get_tags_by_sql(self, query, bindings=None) -> typing.Iterable[objects.Tag]:
-        return self.get_things_by_sql('tag', query, bindings)
+        return self.get_objects_by_sql(objects.Tag, query, bindings)
 
     @decorators.required_feature('tag.new')
-    @decorators.transaction
+    @worms.transaction
     def new_tag(self, tagname, description=None, *, author=None) -> objects.Tag:
         '''
         Register a new tag and return the Tag object.
@@ -1308,7 +970,7 @@ class PDBTagMixin:
 
         # Ok.
         tag_id = self.generate_id(table='tags')
-        self.log.info('New Tag: %s %s.', tag_id, tagname)
+        log.info('New Tag: %s %s.', tag_id, tagname)
 
         self.caches['tag_exports'].clear()
 
@@ -1319,9 +981,9 @@ class PDBTagMixin:
             'created': helpers.now(),
             'author_id': author_id,
         }
-        self.sql_insert(table='tags', data=data)
+        self.insert(table=objects.Tag, data=data)
 
-        tag = self.get_cached_instance('tag', data)
+        tag = self.get_cached_instance(objects.Tag, data)
 
         return tag
 
@@ -1384,7 +1046,7 @@ class PDBUserMixin:
         for retry in range(20):
             user_id = ''.join(random.choices(constants.USER_ID_CHARACTERS, k=length))
 
-            user_exists = self.sql_select_one('SELECT 1 FROM users WHERE id == ?', [user_id])
+            user_exists = self.select_one('SELECT 1 FROM users WHERE id == ?', [user_id])
             if user_exists is None:
                 break
         else:
@@ -1405,18 +1067,18 @@ class PDBUserMixin:
             return self.get_user_by_username(username)
 
     def get_user_by_id(self, id) -> objects.User:
-        return self.get_thing_by_id('user', id)
+        return self.get_object_by_id(objects.User, id)
 
     def get_user_by_username(self, username) -> objects.User:
-        user_row = self.sql_select_one('SELECT * FROM users WHERE username == ?', [username])
+        user_row = self.select_one('SELECT * FROM users WHERE username == ?', [username])
 
         if user_row is None:
             raise exceptions.NoSuchUser(username)
 
-        return self.get_cached_instance('user', user_row)
+        return self.get_cached_instance(objects.User, user_row)
 
     def get_user_count(self) -> int:
-        return self.sql_select_one('SELECT COUNT(id) FROM users')[0]
+        return self.select_one('SELECT COUNT(id) FROM users')[0]
 
     def get_user_id_or_none(self, user_obj_or_id) -> typing.Optional[str]:
         '''
@@ -1448,13 +1110,13 @@ class PDBUserMixin:
         return author_id
 
     def get_users(self) -> typing.Iterable[objects.User]:
-        return self.get_things('user')
+        return self.get_objects(objects.User)
 
     def get_users_by_id(self, ids) -> typing.Iterable[objects.User]:
-        return self.get_things_by_id('user', ids)
+        return self.get_objects_by_id(objects.User, ids)
 
     def get_users_by_sql(self, query, bindings=None) -> typing.Iterable[objects.User]:
-        return self.get_things_by_sql('user', query, bindings)
+        return self.get_objects_by_sql(objects.User, query, bindings)
 
     @decorators.required_feature('user.login')
     def login(self, username=None, id=None, *, password) -> objects.User:
@@ -1476,7 +1138,7 @@ class PDBUserMixin:
         return user
 
     @decorators.required_feature('user.new')
-    @decorators.transaction
+    @worms.transaction
     def new_user(self, username, password, *, display_name=None) -> objects.User:
         # These might raise exceptions.
         self.assert_valid_username(username)
@@ -1494,7 +1156,7 @@ class PDBUserMixin:
 
         # Ok.
         user_id = self.generate_user_id()
-        self.log.info('New User: %s %s.', user_id, username)
+        log.info('New User: %s %s.', user_id, username)
 
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
 
@@ -1505,9 +1167,9 @@ class PDBUserMixin:
             'display_name': display_name,
             'created': helpers.now(),
         }
-        self.sql_insert(table='users', data=data)
+        self.insert(table=objects.User, data=data)
 
-        return self.get_cached_instance('user', data)
+        return self.get_cached_instance(objects.User, data)
 
 ####################################################################################################
 
@@ -1515,7 +1177,7 @@ class PDBUtilMixin:
     def __init__(self):
         super().__init__()
 
-    @decorators.transaction
+    @worms.transaction
     def digest_directory(
             self,
             directory,
@@ -1626,14 +1288,13 @@ class PDBUtilMixin:
 
         def _normalize_new_photo_ratelimit(new_photo_ratelimit):
             if new_photo_ratelimit is None:
-                pass
+                return new_photo_ratelimit
             elif isinstance(new_photo_ratelimit, ratelimiter.Ratelimiter):
-                pass
+                return new_photo_ratelimit
             elif isinstance(new_photo_ratelimit, (int, float)):
                 new_photo_ratelimit = ratelimiter.Ratelimiter(allowance=1, period=new_photo_ratelimit)
-            else:
-                raise TypeError(new_photo_ratelimit)
-            return new_photo_ratelimit
+                return new_photo_ratelimit
+            raise TypeError(new_photo_ratelimit)
 
         def check_renamed(filepath):
             '''
@@ -1647,10 +1308,10 @@ class PDBUtilMixin:
             same_meta = [photo for photo in same_meta if not photo.real_path.is_file]
             if len(same_meta) == 1:
                 photo = same_meta[0]
-                self.log.debug('Found mtime+bytesize match %s.', photo)
+                log.debug('Found mtime+bytesize match %s.', photo)
                 return photo
 
-            self.log.loud('Hashing file %s to check for rename.', filepath)
+            log.loud('Hashing file %s to check for rename.', filepath)
             sha256 = spinal.hash_file(
                 filepath,
                 hash_class=hashlib.sha256, **hash_kwargs,
@@ -1735,7 +1396,7 @@ class PDBUtilMixin:
 
         albums_by_path = {}
 
-        self.log.info('Digesting directory "%s".', directory.absolute_path)
+        log.info('Digesting directory "%s".', directory.absolute_path)
         walk_generator = spinal.walk(
             directory,
             exclude_directories=exclude_directories,
@@ -1775,7 +1436,7 @@ class PDBUtilMixin:
             if yield_albums:
                 yield from current_albums
 
-    @decorators.transaction
+    @worms.transaction
     def easybake(self, ebstring, author=None):
         '''
         Easily create tags, groups, and synonyms with a string like
@@ -1827,12 +1488,12 @@ class PDBUtilMixin:
 class PhotoDB(
         PDBAlbumMixin,
         PDBBookmarkMixin,
-        PDBCacheManagerMixin,
+        PDBGroupableMixin,
         PDBPhotoMixin,
-        PDBSQLMixin,
         PDBTagMixin,
         PDBUserMixin,
         PDBUtilMixin,
+        worms.DatabaseWithCaching,
     ):
     def __init__(
             self,
@@ -1862,6 +1523,8 @@ class PhotoDB(
             Beware of modifying any data in this state.
         '''
         super().__init__()
+        # Used by decorators.required_feature.
+        self._photodb = self
 
         ephemeral = bool(ephemeral)
         if data_directory is not None and ephemeral:
@@ -1886,9 +1549,6 @@ class PhotoDB(
 
         if self.data_directory.exists and not self.data_directory.is_dir:
             raise exceptions.BadDataDirectory(self.data_directory.absolute_path)
-
-        # LOGGING
-        self.log = vlogging.getLogger(f'{__name__}:{self.data_directory.absolute_path}')
 
         # DATABASE
         if self.ephemeral:
@@ -1920,13 +1580,17 @@ class PhotoDB(
         self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
         self.load_config()
 
+        # WORMS
+        self.COLUMNS = constants.SQL_COLUMNS
+        self.COLUMN_INDEX = constants.SQL_INDEX
+
         self.caches = {
-            'album': cacheclass.Cache(maxlen=self.config['cache_size']['album']),
-            'bookmark': cacheclass.Cache(maxlen=self.config['cache_size']['bookmark']),
-            'photo': cacheclass.Cache(maxlen=self.config['cache_size']['photo']),
-            'tag': cacheclass.Cache(maxlen=self.config['cache_size']['tag']),
+            objects.Album: cacheclass.Cache(maxlen=self.config['cache_size']['album']),
+            objects.Bookmark: cacheclass.Cache(maxlen=self.config['cache_size']['bookmark']),
+            objects.Photo: cacheclass.Cache(maxlen=self.config['cache_size']['photo']),
+            objects.Tag: cacheclass.Cache(maxlen=self.config['cache_size']['tag']),
+            objects.User: cacheclass.Cache(maxlen=self.config['cache_size']['user']),
             'tag_exports': cacheclass.Cache(maxlen=100),
-            'user': cacheclass.Cache(maxlen=self.config['cache_size']['user']),
         }
 
     def _check_version(self):
@@ -1934,7 +1598,7 @@ class PhotoDB(
         Compare database's user_version against constants.DATABASE_VERSION,
         raising exceptions.DatabaseOutOfDate if not correct.
         '''
-        existing = self.sql_execute('PRAGMA user_version').fetchone()[0]
+        existing = self.execute('PRAGMA user_version').fetchone()[0]
         if existing != constants.DATABASE_VERSION:
             raise exceptions.DatabaseOutOfDate(
                 existing=existing,
@@ -1943,13 +1607,13 @@ class PhotoDB(
             )
 
     def _first_time_setup(self):
-        self.log.info('Running first-time database setup.')
-        self.sql_executescript(constants.DB_INIT)
+        log.info('Running first-time database setup.')
+        self.executescript(constants.DB_INIT)
         self.commit()
 
     def _load_pragmas(self):
-        self.log.debug('Reloading pragmas.')
-        self.sql_executescript(constants.DB_PRAGMAS)
+        log.debug('Reloading pragmas.')
+        self.executescript(constants.DB_PRAGMAS)
         self.commit()
 
     # Will add -> PhotoDB when forward references are supported
@@ -1964,21 +1628,22 @@ class PhotoDB(
         starting = path
 
         while True:
-            if path.with_child(constants.DEFAULT_DATADIR).is_dir:
+            possible = path.with_child(constants.DEFAULT_DATADIR)
+            if possible.is_dir:
                 break
             parent = path.parent
             if path == parent:
                 raise exceptions.NoClosestPhotoDB(starting.absolute_path)
             path = parent
 
-        path = path.with_child(constants.DEFAULT_DATADIR)
+        path = possible
         photodb = cls(
             path,
             create=False,
             *args,
             **kwargs,
         )
-        photodb.log.debug('Found closest PhotoDB at %s.', path)
+        log.debug('Found closest PhotoDB at %s.', path)
         return photodb
 
     def __del__(self):
@@ -1991,11 +1656,7 @@ class PhotoDB(
             return f'PhotoDB(data_directory={self.data_directory})'
 
     def close(self) -> None:
-        # Wrapped in hasattr because if the object fails __init__, Python will
-        # still call __del__ and thus close(), even though the attributes
-        # we're trying to clean up never got set.
-        if hasattr(self, 'sql'):
-            self.sql.close()
+        super().close()
 
         if getattr(self, 'ephemeral', False):
             self.ephemeral_directory.cleanup()
@@ -2011,7 +1672,7 @@ class PhotoDB(
         if table not in ['photos', 'tags', 'albums', 'bookmarks']:
             raise ValueError(f'Invalid table requested: {table}.')
 
-        last_id = self.sql_select_one('SELECT last_id FROM id_numbers WHERE tab == ?', [table])
+        last_id = self.select_one('SELECT last_id FROM id_numbers WHERE tab == ?', [table])
         if last_id is None:
             # Register new value
             new_id_int = 1
@@ -2028,13 +1689,13 @@ class PhotoDB(
             'last_id': new_id,
         }
         if do_insert:
-            self.sql_insert(table='id_numbers', data=pairs)
+            self.insert(table='id_numbers', data=pairs)
         else:
-            self.sql_update(table='id_numbers', pairs=pairs, where_key='tab')
+            self.update(table='id_numbers', pairs=pairs, where_key='tab')
         return new_id
 
     def load_config(self) -> None:
-        self.log.debug('Loading config file.')
+        log.debug('Loading config file.')
         (config, needs_rewrite) = configlayers.load_file(
             filepath=self.config_filepath,
             default_config=constants.DEFAULT_CONFIGURATION,
@@ -2045,6 +1706,6 @@ class PhotoDB(
             self.save_config()
 
     def save_config(self) -> None:
-        self.log.debug('Saving config file.')
+        log.debug('Saving config file.')
         with self.config_filepath.open('w', encoding='utf-8') as handle:
             handle.write(json.dumps(self.config, indent=4, sort_keys=True))

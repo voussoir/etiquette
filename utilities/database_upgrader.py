@@ -28,7 +28,7 @@ class Migrator:
         query = 'SELECT name, sql FROM sqlite_master WHERE type == "table"'
         self.tables = {
             name: {'create': sql, 'transfer': f'INSERT INTO {name} SELECT * FROM {name}_old'}
-            for (name, sql) in self.photodb.sql_select(query)
+            for (name, sql) in self.photodb.select(query)
         }
 
         # The user may be adding entirely new tables derived from the data of
@@ -37,7 +37,7 @@ class Migrator:
         self.existing_tables = set(self.tables)
 
         query = 'SELECT name, sql FROM sqlite_master WHERE type == "index" AND name NOT LIKE "sqlite_%"'
-        self.indices = list(self.photodb.sql_select(query))
+        self.indices = list(self.photodb.select(query))
 
     def go(self):
         # This loop is split in many parts, because otherwise if table A
@@ -45,33 +45,33 @@ class Migrator:
         # be pointing to the version of B which has not been reconstructed yet,
         # which is about to get renamed to B_old and then A's reference will be
         # broken.
-        self.photodb.sql_execute('PRAGMA foreign_keys = OFF')
-        self.photodb.sql_execute('BEGIN')
+        self.photodb.execute('PRAGMA foreign_keys = OFF')
+        self.photodb.execute('BEGIN')
         for (name, table) in self.tables.items():
             if name not in self.existing_tables:
                 continue
-            self.photodb.sql_execute(f'ALTER TABLE {name} RENAME TO {name}_old')
+            self.photodb.execute(f'ALTER TABLE {name} RENAME TO {name}_old')
 
         for (name, table) in self.tables.items():
-            self.photodb.sql_execute(table['create'])
+            self.photodb.execute(table['create'])
 
         for (name, table) in self.tables.items():
-            self.photodb.sql_execute(table['transfer'])
+            self.photodb.execute(table['transfer'])
 
         for (name, query) in self.tables.items():
             if name not in self.existing_tables:
                 continue
-            self.photodb.sql_execute(f'DROP TABLE {name}_old')
+            self.photodb.execute(f'DROP TABLE {name}_old')
 
         for (name, query) in self.indices:
-            self.photodb.sql_execute(query)
+            self.photodb.execute(query)
 
 def upgrade_1_to_2(photodb):
     '''
     In this version, a column `tagged_at` was added to the Photos table, to keep
     track of the last time the photo's tags were edited (added or removed).
     '''
-    photodb.sql_executescript('''
+    photodb.executescript('''
     BEGIN;
     ALTER TABLE photos ADD COLUMN tagged_at INT;
     ''')
@@ -82,7 +82,7 @@ def upgrade_2_to_3(photodb):
     with id, username, password hash, and a timestamp.
     Plus some indices.
     '''
-    photodb.sql_executescript('''
+    photodb.executescript('''
     BEGIN;
 
     CREATE TABLE users(
@@ -101,7 +101,7 @@ def upgrade_3_to_4(photodb):
     '''
     Add an `author_id` column to Photos.
     '''
-    photodb.sql_executescript('''
+    photodb.executescript('''
     BEGIN;
 
     ALTER TABLE photos ADD COLUMN author_id TEXT;
@@ -113,7 +113,7 @@ def upgrade_4_to_5(photodb):
     '''
     Add table `bookmarks` and its indices.
     '''
-    photodb.sql_executescript('''
+    photodb.executescript('''
     BEGIN;
 
     CREATE TABLE bookmarks(
@@ -140,15 +140,15 @@ def upgrade_5_to_6(photodb):
       into `album_group_rel`
     - Gives albums their own last_id value, starting with the current tag value.
     '''
-    photodb.sql_execute('BEGIN')
+    photodb.execute('BEGIN')
     # 1. Start the id_numbers.albums value at the tags value so that the number
     # can continue to increment safely and separately, instead of starting at
     # zero and bumping into existing albums.
-    last_id = photodb.sql_select_one('SELECT last_id FROM id_numbers WHERE tab == "tags"')[0]
-    photodb.sql_execute('INSERT INTO id_numbers VALUES("albums", ?)', [last_id])
+    last_id = photodb.select_one('SELECT last_id FROM id_numbers WHERE tab == "tags"')[0]
+    photodb.execute('INSERT INTO id_numbers VALUES("albums", ?)', [last_id])
 
     # 2. Now's a good chance to rename 'index_grouprel' to 'index_taggroup'.
-    photodb.sql_executescript('''
+    photodb.executescript('''
     DROP INDEX IF EXISTS index_grouprel_parentid;
     DROP INDEX IF EXISTS index_grouprel_memberid;
     CREATE INDEX index_taggroup_parentid ON tag_group_rel(parentid);
@@ -157,27 +157,27 @@ def upgrade_5_to_6(photodb):
 
     # 3. All of the album group relationships need to be moved into their
     # own table, out of tag_group_rel
-    photodb.sql_executescript('''
+    photodb.executescript('''
     CREATE TABLE album_group_rel(parentid TEXT, memberid TEXT);
     CREATE INDEX index_albumgroup_parentid ON album_group_rel(parentid);
     CREATE INDEX index_albumgroup_memberid ON album_group_rel(memberid);
     ''')
 
-    album_ids = [id for (id,) in photodb.sql_select('SELECT id FROM albums')]
+    album_ids = list(photodb.select_column('SELECT id FROM albums'))
     for album_id in album_ids:
         query = 'SELECT * FROM tag_group_rel WHERE parentid == ? OR memberid == ?'
         bindings = [album_id, album_id]
-        grouprels = list(photodb.sql_select(query, bindings))
+        grouprels = list(photodb.select(query, bindings))
 
         if not grouprels:
             continue
 
         for grouprel in grouprels:
-            photodb.sql_execute('INSERT INTO album_group_rel VALUES(?, ?)', grouprel)
+            photodb.execute('INSERT INTO album_group_rel VALUES(?, ?)', grouprel)
 
         query = 'DELETE FROM tag_group_rel WHERE parentid == ? OR memberid == ?'
         bindings = [album_id, album_id]
-        photodb.sql_execute(query, bindings)
+        photodb.execute(query, bindings)
 
 def upgrade_6_to_7(photodb):
     '''
@@ -187,12 +187,11 @@ def upgrade_6_to_7(photodb):
 
     Most of the indices were renamed.
     '''
-    photodb.sql_execute('BEGIN')
+    photodb.execute('BEGIN')
     query = 'SELECT name FROM sqlite_master WHERE type == "index" AND name NOT LIKE "sqlite_%"'
-    indices = photodb.sql_select(query)
-    indices = [name for (name,) in indices]
+    indices = photodb.select_column(query)
     for index in indices:
-        photodb.sql_execute(f'DROP INDEX {index}')
+        photodb.execute(f'DROP INDEX {index}')
 
     m = Migrator(photodb)
     m.tables['album_associated_directories']['create'] = '''
@@ -226,7 +225,7 @@ def upgrade_6_to_7(photodb):
 
     m.go()
 
-    photodb.sql_executescript('''
+    photodb.executescript('''
     CREATE INDEX IF NOT EXISTS index_album_associated_directories_albumid on
         album_associated_directories(albumid);
     CREATE INDEX IF NOT EXISTS index_album_associated_directories_directory on
@@ -260,7 +259,7 @@ def upgrade_7_to_8(photodb):
     '''
     Give the Tags table a description field.
     '''
-    photodb.sql_executescript('''
+    photodb.executescript('''
     BEGIN;
     ALTER TABLE tags ADD COLUMN description TEXT;
     ''')
@@ -269,7 +268,7 @@ def upgrade_8_to_9(photodb):
     '''
     Give the Photos table a searchhidden field.
     '''
-    photodb.sql_executescript('''
+    photodb.executescript('''
     BEGIN;
 
     ALTER TABLE photos ADD COLUMN searchhidden INT;
@@ -286,7 +285,7 @@ def upgrade_9_to_10(photodb):
     Previously, the stored path was unnecessarily high and contained the PDB's
     data_directory, reducing portability.
     '''
-    photodb.sql_execute('BEGIN')
+    photodb.execute('BEGIN')
     photos = list(photodb.search(has_thumbnail=True, is_searchhidden=None, yield_albums=False))
 
     # Since we're doing it all at once, I'm going to cheat and skip the
@@ -296,7 +295,7 @@ def upgrade_9_to_10(photodb):
         new_thumbnail_path = photo.make_thumbnail_filepath()
         new_thumbnail_path = new_thumbnail_path.absolute_path
         new_thumbnail_path = '.' + new_thumbnail_path.replace(thumbnail_dir, '')
-        photodb.sql_execute(
+        photodb.execute(
             'UPDATE photos SET thumbnail = ? WHERE id == ?',
             [new_thumbnail_path, photo.id]
         )
@@ -352,7 +351,7 @@ def upgrade_11_to_12(photodb):
     improve the speed of individual relation searching, important for the
     new intersection-based search.
     '''
-    photodb.sql_executescript('''
+    photodb.executescript('''
     BEGIN;
 
     CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid_tagid on photo_tag_rel(photoid, tagid);
@@ -439,7 +438,7 @@ def upgrade_14_to_15(photodb):
 
     m.go()
 
-    photodb.sql_execute('CREATE INDEX index_photos_dev_ino ON photos(dev_ino);')
+    photodb.execute('CREATE INDEX index_photos_dev_ino ON photos(dev_ino);')
 
     for photo in photodb.get_photos_by_recent():
         if not photo.real_path.is_file:
@@ -449,7 +448,7 @@ def upgrade_14_to_15(photodb):
         if dev == 0 or ino == 0:
             continue
         dev_ino = f'{dev},{ino}'
-        photodb.sql_execute('UPDATE photos SET dev_ino = ? WHERE id == ?', [dev_ino, photo.id])
+        photodb.execute('UPDATE photos SET dev_ino = ? WHERE id == ?', [dev_ino, photo.id])
 
 def upgrade_15_to_16(photodb):
     '''
@@ -502,9 +501,9 @@ def upgrade_15_to_16(photodb):
 
     m.go()
 
-    for (id, filepath) in photodb.sql_select('SELECT id, filepath FROM photos'):
+    for (id, filepath) in photodb.select('SELECT id, filepath FROM photos'):
         basename = os.path.basename(filepath)
-        photodb.sql_execute('UPDATE photos SET basename = ? WHERE id == ?', [basename, id])
+        photodb.execute('UPDATE photos SET basename = ? WHERE id == ?', [basename, id])
 
 def upgrade_16_to_17(photodb):
     '''
@@ -677,7 +676,7 @@ def upgrade_all(data_directory):
     '''
     photodb = etiquette.photodb.PhotoDB(data_directory, create=False, skip_version_check=True)
 
-    current_version = photodb.sql_execute('PRAGMA user_version').fetchone()[0]
+    current_version = photodb.execute('PRAGMA user_version').fetchone()[0]
     needed_version = etiquette.constants.DATABASE_VERSION
 
     if current_version == needed_version:
@@ -690,7 +689,7 @@ def upgrade_all(data_directory):
         upgrade_function = eval(upgrade_function)
 
         try:
-            photodb.sql_execute('PRAGMA foreign_keys = ON')
+            photodb.execute('PRAGMA foreign_keys = ON')
             upgrade_function(photodb)
         except Exception as exc:
             photodb.rollback()
