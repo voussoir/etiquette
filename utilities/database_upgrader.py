@@ -654,6 +654,22 @@ def upgrade_18_to_19(photodb):
 
     m.go()
 
+def upgrade_19_to_20(photodb):
+    '''
+    In this version, the thumbnail folder was renamed from "site_thumbnails"
+    to just "thumbnails".
+    '''
+    old = photodb.data_directory.with_child('site_thumbnails')
+    if not old.exists:
+        return
+    new = photodb.data_directory.with_child('thumbnails')
+    if new.exists:
+        if len(new.listdir()) > 0:
+            raise Exception(f'{new.absolute_path} already has items in it.')
+        else:
+            os.rmdir(new.absolute_path)
+    os.rename(old.absolute_path, new.absolute_path)
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

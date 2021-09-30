@@ -41,7 +41,7 @@ ffmpeg = _load_ffmpeg()
 
 # Database #########################################################################################
 
-DATABASE_VERSION = 19
+DATABASE_VERSION = 20
 DB_VERSION_PRAGMA = f'''
 PRAGMA user_version = {DATABASE_VERSION};
 '''
@@ -254,7 +254,7 @@ ADDITIONAL_MIMETYPES = {
 DEFAULT_DATADIR = '_etiquette'
 DEFAULT_DBNAME = 'phototagger.db'
 DEFAULT_CONFIGNAME = 'config.json'
-DEFAULT_THUMBDIR = 'site_thumbnails'
+DEFAULT_THUMBDIR = 'thumbnails'
 
 DEFAULT_CONFIGURATION = {
     'cache_size': {
@@ -315,6 +315,7 @@ DEFAULT_CONFIGURATION = {
         '_etiquette',
         '_site_thumbnails',
         'site_thumbnails',
+        'thumbnails',
     ],
 
     'file_read_chunk': 2 ** 20,
