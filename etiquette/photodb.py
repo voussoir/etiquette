@@ -1945,12 +1945,12 @@ class PhotoDB(
     def _first_time_setup(self):
         self.log.info('Running first-time database setup.')
         self.sql_executescript(constants.DB_INIT)
-        self.sql.commit()
+        self.commit()
 
     def _load_pragmas(self):
         self.log.debug('Reloading pragmas.')
         self.sql_executescript(constants.DB_PRAGMAS)
-        self.sql.commit()
+        self.commit()
 
     # Will add -> PhotoDB when forward references are supported
     @classmethod
