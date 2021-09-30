@@ -1954,12 +1954,13 @@ class PhotoDB(
 
     # Will add -> PhotoDB when forward references are supported
     @classmethod
-    def closest_photodb(cls, path, *args, **kwargs):
+    def closest_photodb(cls, path='.', *args, **kwargs):
         '''
-        Starting from the cwd and climbing upwards towards the filesystem root,
-        look for an existing Etiquette data directory and return the PhotoDB
-        object. If none exists, raise exceptions.NoClosestPhotoDB.
+        Starting from the given path and climbing upwards towards the filesystem
+        root, look for an existing Etiquette data directory and return the
+        PhotoDB object. If none exists, raise exceptions.NoClosestPhotoDB.
         '''
+        path = pathclass.Path(path)
         starting = path
 
         while True:
