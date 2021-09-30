@@ -137,7 +137,7 @@ def search_by_argparse(args, yield_albums=False, yield_photos=False):
         yield_photos=yield_photos,
     )
 
-####################################################################################################
+# ARGPARSE #########################################################################################
 
 def add_remove_tag_argparse(args, action):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
@@ -1004,7 +1004,7 @@ def main(argv):
 
     ##
 
-    def pp(args):
+    def postprocessor(args):
         args.photo_search_args = p_search.parse_args(photo_search_args) if photo_search_args else None
         args.album_search_args = p_search.parse_args(album_search_args) if album_search_args else None
         args.photo_id_args = [id for arg in photo_id_args for id in stringtools.comma_space_split(arg)]
@@ -1023,7 +1023,7 @@ def main(argv):
             parser,
             main_docstring=DOCSTRING,
             sub_docstrings=SUB_DOCSTRINGS,
-            args_postprocessor=pp,
+            args_postprocessor=postprocessor,
         )
     except etiquette.exceptions.NoClosestPhotoDB as exc:
         pipeable.stderr(exc.error_message)
