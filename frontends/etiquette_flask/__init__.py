@@ -1,2 +1,3 @@
 from . import backend
-from . import etiquette_flask_prod
+
+__all__ = ['backend']

@@ -81,16 +81,24 @@ You already know that the frontend code imports the backend code. But now, gunic
 
 1. Add a symlink to the `frontends/etiquette_flask` folder into the folder you added to your `PYTHONPATH` earlier.
 
-    Windows: `mklink /d fakepath realpath`  
-    for example `mklink /d "D:\pythonpath\etiquette_flask" "D:\Git\Etiquette\frontends\etiquette_flask"`
-
-    Linux: `ln --symbolic realpath fakepath`  
+   `ln --symbolic realpath fakepath`  
     for example `ln --symbolic "~/Git/Etiquette/frontends/etiquette_flask" "~/pythonpath/etiquette_flask"`
 
-2. To run non-daemonized, on a specific port, with logging to the terminal, I use:
+2. Add a symlink to `frontends/etiquette_flask/etiquette_flask_prod.py` into the folder you added to your `PYTHONPATH`, **or** into the folder from which you will run gunicorn.
+
+   `ln --symbolic realpath fakepath`  
+    for example `ln --symbolic "~/Git/Etiquette/frontends/etiquette_flask/etiquette_flask_prod.py" "~/pythonpath/etiquette_flask_prod.py"`
+
+    **or**
+
+    `ln --symbolic "~/Git/Etiquette/frontends/etiquette_flask/etiquette_flask_prod.py" "./etiquette_flask_prod.py"`
+
+    where `./` is the location from which you will run gunicorn.
+
+3. To run non-daemonized, on a specific port, with logging to the terminal, I use:
 
     ```
-    ~/cmd/python ~/cmd/gunicorn_py etiquette_flask.etiquette_flask_prod:site --bind "0.0.0.0:6667" --access-logfile "-" --access-logformat "%(h)s | %(t)s | %(r)s | %(s)s %(b)s"
+    ~/cmd/python ~/cmd/gunicorn_py etiquette_flask_prod:site --bind "0.0.0.0:6667" --access-logfile "-" --access-logformat "%(h)s | %(t)s | %(r)s | %(s)s %(b)s"
     ```
 
 </details>
