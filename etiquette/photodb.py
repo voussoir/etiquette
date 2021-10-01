@@ -1838,7 +1838,7 @@ class PhotoDB(
             self,
             data_directory=None,
             *,
-            create=True,
+            create=False,
             ephemeral=False,
             skip_version_check=False,
         ):
