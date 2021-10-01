@@ -2036,7 +2036,7 @@ class PhotoDB(
     def load_config(self) -> None:
         (config, needs_rewrite) = configlayers.load_file(
             filepath=self.config_filepath,
-            defaults=constants.DEFAULT_CONFIGURATION,
+            default_config=constants.DEFAULT_CONFIGURATION,
         )
         self.config = config
 
