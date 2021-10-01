@@ -11,8 +11,6 @@ Etiquette is unique because the tags themselves are hierarchical. By tagging one
 
 ## Setting up
 
-<details><summary><strong>Click to view setup instructions</strong></summary>
-
 As you'll see below, Etiquette has a core backend package and multiple frontends that use it. These frontend applications will use `import etiquette` to access the backend code. Therefore, the `etiquette` package needs to be in the right place for Python to find it for `import`.
 
 1. Run `pip install -r requirements.txt --upgrade`.
@@ -31,17 +29,11 @@ As you'll see below, Etiquette has a core backend package and multiple frontends
 
 4. Run `python -c "import etiquette; print(etiquette)"` to confirm.
 
-</details>
-
 ## Running
 
-<details>
-<summary><strong>Click to view run instructions</strong></summary>
+In order to prevent the accidental creation of Etiquette databases, you must first use `etiquette_cli.py init` to create your database.
 
-In order to prevent the accidental creation of Etiquette databases, you must use `etiquette_cli.py init` to create your database.
-
-<details>
-<summary><strong>Running Etiquette CLI</strong></summary>
+### Running Etiquette CLI
 
 Run `python etiquette_cli.py` to launch the script. You should see a help message describing each of the commands.
 
@@ -55,10 +47,7 @@ Note: Do not `cd` into the frontends folder. Stay in the folder that contains yo
 
 It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
 
-</details>
-
-<details>
-<summary><strong>Running Etiquette Flask locally</strong></summary>
+### Running Etiquette Flask locally
 
 Run `python etiquette_flask_dev.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
 
@@ -72,10 +61,7 @@ Note: Do not `cd` into the frontends folder. Stay in the folder that contains yo
 
 It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
 
-</details>
-
-<details>
-<summary><strong>Running Etiquette Flask with Gunicorn</strong></summary>
+### Running Etiquette Flask with Gunicorn
 
 You already know that the frontend code imports the backend code. But now, gunicorn needs to import the frontend code.
 
@@ -103,10 +89,7 @@ You already know that the frontend code imports the backend code. But now, gunic
 
 It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
 
-</details>
-
-<details>
-<summary><strong>Running Etiquette REPL</strong></summary>
+### Running Etiquette REPL
 
 Run `python etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 
@@ -119,9 +102,6 @@ Note: Do not `cd` into the frontends folder. Stay in the folder that contains yo
     /somewhere $ python /Git/Etiquette/frontends/etiquette_repl.py
 
 It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
-
-</details>
-</details>
 
 ## Basic usage
 
