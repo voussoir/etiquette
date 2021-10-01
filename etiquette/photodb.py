@@ -2034,6 +2034,7 @@ class PhotoDB(
         return new_id
 
     def load_config(self) -> None:
+        self.log.debug('Loading config file.')
         (config, needs_rewrite) = configlayers.load_file(
             filepath=self.config_filepath,
             default_config=constants.DEFAULT_CONFIGURATION,
@@ -2044,5 +2045,6 @@ class PhotoDB(
             self.save_config()
 
     def save_config(self) -> None:
+        self.log.debug('Saving config file.')
         with self.config_filepath.open('w', encoding='utf-8') as handle:
             handle.write(json.dumps(self.config, indent=4, sort_keys=True))
