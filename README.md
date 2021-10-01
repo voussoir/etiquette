@@ -43,34 +43,34 @@ In order to prevent the accidental creation of Etiquette databases, you must use
 <details>
 <summary><strong>Running Etiquette CLI</strong></summary>
 
-- Run `python etiquette_cli.py` to launch the script. You should see a help message describing each of the commands.
+Run `python etiquette_cli.py` to launch the script. You should see a help message describing each of the commands.
 
-- Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher.
+Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher.
 
-      Windows:
-      D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_cli.py
+    Windows:
+    D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_cli.py
 
-      Linux:
-      /somewhere $ python /Git/Etiquette/frontends/etiquette_cli.py
+    Linux:
+    /somewhere $ python /Git/Etiquette/frontends/etiquette_cli.py
 
-- In practice, I have a shortcut file on my PATH which runs this command.
+It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
 
 </details>
 
 <details>
 <summary><strong>Running Etiquette Flask locally</strong></summary>
 
-- Run `python etiquette_flask_dev.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
+Run `python etiquette_flask_dev.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
 
-- Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher.
+Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher.
 
-      Windows:
-      D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_flask\etiquette_flask_dev.py 5001
+    Windows:
+    D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_flask\etiquette_flask_dev.py 5001
 
-      Linux:
-      /somewhere $ python /Git/Etiquette/frontends/etiquette_flask/etiquette_flask_dev.py 5001
+    Linux:
+    /somewhere $ python /Git/Etiquette/frontends/etiquette_flask/etiquette_flask_dev.py 5001
 
-- In practice, I have a shortcut file on my PATH which runs this command.
+It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
 
 </details>
 
@@ -101,22 +101,24 @@ You already know that the frontend code imports the backend code. But now, gunic
     ~/cmd/python ~/cmd/gunicorn_py etiquette_flask_prod:site --bind "0.0.0.0:6667" --access-logfile "-" --access-logformat "%(h)s | %(t)s | %(r)s | %(s)s %(b)s"
     ```
 
+It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
+
 </details>
 
 <details>
 <summary><strong>Running Etiquette REPL</strong></summary>
 
-- Run `python etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
+Run `python etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
 
-- Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher.
+Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher.
 
-      Windows:
-      D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_repl.py
+    Windows:
+    D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_repl.py
 
-      Linux:
-      /somewhere $ python /Git/Etiquette/frontends/etiquette_repl.py
+    Linux:
+    /somewhere $ python /Git/Etiquette/frontends/etiquette_repl.py
 
-- In practice, I have a shortcut file on my PATH which runs this command.
+It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
 
 </details>
 </details>
