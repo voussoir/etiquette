@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% import "header.html" as header %}
+    <title>Admin control</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/etiquette.css">
+    {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/api.js"></script>
+
+<style>
+</style>
+</head>
+
+
+<body>
+{{header.make_header(session=session)}}
+<div id="content_body">
+    <div class="panel">
+        <button id="reload_config_button" class="green_button" onclick="return reload_config_form();">Reload config file</button>
+    </div>
+</div>
+</body>
+
+
+<script type="text/javascript">
+function reload_config_form()
+{
+    const reload_config_button = document.getElementById("reload_config_button");
+    reload_config_button.disabled = true;
+    function callback(response)
+    {
+        reload_config_button.disabled = false;
+        if (response.meta.status !== 200)
+        {
+            alert(JSON.stringify(response));
+        }
+    }
+    return api.admin.reload_config(callback);
+}
+</script>
+</html>

@@ -1,6 +1,16 @@
 const api = {};
 
 /**************************************************************************************************/
+api.admin = {};
+
+api.admin.reload_config =
+function reload_config(callback)
+{
+    const url = "/admin/reload_config";
+    return common.post(url, null, callback);
+}
+
+/**************************************************************************************************/
 api.albums = {};
 
 api.albums._add_remove_photos =
