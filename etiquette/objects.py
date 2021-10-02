@@ -38,7 +38,6 @@ class ObjectBase(worms.Object):
         self.photodb = photodb
         # Used by decorators.required_feature.
         self._photodb = photodb
-        self.deleted = False
 
     @staticmethod
     def normalize_author_id(author_id) -> typing.Optional[str]:
@@ -61,13 +60,6 @@ class ObjectBase(worms.Object):
             raise ValueError(f'Author ID must consist only of {constants.USER_ID_CHARACTERS}.')
 
         return author_id
-
-    def assert_not_deleted(self) -> None:
-        '''
-        Raises exceptions.DeletedObject if this object is deleted.
-        '''
-        if self.deleted:
-            raise exceptions.DeletedObject(self)
 
     # Will add -> User when forward references are supported by Python.
     def get_author(self):
@@ -585,7 +577,7 @@ class Album(ObjectBase, GroupableMixin):
         '''
         Raises TypeError if photo is not a Photo.
 
-        Raises exceptions.DeletedObject if self.deleted.
+        Raises worms.DeletedObject if self.deleted.
         '''
         if photo is None:
             photo_id = None
