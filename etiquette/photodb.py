@@ -1638,7 +1638,7 @@ class PhotoDB(
 
         path = possible
         photodb = cls(
-            path,
+            data_directory=path,
             create=False,
             *args,
             **kwargs,
