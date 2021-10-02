@@ -67,7 +67,7 @@ def etiquette_flask_launch(
         site.localhost_only = True
 
     try:
-        backend.common.init_photodb(path=pathclass.cwd())
+        backend.common.init_photodb()
     except etiquette.exceptions.NoClosestPhotoDB as exc:
         log.error(exc.error_message)
         log.error('Try `etiquette_cli.py init` to create the database.')
