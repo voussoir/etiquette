@@ -30,7 +30,7 @@ def get_album_html(album_id):
 def get_album_json(album_id):
     album = common.P_album(album_id, response_type='json')
     album = album.jsonify()
-    return flasktools.make_json_response(album)
+    return flasktools.json_response(album)
 
 @site.route('/album/<album_id>.zip')
 def get_album_zip(album_id):
@@ -65,7 +65,7 @@ def post_album_add_child(album_id):
     print(children)
     album.add_children(children, commit=True)
     response = album.jsonify()
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/album/<album_id>/remove_child', methods=['POST'])
 @flasktools.required_fields(['child_id'], forbid_whitespace=True)
@@ -76,14 +76,14 @@ def post_album_remove_child(album_id):
     children = list(common.P_albums(child_ids, response_type='json'))
     album.remove_children(children, commit=True)
     response = album.jsonify()
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/album/<album_id>/remove_thumbnail_photo', methods=['POST'])
 def post_album_remove_thumbnail_photo(album_id):
     album = common.P_album(album_id, response_type='json')
     album.set_thumbnail_photo(None)
     common.P.commit(message='album remove thumbnail photo endpoint')
-    return flasktools.make_json_response(album.jsonify())
+    return flasktools.json_response(album.jsonify())
 
 @site.route('/album/<album_id>/refresh_directories', methods=['POST'])
 def post_album_refresh_directories(album_id):
@@ -94,7 +94,7 @@ def post_album_refresh_directories(album_id):
         digest = common.P.digest_directory(directory, new_photo_ratelimit=0.1)
         gentools.run(digest)
     common.P.commit(message='refresh album directories endpoint')
-    return flasktools.make_json_response({})
+    return flasktools.json_response({})
 
 @site.route('/album/<album_id>/set_thumbnail_photo', methods=['POST'])
 @flasktools.required_fields(['photo_id'], forbid_whitespace=True)
@@ -103,7 +103,7 @@ def post_album_set_thumbnail_photo(album_id):
     photo = common.P_photo(request.form['photo_id'], response_type='json')
     album.set_thumbnail_photo(photo)
     common.P.commit(message='album set thumbnail photo endpoint')
-    return flasktools.make_json_response(album.jsonify())
+    return flasktools.json_response(album.jsonify())
 
 # Album photo operations ###########################################################################
 
@@ -119,7 +119,7 @@ def post_album_add_photo(album_id):
     photos = list(common.P_photos(photo_ids, response_type='json'))
     album.add_photos(photos, commit=True)
     response = album.jsonify()
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/album/<album_id>/remove_photo', methods=['POST'])
 @flasktools.required_fields(['photo_id'], forbid_whitespace=True)
@@ -133,7 +133,7 @@ def post_album_remove_photo(album_id):
     photos = list(common.P_photos(photo_ids, response_type='json'))
     album.remove_photos(photos, commit=True)
     response = album.jsonify()
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 # Album tag operations #############################################################################
 
@@ -150,13 +150,13 @@ def post_album_add_tag(album_id):
         tag = common.P_tag(tag, response_type='json')
     except etiquette.exceptions.NoSuchTag as exc:
         response = exc.jsonify()
-        return flasktools.make_json_response(response, status=404)
+        return flasktools.json_response(response, status=404)
     recursive = request.form.get('recursive', False)
     recursive = stringtools.truthystring(recursive)
     album.add_tag_to_all(tag, nested_children=recursive, commit=True)
     response['action'] = 'add_tag'
     response['tagname'] = tag.name
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 # Album metadata operations ########################################################################
 
@@ -171,7 +171,7 @@ def post_album_edit(album_id):
     description = request.form.get('description', None)
     album.edit(title=title, description=description, commit=True)
     response = album.jsonify(minimal=True)
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/album/<album_id>/show_in_folder', methods=['POST'])
 def post_album_show_in_folder(album_id):
@@ -187,7 +187,7 @@ def post_album_show_in_folder(album_id):
     if os.name == 'nt':
         command = f'start explorer.exe "{directory.absolute_path}"'
         os.system(command)
-        return flasktools.make_json_response({})
+        return flasktools.json_response({})
 
     flask.abort(501)
 
@@ -198,7 +198,7 @@ def post_album_show_in_folder(album_id):
 def get_all_album_names():
     all_albums = {album.id: album.display_name for album in common.P.get_albums()}
     response = {'albums': all_albums}
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 def get_albums_core():
     albums = list(common.P.get_root_albums())
@@ -220,7 +220,7 @@ def get_albums_html():
 def get_albums_json():
     albums = get_albums_core()
     albums = [album.jsonify(minimal=True) for album in albums]
-    return flasktools.make_json_response(albums)
+    return flasktools.json_response(albums)
 
 # Album create and delete ##########################################################################
 
@@ -240,10 +240,10 @@ def post_albums_create():
     common.P.commit('create album endpoint')
 
     response = album.jsonify(minimal=False)
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/album/<album_id>/delete', methods=['POST'])
 def post_album_delete(album_id):
     album = common.P_album(album_id, response_type='json')
     album.delete(commit=True)
-    return flasktools.make_json_response({})
+    return flasktools.json_response({})

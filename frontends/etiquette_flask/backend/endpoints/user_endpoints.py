@@ -21,7 +21,7 @@ def get_user_html(username):
 def get_user_json(username):
     user = common.P_user(username, response_type='json')
     user = user.jsonify()
-    return flasktools.make_json_response(user)
+    return flasktools.json_response(user)
 
 @site.route('/userid/<user_id>')
 @site.route('/userid/<user_id>.json')
@@ -40,10 +40,10 @@ def post_user_edit(username):
     session = session_manager.get(request)
 
     if not session:
-        return flasktools.make_json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
+        return flasktools.json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
     user = common.P_user(username, response_type='json')
     if session.user != user:
-        return flasktools.make_json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
+        return flasktools.json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
 
     display_name = request.form.get('display_name')
     if display_name is not None:
@@ -51,7 +51,7 @@ def post_user_edit(username):
 
     common.P.commit()
 
-    return flasktools.make_json_response(user.jsonify())
+    return flasktools.json_response(user.jsonify())
 
 # Login and logout #################################################################################
 
@@ -72,7 +72,7 @@ def post_login():
     if session.user:
         exc = etiquette.exceptions.AlreadySignedIn()
         response = exc.jsonify()
-        return flasktools.make_json_response(response, status=403)
+        return flasktools.json_response(response, status=403)
 
     username = request.form['username']
     password = request.form['password']
@@ -85,18 +85,18 @@ def post_login():
     except (etiquette.exceptions.NoSuchUser, etiquette.exceptions.WrongLogin):
         exc = etiquette.exceptions.WrongLogin()
         response = exc.jsonify()
-        return flasktools.make_json_response(response, status=422)
+        return flasktools.json_response(response, status=422)
     except etiquette.exceptions.FeatureDisabled as exc:
         response = exc.jsonify()
-        return flasktools.make_json_response(response, status=400)
+        return flasktools.json_response(response, status=400)
     session = sessions.Session(request, user)
     session_manager.add(session)
-    return flasktools.make_json_response({})
+    return flasktools.json_response({})
 
 @site.route('/logout', methods=['POST'])
 def logout():
     session_manager.remove(request)
-    response = flasktools.make_json_response({})
+    response = flasktools.json_response({})
     return response
 
 # User registration ################################################################################
@@ -112,7 +112,7 @@ def post_register():
     if session.user:
         exc = etiquette.exceptions.AlreadySignedIn()
         response = exc.jsonify()
-        return flasktools.make_json_response(response, status=403)
+        return flasktools.json_response(response, status=403)
 
     username = request.form['username']
     display_name = request.form.get('display_name', None)
@@ -124,10 +124,10 @@ def post_register():
             'error_type': 'PASSWORDS_DONT_MATCH',
             'error_message': 'Passwords do not match.',
         }
-        return flasktools.make_json_response(response, status=422)
+        return flasktools.json_response(response, status=422)
 
     user = common.P.new_user(username, password_1, display_name=display_name, commit=True)
 
     session = sessions.Session(request, user)
     session_manager.add(session)
-    return flasktools.make_json_response({})
+    return flasktools.json_response({})

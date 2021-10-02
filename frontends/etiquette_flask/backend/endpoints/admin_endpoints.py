@@ -19,7 +19,7 @@ def get_admin():
 @site.route('/admin/reload_config', methods=['POST'])
 def post_reload_config():
     if not request.is_localhost:
-        return flasktools.make_json_response({}, status=403)
+        return flasktools.json_response({}, status=403)
 
     common.P.load_config()
-    return flasktools.make_json_response({})
+    return flasktools.json_response({})

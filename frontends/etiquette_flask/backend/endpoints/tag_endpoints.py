@@ -40,7 +40,7 @@ def get_tag_json(specific_tag_name):
     include_synonyms = include_synonyms is None or stringtools.truthystring(include_synonyms)
 
     response = specific_tag.jsonify(include_synonyms=include_synonyms)
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/tag/<tagname>/edit', methods=['POST'])
 def post_tag_edit(tagname):
@@ -53,7 +53,7 @@ def post_tag_edit(tagname):
     tag.edit(description=description, commit=True)
 
     response = tag.jsonify()
-    response = flasktools.make_json_response(response)
+    response = flasktools.json_response(response)
     return response
 
 @site.route('/tag/<tagname>/add_child', methods=['POST'])
@@ -63,7 +63,7 @@ def post_tag_add_child(tagname):
     child = common.P_tag(request.form['child_name'], response_type='json')
     parent.add_child(child, commit=True)
     response = {'action': 'add_child', 'tagname': f'{parent.name}.{child.name}'}
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/tag/<tagname>/add_synonym', methods=['POST'])
 @flasktools.required_fields(['syn_name'], forbid_whitespace=True)
@@ -74,7 +74,7 @@ def post_tag_add_synonym(tagname):
     syn_name = master_tag.add_synonym(syn_name, commit=True)
 
     response = {'action': 'add_synonym', 'synonym': syn_name}
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/tag/<tagname>/remove_child', methods=['POST'])
 @flasktools.required_fields(['child_name'], forbid_whitespace=True)
@@ -83,7 +83,7 @@ def post_tag_remove_child(tagname):
     child = common.P_tag(request.form['child_name'], response_type='json')
     parent.remove_child(child, commit=True)
     response = {'action': 'remove_child', 'tagname': f'{parent.name}.{child.name}'}
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/tag/<tagname>/remove_synonym', methods=['POST'])
 @flasktools.required_fields(['syn_name'], forbid_whitespace=True)
@@ -94,7 +94,7 @@ def post_tag_remove_synonym(tagname):
     syn_name = master_tag.remove_synonym(syn_name, commit=True)
 
     response = {'action': 'delete_synonym', 'synonym': syn_name}
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 # Tag listings #####################################################################################
 
@@ -104,7 +104,7 @@ def get_all_tag_names():
     all_tags = list(common.P.get_all_tag_names())
     all_synonyms = common.P.get_all_synonyms()
     response = {'tags': all_tags, 'synonyms': all_synonyms}
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/tag/<specific_tag_name>')
 @site.route('/tags')
@@ -153,7 +153,7 @@ def get_tags_json():
     tags = list(common.P.get_tags())
     response = [tag.jsonify(include_synonyms=include_synonyms) for tag in tags]
 
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 # Tag create and delete ############################################################################
 
@@ -165,7 +165,7 @@ def post_tag_create():
 
     tag = common.P.new_tag(name, description, author=session_manager.get(request).user, commit=True)
     response = tag.jsonify()
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/tags/easybake', methods=['POST'])
 @flasktools.required_fields(['easybake_string'], forbid_whitespace=True)
@@ -174,11 +174,11 @@ def post_tag_easybake():
 
     notes = common.P.easybake(easybake_string, author=session_manager.get(request).user, commit=True)
     notes = [{'action': action, 'tagname': tagname} for (action, tagname) in notes]
-    return flasktools.make_json_response(notes)
+    return flasktools.json_response(notes)
 
 @site.route('/tag/<tagname>/delete', methods=['POST'])
 def post_tag_delete(tagname):
     tag = common.P_tag(tagname, response_type='json')
     tag.delete(commit=True)
     response = {'action': 'delete_tag', 'tagname': tag.name}
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)

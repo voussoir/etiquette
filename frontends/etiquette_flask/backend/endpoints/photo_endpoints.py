@@ -27,7 +27,7 @@ def get_photo_html(photo_id):
 def get_photo_json(photo_id):
     photo = common.P_photo(photo_id, response_type='json')
     photo = photo.jsonify()
-    photo = flasktools.make_json_response(photo)
+    photo = flasktools.json_response(photo)
     return photo
 
 @site.route('/file/<photo_id>')
@@ -75,7 +75,7 @@ def post_photo_delete(photo_id):
     delete_file = request.form.get('delete_file', False)
     delete_file = stringtools.truthystring(delete_file)
     photo.delete(delete_file=delete_file, commit=True)
-    return flasktools.make_json_response({})
+    return flasktools.json_response({})
 
 # Photo tag operations #############################################################################
 
@@ -94,7 +94,7 @@ def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
     common.P.commit('photo add remove tag core')
 
     response = {'action': add_or_remove, 'tagname': tag.name}
-    return flasktools.make_json_response(response)
+    return flasktools.json_response(response)
 
 @site.route('/photo/<photo_id>/add_tag', methods=['POST'])
 @flasktools.required_fields(['tagname'], forbid_whitespace=True)
@@ -119,7 +119,7 @@ def post_photo_copy_tags(photo_id):
     other = common.P_photo(request.form['other_photo'], response_type='json')
     photo.copy_tags(other)
     common.P.commit('photo copy tags')
-    return flasktools.make_json_response([tag.jsonify(minimal=True) for tag in photo.get_tags()])
+    return flasktools.json_response([tag.jsonify(minimal=True) for tag in photo.get_tags()])
 
 @site.route('/photo/<photo_id>/remove_tag', methods=['POST'])
 @flasktools.required_fields(['tagname'], forbid_whitespace=True)
@@ -164,7 +164,7 @@ def post_photo_generate_thumbnail(photo_id):
     photo = common.P_photo(photo_id, response_type='json')
     photo.generate_thumbnail(commit=True, **special)
 
-    response = flasktools.make_json_response({})
+    response = flasktools.json_response({})
     return response
 
 def post_photo_refresh_metadata_core(photo_ids):
@@ -185,7 +185,7 @@ def post_photo_refresh_metadata_core(photo_ids):
 
     common.P.commit('photo refresh metadata core')
 
-    return flasktools.make_json_response({})
+    return flasktools.json_response({})
 
 @site.route('/photo/<photo_id>/refresh_metadata', methods=['POST'])
 def post_photo_refresh_metadata(photo_id):
@@ -202,13 +202,13 @@ def post_batch_photos_refresh_metadata():
 def post_photo_set_searchhidden(photo_id):
     photo = common.P_photo(photo_id, response_type='json')
     photo.set_searchhidden(True)
-    return flasktools.make_json_response({})
+    return flasktools.json_response({})
 
 @site.route('/photo/<photo_id>/unset_searchhidden', methods=['POST'])
 def post_photo_unset_searchhidden(photo_id):
     photo = common.P_photo(photo_id, response_type='json')
     photo.set_searchhidden(False)
-    return flasktools.make_json_response({})
+    return flasktools.json_response({})
 
 def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
     if isinstance(photo_ids, str):
@@ -221,7 +221,7 @@ def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
 
     common.P.commit('photo set searchhidden core')
 
-    return flasktools.make_json_response({})
+    return flasktools.json_response({})
 
 @site.route('/photo/<photo_id>/show_in_folder', methods=['POST'])
 def post_photo_show_in_folder(photo_id):
@@ -232,7 +232,7 @@ def post_photo_show_in_folder(photo_id):
     if os.name == 'nt':
         command = f'start explorer.exe /select,"{photo.real_path.absolute_path}"'
         os.system(command)
-        return flasktools.make_json_response({})
+        return flasktools.json_response({})
 
     flask.abort(501)
 
@@ -268,7 +268,7 @@ def post_batch_photos():
     photos = list(common.P_photos(photo_ids, response_type='json'))
 
     photos = [photo.jsonify() for photo in photos]
-    response = flasktools.make_json_response(photos)
+    response = flasktools.json_response(photos)
     return response
 
 @site.route('/batch/photos/photo_card', methods=['POST'])
@@ -294,7 +294,7 @@ def post_batch_photos_photo_cards():
     divs = [div for div in divs if div]
     divs = [div.split(':', 1) for div in divs]
     divs = {photo_id.strip(): photo_card.strip() for (photo_id, photo_card) in divs}
-    response = flasktools.make_json_response(divs)
+    response = flasktools.json_response(divs)
     return response
 
 # Zipping ##########################################################################################
@@ -347,7 +347,7 @@ def post_batch_photos_download_zip():
     photo_download_zip_tokens[zip_token] = photo_ids
 
     response = {'zip_token': zip_token}
-    response = flasktools.make_json_response(response)
+    response = flasktools.json_response(response)
     return response
 
 # Search ###########################################################################################
@@ -547,7 +547,7 @@ def get_search_json():
     search_results['total_tags'] = [
         tag.jsonify(minimal=True) for tag in search_results['total_tags']
     ]
-    return flasktools.make_json_response(search_results)
+    return flasktools.json_response(search_results)
 
 # Swipe ############################################################################################
 

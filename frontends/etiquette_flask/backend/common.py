@@ -106,7 +106,7 @@ def P_wrapper(function):
                 flask.abort(status, exc.error_message)
             else:
                 response = exc.jsonify()
-                response = flasktools.make_json_response(response, status=status)
+                response = flasktools.json_response(response, status=status)
                 flask.abort(response)
 
         except Exception as exc:
@@ -114,7 +114,7 @@ def P_wrapper(function):
             if response_type == 'html':
                 flask.abort(500)
             else:
-                flask.abort(flasktools.make_json_response({}, status=500))
+                flask.abort(flasktools.json_response({}, status=500))
 
     return P_wrapped
 
