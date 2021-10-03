@@ -463,7 +463,9 @@ def tag_breplace_argparse(args):
         tag.rename(new_name)
         if args.set_synonym:
             tag.add_synonym(tag_name)
-    photodb.commit()
+
+    if args.autoyes or interactive.getpermission('Commit?'):
+        photodb.commit()
 
 def tag_list_argparse(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
