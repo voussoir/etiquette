@@ -1550,7 +1550,54 @@ class PhotoDB(
         if self.data_directory.exists and not self.data_directory.is_dir:
             raise exceptions.BadDataDirectory(self.data_directory.absolute_path)
 
-        # DATABASE
+        # DATABASE / WORMS
+        self._init_sql(create=create, skip_version_check=skip_version_check)
+
+        # THUMBNAIL DIRECTORY
+        self.thumbnail_directory = self.data_directory.with_child(constants.DEFAULT_THUMBDIR)
+        self.thumbnail_directory.makedirs(exist_ok=True)
+
+        # CONFIG
+        self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
+        self.load_config()
+
+        # WORMS
+        self._init_column_index()
+        self._init_caches()
+
+    def _check_version(self):
+        '''
+        Compare database's user_version against constants.DATABASE_VERSION,
+        raising exceptions.DatabaseOutOfDate if not correct.
+        '''
+        existing = self.execute('PRAGMA user_version').fetchone()[0]
+        if existing != constants.DATABASE_VERSION:
+            raise exceptions.DatabaseOutOfDate(
+                existing=existing,
+                new=constants.DATABASE_VERSION,
+                filepath=self.data_directory,
+            )
+
+    def _first_time_setup(self):
+        log.info('Running first-time database setup.')
+        self.executescript(constants.DB_INIT)
+        self.commit()
+
+    def _init_caches(self):
+        self.caches = {
+            objects.Album: cacheclass.Cache(maxlen=self.config['cache_size']['album']),
+            objects.Bookmark: cacheclass.Cache(maxlen=self.config['cache_size']['bookmark']),
+            objects.Photo: cacheclass.Cache(maxlen=self.config['cache_size']['photo']),
+            objects.Tag: cacheclass.Cache(maxlen=self.config['cache_size']['tag']),
+            objects.User: cacheclass.Cache(maxlen=self.config['cache_size']['user']),
+            'tag_exports': cacheclass.Cache(maxlen=100),
+        }
+
+    def _init_column_index(self):
+        self.COLUMNS = constants.SQL_COLUMNS
+        self.COLUMN_INDEX = constants.SQL_INDEX
+
+    def _init_sql(self, create, skip_version_check):
         if self.ephemeral:
             existing_database = False
             self.sql = sqlite3.connect(':memory:')
@@ -1571,45 +1618,6 @@ class PhotoDB(
             self._load_pragmas()
         else:
             self._first_time_setup()
-
-        # THUMBNAIL DIRECTORY
-        self.thumbnail_directory = self.data_directory.with_child(constants.DEFAULT_THUMBDIR)
-        self.thumbnail_directory.makedirs(exist_ok=True)
-
-        # CONFIG
-        self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)
-        self.load_config()
-
-        # WORMS
-        self.COLUMNS = constants.SQL_COLUMNS
-        self.COLUMN_INDEX = constants.SQL_INDEX
-
-        self.caches = {
-            objects.Album: cacheclass.Cache(maxlen=self.config['cache_size']['album']),
-            objects.Bookmark: cacheclass.Cache(maxlen=self.config['cache_size']['bookmark']),
-            objects.Photo: cacheclass.Cache(maxlen=self.config['cache_size']['photo']),
-            objects.Tag: cacheclass.Cache(maxlen=self.config['cache_size']['tag']),
-            objects.User: cacheclass.Cache(maxlen=self.config['cache_size']['user']),
-            'tag_exports': cacheclass.Cache(maxlen=100),
-        }
-
-    def _check_version(self):
-        '''
-        Compare database's user_version against constants.DATABASE_VERSION,
-        raising exceptions.DatabaseOutOfDate if not correct.
-        '''
-        existing = self.execute('PRAGMA user_version').fetchone()[0]
-        if existing != constants.DATABASE_VERSION:
-            raise exceptions.DatabaseOutOfDate(
-                existing=existing,
-                new=constants.DATABASE_VERSION,
-                filepath=self.data_directory,
-            )
-
-    def _first_time_setup(self):
-        log.info('Running first-time database setup.')
-        self.executescript(constants.DB_INIT)
-        self.commit()
 
     def _load_pragmas(self):
         log.debug('Reloading pragmas.')
