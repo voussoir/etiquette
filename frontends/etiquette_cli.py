@@ -159,6 +159,8 @@ def add_remove_tag_argparse(args, action):
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
+    return 0
+
 def delete_argparse(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
 
@@ -176,10 +178,12 @@ def delete_argparse(args):
             need_commit = True
 
     if not need_commit:
-        return
+        return 0
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
+
+    return 0
 
 def digest_directory_argparse(args):
     directories = pipeable.input(args.directory, strip=True, skip_blank=True)
@@ -209,10 +213,12 @@ def digest_directory_argparse(args):
             need_commit = True
 
     if not need_commit:
-        return
+        return 0
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
+
+    return 0
 
 def easybake_argparse(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
@@ -223,6 +229,8 @@ def easybake_argparse(args):
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
+
+    return 0
 
 def export_symlinks_argparse(args):
     destination = pathclass.Path(args.destination)
@@ -249,7 +257,7 @@ def export_symlinks_argparse(args):
         total_paths.update(export)
 
     if not args.prune or args.dry_run:
-        return
+        return 0
 
     symlinks = spinal.walk(destination, yield_directories=True, yield_files=True)
     symlinks = set(path for path in symlinks if path.is_link)
@@ -269,6 +277,8 @@ def export_symlinks_argparse(args):
             os.rmdir(check.absolute_path)
             checkdirs.add(check.parent)
 
+    return 0
+
 def generate_thumbnail_argparse(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
 
@@ -286,14 +296,17 @@ def generate_thumbnail_argparse(args):
         pass
 
     if not need_commit:
-        return
+        return 0
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
+    return 0
+
 def init_argparse(args):
     photodb = etiquette.photodb.PhotoDB(create=True)
     photodb.commit()
+    return 0
 
 def purge_deleted_files_argparse(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
@@ -310,10 +323,12 @@ def purge_deleted_files_argparse(args):
         print(deleted)
 
     if not need_commit:
-        return
+        return 0
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
+
+    return 0
 
 def purge_empty_albums_argparse(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
@@ -333,10 +348,12 @@ def purge_empty_albums_argparse(args):
         print(deleted)
 
     if not need_commit:
-        return
+        return 0
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
+
+    return 0
 
 def reload_metadata_argparse(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
@@ -371,10 +388,12 @@ def reload_metadata_argparse(args):
         pass
 
     if not need_commit:
-        return
+        return 0
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
+
+    return 0
 
 def relocate_argparse(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
@@ -385,10 +404,14 @@ def relocate_argparse(args):
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
+    return 0
+
 def search_argparse(args):
     photos = search_by_argparse(args, yield_photos=True)
     for photo in photos:
         print(photo.real_path.absolute_path)
+
+    return 0
 
 def show_associated_directories_argparse(args):
     if args.album_id_args or args.album_search_args:
@@ -403,6 +426,8 @@ def show_associated_directories_argparse(args):
         directories = [f'"{d.absolute_path}"' for d in directories]
         directories = ' '.join(directories)
         print(f'{album} | {directories}')
+
+    return 0
 
 def set_unset_searchhidden_argparse(args, searchhidden):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
@@ -426,6 +451,8 @@ def set_unset_searchhidden_argparse(args, searchhidden):
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
+
+    return 0
 
 def tag_breplace_argparse(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
@@ -455,7 +482,7 @@ def tag_breplace_argparse(args):
         for (tag_name, new_name, printline) in renames:
             print(printline)
         if not interactive.getpermission('Ok?', must_pick=True):
-            return
+            return 0
 
     for (tag_name, new_name, printline) in renames:
         print(printline)
@@ -467,6 +494,8 @@ def tag_breplace_argparse(args):
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
+    return 0
+
 def tag_list_argparse(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
     tags = photodb.get_all_tag_names()
@@ -477,6 +506,8 @@ def tag_list_argparse(args):
             print(f'{key}={synonyms[key]}')
         else:
             print(key)
+
+    return 0
 
 DOCSTRING = '''
 Etiquette CLI
