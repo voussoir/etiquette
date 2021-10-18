@@ -14,7 +14,7 @@ from voussoirkit import winwhich
 FFMPEG_NOT_FOUND = '''
 ffmpeg or ffprobe not found.
 Add them to your PATH or use symlinks such that they appear in:
-Linux: which ffmpeg & which ffprobe
+Linux: which ffmpeg ; which ffprobe
 Windows: where ffmpeg & where ffprobe
 '''
 
