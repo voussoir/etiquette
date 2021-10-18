@@ -100,7 +100,8 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
 
     except ValueError as exc:
         if warning_bag:
-            warning_bag.add(constants.WARNING_MINMAX_INVALID.format(field=key, value=value))
+            exc = exceptions.MinMaxInvalid(field=key, value=value)
+            warning_bag.add(exc)
             return
         else:
             raise
@@ -320,7 +321,7 @@ def normalize_orderby(orderby, warning_bag=None):
             direction = 'desc'
 
         else:
-            exc = ValueError(constants.WARNING_ORDERBY_INVALID.format(request=requested_order))
+            exc = exceptions.OrderByInvalid(request=requested_order)
             if warning_bag:
                 warning_bag.add(exc)
                 continue
@@ -328,11 +329,7 @@ def normalize_orderby(orderby, warning_bag=None):
                 raise exc
 
         if direction not in ('asc', 'desc'):
-            message = constants.WARNING_ORDERBY_BADDIRECTION.format(
-                column=column,
-                direction=direction,
-            )
-            exc = ValueError(message)
+            exc = exceptions.OrderByBadDirection(column=column, direction=direction)
             if warning_bag:
                 warning_bag.add(exc)
                 direction = 'desc'
@@ -340,7 +337,7 @@ def normalize_orderby(orderby, warning_bag=None):
                 raise exc
 
         if column not in constants.ALLOWED_ORDERBY_COLUMNS:
-            exc = ValueError(constants.WARNING_ORDERBY_BADCOL.format(column=column))
+            exc = exceptions.OrderByBadColumn(column=column)
             if warning_bag:
                 warning_bag.add(exc)
                 continue

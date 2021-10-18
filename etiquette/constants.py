@@ -214,15 +214,6 @@ ALLOWED_ORDERBY_COLUMNS = {
     'width',
 }
 
-# Errors and warnings ##############################################################################
-
-WARNING_MINMAX_INVALID = 'Field "{field}": "{value}" is not a valid request. Ignored.'
-WARNING_ORDERBY_INVALID = 'Invalid orderby request "{request}". Ignored.'
-WARNING_ORDERBY_BADCOL = '"{column}" is not a sorting option. Ignored.'
-WARNING_ORDERBY_BADDIRECTION = '''
-You can\'t order "{column}" by "{direction}". Defaulting to descending.
-'''
-
 # Janitorial stuff #################################################################################
 
 FILENAME_BADCHARS = '\\/:*?<>|"'

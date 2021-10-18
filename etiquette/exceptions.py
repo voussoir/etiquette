@@ -187,6 +187,19 @@ class FeatureDisabled(EtiquetteException):
     '''
     error_message = 'This feature has been disabled. Requires {requires}.'
 
+class MinMaxInvalid(EtiquetteException):
+    '''
+    For when the user searches for e.g. width=a-b but the a-b can't be parsed.
+    If the values can be parsed but are backward, use MinMaxOutOfOrder.
+    '''
+    error_message = 'Field "{field}": "{value}" is not a valid request.'
+
+class MinMaxOutOfOrder(EtiquetteException):
+    '''
+    For when a requested minmax range (a, b) has b > a
+    '''
+    error_message = 'Range "{range}": minimum "{min}" and maximum "{max}" are out of order.'
+
 class NoClosestPhotoDB(EtiquetteException):
     '''
     For calls to PhotoDB.closest_photodb where none exists between cwd and
@@ -207,8 +220,25 @@ class NotExclusive(EtiquetteException):
     '''
     error_message = 'One and only one of {} must be passed.'
 
-class OutOfOrder(EtiquetteException):
+class OrderByBadColumn(EtiquetteException):
     '''
-    For when a requested minmax range (a, b) has b > a
+    For when the user tries to orderby a column that does not exist or is
+    not allowed.
     '''
-    error_message = 'Range "{range}": minimum "{min}" and maximum "{max}" are out of order.'
+    error_message = '"{column}" is not a sortable column.'
+
+class OrderByBadDirection(EtiquetteException):
+    '''
+    For when the user tries to orderby a direction that is not asc or desc.
+    '''
+    error_message = 'You can\'t order "{column}" by "{direction}". Should be asc or desc.'
+
+class OrderByInvalid(EtiquetteException):
+    '''
+    For when the orderby request cannot be parsed into column and direction.
+    For example, it contains too many hyphens like a-b-c.
+
+    If the column and direction can be parsed but are invalid, use
+    OrderByBadColumn or OrderByBadDirection
+    '''
+    error_message = 'Invalid orderby request "{request}".'

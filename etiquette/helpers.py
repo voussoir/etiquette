@@ -294,7 +294,7 @@ def hyphen_range(s) -> tuple:
     high = parse_unit_string(high)
 
     if low is not None and high is not None and low > high:
-        raise exceptions.OutOfOrder(range=s, min=low, max=high)
+        raise exceptions.MinMaxOutOfOrder(range=s, min=low, max=high)
 
     return (low, high)
 
