@@ -31,7 +31,7 @@ def required_feature(features):
                     pass
 
                 elif cfg is False:
-                    raise exceptions.FeatureDisabled(feature)
+                    raise exceptions.FeatureDisabled(requires=feature)
 
                 else:
                     raise ValueError(f'Bad required_feature: "{feature}" led to {cfg}.')

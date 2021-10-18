@@ -185,7 +185,7 @@ class FeatureDisabled(EtiquetteException):
     '''
     For when features of the system have been disabled by the configuration.
     '''
-    error_message = 'This feature has been disabled. Requires {}.'
+    error_message = 'This feature has been disabled. Requires {requires}.'
 
 class NoClosestPhotoDB(EtiquetteException):
     '''
