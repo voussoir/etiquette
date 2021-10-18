@@ -174,7 +174,7 @@ def post_photo_refresh_metadata_core(photo_ids):
     photos = list(common.P_photos(photo_ids, response_type='json'))
 
     for photo in photos:
-        common.P.caches['photo'].remove(photo.id)
+        photo._uncache()
         photo = common.P_photo(photo.id, response_type='json')
         photo.reload_metadata()
         if photo.thumbnail is None:
