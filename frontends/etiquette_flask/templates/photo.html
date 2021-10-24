@@ -178,7 +178,7 @@
         <ul id="metadata">
             {% set author = photo.get_author() %}
             {% if author is not none %}
-                <li>Author: <a href="/user/{{author.username}}">{{author.display_name}}</a></li>
+                <li>Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a></li>
             {% endif %}
             {% if photo.width %}
                 <li title="{{photo.area}} px">Dimensions: {{photo.width}}x{{photo.height}} px</li>
