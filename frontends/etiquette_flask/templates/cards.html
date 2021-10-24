@@ -65,7 +65,7 @@ draggable=true
 
 {# BOOKMARK ###################################################################}
 
-{% macro create_bookmark_card(bookmark, add_delete_button=False) %}
+{% macro create_bookmark_card(bookmark, add_delete_button=False, add_author=True) %}
 <div class="bookmark_card" data-id="{{bookmark.id}}">
     <a href="{{bookmark.url}}" class="bookmark_title">{{bookmark.display_name}}</a>
 
@@ -83,6 +83,15 @@ draggable=true
         </button>
         {% endif %}
     </div>
+
+    {% if add_author %}
+    {% set author = bookmark.author %}
+    {% if author is not none %}
+    <p>
+        Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a>
+    </p>
+    {% endif %}
+    {% endif %}
 </div>
 {% endmacro %}
 

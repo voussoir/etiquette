@@ -73,7 +73,7 @@ h2, h3
         <div id="hierarchy_bookmarks" class="panel">
             <h3>Bookmarks by <span class="dynamic_user_display_name">{{user.display_name}}</span></h3>
             {% for bookmark in bookmarks %}
-            {{cards.create_bookmark_card(bookmark)}}
+            {{cards.create_bookmark_card(bookmark, add_author=False)}}
             {% endfor %}
         </div>
         {% endif %}
