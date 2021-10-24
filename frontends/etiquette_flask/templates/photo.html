@@ -176,7 +176,7 @@
             File info
         </h4>
         <ul id="metadata">
-            {% set author = photo.get_author() %}
+            {% set author = photo.author %}
             {% if author is not none %}
                 <li>Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a></li>
             {% endif %}

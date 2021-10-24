@@ -244,7 +244,7 @@ const ALBUM_ID = undefined;
                     {{-album.description-}}
                 </pre>
 
-                {% set author = album.get_author() %}
+                {% set author = album.author %}
                 {% if author is not none %}
                 <p>Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a></p>
                 {% endif %}

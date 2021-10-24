@@ -119,7 +119,7 @@ h2, h3
             Delete
             </button>
 
-            {% set author = specific_tag.get_author() %}
+            {% set author = specific_tag.author %}
             {% if author is not none %}
             <p>
                 Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a>

@@ -38,6 +38,8 @@ class ObjectBase(worms.Object):
         self.photodb = photodb
         # Used by decorators.required_feature.
         self._photodb = photodb
+        # To be lazily retrieved by @property author.
+        self._author = None
 
     @staticmethod
     def normalize_author_id(author_id) -> typing.Optional[str]:
@@ -62,13 +64,18 @@ class ObjectBase(worms.Object):
         return author_id
 
     # Will add -> User when forward references are supported by Python.
-    def get_author(self):
+    @property
+    def author(self):
         '''
         Return the User who created this object, or None if it is unassigned.
         '''
-        if self.author_id is None:
+        if self._author_id is None:
             return None
-        return self.photodb.get_user(id=self.author_id)
+        if self._author is not None:
+            return self._author
+        user = self.photodb.get_user(id=self._author_id)
+        self._author = user
+        return user
 
 class GroupableMixin(metaclass=abc.ABCMeta):
     group_getter_many = None
@@ -261,8 +268,9 @@ class Album(ObjectBase, GroupableMixin):
         self.title = self.normalize_title(db_row['title'])
         self.description = self.normalize_description(db_row['description'])
         self.created = db_row['created']
+        # To be lazily retrieved by @property thumbnail_photo.
         self._thumbnail_photo = db_row['thumbnail_photo']
-        self.author_id = self.normalize_author_id(db_row['author_id'])
+        self._author_id = self.normalize_author_id(db_row['author_id'])
 
         self.group_getter_many = self.photodb.get_albums_by_id
 
@@ -529,7 +537,7 @@ class Album(ObjectBase, GroupableMixin):
             'created': self.created,
             'display_name': self.display_name,
             'thumbnail_photo': self.thumbnail_photo.id if self._thumbnail_photo else None,
-            'author': self.get_author().jsonify() if self.author_id else None,
+            'author': self.author.jsonify() if self._author_id else None,
         }
         if not minimal:
             j['parents'] = [parent.jsonify(minimal=True) for parent in self.get_parents()]
@@ -666,6 +674,9 @@ class Album(ObjectBase, GroupableMixin):
     # Will add -> Photo when forward references are supported by Python.
     @property
     def thumbnail_photo(self):
+        # When the object is instantiated, the _thumbnail_photo that comes out
+        # of the db_row is just the ID string. We lazily convert it to a real
+        # Photo object here.
         if self._thumbnail_photo is None:
             return None
         if isinstance(self._thumbnail_photo, Photo):
@@ -694,7 +705,7 @@ class Bookmark(ObjectBase):
         self.title = self.normalize_title(db_row['title'])
         self.url = self.normalize_url(db_row['url'])
         self.created = db_row['created']
-        self.author_id = self.normalize_author_id(db_row['author_id'])
+        self._author_id = self.normalize_author_id(db_row['author_id'])
 
     def __repr__(self):
         return f'Bookmark:{self.id}'
@@ -779,7 +790,7 @@ class Bookmark(ObjectBase):
         j = {
             'type': 'bookmark',
             'id': self.id,
-            'author': self.get_author().jsonify() if self.author_id else None,
+            'author': self.author.jsonify() if self._author_id else None,
             'url': self.url,
             'created': self.created,
             'title': self.title,
@@ -805,7 +816,7 @@ class Photo(ObjectBase):
 
         self.id = db_row['id']
         self.created = db_row['created']
-        self.author_id = self.normalize_author_id(db_row['author_id'])
+        self._author_id = self.normalize_author_id(db_row['author_id'])
         self.override_filename = db_row['override_filename']
         self.extension = self.real_path.extension.no_dot
         self.mtime = db_row['mtime']
@@ -1098,7 +1109,7 @@ class Photo(ObjectBase):
         j = {
             'type': 'photo',
             'id': self.id,
-            'author': self.get_author().jsonify() if self.author_id else None,
+            'author': self.author.jsonify() if self._author_id else None,
             'extension': self.extension,
             'width': self.width,
             'height': self.height,
@@ -1445,7 +1456,7 @@ class Tag(ObjectBase, GroupableMixin):
         self.name = db_row['name']
         self.description = self.normalize_description(db_row['description'])
         self.created = db_row['created']
-        self.author_id = self.normalize_author_id(db_row['author_id'])
+        self._author_id = self.normalize_author_id(db_row['author_id'])
 
         self.group_getter_many = self.photodb.get_tags_by_id
 
@@ -1701,7 +1712,7 @@ class Tag(ObjectBase, GroupableMixin):
             'created': self.created,
         }
         if not minimal:
-            j['author'] = self.get_author().jsonify() if self.author_id else None
+            j['author'] = self.author.jsonify() if self._author_id else None
             j['description'] = self.description
             j['parents'] = [parent.jsonify(minimal=True) for parent in self.get_parents()]
             j['children'] = [child.jsonify(minimal=True) for child in self.get_children()]
