@@ -118,6 +118,13 @@ h2, h3
             >
             Delete
             </button>
+
+            {% set author = specific_tag.get_author() %}
+            {% if author is not none %}
+            <p>
+                Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a>
+            </p>
+            {% endif %}
         </div> <!-- hierarchy_self -->
 
         {% set parents = specific_tag.get_parents() %}
