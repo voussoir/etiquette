@@ -44,6 +44,10 @@ function register_hotkey(hotkey, action, description)
 hotkeys.should_prevent_hotkey =
 function should_prevent_hotkey(event)
 {
+    /*
+    If the user is currently in an input element, then the registered hotkey
+    will be ignored and the browser will use its default behavior.
+    */
     if (event.target.tagName == "INPUT" && event.target.type == "checkbox")
     {
         return false;
@@ -71,7 +75,11 @@ function show_all_hotkeys()
 hotkeys.hotkeys_listener =
 function hotkeys_listener(event)
 {
-    if (hotkeys.should_prevent_hotkey(event)) { return; }
+    if (hotkeys.should_prevent_hotkey(event))
+    {
+        return;
+    }
+
     identifier = hotkeys.hotkey_identifier(event.key, event.ctrlKey, event.shiftKey, event.altKey);
     //console.log(identifier);
     if (identifier in hotkeys.HOTKEYS)
