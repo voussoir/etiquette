@@ -1,4 +1,9 @@
 /*
+This file contains styles that I want on almost all webpages that I make,
+not specific to one project.
+*/
+
+/*
 These properties are used by javascript functions.
 getComputedStyle(document.documentElement).getPropertyValue("--narrow").trim() === "1"
 */

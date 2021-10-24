@@ -1,3 +1,8 @@
+/*
+This file contains styles that apply to all pages within Etiquette, but don't
+belong in common.css because they are specifically for this project.
+*/
+
 :root
 {
     --size_sticky_side: 300px;
