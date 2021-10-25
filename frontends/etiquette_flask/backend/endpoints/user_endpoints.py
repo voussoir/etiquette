@@ -62,6 +62,7 @@ def get_login():
         'login.html',
         min_username_length=common.P.config['user']['min_username_length'],
         min_password_length=common.P.config['user']['min_password_length'],
+        registration_enabled=common.P.config['enable_feature']['user']['new'],
     )
     return response
 

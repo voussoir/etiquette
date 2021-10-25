@@ -80,11 +80,15 @@ form h2
         </form>
         <form id="register_form" class="panel" action="/register" method="post">
             <h2>Register</h2>
+            {% if registration_enabled %}
             <input type="text" id="register_input_username" name="username" placeholder="username (at least {{min_username_length}})">
             <input type="text" id="register_input_display_name" name="display_name" placeholder="display name (optional)">
             <input type="password" id="register_input_password_1" name="password_1" placeholder="password (at least {{min_password_length}})">
             <input type="password" id="register_input_password_2" name="password_2" placeholder="password again">
             <button type="submit" id="register_input_button" class="green_button" onclick="return register_form(event);">Register</button>
+            {% else %}
+            <span>Registrations are disabled.</span>
+            {% endif %}
         </form>
         <div id="message_area" class="panel">
         </div>
