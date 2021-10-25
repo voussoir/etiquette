@@ -77,6 +77,10 @@ site.route = decorate_and_route
 
 @site.before_request
 def before_request():
+    # Note for prod: If you see that remote_addr is always 127.0.0.1 for all
+    # visitors, make sure your reverse proxy is properly setting X-Forwarded-For
+    # so that werkzeug's proxyfix can set that as the remote_addr.
+    # In NGINX: proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     request.is_localhost = (request.remote_addr == '127.0.0.1')
     if site.localhost_only and not request.is_localhost:
         flask.abort(403)

@@ -81,13 +81,24 @@ You already know that the frontend code imports the backend code. But now, gunic
 
     where `./` is the location from which you will run gunicorn.
 
-3. To run non-daemonized, on a specific port, with logging to the terminal, I use:
+3. If you are using a proxy like NGINX, make sure you are setting X-Forwarded-For so that Etiquette sees the user's real IP, and not the proxy's own (127.0.0.1) IP. For example:
+
+    ```
+    location / {
+        ...
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        ...
+    }
+    ```
+
+4. To run non-daemonized, on a specific port, with logging to the terminal, I use:
 
     ```
     ~/cmd/python ~/cmd/gunicorn_py etiquette_flask_prod:site --bind "0.0.0.0:6667" --access-logfile "-" --access-logformat "%(h)s | %(t)s | %(r)s | %(s)s %(b)s"
     ```
 
 It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
+
 
 ### Running Etiquette REPL
 
