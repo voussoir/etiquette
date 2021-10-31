@@ -148,8 +148,8 @@
     position: relative;
     display: grid;
     grid-template:
-        "checkbox filename metadata tags" auto
-        /auto     1fr      auto     auto;
+        "checkbox filename metadata tags toolbutton" auto
+        /auto     1fr      auto     auto auto;
     grid-column-gap: 4px;
     margin: 8px;
     padding: 4px;
@@ -269,7 +269,7 @@
     font-size: 11px;
 }
 
-.photo_card_toolbutton
+.photo_card_grid .photo_card_toolbutton
 {
     position: absolute;
     top: 4px;
@@ -277,7 +277,12 @@
     width: 16px;
     height: 16px;
 }
-.photo_card_grid .photo_card_tools
+.photo_card_list .photo_card_toolbutton
+{
+    grid-area: toolbutton;
+}
+
+.photo_card_tools
 {
     display: none;
     background-color: var(--color_secondary);
@@ -285,7 +290,7 @@
     z-index: 1;
     width: max-content;
 }
-.photo_card_grid .photo_card_tools.open_contextmenu
+.photo_card_tools.open_contextmenu
 {
     display: initial;
     position: absolute;
