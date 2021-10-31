@@ -19,6 +19,8 @@ from . import sessions
 
 # Flask init #######################################################################################
 
+# __file__ = .../etiquette_flask/backend/common.py
+# root_dir = .../etiquette_flask
 root_dir = pathclass.Path(__file__).parent.parent
 
 TEMPLATE_DIR = root_dir.with_child('templates')
