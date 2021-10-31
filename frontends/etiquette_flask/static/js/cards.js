@@ -72,7 +72,7 @@ function drag_drop(event)
 cards.bookmarks = {};
 
 cards.bookmarks.create =
-function create(bookmark, add_delete_button)
+function create(bookmark, add_author, add_delete_button, add_url_element)
 {
     const bookmark_card = document.createElement("div");
     bookmark_card.className = "bookmark_card"
@@ -84,27 +84,39 @@ function create(bookmark, add_delete_button)
     bookmark_title.innerText = bookmark.display_name;
     bookmark_card.appendChild(bookmark_title);
 
-    const bookmark_url = document.createElement("a");
-    bookmark_url.className = "bookmark_url";
-    bookmark_url.href = bookmark.url;
-    bookmark_url.innerText = bookmark.url;
-    bookmark_card.appendChild(bookmark_url);
+    // The URL element is always display:none, but its presence is useful in
+    // facilitating the Editor object. If this bookmark will not be editable,
+    // there is no need for it.
+    if (add_url_element)
+    {
+        const bookmark_url = document.createElement("a");
+        bookmark_url.className = "bookmark_url";
+        bookmark_url.href = bookmark.url;
+        bookmark_url.innerText = bookmark.url;
+        bookmark_card.appendChild(bookmark_url);
+    }
 
-    const bookmark_toolbox = document.createElement("div");
-    bookmark_toolbox.className = "bookmark_toolbox"
-    bookmark_card.appendChild(bookmark_toolbox);
-
+    // If more tools are added, this will become an `or`.
+    // I just want to have the structure in place now.
     if (add_delete_button)
     {
-        const delete_button = document.createElement("button");
-        delete_button.className = "red_button button_with_confirm";
-        delete_button.dataset.onclick = "return delete_bookmark_form(event);";
-        delete_button.dataset.prompt = "Delete Bookmark?";
-        delete_button.dataset.cancelClass = "gray_button";
-        delete_button.innerText = "Delete";
-        bookmark_toolbox.appendChild(delete_button);
-        common.init_button_with_confirm(delete_button);
+        const bookmark_toolbox = document.createElement("div");
+        bookmark_toolbox.className = "bookmark_toolbox"
+        bookmark_card.appendChild(bookmark_toolbox);
+
+        if (add_delete_button)
+        {
+            const delete_button = document.createElement("button");
+            delete_button.className = "red_button button_with_confirm";
+            delete_button.dataset.onclick = "return delete_bookmark_form(event);";
+            delete_button.dataset.prompt = "Delete Bookmark?";
+            delete_button.dataset.cancelClass = "gray_button";
+            delete_button.innerText = "Delete";
+            bookmark_toolbox.appendChild(delete_button);
+            common.init_button_with_confirm(delete_button);
+        }
     }
+
     return bookmark_card;
 }
 

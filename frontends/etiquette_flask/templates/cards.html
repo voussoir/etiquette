@@ -65,12 +65,19 @@ draggable=true
 
 {# BOOKMARK ###################################################################}
 
-{% macro create_bookmark_card(bookmark, add_delete_button=False, add_author=True) %}
+{% macro create_bookmark_card(bookmark, add_author=True, add_delete_button=False, add_url_element=False) %}
 <div class="bookmark_card" data-id="{{bookmark.id}}">
-    <a href="{{bookmark.url}}" class="bookmark_title">{{bookmark.display_name}}</a>
+    <h2><a href="{{bookmark.url}}" class="bookmark_title" title="{{bookmark.url}}">{{bookmark.display_name}}</a></h2>
 
+    {# The URL element is always display:none, but its presence is useful in #}
+    {# facilitating the Editor object. If this bookmark will not be editable, #}
+    {# there is no need for it. #}
+    {% if add_url_element %}
     <a href="{{bookmark.url}}" class="bookmark_url">{{bookmark.url}}</a>
+    {% endif %}
 
+    {# if more tools are added, this will become an `or` #}
+    {% if add_delete_button %}
     <div class="bookmark_toolbox">
         {% if add_delete_button %}
         <button
@@ -83,6 +90,7 @@ draggable=true
         </button>
         {% endif %}
     </div>
+    {% endif %}
 
     {% if add_author %}
     {% set author = bookmark.author %}

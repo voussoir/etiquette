@@ -102,6 +102,7 @@
 
 .bookmark_card .bookmark_url
 {
+    display: none;
 }
 
 .bookmark_card input

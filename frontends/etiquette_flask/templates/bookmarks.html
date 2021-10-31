@@ -23,6 +23,11 @@
     flex: 0 0 auto;
     flex-direction: column;
 }
+.bookmark_card h2 .editor_input
+{
+    font-size: inherit;
+    font-weight: inherit;
+}
 </style>
 </head>
 
@@ -32,7 +37,7 @@
         <div id="bookmark_list">
             <h2>Bookmarks</h2>
             {% for bookmark in bookmarks %}
-            {{cards.create_bookmark_card(bookmark, add_delete_button=True)}}
+            {{cards.create_bookmark_card(bookmark, add_delete_button=True, add_url_element=True)}}
             {% endfor %}
 
             <div id="new_bookmark_card" class="bookmark_card">
@@ -114,6 +119,7 @@ function ed_on_save(ed)
         ed.save();
 
         ed.elements["title"].display.href = response.data.url;
+        ed.elements["title"].display.title = response.data.url;
         ed.elements["url"].display.href = response.data.url;
     }
 
