@@ -36,7 +36,7 @@
         {% set photos = user.get_photos(direction='desc')|islice(0, 15)|list %}
         {% if photos %}
         <div id="hierarchy_photos" class="panel">
-            <h3><a href="/search?author={{user.username}}">Photos by <span class="dynamic_user_display_name">{{user.display_name}}</span></a></h3>
+            <h2><a href="/search?author={{user.username}}">Photos by <span class="dynamic_user_display_name">{{user.display_name}}</span></a></h2>
             {% for photo in photos %}
             {{cards.create_photo_card(photo)}}
             {% endfor %}
@@ -46,7 +46,7 @@
         {% set tags = user.get_tags(direction='desc')|islice(0, 100)|list %}
         {% if tags %}
         <div id="hierarchy_tags" class="panel">
-            <h3>Tags by <span class="dynamic_user_display_name">{{user.display_name}}</span></h3>
+            <h2>Tags by <span class="dynamic_user_display_name">{{user.display_name}}</span></h2>
             {% for tag in tags %}
             {{cards.create_tag_card(tag, with_alt_description=True)}}
             {% endfor %}
@@ -56,7 +56,7 @@
         {% set albums = user.get_albums()|islice(0, 20)|list %}
         {% if albums %}
         <div id="hierarchy_albums" class="panel">
-            <h3>Albums by <span class="dynamic_user_display_name">{{user.display_name}}</span></h3>
+            <h2>Albums by <span class="dynamic_user_display_name">{{user.display_name}}</span></h2>
             {% for album in albums %}
             {{cards.create_album_card(album)}}
             {% endfor %}
@@ -66,7 +66,7 @@
         {% set bookmarks = user.get_bookmarks()|islice(0, 50)|list %}
         {% if bookmarks %}
         <div id="hierarchy_bookmarks" class="panel">
-            <h3>Bookmarks by <span class="dynamic_user_display_name">{{user.display_name}}</span></h3>
+            <h2>Bookmarks by <span class="dynamic_user_display_name">{{user.display_name}}</span></h2>
             {% for bookmark in bookmarks %}
             {{cards.create_bookmark_card(bookmark, add_author=False)}}
             {% endfor %}

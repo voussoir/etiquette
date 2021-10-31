@@ -24,7 +24,7 @@
 {
     max-height: 150px;
 }
-#album_metadata h2 .editor_input
+#album_metadata h1 .editor_input
 {
     font-size: inherit;
     font-weight: inherit;
@@ -231,7 +231,7 @@ const ALBUM_ID = undefined;
     <div id="left">
         <div id="hierarchy_self" class="panel">
             <div id="album_metadata">
-                <h2><span id="title_text">{{-album.display_name-}}</span></h2>
+                <h1><span id="title_text">{{-album.display_name-}}</span></h1>
 
                 <pre
                 id="description_text"
@@ -258,12 +258,12 @@ const ALBUM_ID = undefined;
         <div id="hierarchy_parents" class="panel">
             {% set parents = album.get_parents() %}
             {% if parents %}
-                <h3>{{parents|length}} Parents</h3>
+                <h2>{{parents|length}} Parents</h2>
                 {% for parent in parents %}
                     {{cards.create_album_card(parent, view=view)}}
                 {% endfor %}
             {% else %}
-                <h3>1 Parent</h3>
+                <h2>1 Parent</h2>
                 {{cards.create_album_card("root", view=view)}}
             {% endif %}
         </div>
@@ -271,7 +271,7 @@ const ALBUM_ID = undefined;
         {% set sub_albums = album.get_children() %}
         {% if sub_albums %}
         <div id="hierarchy_children" class="panel">
-            <h3>{{sub_albums|length}} Children</h3>
+            <h2>{{sub_albums|length}} Children</h2>
             {% for sub_album in sub_albums|sort(attribute='title') %}
                 {{cards.create_album_card(sub_album, view=view, unlink_parent=album, draggable=true)}}
             {% endfor %}
@@ -281,7 +281,7 @@ const ALBUM_ID = undefined;
         {% set photos = album.get_photos() %}
         {% if photos %}
         <div id="hierarchy_photos" class="photos_holder panel">
-            <h3>{{photos|length}} Photos</h3>
+            <h2>{{photos|length}} Photos</h2>
             <div id="photo_list">
             {% for photo in photos|sort(attribute='basename', case_sensitive=False) %}
                 {{cards.create_photo_card(photo, view=view)}}
@@ -294,7 +294,7 @@ const ALBUM_ID = undefined;
         {% set has_child_photos = album.has_any_subalbum_photo() %}
         {% if has_local_photos or has_child_photos %}
         <div id="download_links" class="panel">
-            <h3>Download</h3>
+            <h2>Download</h2>
             {% if has_local_photos %}
                 <p><a id="download_link_single" href="/album/{{album.id}}.zip?recursive=no">These files &ndash; {{album.sum_bytes(recurse=False)|bytestring}}</a></p>
             {% endif %}

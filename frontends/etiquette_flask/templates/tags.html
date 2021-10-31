@@ -126,7 +126,7 @@
         {% set parents = specific_tag.get_parents() %}
         {% if parents %}
         <div id="hierarchy_parents" class="panel">
-            <h3>{{parents|length}} Parents</h3>
+            <h2>{{parents|length}} Parents</h2>
             <ul id="parent_list">
             {% for ancestor in specific_tag.get_parents() %}
             <li>
@@ -142,7 +142,7 @@
 
         <div id="hierarchy_tags" class="panel">
             {% if specific_tag %}
-            <h3>{{tag_count - 1}} Descendants</h3>
+            <h2>{{tag_count - 1}} Descendants</h2>
             {% else %}
             <h1>{{tag_count}} Tags</h1>
             {% endif %}
@@ -218,7 +218,7 @@
         {% if specific_tag and include_synonyms %}
         {% set synonyms = specific_tag.get_synonyms() %}
         <div id="hierarchy_synonyms" class="panel">
-            <h3>{{synonyms|length}} Synonyms</h3>
+            <h2>{{synonyms|length}} Synonyms</h2>
             <ul>
             {% for synonym in synonyms %}
             <li>
@@ -250,7 +250,7 @@
 
         {% if specific_tag %}
         <div id="hierarchy_recentphotos" class="panel">
-            <h3><a href="/search?tag_musts={{specific_tag.name}}&orderby=tagged_at-desc">Recent photos</a></h3>
+            <h2><a href="/search?tag_musts={{specific_tag.name}}&orderby=tagged_at-desc">Recent photos</a></h2>
             <iframe
             class="embedded_search"
             src="/search_embed?tag_musts={{specific_tag.name}}&orderby=tagged_at-desc&yield_albums=no&limit=10"
