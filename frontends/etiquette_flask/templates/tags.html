@@ -21,17 +21,13 @@
     <script src="/static/js/tag_autocomplete.js"></script>
 
 <style>
-h2, h3
-{
-    margin-top: 0;
-}
 #left
 {
     display: grid;
     grid-row-gap: 8px;
     grid-auto-rows: max-content;
 }
-#hierarchy_self h2 .editor_input
+#hierarchy_self h1 .editor_input
 {
     font-size: inherit;
     font-weight: inherit;
@@ -95,11 +91,11 @@ h2, h3
     <div id="left">
         {% if specific_tag %}
         <div id="hierarchy_self" class="panel">
-            <h2>{{cards.create_tag_card(
+            <h1>{{cards.create_tag_card(
                 specific_tag,
                 link="search",
                 id="name_text",
-            )}}</h2>
+            )}}</h1>
 
             <pre
             id="description_text"
@@ -148,7 +144,7 @@ h2, h3
             {% if specific_tag %}
             <h3>{{tag_count - 1}} Descendants</h3>
             {% else %}
-            <h2>{{tag_count}} Tags</h2>
+            <h1>{{tag_count}} Tags</h1>
             {% endif %}
 
             <div id="filter_box_holder">

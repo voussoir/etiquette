@@ -27,7 +27,24 @@ iframe.embedded_search
     border: none;
 }
 
-p:last-of-type
+h1:first-child,
+h2:first-child,
+h3:first-child,
+h4:first-child,
+h5:first-child,
+h6:first-child,
+p:first-child
+{
+    margin-top: 0;
+}
+
+h1:last-child,
+h2:last-child,
+h3:last-child,
+h4:last-child,
+h5:last-child,
+h6:last-child,
+p:last-child
 {
     margin-bottom: 0;
 }

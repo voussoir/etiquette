@@ -16,11 +16,6 @@
     <script src="/static/js/spinner.js"></script>
 
 <style>
-h2, h3
-{
-    margin-top: 0;
-}
-
 #content_body
 {
     grid-row-gap: 8px;
@@ -33,7 +28,7 @@ h2, h3
     {{header.make_header(session=session)}}
     <div id="content_body">
         <div id="hierarchy_self" class="panel">
-            <h2 id="display_name">{{user.display_name}}</h2>
+            <h1 id="display_name">{{user.display_name}}</h1>
             <p>ID: <a href="/userid/{{user.id}}">{{user.id}}</a></p>
             <p>User since <span title="{{user.created|int|timestamp_to_8601}}">{{user.created|timestamp_to_naturaldate}}.</span></p>
         </div>

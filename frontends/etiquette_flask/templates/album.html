@@ -3,10 +3,6 @@
 
 {% macro shared_css() %}
 <style>
-h2, h3
-{
-    margin-top: 0;
-}
 #hierarchy_self
 {
     display: grid;
@@ -105,7 +101,7 @@ h2, h3
 <div id="content_body" class="sticky_side_right sticky_bottom_right">
     <div id="left">
         <div id="album_list" class="panel">
-            <h2>Albums</h2>
+            <h1>Albums</h1>
             {% for album in albums %}
             {{cards.create_album_card(album, view=view, draggable=true)}}
             {% endfor %}
