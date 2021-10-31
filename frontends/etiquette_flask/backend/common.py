@@ -65,7 +65,11 @@ def decorate_and_route(*route_args, **route_kwargs):
         # same one multiple times. The _fully_decorated will track that.
         if not hasattr(endpoint, '_fully_decorated'):
             endpoint = flasktools.ensure_response_type(endpoint)
-            endpoint = decorators.give_theme_cookie(endpoint)
+            endpoint = flasktools.give_theme_cookie(
+                endpoint,
+                cookie_name='etiquette_theme',
+                default_theme='slate',
+            )
             endpoint = decorators.catch_etiquette_exception(endpoint)
             endpoint = session_manager.give_token(endpoint)
 
