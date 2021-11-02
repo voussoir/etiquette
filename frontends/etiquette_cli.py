@@ -693,7 +693,7 @@ generate_thumbnail:
 
     > etiquette_cli.py generate_thumbnail
     > etiquette_cli.py generate_thumbnail --photos id id id
-    > etiquette_cli.py generate_thumbnail searchargs
+    > etiquette_cli.py generate_thumbnail --search searchargs
 
     Examples:
     > etiquette_cli.py generate_thumbnail --search --has-thumbnail no
@@ -714,7 +714,7 @@ purge_deleted_files:
 
     > etiquette_cli.py purge_deleted_files
     > etiquette_cli.py purge_deleted_files --photos id id id
-    > etiquette_cli.py purge_deleted_files searchargs
+    > etiquette_cli.py purge_deleted_files --search searchargs
 
     See etiquette_cli.py search --help for more info about searchargs.
 '''.strip(),
@@ -744,7 +744,7 @@ reload_metadata:
 
     > etiquette_cli.py reload_metadata
     > etiquette_cli.py reload_metadata --photos id id id
-    > etiquette_cli.py reload_metadata searchargs
+    > etiquette_cli.py reload_metadata --search searchargs
 
     flags:
     --force:
