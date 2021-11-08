@@ -513,6 +513,11 @@ DOCSTRING = '''
 Etiquette CLI
 =============
 
+This is the command-line interface for Etiquette, so that you can automate your
+database and integrate it into other scripts.
+
+The following commands are available:
+
 {add_tag}
 
 {remove_tag}
@@ -549,9 +554,7 @@ Etiquette CLI
 
 {tag_list}
 
-At any time, you may add --silent, --quiet, --debug, --loud to change logging.
-
-You can add --yes to avoid the "Commit?" prompt.
+You can add --yes to avoid the "Commit?" prompt on commands that modify the db.
 
 TO SEE DETAILS ON EACH COMMAND, RUN
 > etiquette_cli.py <command> --help
