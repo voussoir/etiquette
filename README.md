@@ -35,9 +35,13 @@ In order to prevent the accidental creation of Etiquette databases, you must fir
 
 ### Running Etiquette CLI
 
-Run `python etiquette_cli.py` to launch the script. You should see a help message describing each of the commands.
+1. `cd` to the folder where you'd like to create the Etiquette database.
 
-Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher.
+2. Run `python frontends/etiquette_cli.py --help` to learn about the available commands.
+
+3. Run `python frontends/etiquette_cli.py init` to create a database in the current directory.
+
+Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher. For example:
 
     Windows:
     D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_cli.py
@@ -49,9 +53,13 @@ It is expected that you create a shortcut file or launch script so you don't hav
 
 ### Running Etiquette Flask locally
 
-Run `python etiquette_flask_dev.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
+1. Use `etiquette_cli init` to create the database in the desired directory.
 
-Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher.
+2. Run `python frontends/etiquette_flask/etiquette_flask_dev.py [port]` to launch the flask server. Port defaults to 5000 if not provided.
+
+3. Open your web browser to `localhost:<port>`.
+
+Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher. For example:
 
     Windows:
     D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_flask\etiquette_flask_dev.py 5001
@@ -59,18 +67,22 @@ Note: Do not `cd` into the frontends folder. Stay in the folder that contains yo
     Linux:
     /somewhere $ python /Git/Etiquette/frontends/etiquette_flask/etiquette_flask_dev.py 5001
 
+Add `--help` to learn the arguments.
+
 It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
 
 ### Running Etiquette Flask with Gunicorn
 
 You already know that the frontend code imports the backend code. But now, gunicorn needs to import the frontend code.
 
-1. Add a symlink to the `frontends/etiquette_flask` folder into the folder you added to your `PYTHONPATH` earlier.
+1. Use `etiquette_cli init` to create the database in the desired directory.
+
+2. Add a symlink to the `frontends/etiquette_flask` folder into the folder you added to your `PYTHONPATH` earlier.
 
    `ln --symbolic realpath fakepath`  
     for example `ln --symbolic "~/Git/Etiquette/frontends/etiquette_flask" "~/pythonpath/etiquette_flask"`
 
-2. Add a symlink to `frontends/etiquette_flask/etiquette_flask_prod.py` into the folder you added to your `PYTHONPATH`, **or** into the folder from which you will run gunicorn.
+3. Add a symlink to `frontends/etiquette_flask/etiquette_flask_prod.py` into the folder you added to your `PYTHONPATH`, **or** into the folder from which you will run gunicorn.
 
    `ln --symbolic realpath fakepath`  
     for example `ln --symbolic "~/Git/Etiquette/frontends/etiquette_flask/etiquette_flask_prod.py" "~/pythonpath/etiquette_flask_prod.py"`
@@ -81,7 +93,7 @@ You already know that the frontend code imports the backend code. But now, gunic
 
     where `./` is the location from which you will run gunicorn.
 
-3. If you are using a proxy like NGINX, make sure you are setting X-Forwarded-For so that Etiquette sees the user's real IP, and not the proxy's own (127.0.0.1) IP. For example:
+4. If you are using a proxy like NGINX, make sure you are setting X-Forwarded-For so that Etiquette sees the user's real IP, and not the proxy's own (127.0.0.1) IP. For example:
 
     ```
     location / {
@@ -91,7 +103,7 @@ You already know that the frontend code imports the backend code. But now, gunic
     }
     ```
 
-4. To run non-daemonized, on a specific port, with logging to the terminal, I use:
+5. To run non-daemonized, on a specific port, with logging to the terminal, I use:
 
     ```
     ~/cmd/python ~/cmd/gunicorn_py etiquette_flask_prod:site --bind "0.0.0.0:6667" --access-logfile "-" --access-logformat "%(h)s | %(t)s | %(r)s | %(s)s %(b)s"
@@ -99,12 +111,13 @@ You already know that the frontend code imports the backend code. But now, gunic
 
 It is expected that you create a shortcut file or launch script so you don't have to type the whole filepath every time.
 
-
 ### Running Etiquette REPL
 
-Run `python etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
+1. Use `etiquette_cli init` to create the database in the desired directory.
 
-Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher.
+2. Run `python frontends/etiquette_repl.py` to launch the Python interpreter with the PhotoDB pre-loaded into a variable called `P`. Try things like `P.new_photo` or `P.digest_directory`.
+
+Note: Do not `cd` into the frontends folder. Stay in the folder that contains your `_etiquette` database and specify the full path of the frontend launcher. For example:
 
     Windows:
     D:\somewhere> python D:\Git\Etiquette\frontends\etiquette_repl.py
