@@ -81,6 +81,7 @@ def get_photos_by_globs(patterns):
 def get_photos_from_args(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
     photos = []
+
     if args.photo_id_args:
         photos.extend(photodb.get_photos_by_id(args.photo_id_args))
 
@@ -92,6 +93,7 @@ def get_photos_from_args(args):
 def get_albums_from_args(args):
     photodb = etiquette.photodb.PhotoDB.closest_photodb()
     albums = []
+
     if args.album_id_args:
         albums.extend(photodb.get_albums_by_id(args.album_id_args))
 
@@ -573,7 +575,7 @@ add_tag:
     > etiquette_cli.py add_tag author.author_voussoir --search --tag-forbids author
 
     See etiquette_cli.py search --help for more info about searchargs.
-'''.strip(),
+''',
 
 remove_tag='''
 remove_tag:
@@ -587,7 +589,7 @@ remove_tag:
     > etiquette_cli.py remove_tag watchlist --search --tag-musts directed_by_michael_bay
 
     See etiquette_cli.py search --help for more info about searchargs.
-'''.strip(),
+''',
 
 delete='''
 delete:
@@ -605,7 +607,7 @@ delete:
     > etiquette_cli.py delete --album-search searchargs
 
     See etiquette_cli.py search --help for more info about searchargs.
-'''.strip(),
+''',
 
 digest='''
 digest:
@@ -649,14 +651,14 @@ digest:
     > etiquette_cli.py digest media --ratelimit 1
     > etiquette_cli.py digest photos --no-recurse --no-albums --ratelimit 0.25
     > etiquette_cli.py digest . --glob-filenames *.jpg --exclude-filenames thumb*
-'''.strip(),
+''',
 
 easybake='''
 easybake:
     Create and manipulate tags by easybake strings.
 
     > etiquette_cli.py easybake eb_string
-'''.strip(),
+''',
 
 export_symlinks='''
 export_symlinks:
@@ -685,7 +687,7 @@ export_symlinks:
         longer exists will be deleted.
 
     See etiquette_cli.py search --help for more info about searchargs.
-'''.strip(),
+''',
 
 generate_thumbnail='''
 generate_thumbnail:
@@ -702,14 +704,14 @@ generate_thumbnail:
     > etiquette_cli.py generate_thumbnail --search --has-thumbnail no
 
     See etiquette_cli.py search --help for more info about searchargs.
-'''.strip(),
+''',
 
 init='''
 init:
     Create a new Etiquette database in the current directory.
 
     > etiquette_cli.py init
-'''.strip(),
+''',
 
 purge_deleted_files='''
 purge_deleted_files:
@@ -720,7 +722,7 @@ purge_deleted_files:
     > etiquette_cli.py purge_deleted_files --search searchargs
 
     See etiquette_cli.py search --help for more info about searchargs.
-'''.strip(),
+''',
 
 purge_empty_albums='''
 purge_empty_albums:
@@ -736,7 +738,7 @@ purge_empty_albums:
 
     > etiquette_cli.py purge_empty_albums
     > etiquette_cli.py purge_empty_albums --albums id id id
-'''.strip(),
+''',
 
 reload_metadata='''
 reload_metadata:
@@ -759,7 +761,7 @@ reload_metadata:
         of reducing system load.
 
     See etiquette_cli.py search --help for more info about searchargs.
-'''.strip(),
+''',
 
 relocate='''
 relocate:
@@ -767,7 +769,7 @@ relocate:
     by external tools.
 
     > etiquette_cli.py relocate photo_id filepath
-'''.strip(),
+''',
 
 search='''
 search:
@@ -846,7 +848,7 @@ search:
     --orderby X-Y:
         Order the results by property X in direction Y. E.g. created-desc or
         bytes-asc.
-'''.strip(),
+''',
 
 show_associated_directories='''
 show_associated_directories:
@@ -857,7 +859,7 @@ show_associated_directories:
     > etiquette_cli.py show_associated_directories --album-search searchargs
 
     See etiquette_cli.py search --help for more info about searchargs.
-'''.strip(),
+''',
 
 set_searchhidden='''
 set_searchhidden:
@@ -867,7 +869,7 @@ set_searchhidden:
     > etiquette_cli.py set_searchhidden --search searchargs
 
     See etiquette_cli.py search --help for more info about searchargs.
-'''.strip(),
+''',
 
 unset_searchhidden='''
 unset_searchhidden:
@@ -877,21 +879,21 @@ unset_searchhidden:
     > etiquette_cli.py unset_searchhidden --search searchargs
 
     See etiquette_cli.py search --help for more info about searchargs.
-'''.strip(),
+''',
 
 tag_breplace='''
 tag_breplace:
     For all tags in the database, use find-and-replace to rename the tags.
 
     > etiquette_cli.py tag_breplace replace_from replace_to
-'''.strip(),
+''',
 
 tag_list='''
 tag_list:
     Show all tags in the database.
 
     > etiquette_cli.py tag_list
-'''.strip(),
+''',
 )
 
 DOCSTRING = betterhelp.add_previews(DOCSTRING, SUB_DOCSTRINGS)
