@@ -1601,16 +1601,18 @@ class PhotoDB(
         if self.ephemeral:
             existing_database = False
             self.sql = sqlite3.connect(':memory:')
-        else:
-            self.database_filepath = self.data_directory.with_child(constants.DEFAULT_DBNAME)
-            existing_database = self.database_filepath.exists
+            self._first_time_setup()
+            return
 
-            if not existing_database and not create:
-                msg = f'"{self.database_filepath.absolute_path}" does not exist and create is off.'
-                raise FileNotFoundError(msg)
+        self.database_filepath = self.data_directory.with_child(constants.DEFAULT_DBNAME)
+        existing_database = self.database_filepath.exists
 
-            self.data_directory.makedirs(exist_ok=True)
-            self.sql = sqlite3.connect(self.database_filepath.absolute_path)
+        if not existing_database and not create:
+            msg = f'"{self.database_filepath.absolute_path}" does not exist and create is off.'
+            raise FileNotFoundError(msg)
+
+        self.data_directory.makedirs(exist_ok=True)
+        self.sql = sqlite3.connect(self.database_filepath.absolute_path)
 
         if existing_database:
             if not skip_version_check:
