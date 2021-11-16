@@ -296,12 +296,12 @@
                 {% endfor %}
             </select>
             <select name="has_tags" class="basic_param">
-                <option value=""    {{"selected" if search_kwargs['has_tags']==None else ""}}>Tagged and untagged</option>
+                <option value=""    {{"selected" if search_kwargs['has_tags']==None else ""}}>Tagged or untagged</option>
                 <option value="yes" {{"selected" if search_kwargs['has_tags']==True else ""}}>Tagged only</option>
                 <option value="no"  {{"selected" if search_kwargs['has_tags']==False else ""}}>Untagged only</option>
             </select>
             <select name="has_thumbnail" class="basic_param">
-                <option value=""    {{"selected" if search_kwargs['has_thumbnail']==None else ""}}>Thumbnail doesn't matter</option>
+                <option value=""    {{"selected" if search_kwargs['has_thumbnail']==None else ""}}>Thumbnail or no thumbnail</option>
                 <option value="yes" {{"selected" if search_kwargs['has_thumbnail']==True else ""}}>Has thumbnail</option>
                 <option value="no"  {{"selected" if search_kwargs['has_thumbnail']==False else ""}}>No thumbnail</option>
             </select>
@@ -314,8 +314,8 @@
                 <option value="no" {{"selected" if search_kwargs['yield_photos']==False else ""}}>Don't include photos</option>
             </select>
             <select name="view" class="basic_param">
-                <option value="grid"  {{"selected" if search_kwargs['view']=="grid" else ""}}>Grid</option>
-                <option value="list"  {{"selected" if search_kwargs['view']=="list" else ""}}>List</option>
+                <option value="grid"  {{"selected" if search_kwargs['view']=="grid" else ""}}>Grid view</option>
+                <option value="list"  {{"selected" if search_kwargs['view']=="list" else ""}}>List view</option>
             </select>
             <button type="submit" id="search_go_button" class="green_button" value="">Search</button>
             <button type="button" id="swipe_go_button" class="green_button" value="" onclick="return submit_swipe();">Swipe UI</button>
