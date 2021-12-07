@@ -666,11 +666,11 @@ def upgrade_19_to_20(photodb):
         if len(new.listdir()) > 0:
             raise Exception(f'{new.absolute_path} already has items in it.')
         else:
-            os.rmdir(new.absolute_path)
+            os.rmdir(new)
 
     photodb.execute('UPDATE photos SET thumbnail = REPLACE(thumbnail, "/site_thumbnails/", "/thumbnails/")')
     photodb.execute('UPDATE photos SET thumbnail = REPLACE(thumbnail, "\\site_thumbnails\\", "\\thumbnails\\")')
-    photodb.on_commit_queue.append({'action': os.rename, 'args': (old.absolute_path, new.absolute_path)})
+    photodb.on_commit_queue.append({'action': os.rename, 'args': (old, new)})
 
 def upgrade_all(data_directory):
     '''

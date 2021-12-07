@@ -971,22 +971,21 @@ class Photo(ObjectBase):
         self.photodb.delete(table=Photo, pairs={'id': self.id})
 
         if delete_file and self.real_path.exists:
-            path = self.real_path.absolute_path
             if self.photodb.config['recycle_instead_of_delete']:
-                log.debug('Recycling %s.', path)
+                log.debug('Recycling %s.', self.real_path.absolute_path)
                 action = send2trash.send2trash
             else:
-                log.debug('Deleting %s.', path)
+                log.debug('Deleting %s.', self.real_path.absolute_path)
                 action = os.remove
 
             self.photodb.on_commit_queue.append({
                 'action': action,
-                'args': [path],
+                'args': [self.real_path],
             })
             if self.thumbnail and self.thumbnail.is_file:
                 self.photodb.on_commit_queue.append({
                     'action': action,
-                    'args': [self.thumbnail.absolute_path],
+                    'args': [self.thumbnail],
                 })
 
         self._uncache()
@@ -1379,7 +1378,7 @@ class Photo(ObjectBase):
             # If we're on the same partition, make a hardlink.
             # Otherwise make a copy.
             try:
-                os.link(old_path.absolute_path, new_path.absolute_path)
+                os.link(old_path, new_path)
             except OSError:
                 spinal.copy_file(old_path, new_path)
 

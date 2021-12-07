@@ -32,7 +32,7 @@ def export_symlinks_albums(albums, destination, dry_run):
                 yield symlink_dir
                 continue
             print(album, symlink_dir)
-            os.symlink(src=album_dir.absolute_path, dst=symlink_dir.absolute_path)
+            os.symlink(src=album_dir, dst=symlink_dir)
             yield symlink_dir
 
 def export_symlinks_photos(photos, destination, dry_run):
@@ -48,7 +48,7 @@ def export_symlinks_photos(photos, destination, dry_run):
             yield symlink_path
             continue
         print(symlink_path.absolute_path)
-        os.symlink(src=photo.real_path.absolute_path, dst=symlink_path.absolute_path)
+        os.symlink(src=photo.real_path, dst=symlink_path)
         yield symlink_path
 
 def get_photos_by_glob(pattern):
@@ -266,9 +266,9 @@ def export_symlinks_argparse(args):
     symlinks = symlinks.difference(total_paths)
     for old_symlink in symlinks:
         print(f'Pruning {old_symlink}.')
-        os.remove(old_symlink.absolute_path)
+        os.remove(old_symlink)
         if not old_symlink.parent.listdir():
-            os.rmdir(old_symlink.parent.absolute_path)
+            os.rmdir(old_symlink.parent)
 
     checkdirs = set(spinal.walk(destination, yield_directories=True, yield_files=False))
     while checkdirs:
@@ -276,7 +276,7 @@ def export_symlinks_argparse(args):
         if check not in destination:
             continue
         if len(check.listdir()) == 0:
-            os.rmdir(check.absolute_path)
+            os.rmdir(check)
             checkdirs.add(check.parent)
 
     return 0
