@@ -71,8 +71,15 @@ function create_bookmark_callback(response)
         return;
     }
     const bookmark = response.data;
+    const add_author = true;
     const add_delete_button = true;
-    const bookmark_card = cards.bookmarks.create(bookmark, add_delete_button);
+    const add_url_element = true;
+    const bookmark_card = cards.bookmarks.create(
+        bookmark,
+        add_author,
+        add_delete_button,
+        add_url_element
+    );
     create_editor(bookmark_card);
 
     const bookmark_list = document.getElementById("bookmark_list");
