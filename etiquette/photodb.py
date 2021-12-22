@@ -1612,6 +1612,7 @@ class PhotoDB(
             raise FileNotFoundError(msg)
 
         self.data_directory.makedirs(exist_ok=True)
+        log.debug('Connecting to sqlite file "%s".', self.database_filepath.absolute_path)
         self.sql = sqlite3.connect(self.database_filepath.absolute_path)
 
         if existing_database:
@@ -1647,13 +1648,13 @@ class PhotoDB(
             path = parent
 
         path = possible
+        log.debug('Found closest PhotoDB at "%s".', path.absolute_path)
         photodb = cls(
             data_directory=path,
             create=False,
             *args,
             **kwargs,
         )
-        log.debug('Found closest PhotoDB at %s.', path)
         return photodb
 
     def __del__(self):
