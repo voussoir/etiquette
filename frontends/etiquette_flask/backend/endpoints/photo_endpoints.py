@@ -5,6 +5,7 @@ import urllib.parse
 
 from voussoirkit import cacheclass
 from voussoirkit import flasktools
+from voussoirkit import pathclass
 from voussoirkit import stringtools
 
 import etiquette
@@ -176,7 +177,10 @@ def post_photo_refresh_metadata_core(photo_ids):
     for photo in photos:
         photo._uncache()
         photo = common.P_photo(photo.id, response_type='json')
-        photo.reload_metadata()
+        try:
+            photo.reload_metadata()
+        except pathclass.NotFile:
+            flask.abort(404)
         if photo.thumbnail is None:
             try:
                 photo.generate_thumbnail()
