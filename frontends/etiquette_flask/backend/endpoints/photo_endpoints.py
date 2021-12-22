@@ -7,6 +7,9 @@ from voussoirkit import cacheclass
 from voussoirkit import flasktools
 from voussoirkit import pathclass
 from voussoirkit import stringtools
+from voussoirkit import vlogging
+
+log = vlogging.get_logger(__name__)
 
 import etiquette
 
@@ -185,7 +188,7 @@ def post_photo_refresh_metadata_core(photo_ids):
             try:
                 photo.generate_thumbnail()
             except Exception:
-                traceback.print_exc()
+                log.warning(traceback.format_exc())
 
     common.P.commit('photo refresh metadata core')
 
