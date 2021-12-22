@@ -78,11 +78,13 @@ function create(bookmark, add_author, add_delete_button, add_url_element)
     bookmark_card.className = "bookmark_card"
     bookmark_card.dataset.id = bookmark.id;
 
+    const h2 = document.createElement("h2");
     const bookmark_title = document.createElement("a");
     bookmark_title.className = "bookmark_title";
     bookmark_title.href = bookmark.url;
     bookmark_title.innerText = bookmark.display_name;
-    bookmark_card.appendChild(bookmark_title);
+    h2.appendChild(bookmark_title);
+    bookmark_card.appendChild(h2);
 
     // The URL element is always display:none, but its presence is useful in
     // facilitating the Editor object. If this bookmark will not be editable,
