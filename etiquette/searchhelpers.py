@@ -490,6 +490,9 @@ def normalize_tagset(photodb, tags, warning_bag=None):
     if not tags:
         return None
 
+    if isinstance(tags, objects.Tag):
+        tags = {tags}
+
     if isinstance(tags, str):
         tags = stringtools.comma_space_split(tags)
 
