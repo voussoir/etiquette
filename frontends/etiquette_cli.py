@@ -172,26 +172,31 @@ def add_remove_tag_argparse(args, action):
 
     return 0
 
+def delete_albums_argparse(args):
+    load_photodb()
+
+    need_commit = False
+    albums = get_albums_from_args(args)
+    for album in albums:
+        album.delete()
+        need_commit = True
+
+    if not need_commit:
+        return 0
+
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
 
     return 0
 
-def delete_argparse(args):
+def delete_photos_argparse(args):
     load_photodb()
 
     need_commit = False
-    if args.photo_id_args or args.photo_search_args:
-        photos = get_photos_from_args(args)
-        for photo in photos:
-            photo.delete(delete_file=args.delete_file)
-            need_commit = True
-
-    if args.album_id_args or args.album_search_args:
-        albums = get_albums_from_args(args)
-        for album in albums:
-            album.delete()
-            need_commit = True
+    photos = get_photos_from_args(args)
+    for photo in photos:
+        photo.delete(delete_file=args.delete_file)
+        need_commit = True
 
     if not need_commit:
         return 0
@@ -607,9 +612,19 @@ remove_tag:
     See etiquette_cli.py search --help for more info about searchargs.
 ''',
 
-delete='''
-delete:
-    Remove photos or albums from the database.
+delete_albums='''
+delete_albums:
+    Remove albums from the database.
+
+    > etiquette_cli.py delete_albums --albums id id id
+    > etiquette_cli.py delete_albums --album-search searchargs
+
+    See etiquette_cli.py search --help for more info about searchargs.
+''',
+
+delete_photos='''
+delete_photos:
+    Remove photos from the database.
 
     flags:
     --delete_file:
@@ -617,10 +632,8 @@ delete:
         Your config.json file's recycle_instead_of_delete will influence this.
         Without this flag, photos are removed from the db but remain on disk.
 
-    > etiquette_cli.py delete --photos id id id
-    > etiquette_cli.py delete --search searchargs
-    > etiquette_cli.py delete --albums id id id
-    > etiquette_cli.py delete --album-search searchargs
+    > etiquette_cli.py delete_photos --photos id id id
+    > etiquette_cli.py delete_photos --search searchargs
 
     See etiquette_cli.py search --help for more info about searchargs.
 ''',
@@ -951,10 +964,14 @@ def main(argv):
     p_remove_tag.add_argument('--yes', dest='autoyes', action='store_true')
     p_remove_tag.set_defaults(func=lambda args: add_remove_tag_argparse(args, action='remove'))
 
-    p_delete = subparsers.add_parser('delete')
-    p_delete.add_argument('--delete_file', '--delete-file', action='store_true')
-    p_delete.add_argument('--yes', dest='autoyes', action='store_true')
-    p_delete.set_defaults(func=delete_argparse)
+    p_delete_albums = subparsers.add_parser('delete_albums', aliases=['delete-albums'])
+    p_delete_albums.add_argument('--yes', dest='autoyes', action='store_true')
+    p_delete_albums.set_defaults(func=delete_albums_argparse)
+
+    p_delete_photos = subparsers.add_parser('delete_photos', aliases=['delete-photos'])
+    p_delete_photos.add_argument('--delete_file', '--delete-file', action='store_true')
+    p_delete_photos.add_argument('--yes', dest='autoyes', action='store_true')
+    p_delete_photos.set_defaults(func=delete_photos_argparse)
 
     p_digest = subparsers.add_parser('digest', aliases=['digest_directory', 'digest-directory'])
     p_digest.add_argument('directory')
