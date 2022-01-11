@@ -65,16 +65,7 @@ def get_photos_by_glob(pattern):
     if pattern == '**':
         return search_in_cwd(yield_photos=True, yield_albums=False)
 
-    cwd = pathclass.cwd()
-
-    (folder, pattern) = os.path.split(pattern)
-    if folder:
-        folder = cwd.join(folder)
-    else:
-        folder = cwd
-
-    files = [f for f in folder.glob(pattern) if f.is_file]
-    for file in files:
+    for file in pathclass.glob_files(pattern):
         try:
             photo = photodb.get_photo_by_path(file)
             yield photo
@@ -88,6 +79,12 @@ def get_photos_by_globs(patterns):
 def get_photos_from_args(args):
     load_photodb()
     photos = []
+
+    if args.globs:
+        photos.extend(get_photos_by_globs(args.globs))
+
+    if args.glob:
+        photos.extend(get_photos_by_glob(args.glob))
 
     if args.photo_id_args:
         photos.extend(photodb.get_photos_by_id(args.photo_id_args))
@@ -151,19 +148,29 @@ def search_by_argparse(args, yield_albums=False, yield_photos=False):
 def add_remove_tag_argparse(args, action):
     load_photodb()
 
-    tag = photodb.get_tag(name=args.tag_name)
-    if args.any_id_args:
+    tag = photodb.get_tag_by_name(args.tag_name)
+
+    if args.any_photo_args:
         photos = get_photos_from_args(args)
-    elif args.globs:
-        photos = get_photos_by_globs(args.globs)
     else:
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
+
+    need_commit = False
 
     for photo in photos:
         if action == 'add':
             photo.add_tag(tag)
         elif action == 'remove':
             photo.remove_tag(tag)
+        need_commit = True
+
+    if not need_commit:
+        return 0
+
+    if args.autoyes or interactive.getpermission('Commit?'):
+        photodb.commit()
+
+    return 0
 
     if args.autoyes or interactive.getpermission('Commit?'):
         photodb.commit()
@@ -247,7 +254,7 @@ def export_symlinks_argparse(args):
 
     total_paths = set()
 
-    if args.album_id_args or args.album_search_args:
+    if args.any_album_args:
         albums = get_albums_from_args(args)
         export = export_symlinks_albums(
             albums,
@@ -256,7 +263,7 @@ def export_symlinks_argparse(args):
         )
         total_paths.update(export)
 
-    if args.photo_id_args or args.photo_search_args:
+    if args.any_photo_args:
         photos = get_photos_from_args(args)
         export = export_symlinks_photos(
             photos,
@@ -291,7 +298,7 @@ def export_symlinks_argparse(args):
 def generate_thumbnail_argparse(args):
     load_photodb()
 
-    if args.photo_id_args or args.photo_search_args:
+    if args.any_photo_args:
         photos = get_photos_from_args(args)
     else:
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
@@ -320,7 +327,7 @@ def init_argparse(args):
 def purge_deleted_files_argparse(args):
     load_photodb()
 
-    if args.photo_id_args or args.photo_search_args:
+    if args.any_photo_args:
         photos = get_photos_from_args(args)
     else:
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
@@ -367,7 +374,7 @@ def purge_empty_albums_argparse(args):
 def reload_metadata_argparse(args):
     load_photodb()
 
-    if args.photo_id_args or args.photo_search_args:
+    if args.any_photo_args:
         photos = get_photos_from_args(args)
     else:
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
@@ -423,7 +430,7 @@ def search_argparse(args):
     return 0
 
 def show_associated_directories_argparse(args):
-    if args.album_id_args or args.album_search_args:
+    if args.any_album_args:
         albums = get_albums_from_args(args)
     else:
         albums = search_in_cwd(yield_photos=False, yield_albums=True)
@@ -447,8 +454,10 @@ def set_unset_searchhidden_argparse(args, searchhidden):
     if args.album_search_args:
         args.album_search_args.is_searchhidden = not searchhidden
 
-    if args.any_id_args:
-        photos = get_photos_from_args(args)
+    photos = []
+    if args.any_photo_args:
+        photos.extend(get_photos_from_args(args))
+    if args.any_album_args:
         albums = get_albums_from_args(args)
         photos.extend(photo for album in albums for photo in album.walk_photos())
     else:
@@ -987,6 +996,7 @@ def main(argv):
     p_purge_empty_albums.set_defaults(func=purge_empty_albums_argparse)
 
     p_reload_metadata = subparsers.add_parser('reload_metadata', aliases=['reload-metadata'])
+    p_reload_metadata.add_argument('globs', nargs='*')
     p_reload_metadata.add_argument('--hash_bytes_per_second', '--hash-bytes-per-second', default=None)
     p_reload_metadata.add_argument('--force', action='store_true')
     p_reload_metadata.add_argument('--yes', dest='autoyes', action='store_true')
@@ -1054,11 +1064,22 @@ def main(argv):
         args.album_search_args = p_search.parse_args(album_search_args) if album_search_args else None
         args.photo_id_args = [id for arg in photo_id_args for id in stringtools.comma_space_split(arg)]
         args.album_id_args = [id for arg in album_id_args for id in stringtools.comma_space_split(arg)]
-        args.any_id_args = bool(
+
+        if not hasattr(args, 'globs'):
+            args.globs = None
+
+        if not hasattr(args, 'glob'):
+            args.glob = None
+
+        args.any_photo_args = bool(
             args.photo_search_args or
-            args.album_search_args or
             args.photo_id_args or
-            args.album_id_args
+            args.globs or
+            args.glob
+        )
+        args.any_album_args = bool(
+            args.album_id_args or
+            args.album_search_args
         )
         return args
 
