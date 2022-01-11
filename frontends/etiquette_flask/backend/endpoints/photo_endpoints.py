@@ -1,5 +1,6 @@
 import flask; from flask import request
 import os
+import subprocess
 import traceback
 import urllib.parse
 
@@ -237,8 +238,12 @@ def post_photo_show_in_folder(photo_id):
 
     photo = common.P_photo(photo_id, response_type='json')
     if os.name == 'nt':
-        command = f'start explorer.exe /select,"{photo.real_path.absolute_path}"'
-        os.system(command)
+        command = f'explorer.exe /select,"{photo.real_path.absolute_path}"'
+        subprocess.Popen(command, shell=True)
+        return flasktools.json_response({})
+    else:
+        command = ['xdg-open', photo.real_path.parent.absolute_path]
+        subprocess.Popen(command, shell=True)
         return flasktools.json_response({})
 
     flask.abort(501)
