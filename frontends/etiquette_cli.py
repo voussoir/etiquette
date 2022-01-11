@@ -539,43 +539,55 @@ Etiquette CLI
 This is the command-line interface for Etiquette, so that you can automate your
 database and integrate it into other scripts.
 
-The following commands are available:
+-- DATABASE --------------------------------------------------------------------
+
+{init}
+
+-- ALBUMS ----------------------------------------------------------------------
+
+{delete_albums}
+
+{export_symlinks}
+
+{purge_empty_albums}
+
+{show_associated_directories}
+
+-- PHOTOS ----------------------------------------------------------------------
 
 {add_tag}
 
-{remove_tag}
-
-{delete}
+{delete_photos}
 
 {digest}
-
-{easybake}
 
 {export_symlinks}
 
 {generate_thumbnail}
 
-{init}
-
 {purge_deleted_files}
-
-{purge_empty_albums}
 
 {reload_metadata}
 
 {relocate}
 
-{search}
+{remove_tag}
 
-{show_associated_directories}
+{search}
 
 {set_searchhidden}
 
 {unset_searchhidden}
 
+-- TAGS ------------------------------------------------------------------------
+
+{easybake}
+
 {tag_breplace}
 
 {tag_list}
+
+--------------------------------------------------------------------------------
 
 You can add --yes to avoid the "Commit?" prompt on commands that modify the db.
 
