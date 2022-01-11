@@ -13,6 +13,13 @@ from voussoirkit import vlogging
 
 import etiquette
 
+photodb = None
+def load_photodb():
+    global photodb
+    if photodb is not None:
+        return
+    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+
 # HELPERS ##########################################################################################
 
 def export_symlinks_albums(albums, destination, dry_run):
@@ -52,7 +59,7 @@ def export_symlinks_photos(photos, destination, dry_run):
         yield symlink_path
 
 def get_photos_by_glob(pattern):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
     pattern = pathclass.normalize_sep(pattern)
 
     if pattern == '**':
@@ -79,7 +86,7 @@ def get_photos_by_globs(patterns):
         yield from get_photos_by_glob(pattern)
 
 def get_photos_from_args(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
     photos = []
 
     if args.photo_id_args:
@@ -91,7 +98,7 @@ def get_photos_from_args(args):
     return photos
 
 def get_albums_from_args(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
     albums = []
 
     if args.album_id_args:
@@ -103,7 +110,7 @@ def get_albums_from_args(args):
     return albums
 
 def search_in_cwd(**kwargs):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
     cwd = pathclass.cwd()
     return photodb.search(
         within_directory=cwd,
@@ -142,7 +149,7 @@ def search_by_argparse(args, yield_albums=False, yield_photos=False):
 # ARGPARSE #########################################################################################
 
 def add_remove_tag_argparse(args, action):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
 
     tag = photodb.get_tag(name=args.tag_name)
     if args.any_id_args:
@@ -164,7 +171,7 @@ def add_remove_tag_argparse(args, action):
     return 0
 
 def delete_argparse(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
 
     need_commit = False
     if args.photo_id_args or args.photo_search_args:
@@ -193,7 +200,7 @@ def digest_directory_argparse(args):
     for directory in directories:
         directory.assert_is_directory()
 
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
     need_commit = False
 
     for directory in directories:
@@ -223,7 +230,7 @@ def digest_directory_argparse(args):
     return 0
 
 def easybake_argparse(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
     for eb_string in args.eb_strings:
         notes = photodb.easybake(eb_string)
         for (action, tagname) in notes:
@@ -282,7 +289,7 @@ def export_symlinks_argparse(args):
     return 0
 
 def generate_thumbnail_argparse(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
 
     if args.photo_id_args or args.photo_search_args:
         photos = get_photos_from_args(args)
@@ -311,7 +318,7 @@ def init_argparse(args):
     return 0
 
 def purge_deleted_files_argparse(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
 
     if args.photo_id_args or args.photo_search_args:
         photos = get_photos_from_args(args)
@@ -333,7 +340,7 @@ def purge_deleted_files_argparse(args):
     return 0
 
 def purge_empty_albums_argparse(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
 
     # We do not check args.album_search_args because currently it is not
     # possible for search results to find empty albums on account of the fact
@@ -358,7 +365,7 @@ def purge_empty_albums_argparse(args):
     return 0
 
 def reload_metadata_argparse(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
 
     if args.photo_id_args or args.photo_search_args:
         photos = get_photos_from_args(args)
@@ -398,7 +405,7 @@ def reload_metadata_argparse(args):
     return 0
 
 def relocate_argparse(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
 
     photo = photodb.get_photo(args.photo_id)
     photo.relocate(args.filepath)
@@ -432,7 +439,7 @@ def show_associated_directories_argparse(args):
     return 0
 
 def set_unset_searchhidden_argparse(args, searchhidden):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
 
     if args.photo_search_args:
         args.photo_search_args.is_searchhidden = not searchhidden
@@ -457,7 +464,7 @@ def set_unset_searchhidden_argparse(args, searchhidden):
     return 0
 
 def tag_breplace_argparse(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
     renames = []
     tag_names = photodb.get_all_tag_names()
     all_names = tag_names.union(photodb.get_all_synonyms())
@@ -499,7 +506,7 @@ def tag_breplace_argparse(args):
     return 0
 
 def tag_list_argparse(args):
-    photodb = etiquette.photodb.PhotoDB.closest_photodb()
+    load_photodb()
     tags = photodb.get_all_tag_names()
     synonyms = photodb.get_all_synonyms()
     keys = sorted(tags.union(synonyms.keys()))
