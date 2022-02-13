@@ -1,22 +1,5 @@
 '''
-etiquette_flask_dev
-===================
 This file is the gevent launcher for local / development use.
-
-> etiquette_flask_dev port <flags>
-
-port:
-    Port number on which to run the server. Default 5000.
-
---https:
-    If this flag is not passed, HTTPS will automatically be enabled if the port
-    is 443. You can pass this flag to enable HTTPS on other ports.
-    We expect to find etiquette.key and etiquette.crt in
-    frontends/etiquette_flask/https.
-
---localhost-only:
-    If this flag is passed, only localhost will be able to access the server.
-    Other users on the LAN will be blocked.
 '''
 import gevent.monkey; gevent.monkey.patch_all()
 
@@ -93,14 +76,43 @@ def etiquette_flask_launch_argparse(args):
 
 @vlogging.main_decorator
 def main(argv):
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('port', nargs='?', type=int, default=5000)
-    parser.add_argument('--https', dest='use_https', action='store_true', default=None)
-    parser.add_argument('--localhost_only', '--localhost-only', dest='localhost_only', action='store_true')
+    parser = argparse.ArgumentParser(
+        description='''
+        This file is the gevent launcher for local / development use.
+        ''',
+    )
+    parser.add_argument(
+        'port',
+        nargs='?',
+        type=int,
+        default=5000,
+        help='''
+        Port number on which to run the server.
+        ''',
+    )
+    parser.add_argument(
+        '--https',
+        dest='use_https',
+        action='store_true',
+        help='''
+        If this flag is not passed, HTTPS will automatically be enabled if the port
+        is 443. You can pass this flag to enable HTTPS on other ports.
+        We expect to find etiquette.key and etiquette.crt in
+        frontends/etiquette_flask/https.
+        ''',
+    )
+    parser.add_argument(
+        '--localhost_only',
+        '--localhost-only',
+        action='store_true',
+        help='''
+        If this flag is passed, only localhost will be able to access the server.
+        Other users on the LAN will be blocked.
+        ''',
+    )
     parser.set_defaults(func=etiquette_flask_launch_argparse)
 
-    return betterhelp.single_main(argv, parser, __doc__)
+    return betterhelp.go(parser, argv)
 
 if __name__ == '__main__':
     raise SystemExit(main(sys.argv[1:]))

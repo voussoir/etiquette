@@ -153,6 +153,7 @@ def add_remove_tag_argparse(args, action):
     if args.any_photo_args:
         photos = get_photos_from_args(args)
     else:
+        # todo: require the user to provide some photo args, dont implicitly do all under cwd.
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
 
     need_commit = False
@@ -532,567 +533,1070 @@ def tag_list_argparse(args):
 
     return 0
 
-DOCSTRING = '''
-Etiquette CLI
-=============
+@vlogging.main_decorator
+def main(argv):
+    parser = argparse.ArgumentParser(
+        description='''
+        This is the command-line interface for Etiquette, so that you can automate your
+        database and integrate it into other scripts.
+        ''',
+    )
+    subparsers = parser.add_subparsers()
 
-This is the command-line interface for Etiquette, so that you can automate your
-database and integrate it into other scripts.
+    ################################################################################################
 
--- DATABASE --------------------------------------------------------------------
+    p_add_tag = subparsers.add_parser(
+        'add_tag',
+        aliases=['add-tag'],
+        description='''
+        Add a tag to photos by a filename glob or by search results.
+        ''',
+    )
+    p_add_tag.examples = [
+        'wallpaper wall*.jpg wall*.png',
+        {'args': 'author.voussoir --photo-search --tag-forbids author', 'comment': 'Add an author tag to all photos that don\'t have one.'}
+    ]
+    p_add_tag.add_argument(
+        'tag_name',
+    )
+    p_add_tag.add_argument(
+        'globs',
+        nargs='*',
+        help='''
+        Select Photos by using glob patterns that match files.
+        ''',
+    )
+    p_add_tag.add_argument(
+        '--photos',
+        dest='photo_id_args',
+        metavar='photo_id',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Photos to tag.
+        ''',
+    )
+    p_add_tag.add_argument(
+        '--photo_search',
+        '--photo-search',
+        dest='photo_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Photos to tag. See search --help for help.
+        ''',
+    )
+    p_add_tag.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
+    p_add_tag.set_defaults(func=lambda args: add_remove_tag_argparse(args, action='add'))
 
-{init}
+    ################################################################################################
 
--- ALBUMS ----------------------------------------------------------------------
+    p_remove_tag = subparsers.add_parser(
+        'remove_tag',
+        aliases=['remove-tag'],
+        description='''
+        Remove a tag from photos by a filename glob or by search results.
+        ''',
+    )
+    p_remove_tag.examples = [
+        'watchlist spongebob*.mp4',
+        'watchlist --photo-search --tag-musts directed_by_michael_bay',
+    ]
+    p_remove_tag.add_argument(
+        'tag_name',
+    )
+    p_remove_tag.add_argument(
+        'globs',
+        nargs='*',
+        help='''
+        Select Photos by using glob patterns that match files.
+        ''',
+    )
+    p_remove_tag.add_argument(
+        '--photos',
+        dest='photo_id_args',
+        metavar='photo_id',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Photos to untag.
+        ''',
+    )
+    p_remove_tag.add_argument(
+        '--photo_search',
+        '--photo-search',
+        dest='photo_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Photos to untag. See search --help for help.
+        ''',
+    )
+    p_remove_tag.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
+    p_remove_tag.set_defaults(func=lambda args: add_remove_tag_argparse(args, action='remove'))
 
-{delete_albums}
+    ################################################################################################
 
-{export_symlinks}
+    p_delete_albums = subparsers.add_parser(
+        'delete_albums',
+        aliases=['delete-albums'],
+        description='''
+        Remove albums from the database.
+        ''',
+    )
+    p_delete_albums.add_argument(
+        '--albums',
+        dest='album_id_args',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Albums to delete.
+        ''',
+    )
+    p_delete_albums.add_argument(
+        '--album_search',
+        '--album-search',
+        dest='album_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Albums to delete. See search --help for help.
+        ''',
+    )
+    p_delete_albums.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
+    p_delete_albums.set_defaults(func=delete_albums_argparse)
 
-{purge_empty_albums}
+    ################################################################################################
 
-{show_associated_directories}
-
--- PHOTOS ----------------------------------------------------------------------
-
-{add_tag}
-
-{delete_photos}
-
-{digest}
-
-{export_symlinks}
-
-{generate_thumbnail}
-
-{purge_deleted_files}
-
-{reload_metadata}
-
-{relocate}
-
-{remove_tag}
-
-{search}
-
-{set_searchhidden}
-
-{unset_searchhidden}
-
--- TAGS ------------------------------------------------------------------------
-
-{easybake}
-
-{tag_breplace}
-
-{tag_list}
-
---------------------------------------------------------------------------------
-
-You can add --yes to avoid the "Commit?" prompt on commands that modify the db.
-
-TO SEE DETAILS ON EACH COMMAND, RUN
-> etiquette_cli.py <command> --help
-'''
-
-SUB_DOCSTRINGS = dict(
-add_tag='''
-add_tag:
-    Add a tag to photos by a filename glob or by search results.
-
-    > etiquette_cli.py add_tag tag_name glob_patterns
-    > etiquette_cli.py add_tag tag_name --search searchargs
-
-    Examples:
-    > etiquette_cli.py add_tag wallpaper wall*.jpg wall*.png
-    > etiquette_cli.py add_tag author.author_voussoir --search --tag-forbids author
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-remove_tag='''
-remove_tag:
-    Remove a tag from photos by a filename glob or by search results.
-
-    > etiquette_cli.py remove_tag tag_name glob_patterns
-    > etiquette_cli.py remove_tag tag_name --search searchargs
-
-    Examples:
-    > etiquette_cli.py remove_tag watchlist spongebob*.mp4
-    > etiquette_cli.py remove_tag watchlist --search --tag-musts directed_by_michael_bay
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-delete_albums='''
-delete_albums:
-    Remove albums from the database.
-
-    > etiquette_cli.py delete_albums --albums id id id
-    > etiquette_cli.py delete_albums --album-search searchargs
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-delete_photos='''
-delete_photos:
-    Remove photos from the database.
-
-    flags:
-    --delete_file:
+    p_delete_photos = subparsers.add_parser(
+        'delete_photos',
+        aliases=['delete-photos'],
+        description='''
+        Remove photos from the database.
+        ''',
+    )
+    p_delete_photos.add_argument(
+        'globs',
+        nargs='*',
+        help='''
+        Select Photos by using glob patterns that match files.
+        ''',
+    )
+    p_delete_photos.add_argument(
+        '--delete_file',
+        '--delete-file',
+        action='store_true',
+        help='''
         Delete the file from disk after committing.
         Your config.json file's recycle_instead_of_delete will influence this.
         Without this flag, photos are removed from the db but remain on disk.
-
-    > etiquette_cli.py delete_photos --photos id id id
-    > etiquette_cli.py delete_photos --search searchargs
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-digest='''
-digest:
-    Digest a directory, adding new files as Photos into the database.
-
-    > etiquette_cli.py digest directory <flags>
-
-    flags:
-    --exclude_directories A B C:
-        Any directories matching any pattern of A, B, C... will be skipped.
-        These patterns may be absolute paths like 'D:\\temp', plain names like
-        'thumbnails' or glob patterns like 'build_*'.
-
-    --exclude_filenames A B C:
-        Any filenames matching any pattern of A, B, C... will be skipped.
-        These patterns may be absolute paths like 'D:\\somewhere\\config.json',
-        plain names like 'thumbs.db' or glob patterns like '*.temp'.
-
-    --glob_directories A B C:
-        Only directories matching any pattern of A, B, C... will be digested.
-        These patterns may be plain names or glob patterns like '2021*'
-
-    --glob_filenames A B C:
-        Only filenames matching any pattern of A, B, C... will be digested.
-        These patterns may be plain names or glob patterns like '*.jpg'
-
-    --no_albums:
-        Do not create any albums. By default, albums are created and nested to
-        match the directory structure.
-
-    --ratelimit X:
-        Limit the ingest of new Photos to only one per X seconds. This can be
-        used to reduce system load or to make sure that two photos don't get the
-        same `created` timestamp.
-
-    --no_recurse:
-        Do not recurse into subdirectories. Only create Photos from files in
-        the current directory.
-
-    Examples:
-    > etiquette_cli.py digest media --ratelimit 1
-    > etiquette_cli.py digest photos --no-recurse --no-albums --ratelimit 0.25
-    > etiquette_cli.py digest . --glob-filenames *.jpg --exclude-filenames thumb*
-''',
-
-easybake='''
-easybake:
-    Create and manipulate tags by easybake strings.
-
-    > etiquette_cli.py easybake eb_string
-''',
-
-export_symlinks='''
-export_symlinks:
-    Search for photos or albums, then create symlinks pointing to the results.
-
-    THIS IS STILL A BIT EXPERIMENTAL.
-    This can be used to gather up search results for the purpose of further
-    uploading, transfering, etc. with other applications.
-    Symlinks point to files (if result is a photo) or directories (if result is
-    an album with an associated directory).
-    Albums are limited to only one associated directory since the output
-    symlink can't point to two places at once.
-
-    > etiquette_cli.py export_symlinks --destination directory --search searchargs
-    > etiquette_cli.py export_symlinks --destination directory --album-search searchargs
-
-    flags:
-    --destination X:
-        A path to a directory into which the symlinks will be placed.
-
-    --dry:
-        Print the results without actually creating the symlinks.
-
-    --prune:
-        In the destination directory, any existing symlinks whose target no
-        longer exists will be deleted.
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-generate_thumbnail='''
-generate_thumbnail:
-    Generate thumbnails for photos.
-
-    With no args, all files under the cwd will be thumbnailed.
-    Or, you can pass specific photo ids or searchargs.
-
-    > etiquette_cli.py generate_thumbnail
-    > etiquette_cli.py generate_thumbnail --photos id id id
-    > etiquette_cli.py generate_thumbnail --search searchargs
-
-    Examples:
-    > etiquette_cli.py generate_thumbnail --search --has-thumbnail no
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-init='''
-init:
-    Create a new Etiquette database in the current directory.
-
-    > etiquette_cli.py init
-''',
-
-purge_deleted_files='''
-purge_deleted_files:
-    Delete any Photo objects whose file no longer exists on disk.
-
-    > etiquette_cli.py purge_deleted_files
-    > etiquette_cli.py purge_deleted_files --photos id id id
-    > etiquette_cli.py purge_deleted_files --search searchargs
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-purge_empty_albums='''
-purge_empty_albums:
-    Delete any albums which have no child albums or photos.
-
-    Consider running purge_deleted_files first, so that albums containing
-    deleted files will get cleared out and then caught by this function.
-
-    With no args, all albums will be checked.
-    Or you can pass specific album ids. (searchargs is not available since
-    albums only appear in search results when a matching photo is found, and
-    we're looking for albums with no photos!)
-
-    > etiquette_cli.py purge_empty_albums
-    > etiquette_cli.py purge_empty_albums --albums id id id
-''',
-
-reload_metadata='''
-reload_metadata:
-    Reload photos' metadata by reading the files from disk.
-
-    With no args, all files under the cwd will be reloaded.
-    Or, you can pass specific photo ids or searchargs.
-
-    > etiquette_cli.py reload_metadata
-    > etiquette_cli.py reload_metadata --photos id id id
-    > etiquette_cli.py reload_metadata --search searchargs
-
-    flags:
-    --force:
-        By default, we wil skip any files that have the same mtime and byte
-        size as before. You can pass --force to always reload.
-
-    --hash_bytes_per_second X:
-        A string like "10mb" to limit the speed of file hashing for the purpose
-        of reducing system load.
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-relocate='''
-relocate:
-    Change a photo's filepath. Used for updating photos that have been changed
-    by external tools.
-
-    > etiquette_cli.py relocate photo_id filepath
-''',
-
-search='''
-search:
-    Search for photos and albums with complex operators.
-
-    > etiquette_cli.py search searchargs
-    > etiquette_cli.py search --album-search searchargs
-
-    Searchargs:
-    --area X-Y:
-        Photo/video width*height between X and Y.
-
-    --width X-Y:
-        Photo/video width between X and Y.
-
-    --height X-Y:
-        Photo/video height between X and Y.
-
-    --ratio X-Y:
-        Photo/video aspect ratio between X and Y.
-
-    --bytes X-Y:
-        File size in bytes between X and Y.
-
-    --duration X-Y:
-        Media duration between X and Y seconds.
-
-    --author X:
-        Photo authored by user with username X.
-
-    --created X-Y:
-        Photo creation date between X and Y unix timestamp.
-
-    --extension A,B,C:
-        Photo with any extension of A, B, C...
-
-    --extension_not A,B,C:
-        Photo without any extension of A, B, C...
-
-    --filename X:
-        Search terms for Photo's filename.
-
-    --has_tags yes/no/null:
-        If yes, Photo must have at least one tag.
-        If no, Photo must have no tags.
-        If null, doesn't matter.
-
-    --has_thumbnail yes/no/null:
-
-    --is_searchhidden yes/no/null:
-
-    --mimetype A,B,C:
-        Photo with any mimetype of A, B, C...
-
-    --sha256 A,B,C:
-        Photo with any sha256 of A, B, C...
-
-    --tag_musts A,B,C:
-        Photo must have all tags A and B and C...
-
-    --tag_mays A,B,C:
-        Photo must have at least one tag of A, B, C...
-
-    --tag_forbids A,B,C:
-        Photo must not have any tags of A, B, C...
-
-    --tag_expression X:
-        Complex expression string to match tags.
-
-    --limit X:
-        Limit results to first X items.
-
-    --offset X:
-        Skip the first X items.
-
-    --orderby X-Y:
-        Order the results by property X in direction Y. E.g. created-desc or
-        bytes-asc.
-''',
-
-show_associated_directories='''
-show_associated_directories:
-    Show the associated directories for albums.
-
-    > etiquette_cli.py show_associated_directories
-    > etiquette_cli.py show_associated_directories --albums id id id
-    > etiquette_cli.py show_associated_directories --album-search searchargs
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-set_searchhidden='''
-set_searchhidden:
-    Mark photos as searchhidden.
-
-    > etiquette_cli.py set_searchhidden --photos id id id
-    > etiquette_cli.py set_searchhidden --search searchargs
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-unset_searchhidden='''
-unset_searchhidden:
-    Unmark photos as searchhidden.
-
-    > etiquette_cli.py unset_searchhidden --photos id id id
-    > etiquette_cli.py unset_searchhidden --search searchargs
-
-    See etiquette_cli.py search --help for more info about searchargs.
-''',
-
-tag_breplace='''
-tag_breplace:
-    For all tags in the database, use find-and-replace to rename the tags.
-
-    > etiquette_cli.py tag_breplace replace_from replace_to
-''',
-
-tag_list='''
-tag_list:
-    Show all tags in the database.
-
-    > etiquette_cli.py tag_list
-''',
-)
-
-DOCSTRING = betterhelp.add_previews(DOCSTRING, SUB_DOCSTRINGS)
-
-@vlogging.main_decorator
-def main(argv):
-    parser = argparse.ArgumentParser(description=__doc__)
-    subparsers = parser.add_subparsers()
-
-    primary_args = []
-    photo_id_args = []
-    photo_search_args = []
-    album_id_args = []
-    album_search_args = []
-    mode = primary_args
-    for arg in argv:
-        if 0:
-            pass
-        elif arg in {'--search', '--photo_search', '--photo-search'}:
-            mode = photo_search_args
-        elif arg in {'--album_search', '--album-search'}:
-            mode = album_search_args
-        elif arg == '--photos':
-            mode = photo_id_args
-        elif arg == '--albums':
-            mode = album_id_args
-        else:
-            mode.append(arg)
-
-    p_add_tag = subparsers.add_parser('add_tag', aliases=['add-tag'])
-    p_add_tag.add_argument('tag_name')
-    p_add_tag.add_argument('globs', nargs='*')
-    p_add_tag.add_argument('--yes', dest='autoyes', action='store_true')
-    p_add_tag.set_defaults(func=lambda args: add_remove_tag_argparse(args, action='add'))
-
-    p_remove_tag = subparsers.add_parser('remove_tag', aliases=['remove-tag'])
-    p_remove_tag.add_argument('tag_name')
-    p_remove_tag.add_argument('globs', nargs='*')
-    p_remove_tag.add_argument('--yes', dest='autoyes', action='store_true')
-    p_remove_tag.set_defaults(func=lambda args: add_remove_tag_argparse(args, action='remove'))
-
-    p_delete_albums = subparsers.add_parser('delete_albums', aliases=['delete-albums'])
-    p_delete_albums.add_argument('--yes', dest='autoyes', action='store_true')
-    p_delete_albums.set_defaults(func=delete_albums_argparse)
-
-    p_delete_photos = subparsers.add_parser('delete_photos', aliases=['delete-photos'])
-    p_delete_photos.add_argument('--delete_file', '--delete-file', action='store_true')
-    p_delete_photos.add_argument('--yes', dest='autoyes', action='store_true')
+        ''',
+    )
+    p_delete_photos.add_argument(
+        '--photos',
+        dest='photo_id_args',
+        metavar='photo_id',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Photos to delete.
+        ''',
+    )
+    p_delete_photos.add_argument(
+        '--photo_search',
+        '--photo-search',
+        dest='photo_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Photos to delete. See search --help for help.
+        ''',
+    )
+    p_delete_photos.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_delete_photos.set_defaults(func=delete_photos_argparse)
 
-    p_digest = subparsers.add_parser('digest', aliases=['digest_directory', 'digest-directory'])
-    p_digest.add_argument('directory')
-    p_digest.add_argument('--exclude_directories', '--exclude-directories', nargs='+', default=None)
-    p_digest.add_argument('--exclude_filenames', '--exclude-filenames', nargs='+', default=None)
-    p_digest.add_argument('--glob_directories', '--glob-directories', nargs='+', default=None)
-    p_digest.add_argument('--glob_filenames', '--glob-filenames', nargs='+', default=None)
-    p_digest.add_argument('--no_albums', '--no-albums', dest='make_albums', action='store_false', default=True)
-    p_digest.add_argument('--ratelimit', dest='ratelimit', type=float, default=0.2)
-    p_digest.add_argument('--no_recurse', '--no-recurse', dest='recurse', action='store_false', default=True)
-    p_digest.add_argument('--hash_bytes_per_second', '--hash-bytes-per-second', default=None)
-    p_digest.add_argument('--yes', dest='autoyes', action='store_true')
+    ################################################################################################
+
+    p_digest = subparsers.add_parser(
+        'digest',
+        aliases=['digest_directory', 'digest-directory'],
+        description='''
+        Digest a directory, adding new files as Photos and folders as Albums into
+        the database.
+        ''',
+    )
+    p_digest.examples = [
+        'media --ratelimit 1',
+        'photos --no-recurse --no-albums --ratelimit 0.25',
+        '. --glob-filenames *.jpg --exclude-filenames thumb*',
+    ]
+    p_digest.add_argument(
+        'directory',
+    )
+    p_digest.add_argument(
+        '--exclude_directories',
+        '--exclude-directories',
+        metavar='pattern',
+        nargs='+',
+        default=None,
+        help='''
+        Any directories matching any of these patterns will be skipped.
+        These patterns may be absolute paths like 'D:\\temp', plain names like
+        'thumbnails' or glob patterns like 'build_*'.
+        ''',
+    )
+    p_digest.add_argument(
+        '--exclude_filenames',
+        '--exclude-filenames',
+        metavar='pattern',
+        nargs='+',
+        default=None,
+        help='''
+        Any filenames matching any of these patterns will be skipped.
+        These patterns may be absolute paths like 'D:\\somewhere\\config.json',
+        plain names like 'thumbs.db' or glob patterns like '*.temp'.
+        ''',
+    )
+    p_digest.add_argument(
+        '--glob_directories',
+        '--glob-directories',
+        metavar='pattern',
+        nargs='+',
+        default=None,
+        help='''
+        Only directories matching any of these patterns will be digested.
+        These patterns may be plain names or glob patterns like '2021*'
+        ''',
+    )
+    p_digest.add_argument(
+        '--glob_filenames',
+        '--glob-filenames',
+        metavar='pattern',
+        nargs='+',
+        default=None,
+        help='''
+        Only filenames matching any of these patterns will be digested.
+        These patterns may be plain names or glob patterns like '*.jpg'
+        ''',
+    )
+    p_digest.add_argument(
+        '--no_albums',
+        '--no-albums',
+        dest='make_albums',
+        action='store_false',
+        default=True,
+        help='''
+        Do not create any albums. By default, albums are created and nested to
+        match the directory structure.
+        ''',
+    )
+    p_digest.add_argument(
+        '--ratelimit',
+        dest='ratelimit',
+        type=float,
+        default=0.2,
+        help='''
+        Limit the ingest of new Photos to only one per this many seconds. This
+        can be used to reduce system load or to make sure that two photos don't
+        get the same `created` timestamp.
+        ''',
+    )
+    p_digest.add_argument(
+        '--no_recurse',
+        '--no-recurse',
+        dest='recurse',
+        action='store_false',
+        default=True,
+        help='''
+        Do not recurse into subdirectories. Only create Photos from files in
+        the current directory. By default, we traverse all subdirectories except
+        those excluded by --exclude-directories.
+        ''',
+    )
+    p_digest.add_argument(
+        '--hash_bytes_per_second',
+        '--hash-bytes-per-second',
+        metavar='bytes',
+        default=None,
+        help='''
+        Limit the speed of file hashing. This can be used to reduce system load.
+        ''',
+    )
+    p_digest.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_digest.set_defaults(func=digest_directory_argparse)
 
-    p_easybake = subparsers.add_parser('easybake')
-    p_easybake.add_argument('eb_strings', nargs='+')
-    p_easybake.add_argument('--yes', dest='autoyes', action='store_true')
+    ################################################################################################
+
+    p_easybake = subparsers.add_parser(
+        'easybake',
+        description='''
+        Create and manipulate tags by easybake strings.
+        ''',
+    )
+    p_easybake.examples = [
+        'people.family.parents.mother+mom',
+        'watchlist=to_watch',
+    ]
+    p_easybake.add_argument(
+        'eb_strings',
+        nargs='+',
+        help='''
+        One or more easybake strings. Easybake strings work like this:
+        Every tag name is implicitly created if it does not already exist.
+        Dot '.' is used to make hierarchies.
+        Plus '+' is used to make synonyms.
+        Equals '=' is used to rename tags.
+        ''',
+    )
+    p_easybake.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_easybake.set_defaults(func=easybake_argparse)
 
-    p_export_symlinks = subparsers.add_parser('export_symlinks', aliases=['export-symlinks'])
-    p_export_symlinks.add_argument('--destination', dest='destination', required=True)
-    p_export_symlinks.add_argument('--dry', dest='dry_run', action='store_true')
-    p_export_symlinks.add_argument('--prune', dest='prune', action='store_true')
+    ################################################################################################
+
+    p_export_symlinks = subparsers.add_parser(
+        'export_symlinks',
+        aliases=['export-symlinks'],
+        description='''
+        Search for photos or albums, then create symlinks pointing to the results.
+
+        THIS IS STILL A BIT EXPERIMENTAL.
+        This can be used to gather up search results for the purpose of further
+        uploading, transfering, etc. with other applications.
+        Symlinks point to files (if result is a photo) or directories (if result is
+        an album with an associated directory).
+        Albums are limited to only one associated directory since the output
+        symlink can't point to two places at once.
+        ''',
+    )
+    p_export_symlinks.add_argument(
+        '--destination',
+        dest='destination',
+        required=True,
+        help='''
+        A path to a directory into which the symlinks will be placed.
+        ''',
+    )
+    p_export_symlinks.add_argument(
+        '--dry',
+        dest='dry_run',
+        action='store_true',
+        help='''
+        Print the results without actually creating the symlinks.
+        ''',
+    )
+    p_export_symlinks.add_argument(
+        '--prune',
+        dest='prune',
+        action='store_true',
+        help='''
+        In the destination directory, any existing symlinks whose target no
+        longer exists will be deleted.
+        ''',
+    )
+    p_export_symlinks.add_argument(
+        '--photos',
+        dest='photo_id_args',
+        metavar='photo_id',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Photos to export.
+        ''',
+    )
+    p_export_symlinks.add_argument(
+        '--photo_search',
+        '--photo-search',
+        dest='photo_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Photos to export. See search --help for help.
+        ''',
+    )
+    p_export_symlinks.add_argument(
+        '--albums',
+        dest='album_id_args',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Albums to export.
+        ''',
+    )
+    p_export_symlinks.add_argument(
+        '--album_search',
+        '--album-search',
+        dest='album_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Albums to export. See search --help for help.
+        ''',
+    )
     p_export_symlinks.set_defaults(func=export_symlinks_argparse)
 
-    p_generate_thumbnail = subparsers.add_parser('generate_thumbnail', aliases=['generate-thumbnail'])
-    p_generate_thumbnail.add_argument('--yes', dest='autoyes', action='store_true')
+    ################################################################################################
+
+    p_generate_thumbnail = subparsers.add_parser(
+        'generate_thumbnail',
+        aliases=['generate-thumbnail'],
+        description='''
+        Generate thumbnails for photos.
+        ''',
+    )
+    p_generate_thumbnail.examples = [
+        '--photo-search --has-thumbnail no',
+    ]
+    p_generate_thumbnail.add_argument(
+        'globs',
+        nargs='*',
+        help='''
+        Select Photos by using glob patterns that match files.
+        ''',
+    )
+    p_generate_thumbnail.add_argument(
+        '--photos',
+        dest='photo_id_args',
+        metavar='photo_id',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Photos to thumbnail.
+        ''',
+    )
+    p_generate_thumbnail.add_argument(
+        '--photo_search',
+        '--photo-search',
+        dest='photo_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Photos to thumbnail. See search --help for help.
+        ''',
+    )
+    p_generate_thumbnail.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_generate_thumbnail.set_defaults(func=generate_thumbnail_argparse)
 
-    p_init = subparsers.add_parser('init', aliases=['create'])
+    ################################################################################################
+
+    p_init = subparsers.add_parser(
+        'init',
+        aliases=['create'],
+        description='''
+        Create a new Etiquette database in the current directory.
+        ''',
+    )
     p_init.set_defaults(func=init_argparse)
 
-    p_purge_deleted_files = subparsers.add_parser('purge_deleted_files', aliases=['purge-deleted-files'])
-    p_purge_deleted_files.add_argument('--yes', dest='autoyes', action='store_true')
+    ################################################################################################
+
+    p_purge_deleted_files = subparsers.add_parser(
+        'purge_deleted_files',
+        aliases=['purge-deleted-files'],
+        description='''
+        Delete any Photo objects whose file no longer exists on disk.
+
+        When --photos and --photo-search are not passed, all photos under the cwd
+        and subdirectories will be checked.
+        ''',
+    )
+    p_purge_deleted_files.add_argument(
+        '--photos',
+        dest='photo_id_args',
+        metavar='photo_id',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Photos to purge,
+        if eligible.
+        ''',
+    )
+    p_purge_deleted_files.add_argument(
+        '--photo_search',
+        '--photo-search',
+        dest='photo_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Photos to purge, if eligible. See search --help for help.
+        ''',
+    )
+    p_purge_deleted_files.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_purge_deleted_files.set_defaults(func=purge_deleted_files_argparse)
 
-    p_purge_empty_albums = subparsers.add_parser('purge_empty_albums', aliases=['purge-empty-albums'])
-    p_purge_empty_albums.add_argument('--yes', dest='autoyes', action='store_true')
+    ################################################################################################
+
+    p_purge_empty_albums = subparsers.add_parser(
+        'purge_empty_albums',
+        aliases=['purge-empty-albums'],
+        description='''
+        Delete any albums which have no child albums or photos.
+
+        Consider running purge_deleted_files first, so that albums containing
+        deleted files will get cleared out and then caught by this function.
+
+        With no args, all albums will be checked.
+        Or you can pass specific album ids. (--album-search is not available since
+        albums only appear in search results when a matching photo is found, and
+        we're looking for albums with no photos!)
+        ''',
+    )
+    p_purge_empty_albums.add_argument(
+        '--albums',
+        dest='album_id_args',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Albums to purge,
+        if eligible.
+        ''',
+    )
+    p_purge_empty_albums.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_purge_empty_albums.set_defaults(func=purge_empty_albums_argparse)
 
-    p_reload_metadata = subparsers.add_parser('reload_metadata', aliases=['reload-metadata'])
-    p_reload_metadata.add_argument('globs', nargs='*')
-    p_reload_metadata.add_argument('--hash_bytes_per_second', '--hash-bytes-per-second', default=None)
-    p_reload_metadata.add_argument('--force', action='store_true')
-    p_reload_metadata.add_argument('--yes', dest='autoyes', action='store_true')
+    ################################################################################################
+
+    p_reload_metadata = subparsers.add_parser(
+        'reload_metadata',
+        aliases=['reload-metadata'],
+        description='''
+        Reload photos' metadata by reading the files from disk.
+        ''',
+    )
+    p_reload_metadata.add_argument(
+        'globs',
+        nargs='*',
+        help='''
+        Select Photos by using glob patterns that match files.
+        ''',
+    )
+    p_reload_metadata.add_argument(
+        '--hash_bytes_per_second',
+        '--hash-bytes-per-second',
+        default=None,
+        help='''
+        A string like "10mb" to limit the speed of file hashing for the purpose
+        of reducing system load.
+        ''',
+    )
+    p_reload_metadata.add_argument(
+        '--force',
+        action='store_true',
+        help='''
+        By default, we wil skip any files that have the same mtime and byte
+        size as before. You can pass --force to always reload.
+        ''',
+    )
+    p_reload_metadata.add_argument(
+        '--photos',
+        dest='photo_id_args',
+        metavar='photo_id',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Photos to reload.
+        ''',
+    )
+    p_reload_metadata.add_argument(
+        '--photo_search',
+        '--photo-search',
+        dest='photo_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Photos to reload. See search --help for help.
+        ''',
+    )
+    p_reload_metadata.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_reload_metadata.set_defaults(func=reload_metadata_argparse)
 
-    p_relocate = subparsers.add_parser('relocate')
-    p_relocate.add_argument('photo_id')
-    p_relocate.add_argument('filepath')
-    p_relocate.add_argument('--yes', dest='autoyes', action='store_true')
+    ################################################################################################
+
+    p_relocate = subparsers.add_parser(
+        'relocate',
+        description='''
+        Update a photo's filepath in the database. This does not actually move
+        the file there, rather it is used for updating photos that have already
+        been moved by external tools.
+        ''',
+    )
+    p_relocate.add_argument(
+        'photo_id',
+    )
+    p_relocate.add_argument(
+        'filepath',
+    )
+    p_relocate.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_relocate.set_defaults(func=relocate_argparse)
 
-    p_search = subparsers.add_parser('search')
-    p_search.add_argument('--area', dest='area', default=None)
-    p_search.add_argument('--width', dest='width', default=None)
-    p_search.add_argument('--height', dest='height', default=None)
-    p_search.add_argument('--ratio', dest='ratio', default=None)
-    p_search.add_argument('--bytes', dest='bytes', default=None)
-    p_search.add_argument('--duration', dest='duration', default=None)
-    p_search.add_argument('--author', dest='author', default=None)
-    p_search.add_argument('--created', dest='created', default=None)
-    p_search.add_argument('--extension', dest='extension', default=None)
-    p_search.add_argument('--extension_not', '--extension-not', dest='extension_not', default=None)
-    p_search.add_argument('--filename', dest='filename', default=None)
-    p_search.add_argument('--has_tags', '--has-tags', dest='has_tags', default=None)
-    p_search.add_argument('--has_thumbnail', '--has-thumbnail', dest='has_thumbnail', default=None)
-    p_search.add_argument('--is_searchhidden', '--is-searchhidden', dest='is_searchhidden', default=False)
-    p_search.add_argument('--sha256', default=None)
-    p_search.add_argument('--mimetype', dest='mimetype', default=None)
-    p_search.add_argument('--tag_musts', '--tag-musts', dest='tag_musts', default=None)
-    p_search.add_argument('--tag_mays', '--tag-mays', dest='tag_mays', default=None)
-    p_search.add_argument('--tag_forbids', '--tag-forbids', dest='tag_forbids', default=None)
-    p_search.add_argument('--tag_expression', '--tag-expression', dest='tag_expression', default=None)
-    p_search.add_argument('--limit', dest='limit', default=None)
-    p_search.add_argument('--offset', dest='offset', default=None)
-    p_search.add_argument('--orderby', dest='orderby', default='basename-ASC')
-    # p_search.add_argument('--yield_albums', '--yield-albums', dest='yield_albums', default=None)
+    ################################################################################################
+
+    p_search = subparsers.add_parser(
+        'search',
+        description='''
+        Search for photos and albums with complex operators. Many other commands
+        can use search arguments to pick which Photos / Albums to process.
+        ''',
+    )
+    p_search.add_argument(
+        '--area',
+        metavar='X-Y',
+        default=None,
+        help='''
+        Photo/video width*height between X and Y.
+        ''',
+    )
+    p_search.add_argument(
+        '--width',
+        metavar='X-Y',
+        default=None,
+        help='''
+        Photo/video width between X and Y.
+        ''',
+    )
+    p_search.add_argument(
+        '--height',
+        metavar='X-Y',
+        default=None,
+        help='''
+        Photo/video height between X and Y.
+        ''',
+    )
+    p_search.add_argument(
+        '--ratio',
+        metavar='X-Y',
+        default=None,
+        help='''
+        Photo/video aspect ratio between X and Y.
+        ''',
+    )
+    p_search.add_argument(
+        '--bytes',
+        metavar='X-Y',
+        default=None,
+        help='''
+        File size in bytes between X and Y.
+        ''',
+    )
+    p_search.add_argument(
+        '--duration',
+        metavar='X-Y',
+        default=None,
+        help='''
+        Media duration between X and Y seconds.
+        ''',
+    )
+    p_search.add_argument(
+        '--author',
+        metavar='A,B,C',
+        default=None,
+        help='''
+        Photo authored by user A, B, or C...
+        ''',
+    )
+    p_search.add_argument(
+        '--created',
+        metavar='X-Y',
+        default=None,
+        help='''
+        Photo creation date between X and Y unix timestamp.
+        ''',
+    )
+    p_search.add_argument(
+        '--extension',
+        metavar='A,B,C',
+        default=None,
+        help='''
+        Photo with any extension of A, B, C...
+        ''',
+    )
+    p_search.add_argument(
+        '--extension_not',
+        '--extension-not',
+        metavar='A,B,C',
+        default=None,
+        help='''
+        Photo without any extension of A, B, C...
+        ''',
+    )
+    p_search.add_argument(
+        '--filename',
+        default=None,
+        help='''
+        Search for strings within Photos' filenames.
+        ''',
+    )
+    p_search.add_argument(
+        '--has_tags',
+        '--has-tags',
+        default=None,
+        help='''
+        If "yes", Photo must have at least one tag.
+        If "no", Photo must have no tags.
+        If "null", doesn't matter.
+        ''',
+    )
+    p_search.add_argument(
+        '--has_thumbnail',
+        '--has-thumbnail',
+        default=None,
+        help='''
+        If "yes", Photo must have a thumbnail.
+        If "no", Photo must not have a thumbnail.
+        If "null", doesn't matter.
+        ''',
+    )
+    p_search.add_argument(
+        '--is_searchhidden',
+        '--is-searchhidden',
+        default=False,
+        help='''
+        If "yes", Photo must be searchhidden.
+        If "no", Photo must not be searchhidden.
+        If "null", doesn't matter.
+        ''',
+    )
+    p_search.add_argument(
+        '--sha256',
+        metavar='A,B,C',
+        default=None,
+        help='''
+        Photo with any sha256 of A, B, C...
+        ''',
+    )
+    p_search.add_argument(
+        '--mimetype',
+        metavar='A,B,C',
+        default=None,
+        help='''
+        Photo with any mimetype of A, B, C...
+        ''',
+    )
+    p_search.add_argument(
+        '--tag_musts',
+        '--tag-musts',
+        metavar='A,B,C',
+        default=None,
+        help='''
+        Photo must have all tags A and B and C...
+        ''',
+    )
+    p_search.add_argument(
+        '--tag_mays',
+        '--tag-mays',
+        metavar='A,B,C',
+        default=None,
+        help='''
+        Photo must have at least one tag of A, B, C...
+        ''',
+    )
+    p_search.add_argument(
+        '--tag_forbids',
+        '--tag-forbids',
+        metavar='A,B,C',
+        default=None,
+        help='''
+        Photo must not have any tags of A, B, C...
+        ''',
+    )
+    p_search.add_argument(
+        '--tag_expression',
+        '--tag-expression',
+        default=None,
+        help='''
+        Complex expression string to match tags.
+        ''',
+    )
+    p_search.add_argument(
+        '--limit',
+        default=None,
+        help='''
+        Limit results to first X items.
+        ''',
+    )
+    p_search.add_argument(
+        '--offset',
+        default=None,
+        help='''
+        Skip the first X items.
+        ''',
+    )
+    p_search.add_argument(
+        '--orderby',
+        dest='orderby',
+        default='basename-ASC',
+        help='''
+        Order the results by property X in direction Y. E.g. created-desc or
+        bytes-asc.
+        ''',
+    )
+    p_search.add_argument(
+        '--album_search',
+        '--album-search',
+        dest='album_search_args',
+        nargs='...',
+        help='''
+        Search for albums instead of photos.
+        ''',
+    )
     p_search.set_defaults(func=search_argparse)
 
-    p_show_associated_directories = subparsers.add_parser('show_associated_directories', aliases=['show-associated-directories'])
+    ################################################################################################
+
+    p_show_associated_directories = subparsers.add_parser(
+        'show_associated_directories',
+        aliases=['show-associated-directories'],
+        description='''
+        Show the associated directories for albums.
+        ''',
+    )
+    p_show_associated_directories.add_argument(
+        '--albums',
+        dest='album_id_args',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Albums to list.
+        ''',
+    )
+    p_show_associated_directories.add_argument(
+        '--album_search',
+        '--album-search',
+        dest='album_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Albums to list. See search --help for help.
+        ''',
+    )
     p_show_associated_directories.set_defaults(func=show_associated_directories_argparse)
 
-    p_set_searchhidden = subparsers.add_parser('set_searchhidden', aliases=['set-searchhidden'])
-    p_set_searchhidden.add_argument('--yes', dest='autoyes', action='store_true')
+    ################################################################################################
+
+    p_set_searchhidden = subparsers.add_parser(
+        'set_searchhidden',
+        aliases=['set-searchhidden'],
+        description='''
+        Mark photos as searchhidden.
+        ''',
+    )
+    p_set_searchhidden.add_argument(
+        '--photos',
+        dest='photo_id_args',
+        metavar='photo_id',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Photos to set.
+        ''',
+    )
+    p_set_searchhidden.add_argument(
+        '--photo_search',
+        '--photo-search',
+        dest='photo_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Photos to set. See search --help for help.
+        ''',
+    )
+    p_set_searchhidden.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_set_searchhidden.set_defaults(func=lambda args: set_unset_searchhidden_argparse(args, searchhidden=True))
 
-    p_unset_searchhidden = subparsers.add_parser('unset_searchhidden', aliases=['unset-searchhidden'])
-    p_unset_searchhidden.add_argument('--yes', dest='autoyes', action='store_true')
+    ################################################################################################
+
+    p_unset_searchhidden = subparsers.add_parser(
+        'unset_searchhidden',
+        aliases=['unset-searchhidden'],
+        description='''
+        Unmark photos as searchhidden.
+        ''',
+    )
+    p_unset_searchhidden.add_argument(
+        '--photos',
+        dest='photo_id_args',
+        metavar='photo_id',
+        nargs='...',
+        help='''
+        All remaining arguments will be treated as IDs of Photos to unset.
+        ''',
+    )
+    p_unset_searchhidden.add_argument(
+        '--photo_search',
+        '--photo-search',
+        dest='photo_search_args',
+        nargs='...',
+        help='''
+        All remaining arguments will go to the search command to generate the
+        list of Photos to unset. See search --help for help.
+        ''',
+    )
+    p_unset_searchhidden.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_unset_searchhidden.set_defaults(func=lambda args: set_unset_searchhidden_argparse(args, searchhidden=False))
 
-    p_tag_breplace = subparsers.add_parser('tag_breplace', aliases=['tag-breplace'])
-    p_tag_breplace.add_argument('replace_from')
-    p_tag_breplace.add_argument('replace_to')
-    p_tag_breplace.add_argument('--set_synonym', '--set-synonym', dest='set_synonym', action='store_true')
-    p_tag_breplace.add_argument('--regex', dest='regex', action='store_true')
-    p_tag_breplace.add_argument('--yes', dest='autoyes', action='store_true')
+    ################################################################################################
+
+    p_tag_breplace = subparsers.add_parser(
+        'tag_breplace',
+        aliases=['tag-breplace'],
+        description='''
+        For all tags in the database, use find-and-replace to rename the tags.
+        ''',
+    )
+    p_tag_breplace.add_argument(
+        'replace_from',
+    )
+    p_tag_breplace.add_argument(
+        'replace_to',
+    )
+    p_tag_breplace.add_argument(
+        '--set_synonym',
+        '--set-synonym',
+        dest='set_synonym',
+        action='store_true',
+        help='''
+        After renaming the tag, assign the old name as a synonym to the new one.
+        ''',
+    )
+    p_tag_breplace.add_argument(
+        '--regex',
+        dest='regex',
+        action='store_true',
+        help='''
+        Treat replace_from and replace_to as regex patterns instead of plain
+        strings.
+        ''',
+    )
+    p_tag_breplace.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
     p_tag_breplace.set_defaults(func=tag_breplace_argparse)
 
-    p_tag_list = subparsers.add_parser('tag_list', aliases=['tag-list'])
+    ################################################################################################
+
+    p_tag_list = subparsers.add_parser(
+        'tag_list',
+        aliases=['tag-list'],
+        description='''
+        Show all tags in the database.
+        ''',
+    )
     p_tag_list.set_defaults(func=tag_list_argparse)
 
     ##
 
     def postprocessor(args):
-        args.photo_search_args = p_search.parse_args(photo_search_args) if photo_search_args else None
-        args.album_search_args = p_search.parse_args(album_search_args) if album_search_args else None
-        args.photo_id_args = [id for arg in photo_id_args for id in stringtools.comma_space_split(arg)]
-        args.album_id_args = [id for arg in album_id_args for id in stringtools.comma_space_split(arg)]
+        if hasattr(args, 'photo_search_args'):
+            args.photo_search_args = p_search.parse_args(args.photo_search_args)
+        else:
+            args.photo_search_args = None
+
+        if hasattr(args, 'album_search_args'):
+            args.album_search_args = p_search.parse_args(args.album_search_args)
+        else:
+            args.album_search_args = None
+
+        if hasattr(args, 'photo_id_args'):
+            args.photo_id_args = [
+                photo_id
+                for arg in args.photo_id_args
+                for photo_id in stringtools.comma_space_split(arg)
+            ]
+        else:
+            args.photo_id_args = None
+
+        if hasattr(args, 'album_id_args'):
+            args.album_id_args = [
+                album_id
+                for arg in args.album_id_args
+                for album_id in stringtools.comma_space_split(arg)
+            ]
+        else:
+            args.album_id_args = None
+
 
         if not hasattr(args, 'globs'):
             args.globs = None
@@ -1113,13 +1617,7 @@ def main(argv):
         return args
 
     try:
-        return betterhelp.subparser_main(
-            primary_args,
-            parser,
-            main_docstring=DOCSTRING,
-            sub_docstrings=SUB_DOCSTRINGS,
-            args_postprocessor=postprocessor,
-        )
+        return betterhelp.go(parser, argv)
     except etiquette.exceptions.NoClosestPhotoDB as exc:
         pipeable.stderr(exc.error_message)
         pipeable.stderr('Try `etiquette_cli.py init` to create the database.')
