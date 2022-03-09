@@ -165,7 +165,7 @@ function init_button_with_spinner()
 
         const wrapped_onclick = button.onclick;
         button.removeAttribute('onclick');
-        button.onclick = function()
+        button.onclick = function(event)
         {
             if (button.dataset.spinnerGroup)
             {
@@ -175,7 +175,7 @@ function init_button_with_spinner()
             {
                 window[button.dataset.spinnerOpener]();
             }
-            const ret = wrapped_onclick();
+            const ret = wrapped_onclick(event);
             if (ret === spinner.BAIL)
             {
                 window[button.dataset.spinnerCloser]();
