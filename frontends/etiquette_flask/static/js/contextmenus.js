@@ -11,18 +11,17 @@ function hide_open_menus()
 }
 
 contextmenus.show_menu =
-function show_menu(event, element)
+function show_menu(event, menu)
 {
     contextmenus.hide_open_menus();
-    console.log(event);
-    element.classList.add("open_contextmenu");
+    menu.classList.add("open_contextmenu");
     const html = document.documentElement;
-    const over_right = Math.max(0, event.clientX + element.offsetWidth - html.clientWidth);
-    const over_bottom = Math.max(0, event.clientY + element.offsetHeight - html.clientHeight);
-    const left = event.target.offsetLeft + event.offsetX - over_right;
-    const top = event.target.offsetTop + event.offsetY - over_bottom;
-    element.style.left = left + "px";
-    element.style.top = top + "px";
+    const over_right = Math.max(0, event.clientX + menu.offsetWidth - html.clientWidth);
+    const over_bottom = Math.max(0, event.clientY + menu.offsetHeight - html.clientHeight);
+    const left = event.pageX - over_right;
+    const top = event.pageY - over_bottom;
+    menu.style.left = left + "px";
+    menu.style.top = top + "px";
 }
 
 function on_pageload()
