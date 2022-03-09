@@ -129,6 +129,13 @@ pre
     margin-top: 0;
 }
 
+.panel
+{
+    background-color: var(--color_transparency);
+    border-radius: 5px;
+    padding: 8px;
+}
+
 button,
 button *
 {

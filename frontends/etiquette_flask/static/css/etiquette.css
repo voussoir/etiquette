@@ -170,13 +170,6 @@ p:last-child
     max-width: 800px;
 }
 
-.panel
-{
-    background-color: var(--color_transparency);
-    border-radius: 5px;
-    padding: 8px;
-}
-
 .remove_tag_button,
 .remove_tag_button_perm
 {
