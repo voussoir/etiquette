@@ -250,7 +250,8 @@ function create(photo, view)
     photo_card.appendChild(toolbutton);
 
     const photo_card_tools = document.createElement("div");
-    photo_card_tools.className = "photo_card_tools";
+    photo_card_tools.classList.add("photo_card_tools");
+    photo_card_tools.classList.add("contextmenu");
     photo_card_tools.onclick = "event.stopPropagation(); return;";
     photo_card.appendChild(photo_card_tools);
 

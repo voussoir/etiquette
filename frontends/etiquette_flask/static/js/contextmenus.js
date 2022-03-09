@@ -1,5 +1,17 @@
 const contextmenus = {};
 
+contextmenus.background_click =
+function background_click(event)
+{
+    const contextmenu = event.target.closest(".contextmenu");
+    if (! contextmenu)
+    {
+        contextmenus.hide_open_menus();
+        return;
+    }
+    event.stopPropagation();
+}
+
 contextmenus.hide_open_menus =
 function hide_open_menus()
 {
@@ -32,6 +44,6 @@ function show_menu(event, menu)
 
 function on_pageload()
 {
-    document.body.addEventListener("click", contextmenus.hide_open_menus);
+    document.body.addEventListener("click", contextmenus.background_click);
 }
 document.addEventListener("DOMContentLoaded", on_pageload);
