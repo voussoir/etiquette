@@ -18,7 +18,6 @@ function Spinner(element)
     this.show = function(delay)
     {
         clearTimeout(this.delayed_showing_timeout);
-        this.delayed_showing_timeout = null;
 
         if (delay)
         {
@@ -26,6 +25,7 @@ function Spinner(element)
         }
         else
         {
+            this.delayed_showing_timeout = null;
             this.element.classList.remove("hidden");
         }
     }
