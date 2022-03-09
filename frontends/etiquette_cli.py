@@ -326,6 +326,14 @@ def generate_thumbnail_argparse(args):
     return 0
 
 def init_argparse(args):
+    global photodb
+    try:
+        load_photodb()
+    except etiquette.exceptions.NoClosestPhotoDB:
+        pass
+    else:
+        pipeable.stderr(f'PhotoDB {photodb} already exists.')
+        return 0
     photodb = etiquette.photodb.PhotoDB(create=True)
     photodb.commit()
     return 0
