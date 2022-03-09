@@ -10,6 +10,12 @@ function hide_open_menus()
     }
 }
 
+contextmenus.menu_is_open =
+function menu_is_open()
+{
+    return document.getElementsByClassName("open_contextmenu").length > 0;
+}
+
 contextmenus.show_menu =
 function show_menu(event, menu)
 {
