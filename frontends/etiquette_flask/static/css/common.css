@@ -122,10 +122,13 @@ pre
     grid-auto-rows: min-content;
     grid-gap: 8px;
 
-    /*
-    8px all around except the top, where the header already has a margin.
-    */
     margin: 8px;
+}
+#header:not(.hidden) + #content_body
+{
+    /*
+    The header already has a margin.
+    */
     margin-top: 0;
 }
 
