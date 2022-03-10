@@ -138,7 +138,7 @@ function init_button_with_spinner()
         else
         {
             spinner_element = document.createElement("span");
-            spinner_element.innerText = "Working...";
+            spinner_element.innerText = button.dataset.spinnerText || "Working...";
             spinner_element.classList.add("hidden");
             holder.appendChild(spinner_element);
         }
