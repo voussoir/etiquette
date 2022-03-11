@@ -21,31 +21,31 @@ body
     margin: 0;
 }
 body > #motd,
-body > #theme_links,
+body > .link_group,
 body > .nice_link
 {
     width: 90%;
     max-width: 600px;
 }
-#theme_links
+.link_group
 {
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
     grid-gap: 8px;
 }
-.nice_link, .plain_link
+.nice_link
 {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     margin: 8px 0;
+    height: 40px;
+    background-color: var(--color_transparency);
 }
 .nice_link
 {
-    height: 40px;
-    background-color: var(--color_transparency);
 }
 .nice_link:hover
 {
@@ -77,12 +77,16 @@ body > .nice_link
     {% else %}
     <a class="nice_link" href="/login">Log in</a>
     {% endif %}
-    <div id="theme_links">
+    <div class="link_group">
         <a class="nice_link" href="/?theme=turquoise">Turquoise</a>
         <a class="nice_link" href="/?theme=slate">Slate</a>
         <a class="nice_link" href="/?theme=pearl">Pearl</a>
     </div>
-    <a class="plain_link" href="http://www.github.com/voussoir/etiquette">GitHub</a>
+    <div class="link_group">
+        <a class="nice_link" href="https://www.github.com/voussoir/etiquette">GitHub</a>
+        <a class="nice_link" href="https://www.gitlab.com/voussoir/etiquette">GitLab</a>
+        <a class="nice_link" href="https://www.codeberg.org/voussoir/etiquette">Codeberg</a>
+    </div>
 </body>
 
 <script type="text/javascript">
