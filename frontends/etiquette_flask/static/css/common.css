@@ -4,7 +4,8 @@ not specific to one project.
 */
 
 /*
-These properties are used by javascript functions.
+These properties are used by javascript functions in common.js.
+See common.is_narrow_mode, is_wide_mode.
 getComputedStyle(document.documentElement).getPropertyValue("--narrow").trim() === "1"
 */
 @media screen and (min-width: 800px)
@@ -20,11 +21,6 @@ getComputedStyle(document.documentElement).getPropertyValue("--narrow").trim() =
     {
         --narrow: 1;
     }
-}
-
-.hidden
-{
-    display: none !important;
 }
 
 html
@@ -81,6 +77,11 @@ input::placeholder, textarea::placeholder
 pre
 {
     white-space: pre-line;
+}
+
+.hidden
+{
+    display: none !important;
 }
 
 .bold

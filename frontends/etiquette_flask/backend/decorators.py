@@ -20,7 +20,6 @@ def catch_etiquette_exception(function):
                 status = 404
             else:
                 status = 400
-            response = exc.jsonify()
-            response = flasktools.json_response(response, status=status)
+            response = flasktools.json_response(exc.jsonify(), status=status)
             flask.abort(response)
     return wrapped
