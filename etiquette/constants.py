@@ -48,7 +48,6 @@ PRAGMA user_version = {DATABASE_VERSION};
 
 DB_PRAGMAS = f'''
 PRAGMA cache_size = 10000;
-PRAGMA count_changes = OFF;
 PRAGMA foreign_keys = ON;
 '''
 
