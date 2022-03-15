@@ -241,7 +241,7 @@ function Editor(element_argss, on_open, on_save, on_cancel)
     spinner_element.innerText = "Submitting...";
     spinner_element.classList.add("editor_spinner");
     spinner_element.classList.add("hidden");
-    this.spinner = new spinner.Spinner(spinner_element);
+    this.spinner = new spinners.Spinner(spinner_element);
     toolbox.appendChild(spinner_element);
 
     for (const element of Object.values(this.elements))
