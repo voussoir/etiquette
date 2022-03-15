@@ -96,6 +96,7 @@ pre
 
     height: 18px;
     margin: 8px;
+    margin-bottom: 0;
     background-color: var(--color_transparency);
 }
 #header button
@@ -122,14 +123,7 @@ pre
     grid-auto-rows: min-content;
     grid-gap: 8px;
 
-    margin: 8px;
-}
-#header:not(.hidden) + #content_body
-{
-    /*
-    The header already has a margin.
-    */
-    margin-top: 0;
+    padding: 8px;
 }
 
 .panel
