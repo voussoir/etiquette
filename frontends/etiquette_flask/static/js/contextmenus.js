@@ -7,9 +7,8 @@ function background_click(event)
     if (! contextmenu)
     {
         contextmenus.hide_open_menus();
-        return;
+        return true;
     }
-    event.stopPropagation();
 }
 
 contextmenus.hide_open_menus =
