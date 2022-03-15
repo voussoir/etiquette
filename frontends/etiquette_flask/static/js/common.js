@@ -479,6 +479,31 @@ function init_all_button_with_confirm()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+common.init_all_input_bind_to_button =
+function init_all_input_bind_to_button()
+{
+    for (const input of document.querySelectorAll("*[data-bind-enter-to-button]"))
+    {
+        const button = document.getElementById(input.dataset.bindEnterToButton);
+        if (button)
+        {
+            common.bind_box_to_button(input, button, false);
+            delete input.dataset.bindEnterToButton;
+        }
+    }
+    for (const input of document.querySelectorAll("*[data-bind-ctrl-enter-to-button]"))
+    {
+        const button = document.getElementById(input.dataset.bindCtrlEnterToButton);
+        if (button)
+        {
+            common.bind_box_to_button(input, button, true);
+            delete input.dataset.bindCtrlEnterToButton;
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 common.init_enable_on_pageload =
 function init_enable_on_pageload(element)
 {
@@ -666,6 +691,7 @@ function on_pageload()
     common.init_all_button_with_confirm();
     common.init_all_enable_on_pageload();
     common.init_all_entry_with_history();
+    common.init_all_input_bind_to_button();
     common.init_all_tabbed_container();
 }
 document.addEventListener("DOMContentLoaded", common.on_pageload);
