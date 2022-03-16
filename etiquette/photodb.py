@@ -1601,6 +1601,7 @@ class PhotoDB(
         if self.ephemeral:
             existing_database = False
             self.sql = sqlite3.connect(':memory:')
+            self.sql.row_factory = sqlite3.Row
             self._first_time_setup()
             return
 
@@ -1614,6 +1615,7 @@ class PhotoDB(
         self.data_directory.makedirs(exist_ok=True)
         log.debug('Connecting to sqlite file "%s".', self.database_filepath.absolute_path)
         self.sql = sqlite3.connect(self.database_filepath.absolute_path)
+        self.sql.row_factory = sqlite3.Row
 
         if existing_database:
             if not skip_version_check:

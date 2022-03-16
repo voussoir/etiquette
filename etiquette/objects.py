@@ -262,7 +262,6 @@ class Album(ObjectBase, GroupableMixin):
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        db_row = self.photodb.normalize_db_row(db_row, self.table)
 
         self.id = db_row['id']
         self.title = self.normalize_title(db_row['title'])
@@ -699,7 +698,6 @@ class Bookmark(ObjectBase):
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        db_row = self.photodb.normalize_db_row(db_row, self.table)
 
         self.id = db_row['id']
         self.title = self.normalize_title(db_row['title'])
@@ -809,7 +807,6 @@ class Photo(ObjectBase):
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        db_row = self.photodb.normalize_db_row(db_row, self.table)
 
         self.real_path = db_row['filepath']
         self.real_path = pathclass.Path(self.real_path)
@@ -1447,7 +1444,6 @@ class Tag(ObjectBase, GroupableMixin):
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        db_row = self.photodb.normalize_db_row(db_row, self.table)
 
         self.id = db_row['id']
         # Do not pass the name through the normalizer. It may be grandfathered
@@ -1823,7 +1819,6 @@ class User(ObjectBase):
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
-        db_row = self.photodb.normalize_db_row(db_row, self.table)
 
         self.id = db_row['id']
         self.username = db_row['username']
