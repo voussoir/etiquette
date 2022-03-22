@@ -104,7 +104,7 @@ class PDBAlbumMixin:
         author_id = self.get_user_id_or_none(author)
 
         # Ok.
-        album_id = self.generate_id(table='albums')
+        album_id = self.generate_id(objects.Album)
         log.info('New Album: %s %s.', album_id, title)
 
         data = {
@@ -196,7 +196,7 @@ class PDBBookmarkMixin:
         author_id = self.get_user_id_or_none(author)
 
         # Ok.
-        bookmark_id = self.generate_id(table='bookmarks')
+        bookmark_id = self.generate_id(objects.Bookmark)
         log.info('New Bookmark: %s %s %s.', bookmark_id, title, url)
 
         data = {
@@ -349,7 +349,7 @@ class PDBPhotoMixin:
             raise TypeError(f'known_hash should be the 64-character sha256 hexdigest string.')
 
         # Ok.
-        photo_id = self.generate_id(table='photos')
+        photo_id = self.generate_id(objects.Photo)
         log.info('New Photo: %s %s.', photo_id, filepath.absolute_path)
 
         data = {
@@ -969,7 +969,7 @@ class PDBTagMixin:
         author_id = self.get_user_id_or_none(author)
 
         # Ok.
-        tag_id = self.generate_id(table='tags')
+        tag_id = self.generate_id(objects.Tag)
         log.info('New Tag: %s %s.', tag_id, tagname)
 
         self.caches['tag_exports'].clear()
@@ -1674,13 +1674,18 @@ class PhotoDB(
         if getattr(self, 'ephemeral', False):
             self.ephemeral_directory.cleanup()
 
-    def generate_id(self, table) -> str:
+    def generate_id(self, thing_class) -> str:
         '''
         Create a new ID number that is unique to the given table.
         Note that while this method may INSERT / UPDATE, it does not commit.
         We'll wait for that to happen in whoever is calling us, so we know the
         ID is actually used.
         '''
+        if not (isinstance(thing_class, type) and issubclass(thing_class, objects.ObjectBase)):
+            raise TypeError(thing_class)
+
+        table = thing_class.table
+
         table = table.lower()
         if table not in ['photos', 'tags', 'albums', 'bookmarks']:
             raise ValueError(f'Invalid table requested: {table}.')
