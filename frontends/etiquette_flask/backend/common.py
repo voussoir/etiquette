@@ -14,7 +14,6 @@ from voussoirkit import pathclass
 import etiquette
 
 from . import client_caching
-from . import decorators
 from . import jinja_filters
 from . import sessions
 
@@ -53,19 +52,23 @@ file_etag_manager = client_caching.FileEtagManager(
 
 # Response wrappers ################################################################################
 
-site.route = flasktools.decorate_and_route(
-    flask_app=site,
-    decorators=[
-        flasktools.ensure_response_type,
-        functools.partial(
-            flasktools.give_theme_cookie,
-            cookie_name='etiquette_theme',
-            default_theme='slate',
-        ),
-        decorators.catch_etiquette_exception,
-        session_manager.give_token
-    ],
-)
+def catch_etiquette_exception(endpoint):
+    '''
+    If an EtiquetteException is raised, automatically catch it and convert it
+    into a json response so that the user doesn't receive error 500.
+    '''
+    @functools.wraps(endpoint)
+    def wrapped(*args, **kwargs):
+        try:
+            return endpoint(*args, **kwargs)
+        except etiquette.exceptions.EtiquetteException as exc:
+            if isinstance(exc, etiquette.exceptions.NoSuch):
+                status = 404
+            else:
+                status = 400
+            response = flasktools.json_response(exc.jsonify(), status=status)
+            flask.abort(response)
+    return wrapped
 
 @site.before_request
 def before_request():
@@ -81,6 +84,20 @@ def before_request():
 def after_request(response):
     response = flasktools.gzip_response(request, response)
     return response
+
+site.route = flasktools.decorate_and_route(
+    flask_app=site,
+    decorators=[
+        flasktools.ensure_response_type,
+        functools.partial(
+            flasktools.give_theme_cookie,
+            cookie_name='etiquette_theme',
+            default_theme='slate',
+        ),
+        catch_etiquette_exception,
+        session_manager.give_token
+    ],
+)
 
 # P functions ######################################################################################
 
