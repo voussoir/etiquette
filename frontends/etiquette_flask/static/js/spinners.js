@@ -6,7 +6,7 @@ callback will close the spinner after it runs. But, if your initial function
 decides not to launch the callback (insufficient parameters, failed clientside
 checks, etc.), you can have it return spinners.BAIL and the spinners will close
 immediately. Of course, you're always welcome to use
-window[button.dataset.spinnerCloser](), but this return value means you don't
+spinners.close_button_spinner(button), but this return value means you don't
 need to pull the button into a variable, as long as you weren't using the
 return value anyway.
 */
@@ -62,6 +62,12 @@ function add_to_spinner_group(group_id, button)
     spinners.button_spinner_groups[group_id].push(button);
 }
 
+spinners.close_button_spinner =
+function close_button_spinner(button)
+{
+    window[button.dataset.spinnerCloser]();
+}
+
 spinners.close_grouped_spinners =
 function close_grouped_spinners(group_id)
 {
@@ -92,7 +98,7 @@ function init_button_with_spinner()
     To create a button that has a spinner, and cannot be clicked again while
     the action is running, assign it the class "button_with_spinner".
     When you're ready for the spinner to disappear, call
-    window[button.dataset.spinnerCloser]().
+    spinners.close_button_spinner(button).
 
     Optional:
         data-spinner-id: If you want to use your own element as the spinner,
@@ -153,7 +159,7 @@ function init_button_with_spinner()
             button.disabled = true;
         }
         // It is expected that the function referenced by onclick will call
-        // window[button.dataset.spinnerCloser]() when appropriate, since from
+        // spinners.close_button_spinner(button) when appropriate, since from
         // our perspective we cannot be sure when to close the spinner.
         button.dataset.spinnerCloser = "spinner_closer_" + spinners.spinner_button_index;
         window[button.dataset.spinnerCloser] = function spinner_closer()
