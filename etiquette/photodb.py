@@ -40,7 +40,7 @@ class PDBAlbumMixin:
         return self.get_object_by_id(objects.Album, id)
 
     def get_album_count(self) -> int:
-        return self.select_one('SELECT COUNT(id) FROM albums')[0]
+        return self.select_one_value('SELECT COUNT(id) FROM albums')
 
     def get_albums(self) -> typing.Iterable[objects.Album]:
         return self.get_objects(objects.Album)
@@ -176,7 +176,7 @@ class PDBBookmarkMixin:
         return self.get_object_by_id(objects.Bookmark, id)
 
     def get_bookmark_count(self) -> int:
-        return self.select_one('SELECT COUNT(id) FROM bookmarks')[0]
+        return self.select_one_value('SELECT COUNT(id) FROM bookmarks')
 
     def get_bookmarks(self) -> typing.Iterable[objects.Bookmark]:
         return self.get_objects(objects.Bookmark)
@@ -266,7 +266,7 @@ class PDBPhotoMixin:
         return photo
 
     def get_photo_count(self) -> int:
-        return self.select_one('SELECT COUNT(id) FROM photos')[0]
+        return self.select_one_value('SELECT COUNT(id) FROM photos')
 
     def get_photos(self) -> typing.Iterable[objects.Photo]:
         return self.get_objects(objects.Photo)
@@ -931,17 +931,17 @@ class PDBTagMixin:
             # ...or resolve the synonym and try again.
             query = 'SELECT mastername FROM tag_synonyms WHERE name == ?'
             bindings = [tagname]
-            name_row = self.select_one(query, bindings)
-            if name_row is None:
+            mastername = self.select_one_value(query, bindings)
+            if mastername is None:
                 # was not a master tag or synonym
                 raise exceptions.NoSuchTag(tagname)
-            tagname = name_row[0]
+            tagname = mastername
 
         tag = self.get_cached_instance(objects.Tag, tag_row)
         return tag
 
     def get_tag_count(self) -> int:
-        return self.select_one('SELECT COUNT(id) FROM tags')[0]
+        return self.select_one_value('SELECT COUNT(id) FROM tags')
 
     def get_tags(self) -> typing.Iterable[objects.Tag]:
         '''
@@ -1046,7 +1046,7 @@ class PDBUserMixin:
         for retry in range(20):
             user_id = ''.join(random.choices(constants.USER_ID_CHARACTERS, k=length))
 
-            user_exists = self.select_one('SELECT 1 FROM users WHERE id == ?', [user_id])
+            user_exists = self.select_one_value('SELECT 1 FROM users WHERE id == ?', [user_id])
             if user_exists is None:
                 break
         else:
@@ -1078,7 +1078,7 @@ class PDBUserMixin:
         return self.get_cached_instance(objects.User, user_row)
 
     def get_user_count(self) -> int:
-        return self.select_one('SELECT COUNT(id) FROM users')[0]
+        return self.select_one_value('SELECT COUNT(id) FROM users')
 
     def get_user_id_or_none(self, user_obj_or_id) -> typing.Optional[str]:
         '''
@@ -1690,14 +1690,14 @@ class PhotoDB(
         if table not in ['photos', 'tags', 'albums', 'bookmarks']:
             raise ValueError(f'Invalid table requested: {table}.')
 
-        last_id = self.select_one('SELECT last_id FROM id_numbers WHERE tab == ?', [table])
+        last_id = self.select_one_value('SELECT last_id FROM id_numbers WHERE tab == ?', [table])
         if last_id is None:
             # Register new value
             new_id_int = 1
             do_insert = True
         else:
             # Use database value
-            new_id_int = int(last_id[0]) + 1
+            new_id_int = int(last_id) + 1
             do_insert = False
 
         new_id = str(new_id_int).rjust(self.config['id_length'], '0')

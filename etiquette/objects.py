@@ -185,19 +185,19 @@ class GroupableMixin(metaclass=abc.ABCMeta):
 
     def has_any_child(self) -> bool:
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? LIMIT 1'
-        row = self.photodb.select_one(query, [self.id])
-        return row is not None
+        exists = self.photodb.select_one_value(query, [self.id])
+        return exists is not None
 
     def has_any_parent(self) -> bool:
         query = f'SELECT 1 FROM {self.group_table} WHERE memberid == ? LIMIT 1'
-        row = self.photodb.select_one(query, [self.id])
-        return row is not None
+        exists = self.photodb.select_one_value(query, [self.id])
+        return exists is not None
 
     def has_child(self, member) -> bool:
         self.assert_same_type(member)
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? AND memberid == ?'
-        row = self.photodb.select_one(query, [self.id, member.id])
-        return row is not None
+        exists = self.photodb.select_one_value(query, [self.id, member.id])
+        return exists is not None
 
     def has_descendant(self, descendant) -> bool:
         return self in descendant.walk_parents()
@@ -205,8 +205,8 @@ class GroupableMixin(metaclass=abc.ABCMeta):
     def has_parent(self, parent) -> bool:
         self.assert_same_type(parent)
         query = f'SELECT 1 FROM {self.group_table} WHERE parentid == ? AND memberid == ?'
-        row = self.photodb.select_one(query, [parent.id, self.id])
-        return row is not None
+        exists = self.photodb.select_one_value(query, [parent.id, self.id])
+        return exists is not None
 
     def _remove_child(self, member):
         if not self.has_child(member):
@@ -481,11 +481,11 @@ class Album(ObjectBase, GroupableMixin):
         '''
         Return True if this album has at least 1 associated directory.
         '''
-        row = self.photodb.select_one(
+        exists = self.photodb.select_one_value(
             'SELECT 1 FROM album_associated_directories WHERE albumid == ?',
             [self.id]
         )
-        return row is not None
+        return exists is not None
 
     def has_any_photo(self, recurse=False) -> bool:
         '''
@@ -495,11 +495,11 @@ class Album(ObjectBase, GroupableMixin):
             If True, photos in child albums satisfy.
             If False, only consider this album.
         '''
-        row = self.photodb.select_one(
+        exists = self.photodb.select_one_value(
             'SELECT 1 FROM album_photo_rel WHERE albumid == ? LIMIT 1',
             [self.id]
         )
-        if row is not None:
+        if exists is not None:
             return True
         if recurse:
             return self.has_any_subalbum_photo()
@@ -514,18 +514,18 @@ class Album(ObjectBase, GroupableMixin):
 
     def has_associated_directory(self, path) -> bool:
         path = pathclass.Path(path)
-        row = self.photodb.select_one(
+        exists = self.photodb.select_one_value(
             'SELECT 1 FROM album_associated_directories WHERE albumid == ? AND directory == ?',
             [self.id, path.absolute_path]
         )
-        return row is not None
+        return exists is not None
 
     def has_photo(self, photo) -> bool:
-        row = self.photodb.select_one(
+        exists = self.photodb.select_one_value(
             'SELECT 1 FROM album_photo_rel WHERE albumid == ? AND photoid == ?',
             [self.id, photo.id]
         )
-        return row is not None
+        return exists is not None
 
     def jsonify(self, minimal=False) -> dict:
         j = {
@@ -623,7 +623,7 @@ class Album(ObjectBase, GroupableMixin):
 
         albumids = sqlhelpers.listify(albumids)
         query = query.format(albumids=albumids)
-        total = self.photodb.select_one(query)[0]
+        total = self.photodb.select_one_value(query)
         return total
 
     def sum_children(self, recurse=True) -> int:
@@ -645,7 +645,7 @@ class Album(ObjectBase, GroupableMixin):
         WHERE parentid == ?
         ''')
         bindings = [self.id]
-        total = self.photodb.select_one(query, bindings)[0]
+        total = self.photodb.select_one_value(query, bindings)
         return total
 
     def sum_photos(self, recurse=True) -> int:
@@ -667,7 +667,7 @@ class Album(ObjectBase, GroupableMixin):
 
         albumids = sqlhelpers.listify(albumids)
         query = query.format(albumids=albumids)
-        total = self.photodb.select_one(query)[0]
+        total = self.photodb.select_one_value(query)
         return total
 
     # Will add -> Photo when forward references are supported by Python.
@@ -1091,15 +1091,15 @@ class Photo(ObjectBase):
 
         tag_by_id = {t.id: t for t in tag_options}
         tag_option_ids = sqlhelpers.listify(tag_by_id)
-        rel_row = self.photodb.select_one(
+        tag_id = self.photodb.select_one_value(
             f'SELECT tagid FROM photo_tag_rel WHERE photoid == ? AND tagid IN {tag_option_ids}',
             [self.id]
         )
 
-        if rel_row is None:
+        if tag_id is None:
             return False
 
-        return tag_by_id[rel_row[0]]
+        return tag_by_id[tag_id]
 
     def jsonify(self, include_albums=True, include_tags=True) -> dict:
         j = {
@@ -1755,7 +1755,7 @@ class Tag(ObjectBase, GroupableMixin):
         if synname == self.name:
             raise exceptions.NoSuchSynonym(synname)
 
-        syn_exists = self.photodb.select_one(
+        syn_exists = self.photodb.select_one_value(
             'SELECT 1 FROM tag_synonyms WHERE mastername == ? AND name == ?',
             [self.name, synname]
         )
@@ -1949,23 +1949,23 @@ class User(ObjectBase):
 
     def has_any_albums(self) -> bool:
         query = f'SELECT 1 FROM albums WHERE author_id == ? LIMIT 1'
-        row = self.photodb.select_one(query, [self.id])
-        return row is not None
+        exists = self.photodb.select_one_value(query, [self.id])
+        return exists is not None
 
     def has_any_bookmarks(self) -> bool:
         query = f'SELECT 1 FROM bookmarks WHERE author_id == ? LIMIT 1'
-        row = self.photodb.select_one(query, [self.id])
-        return row is not None
+        exists = self.photodb.select_one_value(query, [self.id])
+        return exists is not None
 
     def has_any_photos(self) -> bool:
         query = f'SELECT 1 FROM photos WHERE author_id == ? LIMIT 1'
-        row = self.photodb.select_one(query, [self.id])
-        return row is not None
+        exists = self.photodb.select_one_value(query, [self.id])
+        return exists is not None
 
     def has_any_tags(self) -> bool:
         query = f'SELECT 1 FROM tags WHERE author_id == ? LIMIT 1'
-        row = self.photodb.select_one(query, [self.id])
-        return row is not None
+        exists = self.photodb.select_one_value(query, [self.id])
+        return exists is not None
 
     def jsonify(self) -> dict:
         j = {

@@ -144,7 +144,7 @@ def upgrade_5_to_6(photodb):
     # 1. Start the id_numbers.albums value at the tags value so that the number
     # can continue to increment safely and separately, instead of starting at
     # zero and bumping into existing albums.
-    last_id = photodb.select_one('SELECT last_id FROM id_numbers WHERE tab == "tags"')[0]
+    last_id = photodb.select_one_value('SELECT last_id FROM id_numbers WHERE tab == "tags"')
     photodb.execute('INSERT INTO id_numbers VALUES("albums", ?)', [last_id])
 
     # 2. Now's a good chance to rename 'index_grouprel' to 'index_taggroup'.
