@@ -2,7 +2,11 @@ import argparse
 import os
 import sys
 
+from voussoirkit import vlogging
+
 import etiquette
+
+log = vlogging.get_logger(__name__, 'database_upgrader')
 
 class Migrator:
     '''
@@ -45,8 +49,7 @@ class Migrator:
         # be pointing to the version of B which has not been reconstructed yet,
         # which is about to get renamed to B_old and then A's reference will be
         # broken.
-        self.photodb.execute('PRAGMA foreign_keys = OFF')
-        self.photodb.execute('BEGIN')
+        self.photodb.pragma_write('foreign_keys', 'OFF')
         for (name, table) in self.tables.items():
             if name not in self.existing_tables:
                 continue
@@ -65,16 +68,14 @@ class Migrator:
 
         for (name, query) in self.indices:
             self.photodb.execute(query)
+        self.photodb.pragma_write('foreign_keys', 'ON')
 
 def upgrade_1_to_2(photodb):
     '''
     In this version, a column `tagged_at` was added to the Photos table, to keep
     track of the last time the photo's tags were edited (added or removed).
     '''
-    photodb.executescript('''
-    BEGIN;
-    ALTER TABLE photos ADD COLUMN tagged_at INT;
-    ''')
+    photodb.execute('ALTER TABLE photos ADD COLUMN tagged_at INT')
 
 def upgrade_2_to_3(photodb):
     '''
@@ -83,8 +84,6 @@ def upgrade_2_to_3(photodb):
     Plus some indices.
     '''
     photodb.executescript('''
-    BEGIN;
-
     CREATE TABLE users(
         id TEXT,
         username TEXT COLLATE NOCASE,
@@ -102,8 +101,6 @@ def upgrade_3_to_4(photodb):
     Add an `author_id` column to Photos.
     '''
     photodb.executescript('''
-    BEGIN;
-
     ALTER TABLE photos ADD COLUMN author_id TEXT;
 
     CREATE INDEX IF NOT EXISTS index_photo_author ON photos(author_id);
@@ -114,8 +111,6 @@ def upgrade_4_to_5(photodb):
     Add table `bookmarks` and its indices.
     '''
     photodb.executescript('''
-    BEGIN;
-
     CREATE TABLE bookmarks(
         id TEXT,
         title TEXT,
@@ -259,18 +254,13 @@ def upgrade_7_to_8(photodb):
     '''
     Give the Tags table a description field.
     '''
-    photodb.executescript('''
-    BEGIN;
-    ALTER TABLE tags ADD COLUMN description TEXT;
-    ''')
+    photodb.executescript('ALTER TABLE tags ADD COLUMN description TEXT')
 
 def upgrade_8_to_9(photodb):
     '''
     Give the Photos table a searchhidden field.
     '''
     photodb.executescript('''
-    BEGIN;
-
     ALTER TABLE photos ADD COLUMN searchhidden INT;
 
     UPDATE photos SET searchhidden = 0;
@@ -351,9 +341,7 @@ def upgrade_11_to_12(photodb):
     improve the speed of individual relation searching, important for the
     new intersection-based search.
     '''
-    photodb.executescript('''
-    BEGIN;
-
+    photodb.execute('''
     CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid_tagid on photo_tag_rel(photoid, tagid);
     ''')
 
@@ -679,11 +667,12 @@ def upgrade_all(data_directory):
     '''
     photodb = etiquette.photodb.PhotoDB(data_directory, create=False, skip_version_check=True)
 
-    current_version = photodb.execute('PRAGMA user_version').fetchone()[0]
+    current_version = photodb.pragma_read('user_version')
     needed_version = etiquette.constants.DATABASE_VERSION
 
     if current_version == needed_version:
         print('Already up to date with version %d.' % needed_version)
+        photodb.close()
         return
 
     for version_number in range(current_version + 1, needed_version + 1):
@@ -691,22 +680,20 @@ def upgrade_all(data_directory):
         upgrade_function = 'upgrade_%d_to_%d' % (current_version, version_number)
         upgrade_function = eval(upgrade_function)
 
-        try:
-            photodb.execute('PRAGMA foreign_keys = ON')
+        photodb.pragma_write('journal_mode', 'wal')
+        with photodb.transaction:
+            photodb.pragma_write('foreign_keys', 'ON')
             upgrade_function(photodb)
-        except Exception as exc:
-            photodb.rollback()
-            raise
-        else:
-            photodb.sql.cursor().execute('PRAGMA user_version = %d' % version_number)
-            photodb.commit()
+            photodb.pragma_write('user_version', version_number)
 
         current_version = version_number
+    photodb.close()
     print('Upgrades finished.')
 
 def upgrade_all_argparse(args):
     return upgrade_all(data_directory=args.data_directory)
 
+@vlogging.main_decorator
 def main(argv):
     parser = argparse.ArgumentParser()
 

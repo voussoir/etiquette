@@ -65,7 +65,14 @@ def get_photos_by_glob(pattern):
     if pattern == '**':
         return search_in_cwd(yield_photos=True, yield_albums=False)
 
-    for file in pathclass.glob_files(pattern):
+    as_path = pathclass.Path(pattern)
+    if as_path.is_directory:
+        files = as_path.listdir_files()
+
+    else:
+        files = pathclass.glob_files(pattern)
+
+    for file in files:
         try:
             photo = photodb.get_photo_by_path(file)
             yield photo
@@ -76,7 +83,7 @@ def get_photos_by_globs(patterns):
     for pattern in patterns:
         yield from get_photos_by_glob(pattern)
 
-def get_photos_from_args(args):
+def get_photos_from_args(args, fallback_search_in_cwd=False):
     load_photodb()
     photos = []
 
@@ -91,6 +98,9 @@ def get_photos_from_args(args):
 
     if args.photo_search_args:
         photos.extend(search_by_argparse(args.photo_search_args, yield_photos=True))
+
+    if (not photos) and fallback_search_in_cwd:
+        photos.extend(search_in_cwd(yield_photos=True, yield_albums=False))
 
     return photos
 
@@ -158,18 +168,20 @@ def add_remove_tag_argparse(args, action):
 
     need_commit = False
 
-    for photo in photos:
-        if action == 'add':
-            photo.add_tag(tag)
-        elif action == 'remove':
-            photo.remove_tag(tag)
-        need_commit = True
+    with photodb.transaction:
+        for photo in photos:
+            if action == 'add':
+                photo.add_tag(tag)
+            elif action == 'remove':
+                photo.remove_tag(tag)
+            need_commit = True
 
-    if not need_commit:
-        return 0
+        if not need_commit:
+            return 0
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
@@ -178,15 +190,18 @@ def delete_albums_argparse(args):
 
     need_commit = False
     albums = get_albums_from_args(args)
-    for album in albums:
-        album.delete()
-        need_commit = True
 
-    if not need_commit:
-        return 0
+    with photodb.transaction:
+        for album in albums:
+            album.delete()
+            need_commit = True
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not need_commit:
+            return 0
+
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
@@ -195,15 +210,18 @@ def delete_photos_argparse(args):
 
     need_commit = False
     photos = get_photos_from_args(args)
-    for photo in photos:
-        photo.delete(delete_file=args.delete_file)
-        need_commit = True
 
-    if not need_commit:
-        return 0
+    with photodb.transaction:
+        for photo in photos:
+            photo.delete(delete_file=args.delete_file)
+            need_commit = True
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not need_commit:
+            return 0
+
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
@@ -216,41 +234,46 @@ def digest_directory_argparse(args):
     load_photodb()
     need_commit = False
 
-    for directory in directories:
-        digest = photodb.digest_directory(
-            directory,
-            exclude_directories=args.exclude_directories,
-            exclude_filenames=args.exclude_filenames,
-            glob_directories=args.glob_directories,
-            glob_filenames=args.glob_filenames,
-            hash_kwargs={'bytes_per_second': args.hash_bytes_per_second},
-            make_albums=args.make_albums,
-            new_photo_ratelimit=args.ratelimit,
-            recurse=args.recurse,
-            yield_albums=True,
-            yield_photos=True,
-        )
-        for result in digest:
-            # print(result)
-            need_commit = True
+    with photodb.transaction:
+        for directory in directories:
+            digest = photodb.digest_directory(
+                directory,
+                exclude_directories=args.exclude_directories,
+                exclude_filenames=args.exclude_filenames,
+                glob_directories=args.glob_directories,
+                glob_filenames=args.glob_filenames,
+                hash_kwargs={'bytes_per_second': args.hash_bytes_per_second},
+                make_albums=args.make_albums,
+                new_photo_ratelimit=args.ratelimit,
+                recurse=args.recurse,
+                yield_albums=True,
+                yield_photos=True,
+            )
+            for result in digest:
+                # print(result)
+                need_commit = True
 
-    if not need_commit:
-        return 0
+        if not need_commit:
+            return 0
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
 def easybake_argparse(args):
     load_photodb()
-    for eb_string in args.eb_strings:
-        notes = photodb.easybake(eb_string)
-        for (action, tagname) in notes:
-            print(action, tagname)
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+    with photodb.transaction:
+        for eb_string in args.eb_strings:
+            notes = photodb.easybake(eb_string)
+            for (action, tagname) in notes:
+                print(action, tagname)
+
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
@@ -310,18 +333,21 @@ def generate_thumbnail_argparse(args):
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
 
     need_commit = False
-    try:
-        for photo in photos:
-            photo.generate_thumbnail()
-            need_commit = True
-    except KeyboardInterrupt:
-        pass
 
-    if not need_commit:
-        return 0
+    with photodb.transaction:
+        try:
+            for photo in photos:
+                photo.generate_thumbnail()
+                need_commit = True
+        except KeyboardInterrupt:
+            pass
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not need_commit:
+            return 0
+
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
@@ -335,7 +361,6 @@ def init_argparse(args):
         pipeable.stderr(f'PhotoDB {photodb} already exists.')
         return 0
     photodb = etiquette.photodb.PhotoDB(create=True)
-    photodb.commit()
     return 0
 
 def purge_deleted_files_argparse(args):
@@ -348,15 +373,17 @@ def purge_deleted_files_argparse(args):
 
     need_commit = False
 
-    for deleted in photodb.purge_deleted_files(photos):
-        need_commit = True
-        print(deleted)
+    with photodb.transaction:
+        for deleted in photodb.purge_deleted_files(photos):
+            need_commit = True
+            print(deleted)
 
-    if not need_commit:
-        return 0
+        if not need_commit:
+            return 0
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
@@ -373,25 +400,24 @@ def purge_empty_albums_argparse(args):
 
     need_commit = False
 
-    for deleted in photodb.purge_empty_albums(albums):
-        need_commit = True
-        print(deleted)
+    with photodb.transaction:
+        for deleted in photodb.purge_empty_albums(albums):
+            need_commit = True
+            print(deleted)
 
-    if not need_commit:
-        return 0
+        if not need_commit:
+            return 0
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
 def reload_metadata_argparse(args):
     load_photodb()
 
-    if args.any_photo_args:
-        photos = get_photos_from_args(args)
-    else:
-        photos = search_in_cwd(yield_photos=True, yield_albums=False)
+    photos = get_photos_from_args(args)
 
     hash_kwargs = {
         'bytes_per_second': args.hash_bytes_per_second,
@@ -399,40 +425,45 @@ def reload_metadata_argparse(args):
     }
 
     need_commit = False
-    try:
-        for photo in photos:
-            if not photo.real_path.is_file:
-                continue
 
-            need_reload = (
-                args.force or
-                photo.mtime != photo.real_path.stat.st_mtime or
-                photo.bytes != photo.real_path.stat.st_size
-            )
+    with photodb.transaction:
+        try:
+            for photo in photos:
+                if not photo.real_path.is_file:
+                    continue
 
-            if not need_reload:
-                continue
-            photo.reload_metadata(hash_kwargs=hash_kwargs)
-            need_commit = True
-    except KeyboardInterrupt:
-        pass
+                need_reload = (
+                    args.force or
+                    photo.mtime != photo.real_path.stat.st_mtime or
+                    photo.bytes != photo.real_path.stat.st_size
+                )
 
-    if not need_commit:
-        return 0
+                if not need_reload:
+                    continue
+                photo.reload_metadata(hash_kwargs=hash_kwargs)
+                need_commit = True
+        except KeyboardInterrupt:
+            pass
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not need_commit:
+            return 0
+
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
 def relocate_argparse(args):
     load_photodb()
 
-    photo = photodb.get_photo(args.photo_id)
-    photo.relocate(args.filepath)
+    with photodb.transaction:
+        photo = photodb.get_photo(args.photo_id)
+        photo.relocate(args.filepath)
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
@@ -477,12 +508,14 @@ def set_unset_searchhidden_argparse(args, searchhidden):
     else:
         photos = search_in_cwd(yield_photos=True, yield_albums=False)
 
-    for photo in photos:
-        print(photo)
-        photo.set_searchhidden(searchhidden)
+    with photodb.transaction:
+        for photo in photos:
+            print(photo)
+            photo.set_searchhidden(searchhidden)
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
@@ -514,17 +547,19 @@ def tag_breplace_argparse(args):
         for (tag_name, new_name, printline) in renames:
             print(printline)
         if not interactive.getpermission('Ok?', must_pick=True):
-            return 0
+            return 1
 
-    for (tag_name, new_name, printline) in renames:
-        print(printline)
-        tag = photodb.get_tag(tag_name)
-        tag.rename(new_name)
-        if args.set_synonym:
-            tag.add_synonym(tag_name)
+    with photodb.transaction:
+        for (tag_name, new_name, printline) in renames:
+            print(printline)
+            tag = photodb.get_tag(tag_name)
+            tag.rename(new_name)
+            if args.set_synonym:
+                tag.add_synonym(tag_name)
 
-    if args.autoyes or interactive.getpermission('Commit?'):
-        photodb.commit()
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
 
     return 0
 
@@ -1577,17 +1612,17 @@ def main(argv):
     ##
 
     def postprocessor(args):
-        if hasattr(args, 'photo_search_args'):
+        if getattr(args, 'photo_search_args', None) is not None:
             args.photo_search_args = p_search.parse_args(args.photo_search_args)
         else:
             args.photo_search_args = None
 
-        if hasattr(args, 'album_search_args'):
+        if getattr(args, 'album_search_args', None) is not None:
             args.album_search_args = p_search.parse_args(args.album_search_args)
         else:
             args.album_search_args = None
 
-        if hasattr(args, 'photo_id_args'):
+        if getattr(args, 'photo_id_args', None) is not None:
             args.photo_id_args = [
                 photo_id
                 for arg in args.photo_id_args
@@ -1596,7 +1631,7 @@ def main(argv):
         else:
             args.photo_id_args = None
 
-        if hasattr(args, 'album_id_args'):
+        if getattr(args, 'album_id_args', None) is not None:
             args.album_id_args = [
                 album_id
                 for arg in args.album_id_args
@@ -1605,11 +1640,10 @@ def main(argv):
         else:
             args.album_id_args = None
 
-
-        if not hasattr(args, 'globs'):
+        if not getattr(args, 'globs', None) is not None:
             args.globs = None
 
-        if not hasattr(args, 'glob'):
+        if not getattr(args, 'glob', None) is not None:
             args.glob = None
 
         args.any_photo_args = bool(
@@ -1625,7 +1659,7 @@ def main(argv):
         return args
 
     try:
-        return betterhelp.go(parser, argv)
+        return betterhelp.go(parser, argv, args_postprocessor=postprocessor)
     except etiquette.exceptions.NoClosestPhotoDB as exc:
         pipeable.stderr(exc.error_message)
         pipeable.stderr('Try `etiquette_cli.py init` to create the database.')

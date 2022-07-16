@@ -75,11 +75,11 @@ def get_thumbnail(photo_id):
 
 @site.route('/photo/<photo_id>/delete', methods=['POST'])
 def post_photo_delete(photo_id):
-    print(photo_id)
-    photo = common.P_photo(photo_id, response_type='json')
     delete_file = request.form.get('delete_file', False)
     delete_file = stringtools.truthystring(delete_file)
-    photo.delete(delete_file=delete_file, commit=True)
+    with common.P.transaction:
+        photo = common.P_photo(photo_id, response_type='json')
+        photo.delete(delete_file=delete_file)
     return flasktools.json_response({})
 
 # Photo tag operations #############################################################################
@@ -91,12 +91,12 @@ def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
     photos = list(common.P_photos(photo_ids, response_type='json'))
     tag = common.P_tag(tagname, response_type='json')
 
-    for photo in photos:
-        if add_or_remove == 'add':
-            photo.add_tag(tag)
-        elif add_or_remove == 'remove':
-            photo.remove_tag(tag)
-    common.P.commit('photo add remove tag core')
+    with common.P.transaction:
+        for photo in photos:
+            if add_or_remove == 'add':
+                photo.add_tag(tag)
+            elif add_or_remove == 'remove':
+                photo.remove_tag(tag)
 
     response = {'action': add_or_remove, 'tagname': tag.name}
     return flasktools.json_response(response)
@@ -120,10 +120,10 @@ def post_photo_copy_tags(photo_id):
     '''
     Copy the tags from another photo.
     '''
-    photo = common.P_photo(photo_id, response_type='json')
-    other = common.P_photo(request.form['other_photo'], response_type='json')
-    photo.copy_tags(other)
-    common.P.commit('photo copy tags')
+    with common.P.transaction:
+        photo = common.P_photo(photo_id, response_type='json')
+        other = common.P_photo(request.form['other_photo'], response_type='json')
+        photo.copy_tags(other)
     return flasktools.json_response([tag.jsonify(minimal=True) for tag in photo.get_tags()])
 
 @site.route('/photo/<photo_id>/remove_tag', methods=['POST'])
@@ -164,10 +164,10 @@ def post_batch_photos_remove_tag():
 @site.route('/photo/<photo_id>/generate_thumbnail', methods=['POST'])
 def post_photo_generate_thumbnail(photo_id):
     special = request.form.to_dict()
-    special.pop('commit', None)
 
-    photo = common.P_photo(photo_id, response_type='json')
-    photo.generate_thumbnail(commit=True, **special)
+    with common.P.transaction:
+        photo = common.P_photo(photo_id, response_type='json')
+        photo.generate_thumbnail(**special)
 
     response = flasktools.json_response({})
     return response
@@ -176,22 +176,21 @@ def post_photo_refresh_metadata_core(photo_ids):
     if isinstance(photo_ids, str):
         photo_ids = stringtools.comma_space_split(photo_ids)
 
-    photos = list(common.P_photos(photo_ids, response_type='json'))
+    with common.P.transaction:
+        photos = list(common.P_photos(photo_ids, response_type='json'))
 
-    for photo in photos:
-        photo._uncache()
-        photo = common.P_photo(photo.id, response_type='json')
-        try:
-            photo.reload_metadata()
-        except pathclass.NotFile:
-            flask.abort(404)
-        if photo.thumbnail is None:
+        for photo in photos:
+            photo._uncache()
+            photo = common.P_photo(photo.id, response_type='json')
             try:
-                photo.generate_thumbnail()
-            except Exception:
-                log.warning(traceback.format_exc())
-
-    common.P.commit('photo refresh metadata core')
+                photo.reload_metadata()
+            except pathclass.NotFile:
+                flask.abort(404)
+            if photo.thumbnail is None:
+                try:
+                    photo.generate_thumbnail()
+                except Exception:
+                    log.warning(traceback.format_exc())
 
     return flasktools.json_response({})
 
@@ -208,26 +207,27 @@ def post_batch_photos_refresh_metadata():
 
 @site.route('/photo/<photo_id>/set_searchhidden', methods=['POST'])
 def post_photo_set_searchhidden(photo_id):
-    photo = common.P_photo(photo_id, response_type='json')
-    photo.set_searchhidden(True)
+    with common.P.transaction:
+        photo = common.P_photo(photo_id, response_type='json')
+        photo.set_searchhidden(True)
     return flasktools.json_response({})
 
 @site.route('/photo/<photo_id>/unset_searchhidden', methods=['POST'])
 def post_photo_unset_searchhidden(photo_id):
-    photo = common.P_photo(photo_id, response_type='json')
-    photo.set_searchhidden(False)
+    with common.P.transaction:
+        photo = common.P_photo(photo_id, response_type='json')
+        photo.set_searchhidden(False)
     return flasktools.json_response({})
 
 def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
     if isinstance(photo_ids, str):
         photo_ids = stringtools.comma_space_split(photo_ids)
 
-    photos = list(common.P_photos(photo_ids, response_type='json'))
+    with common.P.transaction:
+        photos = list(common.P_photos(photo_ids, response_type='json'))
 
-    for photo in photos:
-        photo.set_searchhidden(searchhidden)
-
-    common.P.commit('photo set searchhidden core')
+        for photo in photos:
+            photo.set_searchhidden(searchhidden)
 
     return flasktools.json_response({})
 

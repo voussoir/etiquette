@@ -44,24 +44,25 @@ def get_tag_json(specific_tag_name):
 
 @site.route('/tag/<tagname>/edit', methods=['POST'])
 def post_tag_edit(tagname):
-    tag = common.P_tag(tagname, response_type='json')
-    name = request.form.get('name', '').strip()
-    if name:
-        tag.rename(name)
+    with common.P.transaction:
+        tag = common.P_tag(tagname, response_type='json')
+        name = request.form.get('name', '').strip()
+        if name:
+            tag.rename(name)
 
-    description = request.form.get('description', None)
-    tag.edit(description=description, commit=True)
+        description = request.form.get('description', None)
+        tag.edit(description=description)
 
-    response = tag.jsonify()
-    response = flasktools.json_response(response)
+    response = flasktools.json_response(tag.jsonify())
     return response
 
 @site.route('/tag/<tagname>/add_child', methods=['POST'])
 @flasktools.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_add_child(tagname):
-    parent = common.P_tag(tagname, response_type='json')
-    child = common.P_tag(request.form['child_name'], response_type='json')
-    parent.add_child(child, commit=True)
+    with common.P.transaction:
+        parent = common.P_tag(tagname, response_type='json')
+        child = common.P_tag(request.form['child_name'], response_type='json')
+        parent.add_child(child)
     response = {'action': 'add_child', 'tagname': f'{parent.name}.{child.name}'}
     return flasktools.json_response(response)
 
@@ -70,8 +71,9 @@ def post_tag_add_child(tagname):
 def post_tag_add_synonym(tagname):
     syn_name = request.form['syn_name']
 
-    master_tag = common.P_tag(tagname, response_type='json')
-    syn_name = master_tag.add_synonym(syn_name, commit=True)
+    with common.P.transaction:
+        master_tag = common.P_tag(tagname, response_type='json')
+        syn_name = master_tag.add_synonym(syn_name)
 
     response = {'action': 'add_synonym', 'synonym': syn_name}
     return flasktools.json_response(response)
@@ -79,9 +81,10 @@ def post_tag_add_synonym(tagname):
 @site.route('/tag/<tagname>/remove_child', methods=['POST'])
 @flasktools.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_remove_child(tagname):
-    parent = common.P_tag(tagname, response_type='json')
-    child = common.P_tag(request.form['child_name'], response_type='json')
-    parent.remove_child(child, commit=True)
+    with common.P.transaction:
+        parent = common.P_tag(tagname, response_type='json')
+        child = common.P_tag(request.form['child_name'], response_type='json')
+        parent.remove_child(child)
     response = {'action': 'remove_child', 'tagname': f'{parent.name}.{child.name}'}
     return flasktools.json_response(response)
 
@@ -90,8 +93,9 @@ def post_tag_remove_child(tagname):
 def post_tag_remove_synonym(tagname):
     syn_name = request.form['syn_name']
 
-    master_tag = common.P_tag(tagname, response_type='json')
-    syn_name = master_tag.remove_synonym(syn_name, commit=True)
+    with common.P.transaction:
+        master_tag = common.P_tag(tagname, response_type='json')
+        syn_name = master_tag.remove_synonym(syn_name)
 
     response = {'action': 'delete_synonym', 'synonym': syn_name}
     return flasktools.json_response(response)
@@ -163,7 +167,8 @@ def post_tag_create():
     name = request.form['name']
     description = request.form.get('description', None)
 
-    tag = common.P.new_tag(name, description, author=session_manager.get(request).user, commit=True)
+    with common.P.transaction:
+        tag = common.P.new_tag(name, description, author=session_manager.get(request).user)
     response = tag.jsonify()
     return flasktools.json_response(response)
 
@@ -172,13 +177,15 @@ def post_tag_create():
 def post_tag_easybake():
     easybake_string = request.form['easybake_string']
 
-    notes = common.P.easybake(easybake_string, author=session_manager.get(request).user, commit=True)
+    with common.P.transaction:
+        notes = common.P.easybake(easybake_string, author=session_manager.get(request).user)
     notes = [{'action': action, 'tagname': tagname} for (action, tagname) in notes]
     return flasktools.json_response(notes)
 
 @site.route('/tag/<tagname>/delete', methods=['POST'])
 def post_tag_delete(tagname):
-    tag = common.P_tag(tagname, response_type='json')
-    tag.delete(commit=True)
+    with common.P.transaction:
+        tag = common.P_tag(tagname, response_type='json')
+        tag.delete()
     response = {'action': 'delete_tag', 'tagname': tag.name}
     return flasktools.json_response(response)

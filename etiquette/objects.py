@@ -329,7 +329,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.insert(table='album_associated_directories', data=data)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def add_associated_directory(self, path) -> None:
         '''
         Add a directory from which this album will pull files during rescans.
@@ -341,7 +341,7 @@ class Album(ObjectBase, GroupableMixin):
         self._add_associated_directory(path)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def add_associated_directories(self, paths) -> None:
         '''
         Add multiple associated directories.
@@ -352,7 +352,7 @@ class Album(ObjectBase, GroupableMixin):
             self._add_associated_directory(path)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def add_child(self, member):
         '''
         Raises exceptions.CantGroupSelf if member is self.
@@ -362,7 +362,7 @@ class Album(ObjectBase, GroupableMixin):
         return super().add_child(member)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def add_children(self, *args, **kwargs):
         return super().add_children(*args, **kwargs)
 
@@ -372,7 +372,7 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.insert(table='album_photo_rel', data=data)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def add_photo(self, photo) -> None:
         if self.has_photo(photo):
             return
@@ -380,7 +380,7 @@ class Album(ObjectBase, GroupableMixin):
         self._add_photo(photo)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def add_photos(self, photos) -> None:
         existing_photos = set(self.get_photos())
         photos = set(photos)
@@ -393,7 +393,7 @@ class Album(ObjectBase, GroupableMixin):
             self._add_photo(photo)
 
     # Photo.add_tag already has @required_feature
-    @worms.transaction
+    @worms.atomic
     def add_tag_to_all(self, tag, *, nested_children=True) -> None:
         '''
         Add this tag to every photo in the album. Saves you from having to
@@ -413,7 +413,7 @@ class Album(ObjectBase, GroupableMixin):
             photo.add_tag(tag)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def delete(self, *, delete_children=False) -> None:
         log.info('Deleting %s.', self)
         GroupableMixin.delete(self, delete_children=delete_children)
@@ -431,7 +431,7 @@ class Album(ObjectBase, GroupableMixin):
             return self.id
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def edit(self, title=None, description=None) -> None:
         '''
         Change the title or description. Leave None to keep current value.
@@ -546,12 +546,12 @@ class Album(ObjectBase, GroupableMixin):
         return j
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def remove_child(self, *args, **kwargs):
         return super().remove_child(*args, **kwargs)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def remove_children(self, *args, **kwargs):
         return super().remove_children(*args, **kwargs)
 
@@ -561,12 +561,12 @@ class Album(ObjectBase, GroupableMixin):
         self.photodb.delete(table='album_photo_rel', pairs=pairs)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def remove_photo(self, photo) -> None:
         self._remove_photo(photo)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def remove_photos(self, photos) -> None:
         existing_photos = set(self.get_photos())
         photos = set(photos)
@@ -579,7 +579,7 @@ class Album(ObjectBase, GroupableMixin):
             self._remove_photo(photo)
 
     @decorators.required_feature('album.edit')
-    @worms.transaction
+    @worms.atomic
     def set_thumbnail_photo(self, photo) -> None:
         '''
         Raises TypeError if photo is not a Photo.
@@ -747,7 +747,7 @@ class Bookmark(ObjectBase):
         self.photodb.caches[Bookmark].remove(self.id)
 
     @decorators.required_feature('bookmark.edit')
-    @worms.transaction
+    @worms.atomic
     def delete(self) -> None:
         self.photodb.delete(table=Bookmark, pairs={'id': self.id})
         self._uncache()
@@ -761,7 +761,7 @@ class Bookmark(ObjectBase):
             return self.id
 
     @decorators.required_feature('bookmark.edit')
-    @worms.transaction
+    @worms.atomic
     def edit(self, title=None, url=None) -> None:
         '''
         Change the title or URL. Leave None to keep current.
@@ -894,7 +894,7 @@ class Photo(ObjectBase):
 
     # Will add -> Tag when forward references are supported by Python.
     @decorators.required_feature('photo.add_remove_tag')
-    @worms.transaction
+    @worms.atomic
     def add_tag(self, tag):
         tag = self.photodb.get_tag(name=tag)
 
@@ -948,7 +948,7 @@ class Photo(ObjectBase):
         return '??? b'
 
     # Photo.add_tag already has @required_feature add_remove_tag
-    @worms.transaction
+    @worms.atomic
     def copy_tags(self, other_photo) -> None:
         '''
         Take all of the tags owned by other_photo and apply them to this photo.
@@ -957,7 +957,7 @@ class Photo(ObjectBase):
             self.add_tag(tag)
 
     @decorators.required_feature('photo.edit')
-    @worms.transaction
+    @worms.atomic
     def delete(self, *, delete_file=False) -> None:
         '''
         Delete the Photo and its relation to any tags and albums.
@@ -995,7 +995,7 @@ class Photo(ObjectBase):
         return hms.seconds_to_hms(self.duration)
 
     @decorators.required_feature('photo.generate_thumbnail')
-    @worms.transaction
+    @worms.atomic
     def generate_thumbnail(self, **special) -> pathclass.Path:
         '''
         special:
@@ -1144,7 +1144,7 @@ class Photo(ObjectBase):
         return hopeful_filepath
 
     # Photo.rename_file already has @required_feature
-    @worms.transaction
+    @worms.atomic
     def move_file(self, directory) -> None:
         directory = pathclass.Path(directory)
         directory.assert_is_directory()
@@ -1195,7 +1195,7 @@ class Photo(ObjectBase):
         self.duration = probe.audio.duration
 
     @decorators.required_feature('photo.reload_metadata')
-    @worms.transaction
+    @worms.atomic
     def reload_metadata(self, hash_kwargs=None) -> None:
         '''
         Load the file's height, width, etc as appropriate for this type of file.
@@ -1252,7 +1252,7 @@ class Photo(ObjectBase):
         self._uncache()
 
     @decorators.required_feature('photo.edit')
-    @worms.transaction
+    @worms.atomic
     def relocate(self, new_filepath) -> None:
         '''
         Point the Photo object to a different filepath.
@@ -1287,7 +1287,7 @@ class Photo(ObjectBase):
         self._uncache()
 
     @decorators.required_feature('photo.add_remove_tag')
-    @worms.transaction
+    @worms.atomic
     def remove_tag(self, tag) -> None:
         tag = self.photodb.get_tag(name=tag)
 
@@ -1305,7 +1305,7 @@ class Photo(ObjectBase):
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
     @decorators.required_feature('photo.add_remove_tag')
-    @worms.transaction
+    @worms.atomic
     def remove_tags(self, tags) -> None:
         tags = [self.photodb.get_tag(name=tag) for tag in tags]
 
@@ -1324,7 +1324,7 @@ class Photo(ObjectBase):
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
     @decorators.required_feature('photo.edit')
-    @worms.transaction
+    @worms.atomic
     def rename_file(self, new_filename, *, move=False) -> None:
         '''
         Rename the file on the disk as well as in the database.
@@ -1411,7 +1411,7 @@ class Photo(ObjectBase):
         self.__reinit__()
 
     @decorators.required_feature('photo.edit')
-    @worms.transaction
+    @worms.atomic
     def set_override_filename(self, new_filename) -> None:
         new_filename = self.normalize_override_filename(new_filename)
 
@@ -1425,7 +1425,7 @@ class Photo(ObjectBase):
         self.__reinit__()
 
     @decorators.required_feature('photo.edit')
-    @worms.transaction
+    @worms.atomic
     def set_searchhidden(self, searchhidden) -> None:
         data = {
             'id': self.id,
@@ -1537,7 +1537,7 @@ class Tag(ObjectBase, GroupableMixin):
             photo.remove_tags(ancestors)
 
     @decorators.required_feature('tag.edit')
-    @worms.transaction
+    @worms.atomic
     def add_child(self, member):
         '''
         Raises exceptions.CantGroupSelf if member is self.
@@ -1552,7 +1552,7 @@ class Tag(ObjectBase, GroupableMixin):
         return ret
 
     @decorators.required_feature('tag.edit')
-    @worms.transaction
+    @worms.atomic
     def add_children(self, members):
         ret = super().add_children(members)
         if ret is BAIL:
@@ -1562,7 +1562,7 @@ class Tag(ObjectBase, GroupableMixin):
         return ret
 
     @decorators.required_feature('tag.edit')
-    @worms.transaction
+    @worms.atomic
     def add_synonym(self, synname) -> str:
         '''
         Raises any exceptions from photodb.normalize_tagname.
@@ -1594,7 +1594,7 @@ class Tag(ObjectBase, GroupableMixin):
         return synname
 
     @decorators.required_feature('tag.edit')
-    @worms.transaction
+    @worms.atomic
     def convert_to_synonym(self, mastertag) -> None:
         '''
         Convert this tag into a synonym for a different tag.
@@ -1656,7 +1656,7 @@ class Tag(ObjectBase, GroupableMixin):
         mastertag.add_synonym(self.name)
 
     @decorators.required_feature('tag.edit')
-    @worms.transaction
+    @worms.atomic
     def delete(self, *, delete_children=False) -> None:
         log.info('Deleting %s.', self)
         super().delete(delete_children=delete_children)
@@ -1668,7 +1668,7 @@ class Tag(ObjectBase, GroupableMixin):
         self.deleted = True
 
     @decorators.required_feature('tag.edit')
-    @worms.transaction
+    @worms.atomic
     def edit(self, description=None) -> None:
         '''
         Change the description. Leave None to keep current value.
@@ -1718,7 +1718,7 @@ class Tag(ObjectBase, GroupableMixin):
         return j
 
     @decorators.required_feature('tag.edit')
-    @worms.transaction
+    @worms.atomic
     def remove_child(self, *args, **kwargs):
         ret = super().remove_child(*args, **kwargs)
         if ret is BAIL:
@@ -1728,7 +1728,7 @@ class Tag(ObjectBase, GroupableMixin):
         return ret
 
     @decorators.required_feature('tag.edit')
-    @worms.transaction
+    @worms.atomic
     def remove_children(self, *args, **kwargs):
         ret = super().remove_children(*args, **kwargs)
         if ret is BAIL:
@@ -1738,7 +1738,7 @@ class Tag(ObjectBase, GroupableMixin):
         return ret
 
     @decorators.required_feature('tag.edit')
-    @worms.transaction
+    @worms.atomic
     def remove_synonym(self, synname) -> str:
         '''
         Delete a synonym.
@@ -1770,7 +1770,7 @@ class Tag(ObjectBase, GroupableMixin):
         return synname
 
     @decorators.required_feature('tag.edit')
-    @worms.transaction
+    @worms.atomic
     def rename(self, new_name, *, apply_to_synonyms=True) -> None:
         '''
         Rename the tag. Does not affect its relation to Photos or tag groups.
@@ -1860,7 +1860,7 @@ class User(ObjectBase):
         self.photodb.caches[User].remove(self.id)
 
     @decorators.required_feature('user.edit')
-    @worms.transaction
+    @worms.atomic
     def delete(self, *, disown_authored_things) -> None:
         '''
         If disown_authored_things is True then all of this user's albums,
@@ -1978,7 +1978,7 @@ class User(ObjectBase):
         return j
 
     @decorators.required_feature('user.edit')
-    @worms.transaction
+    @worms.atomic
     def set_display_name(self, display_name) -> None:
         display_name = self.normalize_display_name(
             display_name,
@@ -1993,7 +1993,7 @@ class User(ObjectBase):
         self._display_name = display_name
 
     @decorators.required_feature('user.edit')
-    @worms.transaction
+    @worms.atomic
     def set_password(self, password) -> None:
         if not isinstance(password, bytes):
             password = password.encode('utf-8')

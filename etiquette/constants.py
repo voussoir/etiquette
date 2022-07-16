@@ -42,19 +42,8 @@ ffmpeg = _load_ffmpeg()
 # Database #########################################################################################
 
 DATABASE_VERSION = 20
-DB_VERSION_PRAGMA = f'''
-PRAGMA user_version = {DATABASE_VERSION};
-'''
-
-DB_PRAGMAS = f'''
-PRAGMA cache_size = 10000;
-PRAGMA foreign_keys = ON;
-'''
 
 DB_INIT = f'''
-BEGIN;
-{DB_PRAGMAS}
-{DB_VERSION_PRAGMA}
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS albums(
     id TEXT PRIMARY KEY NOT NULL,
@@ -191,8 +180,6 @@ CREATE TABLE IF NOT EXISTS tag_synonyms(
     mastername TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
-----------------------------------------------------------------------------------------------------
-COMMIT;
 '''
 
 SQL_COLUMNS = sqlhelpers.extract_table_column_map(DB_INIT)

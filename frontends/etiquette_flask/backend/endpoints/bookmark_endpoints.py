@@ -19,11 +19,12 @@ def get_bookmark_json(bookmark_id):
 
 @site.route('/bookmark/<bookmark_id>/edit', methods=['POST'])
 def post_bookmark_edit(bookmark_id):
-    bookmark = common.P_bookmark(bookmark_id, response_type='json')
-    # Emptystring is okay for titles, but not for URL.
-    title = request.form.get('title', None)
-    url = request.form.get('url', None) or None
-    bookmark.edit(title=title, url=url, commit=True)
+    with common.P.transaction:
+        bookmark = common.P_bookmark(bookmark_id, response_type='json')
+        # Emptystring is okay for titles, but not for URL.
+        title = request.form.get('title', None)
+        url = request.form.get('url', None) or None
+        bookmark.edit(title=title, url=url)
 
     response = bookmark.jsonify()
     response = flasktools.json_response(response)
@@ -49,13 +50,15 @@ def post_bookmark_create():
     url = request.form['url']
     title = request.form.get('title', None)
     user = session_manager.get(request).user
-    bookmark = common.P.new_bookmark(url=url, title=title, author=user, commit=True)
+    with common.P.transaction:
+        bookmark = common.P.new_bookmark(url=url, title=title, author=user)
     response = bookmark.jsonify()
     response = flasktools.json_response(response)
     return response
 
 @site.route('/bookmark/<bookmark_id>/delete', methods=['POST'])
 def post_bookmark_delete(bookmark_id):
-    bookmark = common.P_bookmark(bookmark_id, response_type='json')
-    bookmark.delete(commit=True)
+    with common.P.transaction:
+        bookmark = common.P_bookmark(bookmark_id, response_type='json')
+        bookmark.delete()
     return flasktools.json_response({})

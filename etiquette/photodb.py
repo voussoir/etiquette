@@ -9,6 +9,14 @@ import time
 import types
 import typing
 
+from . import constants
+from . import decorators
+from . import exceptions
+from . import helpers
+from . import objects
+from . import searchhelpers
+from . import tag_export
+
 from voussoirkit import cacheclass
 from voussoirkit import configlayers
 from voussoirkit import expressionmatch
@@ -22,13 +30,6 @@ from voussoirkit import worms
 
 log = vlogging.getLogger(__name__)
 
-from . import constants
-from . import decorators
-from . import exceptions
-from . import helpers
-from . import objects
-from . import searchhelpers
-from . import tag_export
 
 ####################################################################################################
 
@@ -85,7 +86,7 @@ class PDBAlbumMixin:
         return self.get_root_objects(objects.Album)
 
     @decorators.required_feature('album.new')
-    @worms.transaction
+    @worms.atomic
     def new_album(
             self,
             title=None,
@@ -130,7 +131,7 @@ class PDBAlbumMixin:
 
         return album
 
-    @worms.transaction
+    @worms.atomic
     def purge_deleted_associated_directories(self, albums=None) -> typing.Iterable[pathclass.Path]:
         query = 'SELECT DISTINCT directory FROM album_associated_directories'
         directories = self.select_column(query)
@@ -148,7 +149,7 @@ class PDBAlbumMixin:
         self.execute(query)
         yield from directories
 
-    @worms.transaction
+    @worms.atomic
     def purge_empty_albums(self, albums=None) -> typing.Iterable[objects.Album]:
         if albums is None:
             to_check = set(self.get_albums())
@@ -188,7 +189,7 @@ class PDBBookmarkMixin:
         return self.get_objects_by_sql(objects.Bookmark, query, bindings)
 
     @decorators.required_feature('bookmark.new')
-    @worms.transaction
+    @worms.atomic
     def new_bookmark(self, url, title=None, *, author=None) -> objects.Bookmark:
         # These might raise exceptions.
         title = objects.Bookmark.normalize_title(title)
@@ -305,7 +306,7 @@ class PDBPhotoMixin:
         return self.get_objects_by_sql(objects.Photo, query, bindings)
 
     @decorators.required_feature('photo.new')
-    @worms.transaction
+    @worms.atomic
     def new_photo(
             self,
             filepath,
@@ -390,7 +391,7 @@ class PDBPhotoMixin:
 
         return photo
 
-    @worms.transaction
+    @worms.atomic
     def purge_deleted_files(self, photos=None) -> typing.Iterable[objects.Photo]:
         '''
         Delete Photos whose corresponding file on disk is missing.
@@ -956,7 +957,7 @@ class PDBTagMixin:
         return self.get_objects_by_sql(objects.Tag, query, bindings)
 
     @decorators.required_feature('tag.new')
-    @worms.transaction
+    @worms.atomic
     def new_tag(self, tagname, description=None, *, author=None) -> objects.Tag:
         '''
         Register a new tag and return the Tag object.
@@ -1138,7 +1139,7 @@ class PDBUserMixin:
         return user
 
     @decorators.required_feature('user.new')
-    @worms.transaction
+    @worms.atomic
     def new_user(self, username, password, *, display_name=None) -> objects.User:
         # These might raise exceptions.
         self.assert_valid_username(username)
@@ -1177,7 +1178,7 @@ class PDBUtilMixin:
     def __init__(self):
         super().__init__()
 
-    @worms.transaction
+    @worms.atomic
     def digest_directory(
             self,
             directory,
@@ -1436,7 +1437,7 @@ class PDBUtilMixin:
             if yield_albums:
                 yield from current_albums
 
-    @worms.transaction
+    @worms.atomic
     def easybake(self, ebstring, author=None):
         '''
         Easily create tags, groups, and synonyms with a string like
@@ -1570,7 +1571,7 @@ class PhotoDB(
         Compare database's user_version against constants.DATABASE_VERSION,
         raising exceptions.DatabaseOutOfDate if not correct.
         '''
-        existing = self.execute('PRAGMA user_version').fetchone()[0]
+        existing = self.pragma_read('user_version')
         if existing != constants.DATABASE_VERSION:
             raise exceptions.DatabaseOutOfDate(
                 existing=existing,
@@ -1580,8 +1581,10 @@ class PhotoDB(
 
     def _first_time_setup(self):
         log.info('Running first-time database setup.')
-        self.executescript(constants.DB_INIT)
-        self.commit()
+        with self.transaction:
+            self._load_pragmas()
+            self.pragma_write('user_version', constants.DATABASE_VERSION)
+            self.executescript(constants.DB_INIT)
 
     def _init_caches(self):
         self.caches = {
@@ -1600,8 +1603,8 @@ class PhotoDB(
     def _init_sql(self, create, skip_version_check):
         if self.ephemeral:
             existing_database = False
-            self.sql = sqlite3.connect(':memory:')
-            self.sql.row_factory = sqlite3.Row
+            self.sql_read = self._make_sqlite_read_connection(':memory:')
+            self.sql_write = self._make_sqlite_write_connection(':memory:')
             self._first_time_setup()
             return
 
@@ -1613,21 +1616,21 @@ class PhotoDB(
             raise FileNotFoundError(msg)
 
         self.data_directory.makedirs(exist_ok=True)
-        log.debug('Connecting to sqlite file "%s".', self.database_filepath.absolute_path)
-        self.sql = sqlite3.connect(self.database_filepath.absolute_path)
-        self.sql.row_factory = sqlite3.Row
+        self.sql_read = self._make_sqlite_read_connection(self.database_filepath)
+        self.sql_write = self._make_sqlite_write_connection(self.database_filepath)
 
         if existing_database:
             if not skip_version_check:
                 self._check_version()
-            self._load_pragmas()
+            with self.transaction:
+                self._load_pragmas()
         else:
             self._first_time_setup()
 
     def _load_pragmas(self):
         log.debug('Reloading pragmas.')
-        self.executescript(constants.DB_PRAGMAS)
-        self.commit()
+        self.pragma_write('cache_size', 10000)
+        self.pragma_write('foreign_keys', 'on')
 
     # Will add -> PhotoDB when forward references are supported
     @classmethod

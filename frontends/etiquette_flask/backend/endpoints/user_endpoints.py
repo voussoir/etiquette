@@ -47,9 +47,8 @@ def post_user_edit(username):
 
     display_name = request.form.get('display_name')
     if display_name is not None:
-        user.set_display_name(display_name)
-
-    common.P.commit()
+        with common.P.transaction:
+            user.set_display_name(display_name)
 
     return flasktools.json_response(user.jsonify())
 
@@ -127,7 +126,8 @@ def post_register():
         }
         return flasktools.json_response(response, status=422)
 
-    user = common.P.new_user(username, password_1, display_name=display_name, commit=True)
+    with common.P.transaction:
+        user = common.P.new_user(username, password_1, display_name=display_name)
 
     session = sessions.Session(request, user)
     session_manager.add(session)
