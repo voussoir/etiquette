@@ -42,7 +42,7 @@ class ObjectBase(worms.Object):
         self._author = None
 
     @staticmethod
-    def normalize_author_id(author_id) -> typing.Optional[str]:
+    def normalize_author_id(author_id) -> typing.Optional[int]:
         '''
         Raises TypeError if author_id is not the right type.
 
@@ -51,15 +51,11 @@ class ObjectBase(worms.Object):
         if author_id is None:
             return None
 
-        if not isinstance(author_id, str):
-            raise TypeError(f'Author ID must be {str}, not {type(author_id)}.')
+        if not isinstance(author_id, int):
+            raise TypeError(f'Author ID must be {int}, not {type(author_id)}.')
 
-        author_id = author_id.strip()
-        if author_id == '':
-            return None
-
-        if not all(c in constants.USER_ID_CHARACTERS for c in author_id):
-            raise ValueError(f'Author ID must consist only of {constants.USER_ID_CHARACTERS}.')
+        if author_id < 1:
+            raise ValueError(f'Author ID should be positive, not {author_id}.')
 
         return author_id
 
@@ -428,7 +424,7 @@ class Album(ObjectBase, GroupableMixin):
         if self.title:
             return self.title
         else:
-            return self.id
+            return str(self.id)
 
     @decorators.required_feature('album.edit')
     @worms.atomic
@@ -1015,12 +1011,14 @@ class Photo(ObjectBase):
             except (OSError, ValueError):
                 traceback.print_exc()
             else:
+                hopeful_filepath.parent.makedirs(exist_ok=True)
                 image.save(hopeful_filepath.absolute_path, quality=50)
                 return_filepath = hopeful_filepath
 
         elif self.simple_mimetype == 'video' and constants.ffmpeg:
             log.info('Thumbnailing %s.', self.real_path.absolute_path)
             try:
+                hopeful_filepath.parent.makedirs(exist_ok=True)
                 success = helpers.generate_video_thumbnail(
                     self.real_path.absolute_path,
                     outfile=hopeful_filepath.absolute_path,
@@ -1134,13 +1132,11 @@ class Photo(ObjectBase):
         '''
         Create the filepath that should be the location of our thumbnail.
         '''
-        chunked_id = [''.join(chunk) for chunk in gentools.chunk_generator(self.id, 3)]
-        (folder, basename) = (chunked_id[:-1], chunked_id[-1])
+        chunked_id = [''.join(chunk) for chunk in gentools.chunk_generator(str(self.id), 3)]
+        folder = chunked_id[:-1]
         folder = os.sep.join(folder)
         folder = self.photodb.thumbnail_directory.join(folder)
-        if folder:
-            folder.makedirs(exist_ok=True)
-        hopeful_filepath = folder.with_child(basename + '.jpg')
+        hopeful_filepath = folder.with_child(f'{self.id}.jpg')
         return hopeful_filepath
 
     # Photo.rename_file already has @required_feature

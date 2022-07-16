@@ -1,3 +1,4 @@
+import time
 import argparse
 import os
 import sys
@@ -50,6 +51,10 @@ class Migrator:
         # which is about to get renamed to B_old and then A's reference will be
         # broken.
         self.photodb.pragma_write('foreign_keys', 'OFF')
+
+        for (name, query) in self.indices:
+            self.photodb.execute(f'DROP INDEX {name}')
+
         for (name, table) in self.tables.items():
             if name not in self.existing_tables:
                 continue
@@ -659,6 +664,164 @@ def upgrade_19_to_20(photodb):
     photodb.execute('UPDATE photos SET thumbnail = REPLACE(thumbnail, "/site_thumbnails/", "/thumbnails/")')
     photodb.execute('UPDATE photos SET thumbnail = REPLACE(thumbnail, "\\site_thumbnails\\", "\\thumbnails\\")')
     photodb.on_commit_queue.append({'action': os.rename, 'args': (old, new)})
+
+def upgrade_20_to_21(photodb):
+    '''
+    In this version, the object IDs were migrated from string to int.
+    '''
+    m = Migrator(photodb)
+
+    m.tables['albums']['create'] = '''
+    CREATE TABLE IF NOT EXISTS albums(
+        id INT PRIMARY KEY NOT NULL,
+        title TEXT,
+        description TEXT,
+        created INT,
+        thumbnail_photo INT,
+        author_id INT,
+        FOREIGN KEY(author_id) REFERENCES users(id),
+        FOREIGN KEY(thumbnail_photo) REFERENCES photos(id)
+    );
+    '''
+    m.tables['albums']['transfer'] = 'INSERT INTO albums SELECT * FROM albums_old'
+
+    m.tables['bookmarks']['create'] = '''
+    CREATE TABLE IF NOT EXISTS bookmarks(
+        id INT PRIMARY KEY NOT NULL,
+        title TEXT,
+        url TEXT,
+        created INT,
+        author_id INT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['bookmarks']['transfer'] = 'INSERT INTO bookmarks SELECT * FROM bookmarks_old'
+
+    m.tables['photos']['create'] = '''
+    CREATE TABLE IF NOT EXISTS photos(
+        id INT PRIMARY KEY NOT NULL,
+        filepath TEXT COLLATE NOCASE,
+        basename TEXT COLLATE NOCASE,
+        override_filename TEXT COLLATE NOCASE,
+        extension TEXT COLLATE NOCASE,
+        mtime INT,
+        sha256 TEXT,
+        width INT,
+        height INT,
+        ratio REAL,
+        area INT,
+        duration INT,
+        bytes INT,
+        created INT,
+        thumbnail TEXT,
+        tagged_at INT,
+        author_id INT,
+        searchhidden INT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['photos']['transfer'] = 'INSERT INTO photos SELECT * FROM photos_old'
+
+    m.tables['tags']['create'] = '''
+    CREATE TABLE IF NOT EXISTS tags(
+        id INT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        created INT,
+        author_id INT,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['tags']['transfer'] = 'INSERT INTO tags SELECT * FROM tags_old'
+
+    m.tables['users']['create'] = '''
+    CREATE TABLE IF NOT EXISTS users(
+        id INT PRIMARY KEY NOT NULL,
+        username TEXT UNIQUE NOT NULL COLLATE NOCASE,
+        password BLOB NOT NULL,
+        display_name TEXT,
+        created INT
+    );
+    '''
+    m.tables['users']['transfer'] = 'INSERT INTO users SELECT * FROM users_old'
+
+    m.tables['album_associated_directories']['create'] = '''
+    CREATE TABLE IF NOT EXISTS album_associated_directories(
+        albumid INT NOT NULL,
+        directory TEXT NOT NULL COLLATE NOCASE,
+        FOREIGN KEY(albumid) REFERENCES albums(id)
+    );
+    '''
+    m.tables['album_associated_directories']['transfer'] = 'INSERT INTO album_associated_directories SELECT * FROM album_associated_directories_old'
+
+    m.tables['album_group_rel']['create'] = '''
+    CREATE TABLE IF NOT EXISTS album_group_rel(
+        parentid INT NOT NULL,
+        memberid INT NOT NULL,
+        FOREIGN KEY(parentid) REFERENCES albums(id),
+        FOREIGN KEY(memberid) REFERENCES albums(id)
+    );
+    '''
+    m.tables['album_group_rel']['transfer'] = 'INSERT INTO album_group_rel SELECT * FROM album_group_rel_old'
+
+    m.tables['album_photo_rel']['create'] = '''
+    CREATE TABLE IF NOT EXISTS album_photo_rel(
+        albumid INT NOT NULL,
+        photoid INT NOT NULL,
+        FOREIGN KEY(albumid) REFERENCES albums(id),
+        FOREIGN KEY(photoid) REFERENCES photos(id)
+    );
+    '''
+    m.tables['album_photo_rel']['transfer'] = 'INSERT INTO album_photo_rel SELECT * FROM album_photo_rel_old'
+
+    m.tables['photo_tag_rel']['create'] = '''
+    CREATE TABLE IF NOT EXISTS photo_tag_rel(
+        photoid INT NOT NULL,
+        tagid INT NOT NULL,
+        FOREIGN KEY(photoid) REFERENCES photos(id),
+        FOREIGN KEY(tagid) REFERENCES tags(id)
+    );
+    '''
+    m.tables['photo_tag_rel']['transfer'] = 'INSERT INTO photo_tag_rel SELECT * FROM photo_tag_rel_old'
+
+    m.tables['tag_group_rel']['create'] = '''
+    CREATE TABLE IF NOT EXISTS tag_group_rel(
+        parentid INT NOT NULL,
+        memberid INT NOT NULL,
+        FOREIGN KEY(parentid) REFERENCES tags(id),
+        FOREIGN KEY(memberid) REFERENCES tags(id)
+    );
+    '''
+    m.tables['tag_group_rel']['transfer'] = 'INSERT INTO tag_group_rel SELECT * FROM tag_group_rel_old'
+
+    m.go()
+
+    users = list(photodb.get_users())
+    for user in users:
+        old_id = user.id
+        new_id = photodb.generate_id(etiquette.objects.User)
+        photodb.execute('UPDATE users SET id = ? WHERE id = ?', [new_id, old_id])
+        photodb.execute('UPDATE albums SET author_id = ? WHERE author_id = ?', [new_id, old_id])
+        photodb.execute('UPDATE bookmarks SET author_id = ? WHERE author_id = ?', [new_id, old_id])
+        photodb.execute('UPDATE photos SET author_id = ? WHERE author_id = ?', [new_id, old_id])
+        photodb.execute('UPDATE tags SET author_id = ? WHERE author_id = ?', [new_id, old_id])
+
+    def movethumbnail(old_thumbnail, new_thumbnail):
+        new_thumbnail.parent.makedirs(exist_ok=True)
+        shutil.move(old_thumbnail.absolute_path, new_thumbnail.absolute_path)
+
+    photos = photodb.get_photos()
+    import shutil
+    for photo in photos:
+        if photo.thumbnail is None:
+            continue
+        old_thumbnail = photo.thumbnail
+        new_thumbnail = photo.make_thumbnail_filepath()
+        print(old_thumbnail, new_thumbnail)
+        photodb.on_commit_queue.append({'action': movethumbnail, 'args': (old_thumbnail.absolute_path, new_thumbnail.absolute_path)})
+        store_as = new_thumbnail.relative_to(photodb.thumbnail_directory)
+        photodb.update(table=etiquette.objects.Photo, pairs={'id': photo.id, 'thumbnail': store_as}, where_key='id')
+        photo.thumbnail = new_thumbnail
 
 def upgrade_all(data_directory):
     '''

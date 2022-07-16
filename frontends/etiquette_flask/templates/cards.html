@@ -1,7 +1,7 @@
 {# ALBUM ######################################################################}
 
 {% macro create_album_card(album, view="grid", unlink_parent=none, draggable=false) %}
-{% set id = "album_card_root" if album == "root" else "album_card_" + album.id %}
+{% set id = "album_card_root" if album == "root" else "album_card_" ~ album.id %}
 {% set view = (view if view in ("list", "grid") else "grid") %}
 {% set viewparam = "?view=list" if view == "list" else "" %}
 <div
@@ -22,7 +22,7 @@ draggable=true
     <a class="album_card_thumbnail" href="/album/{{album.id}}{{viewparam}}" draggable="false">
     {% endif %}
         {% if album.thumbnail_photo %}
-        {% set thumbnail_src = "/thumbnail/" + album.thumbnail_photo.id + ".jpg" %}
+        {% set thumbnail_src = "/thumbnail/" ~ album.thumbnail_photo.id ~ ".jpg" %}
         {% else %}
         {% set thumbnail_src = "/static/basic_thumbnails/album.png" %}
         {% endif %}
@@ -160,7 +160,7 @@ draggable="true"
 
     {% if view == "grid" %}
     {% if photo.thumbnail %}
-        {% set thumbnail_src = "/thumbnail/" + photo.id + ".jpg" %}
+        {% set thumbnail_src = "/thumbnail/" ~ photo.id ~ ".jpg" %}
     {% else %}
         {% set thumbnail_src =
             thumbnails.get(photo.extension, "") or
@@ -168,7 +168,7 @@ draggable="true"
             thumbnails.get(photo.simple_mimetype, "") or
             "other"
         %}
-        {% set thumbnail_src = "/static/basic_thumbnails/" + thumbnail_src + ".png" %}
+        {% set thumbnail_src = "/static/basic_thumbnails/" ~ thumbnail_src ~ ".png" %}
     {% endif -%}{# if thumbnail #}
 
     <a class="photo_card_thumbnail" target="_blank" href="/photo/{{photo.id}}" draggable="false">
@@ -216,15 +216,15 @@ draggable="true"
 ) -%}
 
 {%- set href = {
-        "search": "/search?tag_musts=" + (tag.name|urlencode),
-        "search_musts": "/search?tag_musts=" + (tag.name|urlencode),
-        "search_mays": "/search?tag_mays=" + (tag.name|urlencode),
-        "search_forbids": "/search?tag_forbids=" + (tag.name|urlencode),
-        "info": "/tag/" + tag.name,
+        "search": "/search?tag_musts=" ~ (tag.name|urlencode),
+        "search_musts": "/search?tag_musts=" ~ (tag.name|urlencode),
+        "search_mays": "/search?tag_mays=" ~ (tag.name|urlencode),
+        "search_forbids": "/search?tag_forbids=" ~ (tag.name|urlencode),
+        "info": "/tag/" ~ tag.name,
         None: None,
     }.get(link, link)
 -%}
-{%- set class = ("tag_card" + " " + extra_classes).strip() -%}
+{%- set class = ("tag_card" ~ " " ~ extra_classes).strip() -%}
 {%- set title = (with_alt_description and tag.description) or None -%}
 {%- set innertext = innertext_safe or (innertext or tag.name)|e -%}
 {%- set element = "a" if (link or onclick) else "span" -%}

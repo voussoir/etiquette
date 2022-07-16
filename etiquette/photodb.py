@@ -30,6 +30,7 @@ from voussoirkit import worms
 
 log = vlogging.getLogger(__name__)
 
+RNG = random.SystemRandom()
 
 ####################################################################################################
 
@@ -1038,23 +1039,6 @@ class PDBUserMixin:
         if badchars:
             raise exceptions.InvalidUsernameChars(username=username, badchars=badchars)
 
-    def generate_user_id(self) -> str:
-        '''
-        User IDs are randomized instead of integers like the other objects,
-        so they get their own method.
-        '''
-        length = self.config['id_length']
-        for retry in range(20):
-            user_id = ''.join(random.choices(constants.USER_ID_CHARACTERS, k=length))
-
-            user_exists = self.select_one_value('SELECT 1 FROM users WHERE id == ?', [user_id])
-            if user_exists is None:
-                break
-        else:
-            raise Exception('Failed to create user id after 20 tries.')
-
-        return user_id
-
     def get_user(self, username=None, id=None) -> objects.User:
         '''
         Redirect to get_user_by_id or get_user_by_username.
@@ -1156,7 +1140,7 @@ class PDBUserMixin:
         )
 
         # Ok.
-        user_id = self.generate_user_id()
+        user_id = self.generate_id(objects.User)
         log.info('New User: %s %s.', user_id, username)
 
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
@@ -1677,43 +1661,20 @@ class PhotoDB(
         if getattr(self, 'ephemeral', False):
             self.ephemeral_directory.cleanup()
 
-    def generate_id(self, thing_class) -> str:
+    def generate_id(self, thing_class) -> int:
         '''
         Create a new ID number that is unique to the given table.
-        Note that while this method may INSERT / UPDATE, it does not commit.
-        We'll wait for that to happen in whoever is calling us, so we know the
-        ID is actually used.
         '''
-        if not (isinstance(thing_class, type) and issubclass(thing_class, objects.ObjectBase)):
+        if not issubclass(thing_class, objects.ObjectBase):
             raise TypeError(thing_class)
 
         table = thing_class.table
 
-        table = table.lower()
-        if table not in ['photos', 'tags', 'albums', 'bookmarks']:
-            raise ValueError(f'Invalid table requested: {table}.')
-
-        last_id = self.select_one_value('SELECT last_id FROM id_numbers WHERE tab == ?', [table])
-        if last_id is None:
-            # Register new value
-            new_id_int = 1
-            do_insert = True
-        else:
-            # Use database value
-            new_id_int = int(last_id) + 1
-            do_insert = False
-
-        new_id = str(new_id_int).rjust(self.config['id_length'], '0')
-
-        pairs = {
-            'tab': table,
-            'last_id': new_id,
-        }
-        if do_insert:
-            self.insert(table='id_numbers', data=pairs)
-        else:
-            self.update(table='id_numbers', pairs=pairs, where_key='tab')
-        return new_id
+        length = self.config['id_bits']
+        while True:
+            id = RNG.getrandbits(length)
+            if not self.exists(f'SELECT 1 FROM {table} WHERE id == ?', [id]):
+                return id
 
     def load_config(self) -> None:
         log.debug('Loading config file.')
