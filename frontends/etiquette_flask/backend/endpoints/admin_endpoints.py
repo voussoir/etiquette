@@ -2,6 +2,8 @@ import flask; from flask import request
 
 from voussoirkit import flasktools
 
+import etiquette
+
 from .. import common
 
 site = common.site
@@ -23,3 +25,19 @@ def post_reload_config():
 
     common.P.load_config()
     return flasktools.json_response({})
+
+@site.route('/admin/dbdownload')
+def get_dbdump():
+    if not request.is_localhost:
+        flask.abort(403)
+
+    with common.P.transaction:
+        binary = common.P.database_filepath.read('rb')
+
+    now = etiquette.helpers.now(timestamp=False).strftime('%Y-%m-%d_%H-%M-%S')
+    download_as = f'etiquette {now}.db'
+    outgoing_headers = {
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': f'attachment; filename*=UTF-8\'\'{download_as}',
+    }
+    return flask.Response(binary, headers=outgoing_headers)
