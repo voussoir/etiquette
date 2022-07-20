@@ -36,7 +36,7 @@
     {{header.make_header(session=session)}}
     <div id="content_body">
         <div id="bookmark_list" class="panel">
-            <h1>Bookmarks</h1>
+            <h1>{{bookmarks|length}} Bookmarks</h1>
             {% for bookmark in bookmarks %}
             {{cards.create_bookmark_card(bookmark, add_delete_button=True, add_url_element=True)}}
             {% endfor %}
