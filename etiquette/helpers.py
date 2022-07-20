@@ -304,13 +304,11 @@ def is_xor(*args) -> bool:
     '''
     return [bool(a) for a in args].count(True) == 1
 
-def now(timestamp=True):
+def now():
     '''
-    Return the current UTC timestamp or datetime object.
+    Return the current UTC datetime object.
     '''
     n = datetime.datetime.now(datetime.timezone.utc)
-    if timestamp:
-        return n.timestamp()
     return n
 
 def parse_unit_string(s) -> typing.Union[int, float, None]:
@@ -434,6 +432,9 @@ def split_easybake_string(ebstring) -> tuple[str, str, str]:
 
     tagname = tagname.strip('.')
     return (tagname, synonym, rename_to)
+
+def timestamp_to_datetime(unix):
+    return datetime.datetime.utcfromtimestamp(unix).replace(tzinfo=datetime.timezone.utc)
 
 def zip_album(album, recursive=True) -> zipstream.ZipFile:
     '''

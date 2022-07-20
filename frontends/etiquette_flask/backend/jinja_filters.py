@@ -58,16 +58,15 @@ def join_and_trail(l, s):
 
 @filter_function
 def timestamp_to_8601(timestamp):
-    return datetime.datetime.utcfromtimestamp(timestamp).isoformat(' ') + ' UTC'
+    return timestamp.isoformat(' ') + ' UTC'
 
 @filter_function
-def timestamp_to_string(timestamp, format):
-    date = datetime.datetime.utcfromtimestamp(timestamp)
-    return date.strftime(format)
+def timestamp_strftime(timestamp, format):
+    return timestamp.strftime(format)
 
 @filter_function
 def timestamp_to_naturaldate(timestamp):
-    return timestamp_to_string(timestamp, '%B %d, %Y')
+    return timestamp_strftime(timestamp, '%B %d, %Y')
 
 @filter_function
 def users_to_usernames(users):

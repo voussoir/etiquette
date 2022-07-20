@@ -190,6 +190,7 @@
                 <li>Duration: {{photo.duration_string}}</li>
                 <li>Overall Bitrate: {{photo.bitrate|int}} kbps</li>
             {% endif %}
+            <li>Created {{photo.created|timestamp_to_naturaldate}}</li>
             <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="return refresh_metadata_form();">Refresh metadata</button></li>
             {% if request.is_localhost %}
             <li><button id="show_in_folder_button" onclick="return show_in_folder_form();">Show in folder</button></li>
@@ -223,9 +224,9 @@
 
         <!-- BEFORE & AFTER SEARCH LINKS -->
         <div id="before_after_links">
-            <a href="/search?created=-{{photo.created}}">&larr;Before</a>
+            <a href="/search?created=-{{photo.created_unix}}">&larr;Before</a>
             <span> | </span>
-            <a href="/search?created={{photo.created}}-&orderby=created-asc">After&rarr;</a>
+            <a href="/search?created={{photo.created_unix}}-&orderby=created-asc">After&rarr;</a>
         </div>
 
     </div>

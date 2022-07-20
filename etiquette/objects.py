@@ -4,6 +4,7 @@ but are returned by the PDB accesses.
 '''
 import abc
 import bcrypt
+import datetime
 import hashlib
 import os
 import PIL.Image
@@ -40,6 +41,8 @@ class ObjectBase(worms.Object):
         self._photodb = photodb
         # To be lazily retrieved by @property author.
         self._author = None
+        # To be lazily retrieved by @property created.
+        self._created_dt = None
 
     @staticmethod
     def normalize_author_id(author_id) -> typing.Optional[int]:
@@ -72,6 +75,13 @@ class ObjectBase(worms.Object):
         user = self.photodb.get_user(id=self._author_id)
         self._author = user
         return user
+
+    @property
+    def created(self) -> datetime.datetime:
+        if self._created_dt is not None:
+            return self._created_dt
+        self._created_dt = helpers.timestamp_to_datetime(self.created_unix)
+        return self._created_dt
 
 class GroupableMixin(metaclass=abc.ABCMeta):
     group_getter_many = None
@@ -262,7 +272,7 @@ class Album(ObjectBase, GroupableMixin):
         self.id = db_row['id']
         self.title = self.normalize_title(db_row['title'])
         self.description = self.normalize_description(db_row['description'])
-        self.created = db_row['created']
+        self.created_unix = db_row['created']
         # To be lazily retrieved by @property thumbnail_photo.
         self._thumbnail_photo = db_row['thumbnail_photo']
         self._author_id = self.normalize_author_id(db_row['author_id'])
@@ -529,7 +539,7 @@ class Album(ObjectBase, GroupableMixin):
             'id': self.id,
             'description': self.description,
             'title': self.title,
-            'created': self.created,
+            'created': self.created_unix,
             'display_name': self.display_name,
             'thumbnail_photo': self.thumbnail_photo.id if self._thumbnail_photo else None,
             'author': self.author.jsonify() if self._author_id else None,
@@ -698,7 +708,7 @@ class Bookmark(ObjectBase):
         self.id = db_row['id']
         self.title = self.normalize_title(db_row['title'])
         self.url = self.normalize_url(db_row['url'])
-        self.created = db_row['created']
+        self.created_unix = db_row['created']
         self._author_id = self.normalize_author_id(db_row['author_id'])
 
     def __repr__(self):
@@ -786,7 +796,7 @@ class Bookmark(ObjectBase):
             'id': self.id,
             'author': self.author.jsonify() if self._author_id else None,
             'url': self.url,
-            'created': self.created,
+            'created': self.created_unix,
             'title': self.title,
             'display_name': self.display_name,
         }
@@ -808,7 +818,7 @@ class Photo(ObjectBase):
         self.real_path = pathclass.Path(self.real_path)
 
         self.id = db_row['id']
-        self.created = db_row['created']
+        self.created_unix = db_row['created']
         self._author_id = self.normalize_author_id(db_row['author_id'])
         self.override_filename = db_row['override_filename']
         self.extension = self.real_path.extension.no_dot
@@ -828,7 +838,8 @@ class Photo(ObjectBase):
         self.ratio = db_row['ratio']
 
         self.thumbnail = self.normalize_thumbnail(db_row['thumbnail'])
-        self.tagged_at = db_row['tagged_at']
+        self.tagged_at_unix = db_row['tagged_at']
+        self._tagged_at_dt = None
         self.searchhidden = db_row['searchhidden']
 
         self._assign_mimetype()
@@ -920,7 +931,7 @@ class Photo(ObjectBase):
         self.photodb.insert(table='photo_tag_rel', data=data)
         data = {
             'id': self.id,
-            'tagged_at': helpers.now(),
+            'tagged_at': helpers.now().timestamp(),
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
@@ -1114,7 +1125,7 @@ class Photo(ObjectBase):
             'duration': self.duration,
             'bytes_string': self.bytes_string,
             'has_thumbnail': bool(self.thumbnail),
-            'created': self.created,
+            'created': self.created_unix,
             'filename': self.basename,
             'mimetype': self.mimetype,
             'searchhidden': bool(self.searchhidden),
@@ -1245,7 +1256,7 @@ class Photo(ObjectBase):
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
-        self._uncache()
+        # self._uncache()
 
     @decorators.required_feature('photo.edit')
     @worms.atomic
@@ -1296,7 +1307,7 @@ class Photo(ObjectBase):
 
         data = {
             'id': self.id,
-            'tagged_at': helpers.now(),
+            'tagged_at': helpers.now().timestamp(),
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
@@ -1315,7 +1326,7 @@ class Photo(ObjectBase):
 
         data = {
             'id': self.id,
-            'tagged_at': helpers.now(),
+            'tagged_at': helpers.now().timestamp(),
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
@@ -1430,6 +1441,13 @@ class Photo(ObjectBase):
         self.photodb.update(table=Photo, pairs=data, where_key='id')
         self.searchhidden = searchhidden
 
+    @property
+    def tagged_at(self) -> datetime.datetime:
+        if self._tagged_at_dt is not None:
+            return self._tagged_at_dt
+        self._tagged_at_dt = helpers.timestamp_to_datetime(self.tagged_at_unix)
+        return self._tagged_at_dt
+
 class Tag(ObjectBase, GroupableMixin):
     '''
     A Tag, which can be applied to Photos for organization.
@@ -1446,7 +1464,7 @@ class Tag(ObjectBase, GroupableMixin):
         # from previous character / length rules.
         self.name = db_row['name']
         self.description = self.normalize_description(db_row['description'])
-        self.created = db_row['created']
+        self.created_unix = db_row['created']
         self._author_id = self.normalize_author_id(db_row['author_id'])
 
         self.group_getter_many = self.photodb.get_tags_by_id
@@ -1700,7 +1718,7 @@ class Tag(ObjectBase, GroupableMixin):
             'type': 'tag',
             'id': self.id,
             'name': self.name,
-            'created': self.created,
+            'created': self.created_unix,
         }
         if not minimal:
             j['author'] = self.author.jsonify() if self._author_id else None
@@ -1818,7 +1836,7 @@ class User(ObjectBase):
 
         self.id = db_row['id']
         self.username = db_row['username']
-        self.created = db_row['created']
+        self.created_unix = db_row['created']
         self.password_hash = db_row['password']
         # Do not enforce maxlen here, they may be grandfathered in.
         self._display_name = self.normalize_display_name(db_row['display_name'])
@@ -1968,7 +1986,7 @@ class User(ObjectBase):
             'type': 'user',
             'id': self.id,
             'username': self.username,
-            'created': self.created,
+            'created': self.created_unix,
             'display_name': self.display_name,
         }
         return j

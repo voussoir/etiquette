@@ -113,7 +113,7 @@ class PDBAlbumMixin:
             'id': album_id,
             'title': title,
             'description': description,
-            'created': helpers.now(),
+            'created': helpers.now().timestamp(),
             'thumbnail_photo': None,
             'author_id': author_id,
         }
@@ -205,7 +205,7 @@ class PDBBookmarkMixin:
             'id': bookmark_id,
             'title': title,
             'url': url,
-            'created': helpers.now(),
+            'created': helpers.now().timestamp(),
             'author_id': author_id,
         }
         self.insert(table=objects.Bookmark, data=data)
@@ -360,7 +360,7 @@ class PDBPhotoMixin:
             'basename': filepath.basename,
             'override_filename': None,
             'extension': filepath.extension.no_dot,
-            'created': helpers.now(),
+            'created': helpers.now().timestamp(),
             'tagged_at': None,
             'author_id': author_id,
             'searchhidden': searchhidden,
@@ -980,7 +980,7 @@ class PDBTagMixin:
             'id': tag_id,
             'name': tagname,
             'description': description,
-            'created': helpers.now(),
+            'created': helpers.now().timestamp(),
             'author_id': author_id,
         }
         self.insert(table=objects.Tag, data=data)
@@ -1150,7 +1150,7 @@ class PDBUserMixin:
             'username': username,
             'password': hashed_password,
             'display_name': display_name,
-            'created': helpers.now(),
+            'created': helpers.now().timestamp(),
         }
         self.insert(table=objects.User, data=data)
 

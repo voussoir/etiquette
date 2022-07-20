@@ -118,7 +118,7 @@ class Session:
     def expired(self):
         now = etiquette.helpers.now()
         age = now - self.last_activity
-        return age > SESSION_MAX_AGE
+        return age.seconds > SESSION_MAX_AGE
 
     def maintain(self):
         self.last_activity = etiquette.helpers.now()

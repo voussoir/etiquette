@@ -247,7 +247,7 @@ const ALBUM_ID = undefined;
                 <p>Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a></p>
                 {% endif %}
 
-                <p>Created on <span title="{{album.created|int|timestamp_to_8601}}">{{album.created|timestamp_to_naturaldate}}.</span></p>
+                <p>Created on <span title="{{album.created|timestamp_to_8601}}">{{album.created|timestamp_to_naturaldate}}.</span></p>
                 <button class="green_button editor_toolbox_placeholder">Edit</button>
             </div> <!-- #album_metadata -->
             <div id="album_thumbnail">

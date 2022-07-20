@@ -34,7 +34,7 @@ def get_dbdump():
     with common.P.transaction:
         binary = common.P.database_filepath.read('rb')
 
-    now = etiquette.helpers.now(timestamp=False).strftime('%Y-%m-%d_%H-%M-%S')
+    now = etiquette.helpers.now().strftime('%Y-%m-%d_%H-%M-%S')
     download_as = f'etiquette {now}.db'
     outgoing_headers = {
         'Content-Type': 'application/octet-stream',
