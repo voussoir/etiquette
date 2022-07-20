@@ -294,7 +294,7 @@
 .photo_card_tools.open_contextmenu
 {
     display: initial;
-    position: absolute;
+    position: fixed;
 }
 
 /* ########################################################################## */
