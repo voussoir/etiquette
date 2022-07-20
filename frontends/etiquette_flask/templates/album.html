@@ -102,7 +102,7 @@
 <div id="content_body" class="sticky_side_right sticky_bottom_right">
     <div id="left">
         <div id="album_list" class="panel">
-            <h1>Albums</h1>
+            <h1>{{albums|length}} Albums</h1>
             {% for album in albums %}
             {{cards.create_album_card(album, view=view, draggable=true)}}
             {% endfor %}
