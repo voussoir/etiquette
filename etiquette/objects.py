@@ -4,6 +4,7 @@ but are returned by the PDB accesses.
 '''
 import abc
 import bcrypt
+import bs4
 import datetime
 import hashlib
 import os
@@ -417,6 +418,39 @@ class Album(ObjectBase, GroupableMixin):
 
         for photo in photos:
             photo.add_tag(tag)
+
+    def atomify(self) -> bs4.BeautifulSoup:
+        soup = bs4.BeautifulSoup('', 'xml')
+        entry = soup.new_tag('entry')
+        soup.append(entry)
+
+        id_element = soup.new_tag('id')
+        id_element.string = str(self.id)
+        entry.append(id_element)
+
+        title = soup.new_tag('title')
+        title.string = self.display_name
+        entry.append(title)
+
+        link = soup.new_tag('link')
+        link['rel'] = 'alternate'
+        link['type'] = 'text/html'
+        link['href'] = f'/album/{self.id}'
+        entry.append(link)
+
+        published = soup.new_tag('published')
+        published.string = self.created.isoformat()
+        entry.append(published)
+
+        content = soup.new_tag('content')
+        # content.string = bs4.CData(f'<img src="/thumbnail/{self.id}.jpg"/>')
+        entry.append(content)
+
+        typ = soup.new_tag('etiquette:type')
+        typ.string = 'album'
+        entry.append(typ)
+
+        return soup
 
     @decorators.required_feature('album.edit')
     @worms.atomic
@@ -936,6 +970,39 @@ class Photo(ObjectBase):
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
         return tag
+
+    def atomify(self) -> bs4.BeautifulSoup:
+        soup = bs4.BeautifulSoup('', 'xml')
+        entry = soup.new_tag('entry')
+        soup.append(entry)
+
+        id_element = soup.new_tag('id')
+        id_element.string = str(self.id)
+        entry.append(id_element)
+
+        title = soup.new_tag('title')
+        title.string = self.basename
+        entry.append(title)
+
+        link = soup.new_tag('link')
+        link['rel'] = 'alternate'
+        link['type'] = 'text/html'
+        link['href'] = f'/photo/{self.id}'
+        entry.append(link)
+
+        published = soup.new_tag('published')
+        published.string = self.created.isoformat()
+        entry.append(published)
+
+        content = soup.new_tag('content')
+        content.string = bs4.CData(f'<img src="/thumbnail/{self.id}.jpg"/>')
+        entry.append(content)
+
+        typ = soup.new_tag('etiquette:type')
+        typ.string = 'photo'
+        entry.append(typ)
+
+        return soup
 
     @property
     def basename(self) -> str:

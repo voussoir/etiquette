@@ -2,6 +2,7 @@
 This file provides functions which are used in various places throughout the
 codebase but don't deserve to be methods of any class.
 '''
+import bs4
 import datetime
 import hashlib
 import mimetypes
@@ -303,6 +304,28 @@ def is_xor(*args) -> bool:
     Return True if and only if one arg is truthy.
     '''
     return [bool(a) for a in args].count(True) == 1
+
+def make_atom_feed(objects, feed_title, feed_link, feed_id) -> bs4.BeautifulSoup:
+    soup = bs4.BeautifulSoup('', 'xml')
+    feed = soup.new_tag('feed')
+    soup.append(feed)
+
+    title = soup.new_tag('title')
+    title.string = feed_title
+    feed.append(title)
+
+    link = soup.new_tag('link')
+    link['href'] = feed_link
+    feed.append(link)
+
+    id_element = soup.new_tag('id')
+    id_element.string = feed_id
+    feed.append(id_element)
+
+    for obj in objects:
+        feed.append(obj.atomify())
+
+    return soup
 
 def now():
     '''
