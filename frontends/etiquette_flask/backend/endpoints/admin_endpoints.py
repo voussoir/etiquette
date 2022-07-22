@@ -18,14 +18,6 @@ def get_admin():
 
     return common.render_template(request, 'admin.html')
 
-@site.route('/admin/reload_config', methods=['POST'])
-def post_reload_config():
-    if not request.is_localhost:
-        return flasktools.json_response({}, status=403)
-
-    common.P.load_config()
-    return flasktools.json_response({})
-
 @site.route('/admin/dbdownload')
 def get_dbdump():
     if not request.is_localhost:
@@ -41,3 +33,11 @@ def get_dbdump():
         'Content-Disposition': f'attachment; filename*=UTF-8\'\'{download_as}',
     }
     return flask.Response(binary, headers=outgoing_headers)
+
+@site.route('/admin/reload_config', methods=['POST'])
+def post_reload_config():
+    if not request.is_localhost:
+        return flasktools.json_response({}, status=403)
+
+    common.P.load_config()
+    return flasktools.json_response({})
