@@ -456,7 +456,7 @@ def split_easybake_string(ebstring) -> tuple[str, str, str]:
     tagname = tagname.strip('.')
     return (tagname, synonym, rename_to)
 
-def timestamp_to_datetime(unix):
+def utcfromtimestamp(unix):
     return datetime.datetime.utcfromtimestamp(unix).replace(tzinfo=datetime.timezone.utc)
 
 def zip_album(album, recursive=True) -> zipstream.ZipFile:

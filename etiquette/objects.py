@@ -81,7 +81,7 @@ class ObjectBase(worms.Object):
     def created(self) -> datetime.datetime:
         if self._created_dt is not None:
             return self._created_dt
-        self._created_dt = helpers.timestamp_to_datetime(self.created_unix)
+        self._created_dt = helpers.utcfromtimestamp(self.created_unix)
         return self._created_dt
 
 class GroupableMixin(metaclass=abc.ABCMeta):
@@ -1512,7 +1512,7 @@ class Photo(ObjectBase):
     def tagged_at(self) -> datetime.datetime:
         if self._tagged_at_dt is not None:
             return self._tagged_at_dt
-        self._tagged_at_dt = helpers.timestamp_to_datetime(self.tagged_at_unix)
+        self._tagged_at_dt = helpers.utcfromtimestamp(self.tagged_at_unix)
         return self._tagged_at_dt
 
 class Tag(ObjectBase, GroupableMixin):
