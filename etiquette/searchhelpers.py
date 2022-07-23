@@ -76,9 +76,9 @@ def expand_mmf(tag_musts, tag_mays, tag_forbids):
 
 def minmax(key, value, minimums, maximums, warning_bag=None):
     '''
-    Dissects a hyphenated range string and inserts the correct k:v pair into
+    Dissects a dotdot_range string and inserts the correct k:v pair into
     both minimums and maximums.
-    ('area', '100-200', {}, {})
+    ('area', '100..200', {}, {})
     -->
     {'area': 100}, {'area': 200} (MODIFIED IN PLACE)
     '''
@@ -96,7 +96,7 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
         return
 
     try:
-        (low, high) = helpers.hyphen_range(value)
+        (low, high) = helpers.dotdot_range(value)
 
     except ValueError as exc:
         if warning_bag:
@@ -106,7 +106,7 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
         else:
             raise
 
-    except exceptions.OutOfOrder as exc:
+    except exceptions.MinMaxOutOfOrder as exc:
         if warning_bag:
             warning_bag.add(exc)
             return

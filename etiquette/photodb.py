@@ -451,7 +451,7 @@ class PDBPhotoMixin:
         '''
         PHOTO PROPERTIES
         area, width, height, ratio, bytes, duration:
-            A hyphen_range string representing min and max. Or just a number
+            A dotdot_range string representing min and max. Or just a number
             for lower bound.
 
         TAGS AND FILTERS
@@ -460,7 +460,7 @@ class PDBPhotoMixin:
             usernames.
 
         created:
-            A hyphen_range string respresenting min and max. Or just a number
+            A dotdot_range string respresenting min and max. Or just a number
             for lower bound.
 
         extension:

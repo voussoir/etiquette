@@ -224,9 +224,9 @@
 
         <!-- BEFORE & AFTER SEARCH LINKS -->
         <div id="before_after_links">
-            <a href="/search?created=-{{photo.created_unix}}">&larr;Before</a>
+            <a href="/search?created=..{{photo.created_unix}}">&larr;Before</a>
             <span> | </span>
-            <a href="/search?created={{photo.created_unix}}-&orderby=created-asc">After&rarr;</a>
+            <a href="/search?created={{photo.created_unix}}..&orderby=created-asc">After&rarr;</a>
         </div>
 
     </div>

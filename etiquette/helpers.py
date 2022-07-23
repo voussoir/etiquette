@@ -7,6 +7,7 @@ import datetime
 import hashlib
 import mimetypes
 import os
+import re
 import PIL.Image
 import typing
 import zipstream
@@ -181,6 +182,37 @@ def decollide_names(things, namer):
 def dict_to_tuple(d) -> tuple:
     return tuple(sorted(d.items()))
 
+def dotdot_range(s) -> tuple:
+    '''
+    Given a string like '1..3', return numbers (1, 3) representing lower
+    and upper bounds.
+
+    Supports bytestring.parsebytes and hh:mm:ss format, for example
+    '1k..2k', '10:00..20:00', '4gib..'
+    '''
+    s = s.strip()
+    s = s.replace(' ', '')
+    if not s:
+        return (None, None)
+
+    parts = s.split('..')
+    parts = [part.strip() or None for part in parts]
+
+    if len(parts) == 1:
+        (low, high) = (parts[0], None)
+    elif len(parts) == 2:
+        (low, high) = parts
+    else:
+        raise ValueError('Too many dots.')
+
+    low = parse_unit_string(low)
+    high = parse_unit_string(high)
+
+    if low is not None and high is not None and low > high:
+        raise exceptions.MinMaxOutOfOrder(range=s, min=low, max=high)
+
+    return (low, high)
+
 def generate_image_thumbnail(filepath, width, height) -> PIL.Image:
     if not os.path.isfile(filepath):
         raise FileNotFoundError(filepath)
@@ -267,37 +299,6 @@ def hash_photoset(photos) -> str:
         hasher.update(photo_id.encode('utf-8'))
 
     return hasher.hexdigest()
-
-def hyphen_range(s) -> tuple:
-    '''
-    Given a string like '1-3', return numbers (1, 3) representing lower
-    and upper bounds.
-
-    Supports bytestring.parsebytes and hh:mm:ss format, for example
-    '1k-2k', '10:00-20:00', '4gib-'
-    '''
-    s = s.strip()
-    s = s.replace(' ', '')
-    if not s:
-        return (None, None)
-
-    parts = s.split('-')
-    parts = [part.strip() or None for part in parts]
-
-    if len(parts) == 1:
-        (low, high) = (parts[0], None)
-    elif len(parts) == 2:
-        (low, high) = parts
-    else:
-        raise ValueError('Too many hyphens.')
-
-    low = parse_unit_string(low)
-    high = parse_unit_string(high)
-
-    if low is not None and high is not None and low > high:
-        raise exceptions.MinMaxOutOfOrder(range=s, min=low, max=high)
-
-    return (low, high)
 
 def is_xor(*args) -> bool:
     '''
