@@ -347,14 +347,21 @@ def parse_unit_string(s) -> typing.Union[int, float, None]:
     if ':' in s:
         return hms.hms_to_seconds(s)
 
-    elif all(c in '0123456789' for c in s):
+    if all(c in '0123456789' for c in s):
         return int(s)
 
-    elif all(c in '0123456789.' for c in s):
+    if all(c in '0123456789.' for c in s):
         return float(s)
 
-    else:
-        return bytestring.parsebytes(s)
+    if s == 'now':
+        return now().timestamp()
+
+    nowdelta = re.search(r'now((?:\+|-)\d+(?:\.\d*)?)', s)
+    if nowdelta:
+        nowdelta = nowdelta.group(1)
+        return now().timestamp() + float(nowdelta)
+
+    return bytestring.parsebytes(s)
 
 def read_filebytes(
         filepath,
