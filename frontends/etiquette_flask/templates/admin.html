@@ -23,6 +23,7 @@
     <div class="panel">
         <h1>Admin tools</h1>
         <p><button id="reload_config_button" class="green_button" onclick="return reload_config_form();">Reload config file</button></p>
+        <p><button id="uncache_button" class="green_button" onclick="return uncache_form();">Uncache objects</button></p>
         <p><a href="/admin/dbdownload">Download database file</a></p>
     </div>
 </div>
@@ -43,6 +44,21 @@ function reload_config_form()
         }
     }
     return api.admin.reload_config(callback);
+}
+
+function uncache_form()
+{
+    const uncache_button = document.getElementById("uncache_button");
+    uncache_button.disabled = true;
+    function callback(response)
+    {
+        uncache_button.disabled = false;
+        if (response.meta.status !== 200)
+        {
+            alert(JSON.stringify(response));
+        }
+    }
+    return api.admin.uncache(callback);
 }
 </script>
 </html>

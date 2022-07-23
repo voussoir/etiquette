@@ -41,3 +41,15 @@ def post_reload_config():
 
     common.P.load_config()
     return flasktools.json_response({})
+
+@site.route('/admin/uncache', methods=['POST'])
+def post_uncache():
+    if not request.is_localhost:
+        return flasktools.json_response({}, status=403)
+
+    with common.P.transaction:
+        for cache in common.P.caches.values():
+            print(cache)
+            cache.clear()
+
+    return flasktools.json_response({})

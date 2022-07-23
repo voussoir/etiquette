@@ -10,6 +10,13 @@ function reload_config(callback)
     return common.post(url, null, callback);
 }
 
+api.admin.uncache =
+function uncache(callback)
+{
+    const url = "/admin/uncache";
+    return common.post(url, null, callback);
+}
+
 /**************************************************************************************************/
 api.albums = {};
 
