@@ -146,6 +146,7 @@ class="photo_card photo_card_{{view}} photo_card_unselected {%if photo.searchhid
 ondragstart="return cards.photos.drag_start(event);"
 ondragend="return cards.photos.drag_end(event);"
 ondragover="return cards.photos.drag_over(event);"
+oncontextmenu="return cards.photos.photo_rightclick(event);"
 ondrop="return cards.photos.drag_drop(event);"
 draggable="true"
 >
@@ -177,11 +178,6 @@ draggable="true"
     {% endif %}{# if grid #}
 
     <span class="photo_card_tags" title="{{tag_names_title}}">{{tag_names_inner}}</span>
-
-    {# This button should be unhidden by any page that inserts toolbox items #}
-    <button class="photo_card_toolbutton hidden" onclick="return cards.photos.show_tools(event);"></button>
-    <div class="photo_card_tools" onclick="event.stopPropagation(); return;">
-    </div>
 </div>
 
 {% endmacro %}

@@ -36,7 +36,7 @@ function show_menu(event, menu)
     const over_right = Math.max(0, event.clientX + menu.offsetWidth - html.clientWidth);
     const over_bottom = Math.max(0, event.clientY + menu.offsetHeight - html.clientHeight);
     const left = event.clientX - over_right;
-    const top = event.clientY - over_bottom;
+    const top = event.pageY - over_bottom;
     menu.style.left = left + "px";
     menu.style.top = top + "px";
 }

@@ -283,7 +283,7 @@
     grid-area: toolbutton;
 }
 
-.photo_card_tools
+.photo_card_contextmenu
 {
     display: none;
     background-color: var(--color_secondary);
@@ -291,10 +291,10 @@
     z-index: 1;
     width: max-content;
 }
-.photo_card_tools.open_contextmenu
+.photo_card_contextmenu.open_contextmenu
 {
     display: initial;
-    position: fixed;
+    position: absolute;
 }
 
 /* ########################################################################## */

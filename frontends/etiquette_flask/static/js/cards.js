@@ -244,17 +244,6 @@ function create(photo, view)
     photo_card_tags.innerText = tag_names_inner;
     photo_card.appendChild(photo_card_tags);
 
-    const toolbutton = document.createElement("button");
-    toolbutton.className = "photo_card_toolbutton hidden";
-    toolbutton.onclick = "return cards.photos.show_tools(event);";
-    photo_card.appendChild(toolbutton);
-
-    const photo_card_tools = document.createElement("div");
-    photo_card_tools.classList.add("photo_card_tools");
-    photo_card_tools.classList.add("contextmenu");
-    photo_card_tools.onclick = "event.stopPropagation(); return;";
-    photo_card.appendChild(photo_card_tools);
-
     if (photo_clipboard)
     {
         const clipboard_checkbox = photo_clipboard.give_checkbox(photo_card);
@@ -284,18 +273,51 @@ function drag_drop(event)
 {
 }
 
-cards.photos.show_tools =
-function show_tools(event)
+cards.photos.photo_contextmenu = null;
+cards.photos.set_contextmenu =
+function set_contextmenu(element, build_function)
 {
+    element.classList.add("photo_card_contextmenu");
+    element.classList.add("contextmenu");
+    element.onclick = "event.stopPropagation(); return;";
+    cards.photos.photo_contextmenu = element;
+    cards.photos.build_photo_contextmenu = build_function;
+    contextmenus.hide_open_menus();
+}
+
+cards.photos.right_clicked_photo = null;
+cards.photos.photo_rightclick =
+function photo_rightclick(event)
+{
+    if (["A", "IMG"].includes(event.target.tagName))
+    {
+        return true;
+    }
+    if (cards.photos.photo_contextmenu === null)
+    {
+        return true;
+    }
+    if (event.ctrlKey || event.shiftKey || event.altKey)
+    {
+        return true;
+    }
+    const photo_card = event.target.closest(".photo_card");
+    if (! photo_card)
+    {
+        cards.photos.right_clicked_photo = null;
+        contextmenus.hide_open_menus();
+        return true;
+    }
+    if (contextmenus.menu_is_open())
+    {
+        contextmenus.hide_open_menus();
+    }
+    cards.photos.right_clicked_photo = photo_card;
+    const menu = cards.photos.photo_contextmenu;
+    cards.photos.build_photo_contextmenu(photo_card, menu);
+    setTimeout(() => {contextmenus.show_menu(event, menu);}, 0);
     event.stopPropagation();
     event.preventDefault();
-    const photo_card = event.target.closest(".photo_card");
-    const toolbox = photo_card.getElementsByClassName("photo_card_tools")[0];
-    if (toolbox.childElementCount === 0)
-    {
-        return;
-    }
-    contextmenus.show_menu(event, toolbox);
     return false;
 }
 

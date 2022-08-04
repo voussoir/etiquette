@@ -442,28 +442,29 @@ function add_album_datalist_on_load(datalist)
 }
 album_autocomplete.on_load_hooks.push(add_album_datalist_on_load);
 
-function add_photo_toolbox_entries()
+function prepare_photo_contextmenu()
 {
-    const photo_cards = document.getElementsByClassName("photo_card");
-    for (const photo_card of photo_cards)
+    function build_photo_contextmenu(photo, menu)
     {
-        const photo_id = photo_card.dataset.id;
-        const toolbox = photo_card.getElementsByClassName("photo_card_tools")[0];
-        const toolbutton = photo_card.getElementsByClassName("photo_card_toolbutton")[0];
-        toolbutton.classList.remove("hidden");
-        const button = document.createElement("button");
-        button.innerText = "Set as Album thumbnail";
-        button.onclick = function(event)
-        {
-            api.albums.set_thumbnail_photo(ALBUM_ID, photo_id, common.refresh_or_alert);
-        }
-        toolbox.appendChild(button);
+        ;
     }
+    const menu = document.createElement("div");
+    const set_thumbnail_button = document.createElement("button");
+    set_thumbnail_button.innerText = "Set as Album thumbnail";
+    set_thumbnail_button.onclick = function(event)
+    {
+        const photo_id = cards.photos.right_clicked_photo.dataset.id;
+        api.albums.set_thumbnail_photo(ALBUM_ID, photo_id, common.refresh_or_alert);
+    }
+    menu.appendChild(set_thumbnail_button);
+    document.body.appendChild(menu);
+    cards.photos.set_contextmenu(menu, build_photo_contextmenu);
 }
+
 function on_pageload()
 {
     photo_clipboard.register_hotkeys();
-    add_photo_toolbox_entries();
+    prepare_photo_contextmenu();
 }
 document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
@@ -474,11 +475,7 @@ document.addEventListener("DOMContentLoaded", on_pageload);
 
 function create_album_form(event)
 {
-    const title = event.target.input_source.value;
-    if (! title)
-    {
-        title = undefined;
-    }
+    const title = event.target.input_source.value.trim() || undefined;
     const parent_id = ALBUM_ID;
     api.albums.create(title, parent_id, api.albums.callback_follow);
 }
