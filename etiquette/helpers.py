@@ -227,7 +227,7 @@ def generate_image_thumbnail(filepath, width, height) -> PIL.Image:
         only_shrink=True,
     )
     if (new_width, new_height) != (image_width, image_height):
-        image = image.resize((new_width, new_height))
+        image = image.resize((new_width, new_height), PIL.Image.LANCZOS)
 
     if image.mode == 'RGBA':
         background = imagetools.checkerboard_image(
