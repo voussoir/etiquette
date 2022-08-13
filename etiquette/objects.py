@@ -123,7 +123,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
             'parentid': self.id,
             'memberid': member.id,
         }
-        self.photodb.insert(table=self.group_table, data=data)
+        self.photodb.insert(table=self.group_table, pairs=data)
 
     @abc.abstractmethod
     def add_child(self, member):
@@ -333,7 +333,7 @@ class Album(ObjectBase, GroupableMixin):
 
         log.info('Adding directory "%s" to %s.', path.absolute_path, self)
         data = {'albumid': self.id, 'directory': path.absolute_path}
-        self.photodb.insert(table='album_associated_directories', data=data)
+        self.photodb.insert(table='album_associated_directories', pairs=data)
 
     @decorators.required_feature('album.edit')
     @worms.atomic
@@ -376,7 +376,7 @@ class Album(ObjectBase, GroupableMixin):
     def _add_photo(self, photo):
         log.info('Adding photo %s to %s.', photo, self)
         data = {'albumid': self.id, 'photoid': photo.id}
-        self.photodb.insert(table='album_photo_rel', data=data)
+        self.photodb.insert(table='album_photo_rel', pairs=data)
 
     @decorators.required_feature('album.edit')
     @worms.atomic
@@ -962,7 +962,7 @@ class Photo(ObjectBase):
             'photoid': self.id,
             'tagid': tag.id
         }
-        self.photodb.insert(table='photo_tag_rel', data=data)
+        self.photodb.insert(table='photo_tag_rel', pairs=data)
         data = {
             'id': self.id,
             'tagged_at': helpers.now().timestamp(),
@@ -1667,7 +1667,7 @@ class Tag(ObjectBase, GroupableMixin):
             'name': synname,
             'mastername': self.name,
         }
-        self.photodb.insert(table='tag_synonyms', data=data)
+        self.photodb.insert(table='tag_synonyms', pairs=data)
 
         if self._cached_synonyms is not None:
             self._cached_synonyms.add(synname)

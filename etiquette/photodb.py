@@ -117,7 +117,7 @@ class PDBAlbumMixin:
             'thumbnail_photo': None,
             'author_id': author_id,
         }
-        self.insert(table=objects.Album, data=data)
+        self.insert(table=objects.Album, pairs=data)
 
         album = self.get_cached_instance(objects.Album, data)
 
@@ -208,7 +208,7 @@ class PDBBookmarkMixin:
             'created': helpers.now().timestamp(),
             'author_id': author_id,
         }
-        self.insert(table=objects.Bookmark, data=data)
+        self.insert(table=objects.Bookmark, pairs=data)
 
         bookmark = self.get_cached_instance(objects.Bookmark, data)
 
@@ -375,7 +375,7 @@ class PDBPhotoMixin:
             'duration': None,
             'thumbnail': None,
         }
-        self.insert(table=objects.Photo, data=data)
+        self.insert(table=objects.Photo, pairs=data)
 
         photo = self.get_cached_instance(objects.Photo, data)
 
@@ -983,7 +983,7 @@ class PDBTagMixin:
             'created': helpers.now().timestamp(),
             'author_id': author_id,
         }
-        self.insert(table=objects.Tag, data=data)
+        self.insert(table=objects.Tag, pairs=data)
 
         tag = self.get_cached_instance(objects.Tag, data)
 
@@ -1152,7 +1152,7 @@ class PDBUserMixin:
             'display_name': display_name,
             'created': helpers.now().timestamp(),
         }
-        self.insert(table=objects.User, data=data)
+        self.insert(table=objects.User, pairs=data)
 
         return self.get_cached_instance(objects.User, data)
 
