@@ -399,10 +399,11 @@ def get_search_core():
     area = request.args.get('area')
     width = request.args.get('width')
     height = request.args.get('height')
-    ratio = request.args.get('ratio')
+    aspectratio = request.args.get('aspectratio')
     bytes = request.args.get('bytes')
     has_thumbnail = request.args.get('has_thumbnail')
     duration = request.args.get('duration')
+    bitrate = request.args.get('bitrate')
     created = request.args.get('created')
 
     # These are in a dictionary so I can pass them to the page template.
@@ -410,9 +411,10 @@ def get_search_core():
         'area': area,
         'width': width,
         'height': height,
-        'ratio': ratio,
+        'aspectratio': aspectratio,
         'bytes': bytes,
         'duration': duration,
+        'bitrate': bitrate,
 
         'author': author,
         'created': created,

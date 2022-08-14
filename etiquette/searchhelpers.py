@@ -347,10 +347,6 @@ def normalize_orderby(orderby, warning_bag=None):
         column_friendly = column
         column_expanded = {
             'random': 'RANDOM()',
-            'area': '(width * height)',
-            'basename': 'COALESCE(override_filename, basename)',
-            'bitrate': '((bytes / 128) / duration)',
-            'ratio': '(width / height)',
         }.get(column, column)
 
         final_orderby.append( (column_friendly, column_expanded, direction) )

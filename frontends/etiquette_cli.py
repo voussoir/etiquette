@@ -129,7 +129,7 @@ def search_by_argparse(args, yield_albums=False, yield_photos=False):
         area=args.area,
         width=args.width,
         height=args.height,
-        ratio=args.ratio,
+        aspectratio=args.aspectratio,
         bytes=args.bytes,
         duration=args.duration,
         author=args.author,
@@ -1272,7 +1272,7 @@ def main(argv):
         ''',
     )
     p_search.add_argument(
-        '--ratio',
+        '--aspectratio',
         metavar='X-Y',
         default=None,
         help='''

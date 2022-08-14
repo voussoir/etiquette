@@ -823,6 +823,67 @@ def upgrade_20_to_21(photodb):
         photodb.update(table=etiquette.objects.Photo, pairs={'id': photo.id, 'thumbnail': store_as}, where_key='id')
         photo.thumbnail = new_thumbnail
 
+def upgrade_21_to_22(photodb):
+    m = Migrator(photodb)
+
+    m.tables['photos']['create'] = '''
+    CREATE TABLE IF NOT EXISTS photos(
+        id INT PRIMARY KEY NOT NULL,
+        filepath TEXT COLLATE NOCASE,
+        override_filename TEXT COLLATE NOCASE,
+        mtime INT,
+        sha256 TEXT,
+        width INT,
+        height INT,
+        duration INT,
+        bytes INT,
+        created INT,
+        thumbnail TEXT,
+        tagged_at INT,
+        author_id INT,
+        searchhidden INT,
+        -- GENERATED COLUMNS
+        area INT GENERATED ALWAYS AS (width * height) VIRTUAL,
+        aspectratio REAL GENERATED ALWAYS AS (1.0 * width / height) VIRTUAL,
+        -- Thank you ungalcrys
+        -- https://stackoverflow.com/a/38330814/5430534
+        basename TEXT GENERATED ALWAYS AS (
+            COALESCE(
+                override_filename,
+                replace(filepath, rtrim(filepath, replace(replace(filepath, '\\', '/'), '/', '')), '')
+            )
+        ) STORED COLLATE NOCASE,
+        extension TEXT GENERATED ALWAYS AS (
+            replace(basename, rtrim(basename, replace(basename, '.', '')), '')
+        ) VIRTUAL COLLATE NOCASE,
+        bitrate REAL GENERATED ALWAYS AS ((bytes / 128) / duration) VIRTUAL,
+        FOREIGN KEY(author_id) REFERENCES users(id)
+    );
+    '''
+    m.tables['photos']['transfer'] = '''
+    INSERT INTO photos SELECT
+        id,
+        filepath,
+        override_filename,
+        mtime,
+        sha256,
+        width,
+        height,
+        duration,
+        bytes,
+        created,
+        thumbnail,
+        tagged_at,
+        author_id,
+        searchhidden
+    FROM photos_old;
+    '''
+
+    m.go()
+
+    photodb.execute('DROP INDEX index_photos_override_filename')
+    photodb.execute('CREATE INDEX IF NOT EXISTS index_photos_basename on photos(basename COLLATE NOCASE)')
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

@@ -850,11 +850,11 @@ class Photo(ObjectBase):
 
         self.real_path = db_row['filepath']
         self.real_path = pathclass.Path(self.real_path)
+        self.basename = db_row['basename']
 
         self.id = db_row['id']
         self.created_unix = db_row['created']
         self._author_id = self.normalize_author_id(db_row['author_id'])
-        self.override_filename = db_row['override_filename']
         self.extension = self.real_path.extension.no_dot
         self.mtime = db_row['mtime']
         self.sha256 = db_row['sha256']
@@ -864,12 +864,13 @@ class Photo(ObjectBase):
         else:
             self.dot_extension = '.' + self.extension
 
-        self.area = db_row['area']
         self.bytes = db_row['bytes']
         self.duration = db_row['duration']
         self.width = db_row['width']
         self.height = db_row['height']
-        self.ratio = db_row['ratio']
+        self.area = db_row['area']
+        self.aspectratio = db_row['aspectratio']
+        self.bitrate = db_row['bitrate']
 
         self.thumbnail = self.normalize_thumbnail(db_row['thumbnail'])
         self.tagged_at_unix = db_row['tagged_at']
@@ -1003,17 +1004,6 @@ class Photo(ObjectBase):
         entry.append(typ)
 
         return soup
-
-    @property
-    def basename(self) -> str:
-        return self.override_filename or self.real_path.basename
-
-    @property
-    def bitrate(self) -> typing.Optional[float]:
-        if self.duration and self.bytes is not None:
-            return (self.bytes / 128) / self.duration
-        else:
-            return None
 
     @property
     def bytes_string(self) -> str:
@@ -1181,11 +1171,11 @@ class Photo(ObjectBase):
         j = {
             'type': 'photo',
             'id': self.id,
+            'aspectratio': self.aspectratio,
             'author': self.author.jsonify() if self._author_id else None,
             'extension': self.extension,
             'width': self.width,
             'height': self.height,
-            'ratio': self.ratio,
             'area': self.area,
             'bytes': self.bytes,
             'duration_string': self.duration_string,
@@ -1281,8 +1271,6 @@ class Photo(ObjectBase):
         self.bytes = None
         self.width = None
         self.height = None
-        self.area = None
-        self.ratio = None
         self.duration = None
 
         if self.real_path.is_file:
@@ -1302,10 +1290,6 @@ class Photo(ObjectBase):
         elif self.simple_mimetype == 'audio':
             self._reload_audio_metadata()
 
-        if self.width and self.height:
-            self.area = self.width * self.height
-            self.ratio = round(self.width / self.height, 2)
-
         hash_kwargs = hash_kwargs or {}
         sha256 = spinal.hash_file(self.real_path, hash_class=hashlib.sha256, **hash_kwargs)
         self.sha256 = sha256.hexdigest()
@@ -1316,8 +1300,6 @@ class Photo(ObjectBase):
             'sha256': self.sha256,
             'width': self.width,
             'height': self.height,
-            'area': self.area,
-            'ratio': self.ratio,
             'duration': self.duration,
             'bytes': self.bytes,
         }
@@ -1352,8 +1334,6 @@ class Photo(ObjectBase):
         data = {
             'id': self.id,
             'filepath': new_filepath.absolute_path,
-            'basename': new_filepath.basename,
-            'extension': new_filepath.extension.no_dot,
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
         self.real_path = new_filepath
@@ -1456,8 +1436,6 @@ class Photo(ObjectBase):
         data = {
             'id': self.id,
             'filepath': new_path.absolute_path,
-            'basename': new_path.basename,
-            'extension': new_path.extension.no_dot,
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
         self.real_path = new_path
@@ -1494,7 +1472,6 @@ class Photo(ObjectBase):
             'override_filename': new_filename,
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
-        self.override_filename = new_filename
 
         self.__reinit__()
 

@@ -41,7 +41,7 @@ ffmpeg = _load_ffmpeg()
 
 # Database #########################################################################################
 
-DATABASE_VERSION = 21
+DATABASE_VERSION = 22
 
 DB_INIT = f'''
 CREATE TABLE IF NOT EXISTS albums(
@@ -71,15 +71,11 @@ CREATE INDEX IF NOT EXISTS index_bookmarks_author_id on bookmarks(author_id);
 CREATE TABLE IF NOT EXISTS photos(
     id INT PRIMARY KEY NOT NULL,
     filepath TEXT COLLATE NOCASE,
-    basename TEXT COLLATE NOCASE,
     override_filename TEXT COLLATE NOCASE,
-    extension TEXT COLLATE NOCASE,
     mtime INT,
     sha256 TEXT,
     width INT,
     height INT,
-    ratio REAL,
-    area INT,
     duration INT,
     bytes INT,
     created INT,
@@ -87,12 +83,26 @@ CREATE TABLE IF NOT EXISTS photos(
     tagged_at INT,
     author_id INT,
     searchhidden INT,
+    -- GENERATED COLUMNS
+    area INT GENERATED ALWAYS AS (width * height) VIRTUAL,
+    aspectratio REAL GENERATED ALWAYS AS (1.0 * width / height) VIRTUAL,
+    -- Thank you ungalcrys
+    -- https://stackoverflow.com/a/38330814/5430534
+    basename TEXT GENERATED ALWAYS AS (
+        COALESCE(
+            override_filename,
+            replace(filepath, rtrim(filepath, replace(replace(filepath, '\\', '/'), '/', '')), '')
+        )
+    ) STORED COLLATE NOCASE,
+    extension TEXT GENERATED ALWAYS AS (
+        replace(basename, rtrim(basename, replace(basename, '.', '')), '')
+    ) VIRTUAL COLLATE NOCASE,
+    bitrate REAL GENERATED ALWAYS AS ((bytes / 128) / duration) VIRTUAL,
     FOREIGN KEY(author_id) REFERENCES users(id)
 );
 CREATE INDEX IF NOT EXISTS index_photos_id on photos(id);
 CREATE INDEX IF NOT EXISTS index_photos_filepath on photos(filepath COLLATE NOCASE);
-CREATE INDEX IF NOT EXISTS index_photos_override_filename on
-    photos(override_filename COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS index_photos_basename on photos(basename COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS index_photos_created on photos(created);
 CREATE INDEX IF NOT EXISTS index_photos_extension on photos(extension);
 CREATE INDEX IF NOT EXISTS index_photos_author_id on photos(author_id);
@@ -194,7 +204,7 @@ ALLOWED_ORDERBY_COLUMNS = {
     'extension',
     'height',
     'random',
-    'ratio',
+    'aspectratio',
     'tagged_at',
     'width',
 }

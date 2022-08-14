@@ -59,6 +59,7 @@
 .photo_viewer_application,
 .photo_viewer_text
 {
+    display: flex;
     justify-items: center;
     align-items: center;
 }
@@ -183,7 +184,7 @@
             {% endif %}
             {% if photo.width %}
                 <li title="{{photo.area}} px">Dimensions: {{photo.width}}x{{photo.height}} px</li>
-                <li>Aspect ratio: {{photo.ratio}}</li>
+                <li>Aspect ratio: {{photo.aspectratio|round(2)}}</li>
             {% endif %}
             <li>Size: {{photo.bytes|bytestring}}</li>
             {% if photo.duration %}

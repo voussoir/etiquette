@@ -357,9 +357,7 @@ class PDBPhotoMixin:
         data = {
             'id': photo_id,
             'filepath': filepath.absolute_path,
-            'basename': filepath.basename,
             'override_filename': None,
-            'extension': filepath.extension.no_dot,
             'created': helpers.now().timestamp(),
             'tagged_at': None,
             'author_id': author_id,
@@ -370,14 +368,12 @@ class PDBPhotoMixin:
             'bytes': None,
             'width': None,
             'height': None,
-            'area': None,
-            'ratio': None,
             'duration': None,
             'thumbnail': None,
         }
         self.insert(table=objects.Photo, pairs=data)
 
-        photo = self.get_cached_instance(objects.Photo, data)
+        photo = self.get_photo(photo_id)
 
         if do_metadata:
             hash_kwargs = hash_kwargs or {}
@@ -417,11 +413,12 @@ class PDBPhotoMixin:
             self,
             *,
             area=None,
+            aspectratio=None,
             width=None,
             height=None,
-            ratio=None,
             bytes=None,
             duration=None,
+            bitrate=None,
 
             author=None,
             created=None,
@@ -450,7 +447,7 @@ class PDBPhotoMixin:
         ):
         '''
         PHOTO PROPERTIES
-        area, width, height, ratio, bytes, duration:
+        area, aspectratio, width, height, bytes, duration, bitrate:
             A dotdot_range string representing min and max. Or just a number
             for lower bound.
 
@@ -531,7 +528,7 @@ class PDBPhotoMixin:
             How many *successful* results to skip before we start yielding.
 
         orderby:
-            A list of strings like ['ratio DESC', 'created ASC'] to sort
+            A list of strings like ['aspectratio DESC', 'created ASC'] to sort
             and subsort the results.
             Descending is assumed if not provided.
 
@@ -562,9 +559,10 @@ class PDBPhotoMixin:
         searchhelpers.minmax('created', created, minimums, maximums, warning_bag=warning_bag)
         searchhelpers.minmax('width', width, minimums, maximums, warning_bag=warning_bag)
         searchhelpers.minmax('height', height, minimums, maximums, warning_bag=warning_bag)
-        searchhelpers.minmax('ratio', ratio, minimums, maximums, warning_bag=warning_bag)
+        searchhelpers.minmax('aspectratio', aspectratio, minimums, maximums, warning_bag=warning_bag)
         searchhelpers.minmax('bytes', bytes, minimums, maximums, warning_bag=warning_bag)
         searchhelpers.minmax('duration', duration, minimums, maximums, warning_bag=warning_bag)
+        searchhelpers.minmax('bitrate', bitrate, minimums, maximums, warning_bag=warning_bag)
 
         author = searchhelpers.normalize_author(author, photodb=self, warning_bag=warning_bag)
         extension = searchhelpers.normalize_extension(extension)
@@ -652,7 +650,8 @@ class PDBPhotoMixin:
                 'area': area,
                 'width': width,
                 'height': height,
-                'ratio': ratio,
+                'aspectratio': aspectratio,
+                'bitrate': bitrate,
                 'bytes': bytes,
                 'duration': duration,
                 'author': list(author) or None,
