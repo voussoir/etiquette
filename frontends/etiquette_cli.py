@@ -1249,7 +1249,7 @@ def main(argv):
     )
     p_search.add_argument(
         '--area',
-        metavar='X-Y',
+        metavar='X..Y',
         default=None,
         help='''
         Photo/video width*height between X and Y.
@@ -1257,7 +1257,7 @@ def main(argv):
     )
     p_search.add_argument(
         '--width',
-        metavar='X-Y',
+        metavar='X..Y',
         default=None,
         help='''
         Photo/video width between X and Y.
@@ -1265,7 +1265,7 @@ def main(argv):
     )
     p_search.add_argument(
         '--height',
-        metavar='X-Y',
+        metavar='X..Y',
         default=None,
         help='''
         Photo/video height between X and Y.
@@ -1273,7 +1273,7 @@ def main(argv):
     )
     p_search.add_argument(
         '--aspectratio',
-        metavar='X-Y',
+        metavar='X..Y',
         default=None,
         help='''
         Photo/video aspect ratio between X and Y.
@@ -1281,7 +1281,7 @@ def main(argv):
     )
     p_search.add_argument(
         '--bytes',
-        metavar='X-Y',
+        metavar='X..Y',
         default=None,
         help='''
         File size in bytes between X and Y.
@@ -1289,7 +1289,7 @@ def main(argv):
     )
     p_search.add_argument(
         '--duration',
-        metavar='X-Y',
+        metavar='X..Y',
         default=None,
         help='''
         Media duration between X and Y seconds.
@@ -1305,7 +1305,7 @@ def main(argv):
     )
     p_search.add_argument(
         '--created',
-        metavar='X-Y',
+        metavar='X..Y',
         default=None,
         help='''
         Photo creation date between X and Y unix timestamp.
