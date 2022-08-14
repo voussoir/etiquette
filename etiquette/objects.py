@@ -1231,12 +1231,17 @@ class Photo(ObjectBase):
 
         self.duration = probe.audio.duration
 
-    def _reload_image_metadata(self):
+    def _reload_image_metadata(self, trusted_file=False):
+        _max_pixels = PIL.Image.MAX_IMAGE_PIXELS
+        if trusted_file:
+            PIL.Image.MAX_IMAGE_PIXELS = None
         try:
             image = PIL.Image.open(self.real_path.absolute_path)
         except (OSError, ValueError):
             traceback.print_exc()
             return
+        finally:
+            PIL.Image.MAX_IMAGE_PIXELS = _max_pixels
 
         (self.width, self.height) = image.size
         image.close()
@@ -1260,9 +1265,13 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.reload_metadata')
     @worms.atomic
-    def reload_metadata(self, hash_kwargs=None) -> None:
+    def reload_metadata(self, hash_kwargs=None, trusted_file=False) -> None:
         '''
         Load the file's height, width, etc as appropriate for this type of file.
+
+        trusted_file:
+            If True, we can disable certain safeguards for file parsing,
+            depending on the file format.
         '''
         log.info('Reloading metadata for %s.', self)
 
@@ -1282,7 +1291,7 @@ class Photo(ObjectBase):
             pass
 
         elif self.simple_mimetype == 'image':
-            self._reload_image_metadata()
+            self._reload_image_metadata(trusted_file=trusted_file)
 
         elif self.simple_mimetype == 'video':
             self._reload_video_metadata()
