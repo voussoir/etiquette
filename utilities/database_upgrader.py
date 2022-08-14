@@ -818,7 +818,7 @@ def upgrade_20_to_21(photodb):
         old_thumbnail = photo.thumbnail
         new_thumbnail = photo.make_thumbnail_filepath()
         print(old_thumbnail, new_thumbnail)
-        photodb.on_commit_queue.append({'action': movethumbnail, 'args': (old_thumbnail.absolute_path, new_thumbnail.absolute_path)})
+        photodb.on_commit_queue.append({'action': movethumbnail, 'args': (old_thumbnail, new_thumbnail)})
         store_as = new_thumbnail.relative_to(photodb.thumbnail_directory)
         photodb.update(table=etiquette.objects.Photo, pairs={'id': photo.id, 'thumbnail': store_as}, where_key='id')
         photo.thumbnail = new_thumbnail
