@@ -1177,7 +1177,8 @@ class PDBUtilMixin:
             new_photo_ratelimit=None,
             recurse=True,
             yield_albums=True,
-            yield_photos=True,
+            yield_new_photos=True,
+            yield_old_photos=True,
         ):
         '''
         Walk the directory and create Photos for every file.
@@ -1320,7 +1321,7 @@ class PDBUtilMixin:
             otherwise create it and then return it.
             '''
             try:
-                photo = self.get_photo_by_path(filepath)
+                photo = (self.get_photo_by_path(filepath), False)
                 return photo
             except exceptions.NoSuchPhoto:
                 pass
@@ -1338,7 +1339,7 @@ class PDBUtilMixin:
             if new_photo_ratelimit is not None:
                 new_photo_ratelimit.limit()
 
-            return photo
+            return (photo, True)
 
         def create_or_fetch_current_albums(albums_by_path, current_directory):
             current_albums = albums_by_path.get(current_directory.absolute_path, None)
@@ -1405,8 +1406,9 @@ class PDBUtilMixin:
             if not photos:
                 continue
 
-            if yield_photos:
-                yield from photos
+            for (photo, is_new) in photos:
+                if (is_new and yield_new_photos) or (not is_new and yield_old_photos):
+                    yield photo
 
             if not make_albums:
                 continue
@@ -1415,7 +1417,7 @@ class PDBUtilMixin:
             orphan_join_parent_albums(albums_by_path, current_albums, current_directory)
 
             for album in current_albums:
-                album.add_photos(photos)
+                album.add_photos(photo for (photo, is_new) in photos)
 
             if yield_albums:
                 yield from current_albums
