@@ -1216,6 +1216,21 @@ class Photo(ObjectBase):
         new_path.assert_not_exists()
         self.rename_file(new_path.absolute_path, move=True)
 
+    def _reload_audio_metadata(self):
+        if not constants.ffmpeg:
+            return
+
+        try:
+            probe = constants.ffmpeg.probe(self.real_path.absolute_path)
+        except Exception:
+            traceback.print_exc()
+            return
+
+        if not probe or not probe.audio:
+            return
+
+        self.duration = probe.audio.duration
+
     def _reload_image_metadata(self):
         try:
             image = PIL.Image.open(self.real_path.absolute_path)
@@ -1242,21 +1257,6 @@ class Photo(ObjectBase):
         self.width = probe.video.video_width
         self.height = probe.video.video_height
         self.duration = probe.format.duration or probe.video.duration
-
-    def _reload_audio_metadata(self):
-        if not constants.ffmpeg:
-            return
-
-        try:
-            probe = constants.ffmpeg.probe(self.real_path.absolute_path)
-        except Exception:
-            traceback.print_exc()
-            return
-
-        if not probe or not probe.audio:
-            return
-
-        self.duration = probe.audio.duration
 
     @decorators.required_feature('photo.reload_metadata')
     @worms.atomic
