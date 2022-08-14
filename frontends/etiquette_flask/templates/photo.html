@@ -182,8 +182,8 @@
             {% if author is not none %}
                 <li>Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a></li>
             {% endif %}
-            {% if photo.width %}
-                <li title="{{photo.area}} px">Dimensions: {{photo.width}}x{{photo.height}} px</li>
+            {% if photo.width and photo.height %}
+                <li title="{{(photo.area / 1000000)|round(2)}} mpx">Dimensions: {{photo.width}}&times;{{photo.height}} px</li>
                 <li>Aspect ratio: {{photo.aspectratio|round(2)}}</li>
             {% endif %}
             <li>Size: {{photo.bytes|bytestring}}</li>
