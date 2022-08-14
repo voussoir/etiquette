@@ -235,31 +235,31 @@
             <span>Min-max values</span>
             <input type="text" class="basic_param"
             {%if search_kwargs['area']%} value="{{search_kwargs['area']}}" {%endif%}
-            name="area" placeholder="Area: 1m-2m">
+            name="area" placeholder="Area: 1m..2m">
 
             <input type="text" class="basic_param"
             {%if search_kwargs['width']%} value="{{search_kwargs['width']}}" {%endif%}
-            name="width" placeholder="Width: 1k-2k">
+            name="width" placeholder="Width: 1k..2k">
 
             <input type="text" class="basic_param"
             {%if search_kwargs['height']%} value="{{search_kwargs['height']}}" {%endif%}
-            name="height" placeholder="Height: 1k-2k">
+            name="height" placeholder="Height: 1k..2k">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['ratio']%} value="{{search_kwargs['ratio']}}" {%endif%}
-            name="ratio" placeholder="Aspect Ratio: 1.7-2">
+            {%if search_kwargs['aspectratio']%} value="{{search_kwargs['aspectratio']}}" {%endif%}
+            name="aspectratio" placeholder="Aspect Ratio: 1.7..2">
 
             <input type="text" class="basic_param"
             {%if search_kwargs['bytes']%} value="{{search_kwargs['bytes']}}" {%endif%}
-            name="bytes" placeholder="File Size: 1mb-2mb">
+            name="bytes" placeholder="File Size: 1mb..2mb">
 
             <input type="text" class="basic_param"
             {%if search_kwargs['duration']%} value="{{search_kwargs['duration']}}" {%endif%}
-            name="duration" placeholder="Duration: 10:00-20:00">
+            name="duration" placeholder="Duration: 10:00..20:00">
 
             <input type="text" class="basic_param"
             {%if search_kwargs['created']%} value="{{search_kwargs['created']}}" {%endif%}
-            name="created" placeholder="Created: 1483228800-1514764800">
+            name="created" placeholder="Created: 1483228800..1514764800">
 
             <br>
 
