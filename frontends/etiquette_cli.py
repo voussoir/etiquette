@@ -247,7 +247,8 @@ def digest_directory_argparse(args):
                 new_photo_ratelimit=args.ratelimit,
                 recurse=args.recurse,
                 yield_albums=True,
-                yield_photos=True,
+                yield_new_photos=True,
+                yield_old_photos=False,
             )
             for result in digest:
                 # print(result)
