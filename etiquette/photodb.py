@@ -1321,15 +1321,14 @@ class PDBUtilMixin:
             otherwise create it and then return it.
             '''
             try:
-                photo = (self.get_photo_by_path(filepath), False)
-                return photo
+                return (self.get_photo_by_path(filepath), False)
             except exceptions.NoSuchPhoto:
                 pass
 
             result = check_renamed(filepath)
             if isinstance(result, objects.Photo):
                 result.relocate(filepath.absolute_path)
-                return result
+                return (result, False)
             elif isinstance(result, dict) and 'sha256' in result:
                 sha256 = result['sha256']
             else:
