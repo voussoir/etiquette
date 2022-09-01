@@ -7,11 +7,14 @@ from voussoirkit import betterhelp
 from voussoirkit import interactive
 from voussoirkit import pathclass
 from voussoirkit import pipeable
+from voussoirkit import ratelimiter
 from voussoirkit import spinal
 from voussoirkit import stringtools
 from voussoirkit import vlogging
 
 import etiquette
+
+log = vlogging.get_logger(__name__, 'etiquette_cli')
 
 photodb = None
 def load_photodb():
@@ -362,6 +365,40 @@ def init_argparse(args):
         pipeable.stderr(f'PhotoDB {photodb} already exists.')
         return 0
     photodb = etiquette.photodb.PhotoDB(create=True)
+    return 0
+
+def new_photo_argparse(args):
+    load_photodb()
+
+    limiter = ratelimiter.Ratelimiter(allowance=1, period=args.ratelimit)
+    need_commit = False
+
+    with photodb.transaction:
+        photos = []
+        for file in pathclass.glob_many_files(args.globs):
+            try:
+                exists = photodb.get_photo_by_path(file)
+                log.info('%s exists.', file.absolute_path)
+                continue
+            except etiquette.exceptions.NoSuchPhoto:
+                pass
+            limiter.limit()
+            photo = photodb.new_photo(file)
+            photos.append(photo)
+            need_commit = True
+
+        if not need_commit:
+            return 0
+
+        if args.make_album or args.album_title:
+            album_title = args.album_title or None
+            album = photodb.new_album(title=album_title)
+            album.add_photos(photos)
+
+        if not (args.autoyes or interactive.getpermission('Commit?')):
+            photodb.rollback()
+            return 1
+
     return 0
 
 def purge_deleted_files_argparse(args):
@@ -1072,6 +1109,50 @@ def main(argv):
         ''',
     )
     p_init.set_defaults(func=init_argparse)
+
+    ################################################################################################
+
+    p_new_photo = subparsers.add_parser(
+        'new_photo',
+        aliases=['new-photo', 'new_photos', 'new-photos'],
+        description='''
+        ''',
+    )
+    p_new_photo.add_argument(
+        'globs',
+        nargs='+',
+        help='''
+        Make Photos from files that match glob patterns.
+        ''',
+    )
+    p_new_photo.add_argument(
+        '--ratelimit',
+        type=float,
+        default=0.25,
+        help='''
+        ''',
+    )
+    p_new_photo.add_argument(
+        '--make_album', '--make-album',
+        action='store_true',
+        help='''
+        ''',
+    )
+    p_new_photo.add_argument(
+        '--album_title', '--album-title',
+        default=None,
+        help='''
+        ''',
+    )
+    p_new_photo.add_argument(
+        '--yes',
+        dest='autoyes',
+        action='store_true',
+        help='''
+        Commit the database without prompting.
+        ''',
+    )
+    p_new_photo.set_defaults(func=new_photo_argparse)
 
     ################################################################################################
 
