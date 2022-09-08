@@ -1638,12 +1638,17 @@ class PhotoDB(
 
         path = possible
         log.debug('Found closest PhotoDB at "%s".', path.absolute_path)
-        photodb = cls(
-            data_directory=path,
-            create=False,
-            *args,
-            **kwargs,
-        )
+
+        try:
+            photodb = cls(
+                data_directory=path,
+                create=False,
+                *args,
+                **kwargs,
+            )
+        except FileNotFoundError:
+            raise exceptions.NoClosestPhotoDB(starting.absolute_path)
+
         return photodb
 
     def __del__(self):
