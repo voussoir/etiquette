@@ -1587,8 +1587,8 @@ class PhotoDB(
     def _init_sql(self, create, skip_version_check):
         if self.ephemeral:
             existing_database = False
-            self.sql_read = self._make_sqlite_read_connection(':memory:')
             self.sql_write = self._make_sqlite_write_connection(':memory:')
+            self.sql_read = self._make_sqlite_read_connection(':memory:')
             self._first_time_setup()
             return
 
@@ -1600,8 +1600,8 @@ class PhotoDB(
             raise FileNotFoundError(msg)
 
         self.data_directory.makedirs(exist_ok=True)
-        self.sql_read = self._make_sqlite_read_connection(self.database_filepath)
         self.sql_write = self._make_sqlite_write_connection(self.database_filepath)
+        self.sql_read = self._make_sqlite_read_connection(self.database_filepath)
 
         if existing_database:
             if not skip_version_check:
