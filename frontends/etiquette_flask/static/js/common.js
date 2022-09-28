@@ -34,6 +34,12 @@ function is_wide_mode()
     return getComputedStyle(document.documentElement).getPropertyValue("--wide").trim() === "1";
 }
 
+common.go_to_root =
+function go_to_root()
+{
+    window.location.href = "/";
+}
+
 common.refresh =
 function refresh()
 {
