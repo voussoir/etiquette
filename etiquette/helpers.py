@@ -213,7 +213,7 @@ def dotdot_range(s) -> tuple:
 
     return (low, high)
 
-def generate_image_thumbnail(filepath, width, height) -> PIL.Image:
+def _generate_image_thumbnail(filepath, max_width, max_height) -> PIL.Image:
     if not os.path.isfile(filepath):
         raise FileNotFoundError(filepath)
     image = PIL.Image.open(filepath)
@@ -222,8 +222,8 @@ def generate_image_thumbnail(filepath, width, height) -> PIL.Image:
     (new_width, new_height) = imagetools.fit_into_bounds(
         image_width=image_width,
         image_height=image_height,
-        frame_width=width,
-        frame_height=height,
+        frame_width=max_width,
+        frame_height=max_height,
         only_shrink=True,
     )
     if (new_width, new_height) != (image_width, image_height):
@@ -243,6 +243,15 @@ def generate_image_thumbnail(filepath, width, height) -> PIL.Image:
 
     image = image.convert('RGB')
     return image
+
+def generate_image_thumbnail(*args, trusted_file=False, **kwargs) -> PIL.Image:
+    _max_pixels = PIL.Image.MAX_IMAGE_PIXELS
+    if trusted_file:
+        PIL.Image.MAX_IMAGE_PIXELS = None
+    try:
+        return _generate_image_thumbnail(*args, **kwargs)
+    finally:
+        PIL.Image.MAX_IMAGE_PIXELS = _max_pixels
 
 def generate_video_thumbnail(filepath, outfile, width, height, **special) -> PIL.Image:
     if not os.path.isfile(filepath):

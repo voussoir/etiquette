@@ -1060,9 +1060,11 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.generate_thumbnail')
     @worms.atomic
-    def generate_thumbnail(self, **special) -> pathclass.Path:
+    def generate_thumbnail(self, trusted_file=False, **special) -> pathclass.Path:
         '''
         special:
+            For images, you can provide `max_width` and/or `max_height` to
+            override the config file.
             For videos, you can provide a `timestamp` to take the thumbnail at.
         '''
         hopeful_filepath = self.make_thumbnail_filepath()
@@ -1073,8 +1075,9 @@ class Photo(ObjectBase):
             try:
                 image = helpers.generate_image_thumbnail(
                     self.real_path.absolute_path,
-                    width=self.photodb.config['thumbnail_width'],
-                    height=self.photodb.config['thumbnail_height'],
+                    max_width=special.get('max_width', self.photodb.config['thumbnail_width']),
+                    max_height=special.get('max_height', self.photodb.config['thumbnail_height']),
+                    trusted_file=trusted_file,
                 )
             except (OSError, ValueError):
                 traceback.print_exc()

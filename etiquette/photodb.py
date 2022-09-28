@@ -319,6 +319,7 @@ class PDBPhotoMixin:
             known_hash=None,
             searchhidden=False,
             tags=None,
+            trusted_file=False,
         ) -> objects.Photo:
         '''
         Given a filepath, determine its attributes and create a new Photo object
@@ -377,9 +378,9 @@ class PDBPhotoMixin:
 
         if do_metadata:
             hash_kwargs = hash_kwargs or {}
-            photo.reload_metadata(hash_kwargs=hash_kwargs)
+            photo.reload_metadata(hash_kwargs=hash_kwargs, trusted_file=trusted_file)
         if do_thumbnail:
-            photo.generate_thumbnail()
+            photo.generate_thumbnail(trusted_file=trusted_file)
 
         tags = tags or []
         tags = [self.get_tag(name=tag) for tag in tags]
