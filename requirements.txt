@@ -4,6 +4,7 @@ bcrypt
 # For running the etiquette webserver.
 flask
 gevent
+gunicorn
 
 # For probing and thumbnailing image files.
 pillow
@@ -16,6 +17,9 @@ send2trash
 
 # For serving downloadable zip files as a generator.
 zipstream
+
+# For serving Atom feeds
+bs4
 
 # My own variety toolkit.
 voussoirkit
