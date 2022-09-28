@@ -567,7 +567,7 @@ class Album(ObjectBase, GroupableMixin):
         )
         return exists is not None
 
-    def jsonify(self, minimal=False) -> dict:
+    def jsonify(self, include_photos=True, minimal=False) -> dict:
         j = {
             'type': 'album',
             'id': self.id,
@@ -579,9 +579,11 @@ class Album(ObjectBase, GroupableMixin):
             'author': self.author.jsonify() if self._author_id else None,
         }
         if not minimal:
-            j['parents'] = [parent.jsonify(minimal=True) for parent in self.get_parents()]
-            j['children'] = [child.jsonify(minimal=True) for child in self.get_children()]
-            j['photos'] = [photo.jsonify(include_albums=False) for photo in self.get_photos()]
+            j['parents'] = [parent.id for parent in self.get_parents()]
+            j['children'] = [child.id for child in self.get_children()]
+
+            if include_photos:
+                j['photos'] = [photo.id for photo in self.get_photos()]
 
         return j
 
@@ -1170,7 +1172,7 @@ class Photo(ObjectBase):
 
         return tag_by_id[tag_id]
 
-    def jsonify(self, include_albums=True, include_tags=True) -> dict:
+    def jsonify(self, include_albums=True, include_tags=True, minimal=False) -> dict:
         j = {
             'type': 'photo',
             'id': self.id,
@@ -1191,11 +1193,13 @@ class Photo(ObjectBase):
             'searchhidden': bool(self.searchhidden),
             'simple_mimetype': self.simple_mimetype,
         }
-        if include_albums:
-            j['albums'] = [album.jsonify(minimal=True) for album in self.get_containing_albums()]
 
-        if include_tags:
-            j['tags'] = [tag.jsonify(minimal=True) for tag in self.get_tags()]
+        if not minimal:
+            if include_albums:
+                j['albums'] = [album.id for album in self.get_containing_albums()]
+
+            if include_tags:
+                j['tags'] = [tag.id for tag in self.get_tags()]
 
         return j
 
@@ -1779,11 +1783,11 @@ class Tag(ObjectBase, GroupableMixin):
         if not minimal:
             j['author'] = self.author.jsonify() if self._author_id else None
             j['description'] = self.description
-            j['parents'] = [parent.jsonify(minimal=True) for parent in self.get_parents()]
-            j['children'] = [child.jsonify(minimal=True) for child in self.get_children()]
+            j['parents'] = [parent.id for parent in self.get_parents()]
+            j['children'] = [child.id for child in self.get_children()]
 
-        if include_synonyms:
-            j['synonyms'] = list(self.get_synonyms())
+            if include_synonyms:
+                j['synonyms'] = list(self.get_synonyms())
 
         return j
 
