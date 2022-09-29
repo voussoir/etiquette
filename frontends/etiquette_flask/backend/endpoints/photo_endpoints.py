@@ -401,6 +401,7 @@ def get_search_core():
     height = request.args.get('height')
     aspectratio = request.args.get('aspectratio')
     bytes = request.args.get('bytes')
+    has_albums = request.args.get('has_albums')
     has_thumbnail = request.args.get('has_thumbnail')
     duration = request.args.get('duration')
     bitrate = request.args.get('bitrate')
@@ -421,6 +422,7 @@ def get_search_core():
         'extension': extension,
         'extension_not': extension_not,
         'filename': filename_terms,
+        'has_albums': has_albums,
         'has_tags': has_tags,
         'has_thumbnail': has_thumbnail,
         'is_searchhidden': is_searchhidden,

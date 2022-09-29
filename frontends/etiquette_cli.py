@@ -140,6 +140,7 @@ def search_by_argparse(args, yield_albums=False, yield_photos=False):
         extension=args.extension,
         extension_not=args.extension_not,
         filename=args.filename,
+        has_albums=args.has_albums,
         has_tags=args.has_tags,
         has_thumbnail=args.has_thumbnail,
         is_searchhidden=args.is_searchhidden,
@@ -1415,6 +1416,16 @@ def main(argv):
         default=None,
         help='''
         Search for strings within Photos' filenames.
+        ''',
+    )
+    p_search.add_argument(
+        '--has_albums',
+        '--has-albums',
+        default=None,
+        help='''
+        If "yes", Photo must belong to at least one album.
+        If "no", Photo must not belong to any albums.
+        If "null", doesn't matter.
         ''',
     )
     p_search.add_argument(

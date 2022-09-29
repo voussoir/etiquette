@@ -192,6 +192,12 @@ def normalize_filename(filename_terms):
 
     return filename_terms
 
+def normalize_has_albums(has_albums):
+    '''
+    See voussoirkit.stringtools.truthystring.
+    '''
+    return stringtools.truthystring(has_albums, None)
+
 def normalize_has_tags(has_tags):
     '''
     See voussoirkit.stringtools.truthystring.

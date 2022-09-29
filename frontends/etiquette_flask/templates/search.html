@@ -296,6 +296,11 @@
                 </option>
                 {% endfor %}
             </select>
+            <select name="has_albums" class="basic_param">
+                <option value=""    {{"selected" if search_kwargs['has_albums']==None else ""}}>Album or no album</option>
+                <option value="yes" {{"selected" if search_kwargs['has_albums']==True else ""}}>Photos contained in albums</option>
+                <option value="no"  {{"selected" if search_kwargs['has_albums']==False else ""}}>Photos not in albums</option>
+            </select>
             <select name="has_tags" class="basic_param">
                 <option value=""    {{"selected" if search_kwargs['has_tags']==None else ""}}>Tagged or untagged</option>
                 <option value="yes" {{"selected" if search_kwargs['has_tags']==True else ""}}>Tagged only</option>

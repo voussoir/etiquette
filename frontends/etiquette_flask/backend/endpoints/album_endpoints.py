@@ -205,14 +205,10 @@ def get_all_album_names():
     response = {'albums': all_albums}
     return flasktools.json_response(response)
 
-def get_albums_core():
-    albums = list(common.P.get_root_albums())
-    albums.sort(key=lambda x: x.display_name.lower())
-    return albums
-
 @site.route('/albums')
 def get_albums_html():
-    albums = get_albums_core()
+    albums = list(common.P.get_root_albums())
+    albums.sort(key=lambda x: x.display_name.lower())
     response = common.render_template(
         request,
         'album.html',
@@ -223,8 +219,9 @@ def get_albums_html():
 
 @site.route('/albums.json')
 def get_albums_json():
-    albums = get_albums_core()
-    albums = [album.jsonify(minimal=True) for album in albums]
+    albums = list(common.P.get_albums())
+    albums.sort(key=lambda x: x.display_name.lower())
+    albums = [album.jsonify(include_photos=False) for album in albums]
     return flasktools.json_response(albums)
 
 # Album create and delete ##########################################################################

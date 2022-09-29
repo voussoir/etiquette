@@ -426,6 +426,7 @@ class PDBPhotoMixin:
             extension=None,
             extension_not=None,
             filename=None,
+            has_albums=None,
             has_tags=None,
             has_thumbnail=None,
             is_searchhidden=False,
@@ -474,6 +475,11 @@ class PDBPhotoMixin:
             Examples:
             '.pdf AND (programming OR "survival guide")'
             '.pdf programming python' (implicitly AND each term)
+
+        has_albums:
+            If True, require that the Photo belongs to >=1 album.
+            If False, require that the Photo belongs to no albums.
+            If None, either is okay.
 
         has_tags:
             If True, require that the Photo has >=1 tag.
@@ -569,6 +575,7 @@ class PDBPhotoMixin:
         extension = searchhelpers.normalize_extension(extension)
         extension_not = searchhelpers.normalize_extension(extension_not)
         filename = searchhelpers.normalize_filename(filename)
+        has_albums = searchhelpers.normalize_has_tags(has_albums)
         has_tags = searchhelpers.normalize_has_tags(has_tags)
         has_thumbnail = searchhelpers.normalize_has_thumbnail(has_thumbnail)
         is_searchhidden = searchhelpers.normalize_is_searchhidden(is_searchhidden)
@@ -660,6 +667,7 @@ class PDBPhotoMixin:
                 'extension': list(extension) or None,
                 'extension_not': list(extension_not) or None,
                 'filename': filename or None,
+                'has_albums': has_albums,
                 'has_tags': has_tags,
                 'has_thumbnail': has_thumbnail,
                 'mimetype': list(mimetype) or None,
@@ -731,9 +739,14 @@ class PDBPhotoMixin:
             wheres.append(clauses)
             bindings.extend(patterns)
 
+        if has_albums is True:
+            wheres.append('EXISTS (SELECT 1 FROM album_photo_rel WHERE photoid == photos.id)')
+        elif has_albums is False:
+            wheres.append('NOT EXISTS (SELECT 1 FROM album_photo_rel WHERE photoid == photos.id)')
+
         if has_tags is True:
             wheres.append('EXISTS (SELECT 1 FROM photo_tag_rel WHERE photoid == photos.id)')
-        if has_tags is False:
+        elif has_tags is False:
             wheres.append('NOT EXISTS (SELECT 1 FROM photo_tag_rel WHERE photoid == photos.id)')
 
         if yield_albums and not yield_photos:
