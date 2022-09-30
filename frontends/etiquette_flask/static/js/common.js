@@ -58,145 +58,17 @@ function refresh_or_alert(response)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// HTTP ////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-common.formdata =
-function formdata(data)
-{
-    fd = new FormData();
-    for (let [key, value] of Object.entries(data))
-    {
-        if (value === undefined)
-        {
-            continue;
-        }
-        if (value === null)
-        {
-            value = '';
-        }
-        fd.append(key, value);
-    }
-    return fd;
-}
-
-common._request =
-function _request(method, url, callback)
-{
-    /*
-    Perform an HTTP request and call the `callback` with the response.
-
-    The response will have the following structure:
-    {
-        "meta": {
-            "completed": true / false,
-            "status": If the connection failed or request otherwise could not
-                complete, `status` will be 0. If the request completed,
-                `status` will be the HTTP response code.
-            "json_ok": If the server responded with parseable json, `json_ok`
-                will be true, and that data will be in `response.data`. If the
-                server response was not parseable json, `json_ok` will be false
-                and `response.data` will be undefined.
-            "request_url": The URL exactly as given to this call.
-        }
-        "data": {JSON parsed from server response if json_ok}.
-    }
-
-    So, from most lenient to most strict, error catching might look like:
-    if response.meta.completed
-    if response.meta.json_ok
-    if response.meta.status === 200
-    if response.meta.status === 200 and response.meta.json_ok
-    */
-    const request = new XMLHttpRequest();
-    const response = {
-        "meta": {
-            "completed": false,
-            "status": 0,
-            "json_ok": false,
-            "request_url": url,
-        },
-    };
-
-    request.onreadystatechange = function()
-    {
-        /*
-        readystate values:
-        0 UNSENT / ABORTED
-        1 OPENED
-        2 HEADERS_RECEIVED
-        3 LOADING
-        4 DONE
-        */
-        if (request.readyState != 4)
-            {return;}
-
-        if (callback == null)
-            {return;}
-
-        response.meta.status = request.status;
-
-        if (request.status != 0)
-        {
-            response.meta.completed = true;
-            try
-            {
-                response.data = JSON.parse(request.responseText);
-                response.meta.json_ok = true;
-            }
-            catch (exc)
-            {
-                response.meta.json_ok = false;
-            }
-        }
-        callback(response);
-    };
-    const asynchronous = true;
-    request.open(method, url, asynchronous);
-    return request;
-}
-
-common.get =
-function get(url, callback)
-{
-    request = common._request("GET", url, callback);
-    request.send();
-    return request;
-}
-
-common.post =
-function post(url, data, callback)
-{
-    /*
-    `data`:
-        a FormData object which you have already filled with values, or a
-        dictionary from which a FormData will be made, using common.formdata.
-    */
-    if (data instanceof FormData || data === null)
-    {
-        ;
-    }
-    else
-    {
-        data = common.formdata(data);
-    }
-    request = common._request("POST", url, callback);
-    request.send(data);
-    return request;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
 // STRING TOOLS ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 common.join_and_trail =
-function join_and_trail(l, s)
+function join_and_trail(list, separator)
 {
-    if (l.length === 0)
+    if (list.length === 0)
     {
         return "";
     }
-    return l.join(s) + s
+    return list.join(separator) + separator
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

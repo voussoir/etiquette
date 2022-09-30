@@ -16,6 +16,7 @@
     <script src="/static/js/api.js"></script>
     <script src="/static/js/cards.js"></script>
     <script src="/static/js/hotkeys.js"></script>
+    <script src="/static/js/http.js"></script>
     <script src="/static/js/photo_clipboard.js"></script>
     <script src="/static/js/spinners.js"></script>
     <script src="/static/js/tag_autocomplete.js"></script>
@@ -239,7 +240,11 @@ function request_more_divs()
         }
         refresh_divs();
     }
-    common.post(url, data, callback);
+    http.post({
+        url: url,
+        data: data,
+        callback: callback,
+    });
 }
 
 function my_clipboard_load_save_hook()
