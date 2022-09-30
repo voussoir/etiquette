@@ -94,7 +94,7 @@ def post_login():
     return flasktools.json_response({})
 
 @site.route('/logout', methods=['POST'])
-def logout():
+def post_logout():
     session_manager.remove(request)
     response = flasktools.json_response({})
     return response
