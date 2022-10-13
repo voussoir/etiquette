@@ -8,27 +8,30 @@ http.request_queue = {};
 http.request_queue.array = [];
 
 http.request_queue.push =
-function request_queue_push(func)
+function request_queue_push(func, kwargs)
 {
+    const delay = ((! kwargs) ? 0 : kwargs["delay"]) || 0;
     http.request_queue.array.push(func)
-    if (http.requests_in_flight == 0)
-    {
-        http.request_queue_next();
-    }
+    setTimeout(http.request_queue.next, 0);
 }
 
-http.request_queue.unshift =
-function request_queue_unshift(func)
+http.request_queue.pushleft =
+function request_queue_pushleft(func, kwargs)
 {
     http.request_queue.array.unshift(func)
-    if (http.requests_in_flight == 0)
+    setTimeout(http.request_queue.next, 0);
+}
+
+http.request_queue.clear =
+function request_queue_clear()
+{
+    while (http.request_queue.array.length > 0)
     {
-        http.request_queue_next();
+        http.request_queue.array.shift();
     }
 }
-http.request_queue.pushleft = http.request_queue.unshift;
 
-http.request_queue_next =
+http.request_queue.next =
 function request_queue_next()
 {
     if (http.requests_in_flight > 0)
@@ -68,9 +71,23 @@ function _request(kwargs)
     /*
     Perform an HTTP request and call the `callback` with the response.
 
+    Required kwargs:
+    url
+
+    Optional kwargs:
+    with_credentials: goes to xhr.withCredentials
+    callback
+    asynchronous: goes to the async parameter of xhr.open
+    headers: an object fully of {key: value} that will get added as headers in
+        addition to those in the global http.HEADERS.
+    data: the body of your post request. Can be a FormData object, a string,
+        or an object of {key: value} that will get automatically turned into
+        a FormData.
+
     The response will have the following structure:
     {
         "meta": {
+            "id": a large random number to uniquely identify this request.
             "request": the XMLHttpRequest object,
             "completed": true / false,
             "status": If the connection failed or request otherwise could not
@@ -95,6 +112,7 @@ function _request(kwargs)
     const request = new XMLHttpRequest();
     const response = {
         "meta": {
+            "id": Math.random() * Number.MAX_SAFE_INTEGER,
             "request": request,
             "completed": false,
             "status": 0,
@@ -122,7 +140,7 @@ function _request(kwargs)
         http.requests_in_flight -= 1;
         setTimeout(http.request_queue_next, 0);
 
-        if (kwargs["callback"] == null)
+        if (! (kwargs["callback"]))
         {
             return;
         }

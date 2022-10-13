@@ -400,11 +400,11 @@ function add_remove_photo_tag_callback(response)
     {
         const tagname = response.data.tagname;
         message_positivity = "message_positive";
-        if (response.meta.request_url.includes("add_tag"))
+        if (response.meta.kwargs.url.includes("add_tag"))
         {
             message_text = "Added tag " + tagname;
         }
-        else if (response.meta.request_url.includes("remove_tag"))
+        else if (response.meta.kwargs.url.includes("remove_tag"))
         {
             message_text = "Removed tag " + tagname;
         }
