@@ -31,7 +31,7 @@
     <div id="content_body">
         <div id="hierarchy_self" class="panel">
             <h1 id="display_name">{{user.display_name}}</h1>
-            <p>ID: <a href="/userid/{{user.id}}">{{user.id}}</a></p>
+            <p>ID: <a href="/userid/{{user.id}}"><code>{{user.id}}</code></a></p>
             <p>User since <span title="{{user.created|timestamp_to_8601}}">{{user.created|timestamp_to_naturaldate}}.</span></p>
         </div>
 
