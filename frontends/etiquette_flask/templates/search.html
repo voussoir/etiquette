@@ -297,7 +297,7 @@
                 </option>
                 {% endfor %}
             </select>
-            <select name="has_albums" class="basic_param">
+            <select name="has_albums" class="basic_param" onchange="return disable_yield_albums_if_not_has_albums();">
                 <option value=""    {{"selected" if search_kwargs['has_albums']==None else ""}}>Album or no album</option>
                 <option value="yes" {{"selected" if search_kwargs['has_albums']==True else ""}}>Photos contained in albums</option>
                 <option value="no"  {{"selected" if search_kwargs['has_albums']==False else ""}}>Photos not in albums</option>
@@ -515,6 +515,21 @@ function orderby_remove_hook(button)
     {
         /* You can't remove the only one left */
         ul.removeChild(li);
+    }
+}
+
+function disable_yield_albums_if_not_has_albums()
+{
+    const has_albums = document.querySelector("select[name='has_albums']");
+    const yield_albums = document.querySelector("select[name='yield_albums']");
+    if (has_albums.value == "no")
+    {
+        yield_albums.value = "no";
+        yield_albums.disabled = true;
+    }
+    else
+    {
+        yield_albums.disabled = false;
     }
 }
 
@@ -738,6 +753,7 @@ common.bind_box_to_button(input_expression, search_go_button);
 function on_pageload()
 {
     photo_clipboard.register_hotkeys();
+    disable_yield_albums_if_not_has_albums();
 }
 document.addEventListener("DOMContentLoaded", on_pageload);
 </script>
