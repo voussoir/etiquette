@@ -210,6 +210,9 @@
                 />Clipboard
                 </label>
             </li>
+            {% if not photo.real_path.is_file %}
+            <li>⚠️ File does not exist.</li>
+            {% endif %}
         </ul>
 
         <!-- CONTAINING ALBUMS -->
