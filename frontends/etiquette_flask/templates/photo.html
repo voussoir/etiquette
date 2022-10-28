@@ -91,6 +91,15 @@
     max-height: 100%;
     max-width: 100%;
 }
+#photo_viewer pre
+{
+    align-self: start;
+    width: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    margin: 0;
+    white-space: pre-wrap;
+}
 #photo_viewer a
 {
     margin: auto;
@@ -253,6 +262,9 @@
 
         {% elif photo.simple_mimetype == "audio" %}
         <audio src="{{photo|file_link}}" controls></audio>
+
+        {% elif photo.simple_mimetype == "text" and photo.real_path.is_file and photo.real_path.size < 2**20 %}
+        <pre>{{photo.real_path.open('r', encoding='utf-8', errors='replace').read()}}</pre>
 
         {% else %}
         <a href="{{photo|file_link}}">View {{photo.basename}}</a>
