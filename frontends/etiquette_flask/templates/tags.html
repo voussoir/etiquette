@@ -125,10 +125,9 @@
 
             {% set author = specific_tag.author %}
             {% if author is not none %}
-            <p>
-                Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a>
-            </p>
+            <p>Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a></p>
             {% endif %}
+            <p>ID: <a href="/tagid/{{specific_tag.id}}"><code>{{specific_tag.id}}</code></a></p>
         </div> <!-- hierarchy_self -->
 
         {% set parents = specific_tag.get_parents() %}
