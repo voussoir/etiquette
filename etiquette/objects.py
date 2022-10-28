@@ -926,12 +926,14 @@ class Photo(ObjectBase):
         # self._mimetype vars to help memoize, which needs to be None-capable.
         # So although I normally like using @property, this is less lines of
         # code and less indirection really.
-        self.mimetype = helpers.get_mimetype(self.real_path.basename)
+        mime = helpers.get_mimetype(self.real_path.extension.no_dot)
 
-        if self.mimetype is None:
+        if mime is None:
             self.simple_mimetype = None
+            self.mimetype = None
         else:
-            self.simple_mimetype = self.mimetype.split('/')[0]
+            self.simple_mimetype = mime[0]
+            self.mimetype = '/'.join(mime)
 
     def _uncache(self):
         self.photodb.caches[Photo].remove(self.id)

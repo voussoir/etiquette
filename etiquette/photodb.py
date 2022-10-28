@@ -725,7 +725,8 @@ class PDBPhotoMixin:
                 bindings.extend(extension_not)
 
         if mimetype:
-            notnulls.add('extension')
+            extensions = {extension for (extension, (typ, subtyp)) in constants.MIMETYPES.items() if typ in mimetype}
+            wheres.append(f'extension IN {sqlhelpers.listify(extensions)} COLLATE NOCASE')
 
         if within_directory:
             patterns = {d.absolute_path.rstrip(os.sep) for d in within_directory}
@@ -807,9 +808,6 @@ class PDBPhotoMixin:
         results_received = 0
         for row in generator:
             photo = self.get_cached_instance(objects.Photo, row)
-
-            if mimetype and photo.simple_mimetype not in mimetype:
-                continue
 
             if filename_tree and not filename_tree.evaluate(photo.basename.lower()):
                 continue

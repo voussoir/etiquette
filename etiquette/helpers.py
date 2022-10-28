@@ -5,7 +5,6 @@ codebase but don't deserve to be methods of any class.
 import bs4
 import datetime
 import hashlib
-import mimetypes
 import os
 import re
 import PIL.Image
@@ -286,16 +285,9 @@ def generate_video_thumbnail(filepath, outfile, width, height, **special) -> PIL
     )
     return True
 
-def get_mimetype(filepath) -> typing.Optional[str]:
-    '''
-    Extension to mimetypes.guess_type which uses my
-    constants.ADDITIONAL_MIMETYPES.
-    '''
-    extension = os.path.splitext(filepath)[1].replace('.', '')
-    mimetype = constants.ADDITIONAL_MIMETYPES.get(extension, None)
-    if mimetype is None:
-        mimetype = mimetypes.guess_type(filepath)[0]
-    return mimetype
+def get_mimetype(extension) -> typing.Optional[str]:
+    extension = extension.strip('.')
+    return constants.MIMETYPES.get(extension, None)
 
 def hash_photoset(photos) -> str:
     '''
