@@ -161,8 +161,6 @@
             <ul id="tag_list">
             {% for (qualified_name, tag) in tags %}
                 <li>
-                    {# cards.create_tag_card(tag, link="search_musts", extra_classes="must_shortcut", innertext="(+)") #}
-                    {# cards.create_tag_card(tag, link="search_forbids", extra_classes="forbid_shortcut", innertext="(x)") #}
                     {{cards.create_tag_card(tag, link="info", extra_classes="main_card", innertext=qualified_name, with_alt_description=True)-}}
                     {% if specific_tag or '.' in qualified_name -%}
                     <button
