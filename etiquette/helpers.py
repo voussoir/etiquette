@@ -333,7 +333,7 @@ def now():
     '''
     Return the current UTC datetime object.
     '''
-    n = datetime.datetime.now(datetime.timezone.utc)
+    n = datetime.datetime.now(tz=datetime.timezone.utc)
     return n
 
 def parse_unit_string(s) -> typing.Union[int, float, None]:
