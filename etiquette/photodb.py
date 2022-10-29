@@ -581,6 +581,7 @@ class PDBPhotoMixin:
         is_searchhidden = searchhelpers.normalize_is_searchhidden(is_searchhidden)
         sha256 = searchhelpers.normalize_sha256(sha256)
         mimetype = searchhelpers.normalize_extension(mimetype)
+        sha256 = searchhelpers.normalize_extension(sha256)
         within_directory = searchhelpers.normalize_within_directory(within_directory, warning_bag=warning_bag)
         yield_albums = searchhelpers.normalize_yield_albums(yield_albums)
         yield_photos = searchhelpers.normalize_yield_photos(yield_photos)
@@ -671,6 +672,7 @@ class PDBPhotoMixin:
                 'has_tags': has_tags,
                 'has_thumbnail': has_thumbnail,
                 'mimetype': list(mimetype) or None,
+                'sha256': list(sha256) or None,
                 'tag_musts': tag_musts or None,
                 'tag_mays': tag_mays or None,
                 'tag_forbids': tag_forbids or None,

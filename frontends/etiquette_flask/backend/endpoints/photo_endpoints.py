@@ -377,6 +377,7 @@ def get_search_core():
     extension = request.args.get('extension')
     extension_not = request.args.get('extension_not')
     mimetype = request.args.get('mimetype')
+    sha256 = request.args.get('sha256')
     is_searchhidden = request.args.get('is_searchhidden', False)
     yield_albums = request.args.get('yield_albums', True)
     yield_photos = request.args.get('yield_photos', True)
@@ -427,6 +428,7 @@ def get_search_core():
         'has_thumbnail': has_thumbnail,
         'is_searchhidden': is_searchhidden,
         'mimetype': mimetype,
+        'sha256': sha256,
         'tag_musts': tag_musts,
         'tag_mays': tag_mays,
         'tag_forbids': tag_forbids,

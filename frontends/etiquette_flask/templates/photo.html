@@ -202,6 +202,7 @@
                 <li>Overall bitrate: <a href="/search?bitrate={{photo.bitrate|round(method='floor')|int}}..{{photo.bitrate|round(method='ceil')|int}}">{{photo.bitrate|int}}</a> kbps</li>
             {% endif %}
             <li>Created <a href="/search?created={{photo.created.timestamp()|int-43200}}..{{photo.created.timestamp()|int+43200}}">{{photo.created|timestamp_to_naturaldate}}</a></li>
+            <li>SHA256: <a href="/search?sha256={{photo.sha256}}"><code>{{photo.sha256[:16]}}</code></a></li>
             <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="return refresh_metadata_form();">Refresh metadata</button></li>
             {% if request.is_localhost %}
             <li><button id="show_in_folder_button" onclick="return show_in_folder_form();">Show in folder</button></li>
