@@ -192,20 +192,21 @@
                 <li>Author: <a href="/userid/{{photo.author.id}}">{{photo.author.display_name}}</a></li>
             {% endif %}
             {% if photo.width and photo.height %}
-                <li title="{{(photo.area / 1000000)|round(2)}} mpx">Dimensions: {{photo.width}}&times;{{photo.height}} px</li>
-                <li>Aspect ratio: {{photo.aspectratio|round(2)}}</li>
+                <li title="{{(photo.area / 1000000)|round(2)}} mpx">Dimensions: <a href="/search?width={{photo.width}}..{{photo.width}}&height={{photo.height}}..{{photo.height}}">{{photo.width}}&times;{{photo.height}}</a> px</li>
+                {% set aspectratio = photo.aspectratio|round(2) %}
+                <li>Aspect ratio: <a href="/search?aspectratio={{aspectratio-0.01}}..{{aspectratio+0.01}}">{{aspectratio}}</a></li>
             {% endif %}
-            <li>Size: {{photo.bytes|bytestring}}</li>
+            <li>Size: <a href="/search?bytes={{photo.bytes}}..{{photo.bytes}}">{{photo.bytes|bytestring}}</a></li>
             {% if photo.duration %}
-                <li>Duration: {{photo.duration_string}}</li>
-                <li>Overall bitrate: {{photo.bitrate|int}} kbps</li>
+                <li>Duration: <a href="/search?duration={{photo.duration|round(method='floor')|int}}..{{photo.duration|round(method='ceil')|int}}">{{photo.duration_string}}</a></li>
+                <li>Overall bitrate: <a href="/search?bitrate={{photo.bitrate|round(method='floor')|int}}..{{photo.bitrate|round(method='ceil')|int}}">{{photo.bitrate|int}}</a> kbps</li>
             {% endif %}
-            <li>Created {{photo.created|timestamp_to_naturaldate}}</li>
+            <li>Created <a href="/search?created={{photo.created.timestamp()|int-43200}}..{{photo.created.timestamp()|int+43200}}">{{photo.created|timestamp_to_naturaldate}}</a></li>
             <li><button id="refresh_metadata_button" class="green_button button_with_spinner" onclick="return refresh_metadata_form();">Refresh metadata</button></li>
             {% if request.is_localhost %}
             <li><button id="show_in_folder_button" onclick="return show_in_folder_form();">Show in folder</button></li>
             {% endif %}
-            <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as original filename</a></li>
+            <li><a href="{{photo|file_link}}?download=true&original_filename=true">Download as filename</a></li>
             <li><a href="{{photo|file_link}}?download=true">Download as {{photo.id}}.{{photo.extension}}</a></li>
             <li>
                 <label>
