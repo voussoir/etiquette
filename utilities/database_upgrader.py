@@ -883,7 +883,7 @@ def upgrade_21_to_22(photodb):
 
     m.go()
 
-    photodb.execute('DROP INDEX index_photos_override_filename')
+    photodb.execute('DROP INDEX IF EXISTS index_photos_override_filename')
     photodb.execute('CREATE INDEX IF NOT EXISTS index_photos_basename on photos(basename COLLATE NOCASE)')
 
 def upgrade_all(data_directory):
