@@ -31,11 +31,9 @@ class Migrator:
     def __init__(self, photodb):
         self.photodb = photodb
 
-        query = 'SELECT name, sql FROM sqlite_master WHERE type == "table"'
-        self.tables = {
-            name: {'create': sql, 'transfer': f'INSERT INTO {name} SELECT * FROM {name}_old'}
-            for (name, sql) in self.photodb.select(query)
-        }
+        query = 'SELECT name FROM sqlite_master WHERE type == "table"'
+        table_names = list(self.photodb.select(query))
+        self.tables = {name: {} for name in table_names}
 
         # The user may be adding entirely new tables derived from the data of
         # old ones. We'll need to skip new tables for the rename and drop_old
@@ -56,15 +54,19 @@ class Migrator:
         for (name, query) in self.indices:
             self.photodb.execute(f'DROP INDEX {name}')
 
-        for (name, table) in self.tables.items():
+        self.tables = {name: table for (name, table) in self.tables.items() if len(table) > 0}
+
+        for name in self.tables.keys():
             if name not in self.existing_tables:
                 continue
             self.photodb.execute(f'ALTER TABLE {name} RENAME TO {name}_old')
 
         for (name, table) in self.tables.items():
+            log.debug(table['create'])
             self.photodb.execute(table['create'])
 
         for (name, table) in self.tables.items():
+            log.debug(table['transfer'])
             self.photodb.execute(table['transfer'])
 
         for (name, query) in self.tables.items():
