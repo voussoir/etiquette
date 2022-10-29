@@ -444,7 +444,7 @@ class PDBPhotoMixin:
             warning_bag=None,
 
             give_back_parameters=False,
-            yield_albums=True,
+            yield_albums=False,
             yield_photos=True,
         ):
         '''

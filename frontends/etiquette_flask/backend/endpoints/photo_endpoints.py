@@ -379,7 +379,7 @@ def get_search_core():
     mimetype = request.args.get('mimetype')
     sha256 = request.args.get('sha256')
     is_searchhidden = request.args.get('is_searchhidden', False)
-    yield_albums = request.args.get('yield_albums', True)
+    yield_albums = request.args.get('yield_albums', False)
     yield_photos = request.args.get('yield_photos', True)
 
     limit = request.args.get('limit')
