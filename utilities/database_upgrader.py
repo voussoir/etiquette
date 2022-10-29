@@ -1,8 +1,9 @@
-import time
 import argparse
 import os
+import shutil
 import sys
 
+from voussoirkit import gentools
 from voussoirkit import vlogging
 
 import etiquette
@@ -810,18 +811,19 @@ def upgrade_20_to_21(photodb):
         new_thumbnail.parent.makedirs(exist_ok=True)
         shutil.move(old_thumbnail.absolute_path, new_thumbnail.absolute_path)
 
-    photos = photodb.get_photos()
-    import shutil
-    for photo in photos:
-        if photo.thumbnail is None:
-            continue
-        old_thumbnail = photo.thumbnail
-        new_thumbnail = photo.make_thumbnail_filepath()
+    rows = photodb.select('SELECT id, thumbnail FROM photos where thumbnail IS NOT NULL')
+    for row in rows:
+        photo_id = row['id']
+        chunked_id = [''.join(chunk) for chunk in gentools.chunk_generator(str(photo_id), 3)]
+        folder = chunked_id[:-1]
+        folder = os.sep.join(folder)
+        folder = photodb.thumbnail_directory.join(folder)
+        old_thumbnail = photodb.thumbnail_directory.join(row['thumbnail'])
+        new_thumbnail = folder.with_child(f'{photo_id}.jpg')
         print(old_thumbnail, new_thumbnail)
         photodb.on_commit_queue.append({'action': movethumbnail, 'args': (old_thumbnail, new_thumbnail)})
         store_as = new_thumbnail.relative_to(photodb.thumbnail_directory)
-        photodb.update(table=etiquette.objects.Photo, pairs={'id': photo.id, 'thumbnail': store_as}, where_key='id')
-        photo.thumbnail = new_thumbnail
+        photodb.update(table=etiquette.objects.Photo, pairs={'id': photo_id, 'thumbnail': store_as}, where_key='id')
 
 def upgrade_21_to_22(photodb):
     m = Migrator(photodb)
