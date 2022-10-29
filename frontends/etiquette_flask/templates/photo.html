@@ -433,12 +433,12 @@ function add_remove_photo_tag_callback(response)
 
 function delete_photo_form()
 {
-    api.photos.delete(PHOTO_ID, false, api.photos.callback_go_to_search);
+    api.photos.delete(PHOTO_ID, false, common.go_to_root);
 }
 
 function delete_photo_from_disk_form()
 {
-    api.photos.delete(PHOTO_ID, true, api.photos.callback_go_to_search);
+    api.photos.delete(PHOTO_ID, true, common.go_to_root);
 }
 
 function generate_thumbnail_for_video_form()
