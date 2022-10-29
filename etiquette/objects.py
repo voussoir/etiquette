@@ -1070,7 +1070,7 @@ class Photo(ObjectBase):
     def duration_string(self) -> typing.Optional[str]:
         if self.duration is None:
             return None
-        return hms.seconds_to_hms(self.duration)
+        return hms.seconds_to_hms(self.duration, force_minutes=True)
 
     @decorators.required_feature('photo.generate_thumbnail')
     @worms.atomic
