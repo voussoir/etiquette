@@ -888,6 +888,117 @@ def upgrade_21_to_22(photodb):
     photodb.execute('DROP INDEX IF EXISTS index_photos_override_filename')
     photodb.execute('CREATE INDEX IF NOT EXISTS index_photos_basename on photos(basename COLLATE NOCASE)')
 
+def upgrade_22_to_23(photodb):
+    '''
+    In this version, the rel tables received explicit primary keys and
+    a `created` column.
+    '''
+    m = Migrator(photodb)
+
+    m.tables['album_associated_directories']['create'] = '''
+    CREATE TABLE IF NOT EXISTS album_associated_directories(
+        albumid INT NOT NULL,
+        directory TEXT NOT NULL COLLATE NOCASE,
+        created INT,
+        FOREIGN KEY(albumid) REFERENCES albums(id)
+    );
+    '''
+    m.tables['album_associated_directories']['transfer'] = '''
+    INSERT INTO album_associated_directories SELECT
+        albumid,
+        directory,
+        (SELECT created FROM albums WHERE id=albumid)
+    FROM album_associated_directories_old;
+    '''
+
+    m.tables['album_group_rel']['create'] = '''
+    CREATE TABLE IF NOT EXISTS album_group_rel(
+        parentid INT NOT NULL,
+        memberid INT NOT NULL,
+        created INT,
+        PRIMARY KEY(parentid, memberid),
+        FOREIGN KEY(parentid) REFERENCES albums(id),
+        FOREIGN KEY(memberid) REFERENCES albums(id)
+    );
+    '''
+    m.tables['album_group_rel']['transfer'] = '''
+    INSERT INTO album_group_rel SELECT
+        parentid,
+        memberid,
+        MAX((SELECT created FROM albums WHERE id=parentid), (SELECT created FROM albums WHERE id=memberid))
+    FROM album_group_rel_old;
+    '''
+
+    m.tables['album_photo_rel']['create'] = '''
+    CREATE TABLE IF NOT EXISTS album_photo_rel(
+        albumid INT NOT NULL,
+        photoid INT NOT NULL,
+        created INT,
+        PRIMARY KEY(albumid, photoid),
+        FOREIGN KEY(albumid) REFERENCES albums(id),
+        FOREIGN KEY(photoid) REFERENCES photos(id)
+    );
+    '''
+    m.tables['album_photo_rel']['transfer'] = '''
+    INSERT INTO album_photo_rel SELECT
+        albumid,
+        photoid,
+        MAX((SELECT created FROM albums WHERE id=albumid), (SELECT created FROM photos WHERE id=photoid))
+    FROM album_photo_rel_old;
+    '''
+
+    m.tables['photo_tag_rel']['create'] = '''
+    CREATE TABLE IF NOT EXISTS photo_tag_rel(
+        photoid INT NOT NULL,
+        tagid INT NOT NULL,
+        created INT,
+        PRIMARY KEY(photoid, tagid),
+        FOREIGN KEY(photoid) REFERENCES photos(id),
+        FOREIGN KEY(tagid) REFERENCES tags(id)
+    );
+    '''
+    m.tables['photo_tag_rel']['transfer'] = '''
+    INSERT INTO photo_tag_rel SELECT
+        photoid,
+        tagid,
+        MAX((SELECT created FROM photos WHERE id=photoid), (SELECT created FROM tags WHERE id=tagid))
+    FROM photo_tag_rel_old;
+    '''
+
+    m.tables['tag_group_rel']['create'] = '''
+    CREATE TABLE IF NOT EXISTS tag_group_rel(
+        parentid INT NOT NULL,
+        memberid INT NOT NULL,
+        created INT,
+        PRIMARY KEY(parentid, memberid),
+        FOREIGN KEY(parentid) REFERENCES tags(id),
+        FOREIGN KEY(memberid) REFERENCES tags(id)
+    );
+    '''
+    m.tables['tag_group_rel']['transfer'] = '''
+    INSERT INTO tag_group_rel SELECT
+        parentid,
+        memberid,
+        MAX((SELECT created FROM tags WHERE id=parentid), (SELECT created FROM tags WHERE id=memberid))
+    FROM tag_group_rel_old;
+    '''
+
+    m.tables['tag_synonyms']['create'] = '''
+    CREATE TABLE IF NOT EXISTS tag_synonyms(
+        name TEXT NOT NULL,
+        mastername TEXT NOT NULL,
+        created INT
+    );
+    '''
+    m.tables['tag_synonyms']['transfer'] = '''
+    INSERT INTO tag_synonyms SELECT
+        name,
+        mastername,
+        (SELECT COALESCE(created, 0) FROM tags WHERE tags.name=name)
+    FROM tag_synonyms_old;
+    '''
+    m.go()
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

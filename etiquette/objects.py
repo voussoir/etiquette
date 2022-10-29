@@ -122,6 +122,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         data = {
             'parentid': self.id,
             'memberid': member.id,
+            'created': helpers.now().timestamp(),
         }
         self.photodb.insert(table=self.group_table, pairs=data)
 
@@ -332,7 +333,11 @@ class Album(ObjectBase, GroupableMixin):
             return
 
         log.info('Adding directory "%s" to %s.', path.absolute_path, self)
-        data = {'albumid': self.id, 'directory': path.absolute_path}
+        data = {
+            'albumid': self.id,
+            'directory': path.absolute_path,
+            'created': helpers.now().timestamp(),
+        }
         self.photodb.insert(table='album_associated_directories', pairs=data)
 
     @decorators.required_feature('album.edit')
@@ -375,7 +380,11 @@ class Album(ObjectBase, GroupableMixin):
 
     def _add_photo(self, photo):
         log.info('Adding photo %s to %s.', photo, self)
-        data = {'albumid': self.id, 'photoid': photo.id}
+        data = {
+            'albumid': self.id,
+            'photoid': photo.id,
+            'created': helpers.now().timestamp(),
+        }
         self.photodb.insert(table='album_photo_rel', pairs=data)
 
     @decorators.required_feature('album.edit')
@@ -965,7 +974,8 @@ class Photo(ObjectBase):
 
         data = {
             'photoid': self.id,
-            'tagid': tag.id
+            'tagid': tag.id,
+            'created': helpers.now().timestamp(),
         }
         self.photodb.insert(table='photo_tag_rel', pairs=data)
         data = {
@@ -1661,6 +1671,7 @@ class Tag(ObjectBase, GroupableMixin):
         data = {
             'name': synname,
             'mastername': self.name,
+            'created': helpers.now().timestamp(),
         }
         self.photodb.insert(table='tag_synonyms', pairs=data)
 

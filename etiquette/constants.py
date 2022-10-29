@@ -41,7 +41,7 @@ ffmpeg = _load_ffmpeg()
 
 # Database #########################################################################################
 
-DATABASE_VERSION = 22
+DATABASE_VERSION = 23
 
 DB_INIT = f'''
 CREATE TABLE IF NOT EXISTS albums(
@@ -135,6 +135,7 @@ CREATE INDEX IF NOT EXISTS index_users_username on users(username COLLATE NOCASE
 CREATE TABLE IF NOT EXISTS album_associated_directories(
     albumid INT NOT NULL,
     directory TEXT NOT NULL COLLATE NOCASE,
+    created INT,
     FOREIGN KEY(albumid) REFERENCES albums(id)
 );
 CREATE INDEX IF NOT EXISTS index_album_associated_directories_albumid on
@@ -145,6 +146,8 @@ CREATE INDEX IF NOT EXISTS index_album_associated_directories_directory on
 CREATE TABLE IF NOT EXISTS album_group_rel(
     parentid INT NOT NULL,
     memberid INT NOT NULL,
+    created INT,
+    PRIMARY KEY(parentid, memberid),
     FOREIGN KEY(parentid) REFERENCES albums(id),
     FOREIGN KEY(memberid) REFERENCES albums(id)
 );
@@ -154,20 +157,19 @@ CREATE INDEX IF NOT EXISTS index_album_group_rel_memberid on album_group_rel(mem
 CREATE TABLE IF NOT EXISTS album_photo_rel(
     albumid INT NOT NULL,
     photoid INT NOT NULL,
+    created INT,
+    PRIMARY KEY(albumid, photoid),
     FOREIGN KEY(albumid) REFERENCES albums(id),
     FOREIGN KEY(photoid) REFERENCES photos(id)
 );
 CREATE INDEX IF NOT EXISTS index_album_photo_rel_albumid on album_photo_rel(albumid);
 CREATE INDEX IF NOT EXISTS index_album_photo_rel_photoid on album_photo_rel(photoid);
 ----------------------------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS id_numbers(
-    tab TEXT NOT NULL,
-    last_id TEXT NOT NULL
-);
-----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS photo_tag_rel(
     photoid INT NOT NULL,
     tagid INT NOT NULL,
+    created INT,
+    PRIMARY KEY(photoid, tagid),
     FOREIGN KEY(photoid) REFERENCES photos(id),
     FOREIGN KEY(tagid) REFERENCES tags(id)
 );
@@ -178,6 +180,8 @@ CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid_tagid on photo_tag_rel(ph
 CREATE TABLE IF NOT EXISTS tag_group_rel(
     parentid INT NOT NULL,
     memberid INT NOT NULL,
+    created INT,
+    PRIMARY KEY(parentid, memberid),
     FOREIGN KEY(parentid) REFERENCES tags(id),
     FOREIGN KEY(memberid) REFERENCES tags(id)
 );
@@ -186,7 +190,8 @@ CREATE INDEX IF NOT EXISTS index_tag_group_rel_memberid on tag_group_rel(memberi
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tag_synonyms(
     name TEXT NOT NULL,
-    mastername TEXT NOT NULL
+    mastername TEXT NOT NULL,
+    created INT
 );
 CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
 '''
