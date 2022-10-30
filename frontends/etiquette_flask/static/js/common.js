@@ -389,6 +389,10 @@ function init_enable_on_pageload(element)
     To create an input element which is disabled at first, and is enabled when
     the DOM has completed loading, give it the disabled attribute and the
     class "enable_on_pageload".
+
+    For example:
+    <input type="text" class="enable_on_pageload" disabled/>
+    <button class="enable_on_pageload" disabled>Action</button>
     */
     element.disabled = false;
     element.classList.remove("enable_on_pageload");
