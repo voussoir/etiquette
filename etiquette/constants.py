@@ -240,6 +240,7 @@ MIMETYPES = {
     'opus': ('audio', 'ogg'),
     'snd': ('audio', 'basic'),
     'wav': ('audio', 'x-wav'),
+    'wma': ('audio', 'x-ms-wma'),
 
     'bmp': ('image', 'x-ms-bmp'),
     'gif': ('image', 'gif'),
@@ -290,6 +291,7 @@ MIMETYPES = {
     'mpg': ('video', 'mpeg'),
     'qt': ('video', 'quicktime'),
     'webm': ('video', 'webm'),
+    'wmv': ('video', 'x-ms-asf'),
 }
 
 # Photodb ##########################################################################################
