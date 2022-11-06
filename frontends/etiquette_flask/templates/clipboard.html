@@ -44,6 +44,7 @@
 #toolbox > *
 {
     display: flex;
+    gap: 4px;
 }
 #toolbox input
 {
@@ -98,15 +99,15 @@
 {{header.make_header(session=session)}}
 <div id="content_body" class="sticky_side_right sticky_bottom_right">
 <div id="left">
-    <div class="panel">The clipboard contains <span class="dynamic_clipboard_count">0</span> items.
-        <button id="clear_clipboard_button" class="red_button" onclick="return photo_clipboard.clear_clipboard();">Clear it.</button>
-    </div>
 
     <div id="clipboard_photos_holder" class="photos_holder panel">
     </div>
 </div>
 <div id="right">
     <div id="toolbox">
+        <div id="count_clear_area">The clipboard contains <span class="dynamic_clipboard_count">0</span> items.
+            <button id="clear_clipboard_button" class="red_button" onclick="return photo_clipboard.clear_clipboard();">Clear it.</button>
+        </div>
         <div id="add_tag_area">
             <input type="text" id="add_tag_textbox" class="entry_with_history entry_with_tagname_replacements" list="tag_autocomplete_datalist">
             <button class="add_tag_button green_button" id="add_tag_button" onclick="return add_tag_form();">Add tag</button>
