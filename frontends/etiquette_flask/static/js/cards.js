@@ -244,7 +244,7 @@ function create(photo, view)
     photo_card_tags.innerText = tag_names_inner;
     photo_card.appendChild(photo_card_tags);
 
-    if (photo_clipboard)
+    if (window.photo_clipboard !== undefined)
     {
         const clipboard_checkbox = photo_clipboard.give_checkbox(photo_card);
         photo_clipboard.apply_check(clipboard_checkbox);
