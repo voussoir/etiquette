@@ -497,7 +497,10 @@ def relocate_argparse(args):
     load_photodb()
 
     with photodb.transaction:
-        photo = photodb.get_photo(args.photo_id)
+        if '.' in args.photo_id:
+            photo = photodb.get_photo_by_path(args.photo_id)
+        else:
+            photo = photodb.get_photo(args.photo_id)
         photo.relocate(args.filepath)
 
         if not (args.autoyes or interactive.getpermission('Commit?')):
@@ -1310,6 +1313,9 @@ def main(argv):
     )
     p_relocate.add_argument(
         'filepath',
+        help='''
+        The new filepath of the photo.
+        ''',
     )
     p_relocate.add_argument(
         '--yes',
