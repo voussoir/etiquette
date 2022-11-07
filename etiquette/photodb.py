@@ -1676,6 +1676,7 @@ class PhotoDB(
             return f'PhotoDB(data_directory={self.data_directory})'
 
     def close(self) -> None:
+        log.debug('Closing PhotoDB.')
         super().close()
 
         if getattr(self, 'ephemeral', False):

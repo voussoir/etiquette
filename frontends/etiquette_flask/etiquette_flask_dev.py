@@ -68,7 +68,9 @@ def etiquette_flask_launch(
         http.serve_forever()
     except KeyboardInterrupt:
         log.info('Goodbye')
-        return 0
+
+    backend.common.P.close()
+    return 0
 
 def etiquette_flask_launch_argparse(args):
     return etiquette_flask_launch(
