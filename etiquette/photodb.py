@@ -1117,25 +1117,6 @@ class PDBUserMixin:
     def get_users_by_sql(self, query, bindings=None) -> typing.Iterable[objects.User]:
         return self.get_objects_by_sql(objects.User, query, bindings)
 
-    @decorators.required_feature('user.login')
-    def login(self, username=None, id=None, *, password) -> objects.User:
-        '''
-        Return the User object for the user if the credentials are correct.
-        '''
-        try:
-            user = self.get_user(username=username, id=id)
-        except exceptions.NoSuchUser:
-            raise exceptions.WrongLogin()
-
-        if not isinstance(password, bytes):
-            password = password.encode('utf-8')
-
-        success = bcrypt.checkpw(password, user.password_hash)
-        if not success:
-            raise exceptions.WrongLogin()
-
-        return user
-
     @decorators.required_feature('user.new')
     @worms.atomic
     def new_user(self, username, password, *, display_name=None) -> objects.User:

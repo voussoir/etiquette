@@ -77,18 +77,22 @@ def post_login():
     username = request.form['username']
     password = request.form['password']
     try:
-        # Consideration: Should the server hash the password to discourage
-        # information (user exists) leak via response time?
-        # Currently I think not, because they can check if the account
-        # page 404s anyway.
-        user = common.P.login(username=username, password=password)
-    except (etiquette.exceptions.NoSuchUser, etiquette.exceptions.WrongLogin):
+        user = common.P_user(username, 'json')
+    except (etiquette.exceptions.NoSuchUser):
+        exc = etiquette.exceptions.WrongLogin()
+        response = exc.jsonify()
+        return flasktools.json_response(response, status=404)
+
+    try:
+        user.check_password(password)
+    except (etiquette.exceptions.WrongLogin):
         exc = etiquette.exceptions.WrongLogin()
         response = exc.jsonify()
         return flasktools.json_response(response, status=422)
     except etiquette.exceptions.FeatureDisabled as exc:
         response = exc.jsonify()
         return flasktools.json_response(response, status=400)
+
     session = sessions.Session(request, user)
     session_manager.add(session)
     return flasktools.json_response({})

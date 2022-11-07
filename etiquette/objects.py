@@ -1947,6 +1947,16 @@ class User(ObjectBase):
     def _uncache(self):
         self.photodb.caches[User].remove(self.id)
 
+    @decorators.required_feature('user.login')
+    def check_password(self, password):
+        if not isinstance(password, bytes):
+            password = password.encode('utf-8')
+
+        success = bcrypt.checkpw(password, self.password_hash)
+        if not success:
+            raise exceptions.WrongLogin()
+        return success
+
     @decorators.required_feature('user.edit')
     @worms.atomic
     def delete(self, *, disown_authored_things) -> None:
