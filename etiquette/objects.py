@@ -691,7 +691,7 @@ class Album(ObjectBase, GroupableMixin):
             return sum(1 for child in walker)
 
         query = stringtools.collapse_whitespace('''
-        SELECT COUNT(memberid)
+        SELECT COUNT(*)
         FROM album_group_rel
         WHERE parentid == ?
         ''')
@@ -707,7 +707,7 @@ class Album(ObjectBase, GroupableMixin):
         performs the counting in the database instead of creating Photo objects.
         '''
         query = stringtools.collapse_whitespace('''
-        SELECT COUNT(photoid)
+        SELECT COUNT(*)
         FROM album_photo_rel
         WHERE albumid IN {albumids}
         ''')

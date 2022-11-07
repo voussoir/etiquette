@@ -42,7 +42,7 @@ class PDBAlbumMixin:
         return self.get_object_by_id(objects.Album, id)
 
     def get_album_count(self) -> int:
-        return self.select_one_value('SELECT COUNT(id) FROM albums')
+        return self.select_one_value('SELECT COUNT(*) FROM albums')
 
     def get_albums(self) -> typing.Iterable[objects.Album]:
         return self.get_objects(objects.Album)
@@ -178,7 +178,7 @@ class PDBBookmarkMixin:
         return self.get_object_by_id(objects.Bookmark, id)
 
     def get_bookmark_count(self) -> int:
-        return self.select_one_value('SELECT COUNT(id) FROM bookmarks')
+        return self.select_one_value('SELECT COUNT(*) FROM bookmarks')
 
     def get_bookmarks(self) -> typing.Iterable[objects.Bookmark]:
         return self.get_objects(objects.Bookmark)
@@ -268,7 +268,7 @@ class PDBPhotoMixin:
         return photo
 
     def get_photo_count(self) -> int:
-        return self.select_one_value('SELECT COUNT(id) FROM photos')
+        return self.select_one_value('SELECT COUNT(*) FROM photos')
 
     def get_photos(self) -> typing.Iterable[objects.Photo]:
         return self.get_objects(objects.Photo)
@@ -956,7 +956,7 @@ class PDBTagMixin:
         return tag
 
     def get_tag_count(self) -> int:
-        return self.select_one_value('SELECT COUNT(id) FROM tags')
+        return self.select_one_value('SELECT COUNT(*) FROM tags')
 
     def get_tags(self) -> typing.Iterable[objects.Tag]:
         '''
@@ -1076,7 +1076,7 @@ class PDBUserMixin:
         return self.get_cached_instance(objects.User, user_row)
 
     def get_user_count(self) -> int:
-        return self.select_one_value('SELECT COUNT(id) FROM users')
+        return self.select_one_value('SELECT COUNT(*) FROM users')
 
     def get_user_id_or_none(self, user_obj_or_id) -> typing.Optional[str]:
         '''
