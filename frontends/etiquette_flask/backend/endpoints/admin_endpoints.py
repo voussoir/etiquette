@@ -1,6 +1,7 @@
 import flask; from flask import request
 
 from voussoirkit import flasktools
+from voussoirkit import timetools
 
 import etiquette
 
@@ -26,7 +27,7 @@ def get_dbdump():
     with common.P.transaction:
         binary = common.P.database_filepath.read('rb')
 
-    now = etiquette.helpers.now().strftime('%Y-%m-%d_%H-%M-%S')
+    now = timetools.now().strftime('%Y-%m-%d_%H-%M-%S')
     download_as = f'etiquette {now}.db'
     outgoing_headers = {
         'Content-Type': 'application/octet-stream',

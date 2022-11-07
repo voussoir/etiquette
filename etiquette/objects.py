@@ -22,6 +22,7 @@ from voussoirkit import sentinel
 from voussoirkit import spinal
 from voussoirkit import sqlhelpers
 from voussoirkit import stringtools
+from voussoirkit import timetools
 from voussoirkit import vlogging
 from voussoirkit import worms
 
@@ -122,7 +123,7 @@ class GroupableMixin(metaclass=abc.ABCMeta):
         data = {
             'parentid': self.id,
             'memberid': member.id,
-            'created': helpers.now().timestamp(),
+            'created': timetools.now().timestamp(),
         }
         self.photodb.insert(table=self.group_table, pairs=data)
 
@@ -336,7 +337,7 @@ class Album(ObjectBase, GroupableMixin):
         data = {
             'albumid': self.id,
             'directory': path.absolute_path,
-            'created': helpers.now().timestamp(),
+            'created': timetools.now().timestamp(),
         }
         self.photodb.insert(table='album_associated_directories', pairs=data)
 
@@ -383,7 +384,7 @@ class Album(ObjectBase, GroupableMixin):
         data = {
             'albumid': self.id,
             'photoid': photo.id,
-            'created': helpers.now().timestamp(),
+            'created': timetools.now().timestamp(),
         }
         self.photodb.insert(table='album_photo_rel', pairs=data)
 
@@ -975,12 +976,12 @@ class Photo(ObjectBase):
         data = {
             'photoid': self.id,
             'tagid': tag.id,
-            'created': helpers.now().timestamp(),
+            'created': timetools.now().timestamp(),
         }
         self.photodb.insert(table='photo_tag_rel', pairs=data)
         data = {
             'id': self.id,
-            'tagged_at': helpers.now().timestamp(),
+            'tagged_at': timetools.now().timestamp(),
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
@@ -1382,7 +1383,7 @@ class Photo(ObjectBase):
 
         data = {
             'id': self.id,
-            'tagged_at': helpers.now().timestamp(),
+            'tagged_at': timetools.now().timestamp(),
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
@@ -1401,7 +1402,7 @@ class Photo(ObjectBase):
 
         data = {
             'id': self.id,
-            'tagged_at': helpers.now().timestamp(),
+            'tagged_at': timetools.now().timestamp(),
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
@@ -1671,7 +1672,7 @@ class Tag(ObjectBase, GroupableMixin):
         data = {
             'name': synname,
             'mastername': self.name,
-            'created': helpers.now().timestamp(),
+            'created': timetools.now().timestamp(),
         }
         self.photodb.insert(table='tag_synonyms', pairs=data)
 

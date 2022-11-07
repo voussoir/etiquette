@@ -329,13 +329,6 @@ def make_atom_feed(objects, feed_title, feed_link, feed_id) -> bs4.BeautifulSoup
 
     return soup
 
-def now():
-    '''
-    Return the current UTC datetime object.
-    '''
-    n = datetime.datetime.now(tz=datetime.timezone.utc)
-    return n
-
 def parse_unit_string(s) -> typing.Union[int, float, None]:
     '''
     Try to parse the string as an int, float, or bytestring, or hms.

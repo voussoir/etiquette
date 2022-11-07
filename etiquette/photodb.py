@@ -25,6 +25,7 @@ from voussoirkit import ratelimiter
 from voussoirkit import spinal
 from voussoirkit import sqlhelpers
 from voussoirkit import stringtools
+from voussoirkit import timetools
 from voussoirkit import vlogging
 from voussoirkit import worms
 
@@ -113,7 +114,7 @@ class PDBAlbumMixin:
             'id': album_id,
             'title': title,
             'description': description,
-            'created': helpers.now().timestamp(),
+            'created': timetools.now().timestamp(),
             'thumbnail_photo': None,
             'author_id': author_id,
         }
@@ -205,7 +206,7 @@ class PDBBookmarkMixin:
             'id': bookmark_id,
             'title': title,
             'url': url,
-            'created': helpers.now().timestamp(),
+            'created': timetools.now().timestamp(),
             'author_id': author_id,
         }
         self.insert(table=objects.Bookmark, pairs=data)
@@ -359,7 +360,7 @@ class PDBPhotoMixin:
             'id': photo_id,
             'filepath': filepath.absolute_path,
             'override_filename': None,
-            'created': helpers.now().timestamp(),
+            'created': timetools.now().timestamp(),
             'tagged_at': None,
             'author_id': author_id,
             'searchhidden': searchhidden,
@@ -993,7 +994,7 @@ class PDBTagMixin:
             'id': tag_id,
             'name': tagname,
             'description': description,
-            'created': helpers.now().timestamp(),
+            'created': timetools.now().timestamp(),
             'author_id': author_id,
         }
         self.insert(table=objects.Tag, pairs=data)
@@ -1163,7 +1164,7 @@ class PDBUserMixin:
             'username': username,
             'password': hashed_password,
             'display_name': display_name,
-            'created': helpers.now().timestamp(),
+            'created': timetools.now().timestamp(),
         }
         self.insert(table=objects.User, pairs=data)
 

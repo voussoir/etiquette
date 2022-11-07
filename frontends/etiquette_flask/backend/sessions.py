@@ -5,6 +5,7 @@ import werkzeug.datastructures
 from voussoirkit import cacheclass
 from voussoirkit import flasktools
 from voussoirkit import passwordy
+from voussoirkit import timetools
 
 import etiquette
 
@@ -107,7 +108,7 @@ class Session:
         self.user = user
         self.ip_address = request.remote_addr
         self.user_agent = request.headers.get('User-Agent', '')
-        self.last_activity = etiquette.helpers.now()
+        self.last_activity = timetools.now()
 
     def __repr__(self):
         if self.user:
@@ -116,9 +117,9 @@ class Session:
             return f'Session {self.token} for anonymous'
 
     def expired(self):
-        now = etiquette.helpers.now()
+        now = timetools.now()
         age = now - self.last_activity
         return age.seconds > SESSION_MAX_AGE
 
     def maintain(self):
-        self.last_activity = etiquette.helpers.now()
+        self.last_activity = timetools.now()
