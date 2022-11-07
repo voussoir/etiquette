@@ -11,10 +11,13 @@ import os
 import PIL.Image
 import re
 import send2trash
+import time
 import traceback
 import typing
 
 from voussoirkit import bytestring
+from voussoirkit import dotdict
+from voussoirkit import expressionmatch
 from voussoirkit import gentools
 from voussoirkit import hms
 from voussoirkit import pathclass
@@ -32,6 +35,7 @@ from . import constants
 from . import decorators
 from . import exceptions
 from . import helpers
+from . import searchhelpers
 
 BAIL = sentinel.Sentinel('BAIL')
 
@@ -1521,6 +1525,431 @@ class Photo(ObjectBase):
         self._tagged_at_dt = helpers.utcfromtimestamp(self.tagged_at_unix)
         return self._tagged_at_dt
 
+class Search:
+    '''
+    FILE METADATA
+    =============
+    area, aspectratio, width, height, bytes, duration, bitrate:
+        A dotdot_range string representing min and max. Or just a number
+        for lower bound.
+
+    extension:
+        A string or list of strings of acceptable file extensions.
+
+    extension_not:
+        A string or list of strings of unacceptable file extensions.
+        Including '*' will forbid all extensions, thus returning only
+        extensionless files.
+
+    filename:
+        A string or list of strings in the form of an expression.
+        Match is CASE-INSENSITIVE.
+        Examples:
+        '.pdf AND (programming OR "survival guide")'
+        '.pdf programming python' (implicitly AND each term)
+
+    sha256:
+        A string or list of strings of exact SHA256 hashes to match.
+
+    within_directory:
+        A string or list of strings or pathclass Paths of directories.
+        Photos MUST have a `filepath` that is a child of one of these
+        directories.
+
+    OBJECT METADATA
+    ===============
+    author:
+        A list of User objects or usernames, or a string of comma-separated
+        usernames.
+
+    created:
+        A dotdot_range string respresenting min and max. Or just a number
+        for lower bound.
+
+    has_albums:
+        If True, require that the Photo belongs to >=1 album.
+        If False, require that the Photo belongs to no albums.
+        If None, either is okay.
+
+    has_tags:
+        If True, require that the Photo has >=1 tag.
+        If False, require that the Photo has no tags.
+        If None, any amount is okay.
+
+    has_thumbnail:
+        Require a thumbnail?
+        If None, anything is okay.
+
+    is_searchhidden:
+        If True, find *only* searchhidden photos.
+        If False, find *only* nonhidden photos.
+        If None, either is okay.
+
+    mimetype:
+        A string or list of strings of acceptable mimetypes.
+        'image', 'video', ...
+        Note we are only interested in the simple "video", "audio" etc.
+        For exact mimetypes you might as well use an extension search.
+
+    TAGS
+    ====
+    tag_musts:
+        A list of tag names or Tag objects.
+        Photos MUST have ALL tags in this list.
+
+    tag_mays:
+        A list of tag names or Tag objects.
+        Photos MUST have AT LEAST ONE tag in this list.
+
+    tag_forbids:
+        A list of tag names or Tag objects.
+        Photos MUST NOT have ANY tag in the list.
+
+    tag_expression:
+        A string or list of strings in the form of an expression.
+        Can NOT be used with the must, may, forbid style search.
+        Examples:
+        'family AND (animals OR vacation)'
+        'family vacation outdoors' (implicitly AND each term)
+
+    QUERY OPTIONS
+    =============
+    limit:
+        The maximum number of *successful* results to yield.
+
+    offset:
+        How many *successful* results to skip before we start yielding.
+
+    orderby:
+        A list of strings like ['aspectratio DESC', 'created ASC'] to sort
+        and subsort the results.
+        Descending is assumed if not provided.
+
+    yield_albums:
+        If True, albums which contain photos matching the search
+        will be yielded.
+
+    yield_photos:
+        If True, photos matching the search will be yielded.
+    '''
+    def __init__(self, photodb, kwargs, *, raise_errors=True):
+        self.photodb = photodb
+        self.created = timetools.now()
+        self.raise_errors = raise_errors
+        if isinstance(kwargs, dict):
+            kwargs = dotdict.DotDict(kwargs, default=None)
+        self.kwargs = kwargs
+        self.generator_started = False
+        self.generator_exhausted = False
+        self.more_after_limit = None
+        self.start_time = None
+        self.end_time = None
+        self.start_commit_id = None
+        self.warning_bag = WarningBag()
+        self.results = self._generator()
+        self.results_received = 0
+
+    def atomify(self):
+        raise NotImplementedError
+
+    def jsonify(self):
+        # The search has converted many arguments into sets or other types.
+        # Convert them back into something that will display nicely on the search form.
+        kwargs = self.kwargs._to_dict()
+        join_helper = lambda x: ', '.join(x) if x else None
+        kwargs['extension'] = join_helper(kwargs['extension'])
+        kwargs['extension_not'] = join_helper(kwargs['extension_not'])
+        kwargs['mimetype'] = join_helper(kwargs['mimetype'])
+        kwargs['sha256'] = join_helper(kwargs['sha256'])
+
+        author_helper = lambda users: ', '.join(user.username for user in users) if users else None
+        kwargs['author'] = author_helper(kwargs['author'])
+
+        tagname_helper = lambda tags: [tag.name for tag in tags] if tags else None
+        kwargs['tag_musts'] = tagname_helper(kwargs['tag_musts'])
+        kwargs['tag_mays'] = tagname_helper(kwargs['tag_mays'])
+        kwargs['tag_forbids'] = tagname_helper(kwargs['tag_forbids'])
+
+        results = [
+            result.jsonify(include_albums=False)
+            if isinstance(result, Photo) else
+            result.jsonify(minimal=True)
+            for result in self.results
+        ]
+
+        j = {
+            'kwargs': kwargs,
+            'results': results,
+            'more_after_limit': self.more_after_limit,
+        }
+        return j
+
+    def _generator(self):
+        self.start_time = time.perf_counter()
+        self.generator_started = True
+        self.start_commit_id = self.photodb.last_commit_id
+
+        kwargs = self.kwargs
+
+        maximums = {}
+        minimums = {}
+        searchhelpers.minmax('area', kwargs.area, minimums, maximums, warning_bag=self.warning_bag)
+        searchhelpers.minmax('created', kwargs.created, minimums, maximums, warning_bag=self.warning_bag)
+        searchhelpers.minmax('width', kwargs.width, minimums, maximums, warning_bag=self.warning_bag)
+        searchhelpers.minmax('height', kwargs.height, minimums, maximums, warning_bag=self.warning_bag)
+        searchhelpers.minmax('aspectratio', kwargs.aspectratio, minimums, maximums, warning_bag=self.warning_bag)
+        searchhelpers.minmax('bytes', kwargs.bytes, minimums, maximums, warning_bag=self.warning_bag)
+        searchhelpers.minmax('duration', kwargs.duration, minimums, maximums, warning_bag=self.warning_bag)
+        searchhelpers.minmax('bitrate', kwargs.bitrate, minimums, maximums, warning_bag=self.warning_bag)
+
+        kwargs.author = searchhelpers.normalize_author(kwargs.author, photodb=self.photodb, warning_bag=self.warning_bag)
+        kwargs.extension = searchhelpers.normalize_extension(kwargs.extension)
+        kwargs.extension_not = searchhelpers.normalize_extension(kwargs.extension_not)
+        kwargs.filename = searchhelpers.normalize_filename(kwargs.filename)
+        kwargs.has_albums = searchhelpers.normalize_has_tags(kwargs.has_albums)
+        kwargs.has_tags = searchhelpers.normalize_has_tags(kwargs.has_tags)
+        kwargs.has_thumbnail = searchhelpers.normalize_has_thumbnail(kwargs.has_thumbnail)
+        kwargs.is_searchhidden = searchhelpers.normalize_is_searchhidden(kwargs.is_searchhidden)
+        kwargs.sha256 = searchhelpers.normalize_sha256(kwargs.sha256)
+        kwargs.mimetype = searchhelpers.normalize_extension(kwargs.mimetype)
+        kwargs.sha256 = searchhelpers.normalize_extension(kwargs.sha256)
+        kwargs.within_directory = searchhelpers.normalize_within_directory(kwargs.within_directory, warning_bag=self.warning_bag)
+        kwargs.yield_albums = searchhelpers.normalize_yield_albums(kwargs.yield_albums)
+        kwargs.yield_photos = searchhelpers.normalize_yield_photos(kwargs.yield_photos)
+
+        if kwargs.has_tags is False:
+            if (kwargs.tag_musts or kwargs.tag_mays or kwargs.tag_forbids or kwargs.tag_expression):
+                self.warning_bag.add("has_tags=False so all tag requests are ignored.")
+            kwargs.tag_musts = None
+            kwargs.tag_mays = None
+            kwargs.tag_forbids = None
+            kwargs.tag_expression = None
+        else:
+            kwargs.tag_musts = searchhelpers.normalize_tagset(self.photodb, kwargs.tag_musts, warning_bag=self.warning_bag)
+            kwargs.tag_mays = searchhelpers.normalize_tagset(self.photodb, kwargs.tag_mays, warning_bag=self.warning_bag)
+            kwargs.tag_forbids = searchhelpers.normalize_tagset(self.photodb, kwargs.tag_forbids, warning_bag=self.warning_bag)
+            kwargs.tag_expression = searchhelpers.normalize_tag_expression(kwargs.tag_expression)
+
+        if kwargs.extension is not None and kwargs.extension_not is not None:
+            kwargs.extension = kwargs.extension.difference(kwargs.extension_not)
+
+        tags_fixed = searchhelpers.normalize_mmf_vs_expression_conflict(
+            kwargs.tag_musts,
+            kwargs.tag_mays,
+            kwargs.tag_forbids,
+            kwargs.tag_expression,
+            self.warning_bag,
+        )
+        (kwargs.tag_musts, kwargs.tag_mays, kwargs.tag_forbids, kwargs.tag_expression) = tags_fixed
+
+        if kwargs.tag_expression:
+            tag_expression_tree = searchhelpers.tag_expression_tree_builder(
+                tag_expression=kwargs.tag_expression,
+                photodb=self.photodb,
+                warning_bag=self.warning_bag,
+            )
+            if tag_expression_tree is None:
+                kwargs.tag_expression = None
+                kwargs.tag_expression = None
+            else:
+                kwargs.tag_expression = str(tag_expression_tree)
+                frozen_children = self.photodb.get_cached_tag_export('flat_dict', tags=self.get_root_tags())
+                tag_match_function = searchhelpers.tag_expression_matcher_builder(frozen_children)
+        else:
+            tag_expression_tree = None
+            kwargs.tag_expression = None
+
+        if kwargs.has_tags is True and (kwargs.tag_musts or kwargs.tag_mays):
+            # has_tags check is redundant then, so disable it.
+            kwargs.has_tags = None
+
+        kwargs.limit = searchhelpers.normalize_limit(kwargs.limit, warning_bag=self.warning_bag)
+        kwargs.offset = searchhelpers.normalize_offset(kwargs.offset, warning_bag=self.warning_bag)
+        kwargs.orderby = searchhelpers.normalize_orderby(kwargs.orderby, warning_bag=self.warning_bag)
+
+        if kwargs.filename:
+            try:
+                filename_tree = expressionmatch.ExpressionTree.parse(kwargs.filename)
+                filename_tree.map(lambda x: x.lower())
+            except expressionmatch.NoTokens:
+                filename_tree = None
+        else:
+            filename_tree = None
+
+        if kwargs.orderby:
+            orderby = [(expanded, direction) for (friendly, expanded, direction) in kwargs.orderby]
+            kwargs.orderby = [
+                f'{friendly}-{direction}'
+                for (friendly, expanded, direction) in kwargs.orderby
+            ]
+        else:
+            orderby = [('created', 'desc')]
+            kwargs.orderby = None
+
+        if not kwargs.yield_albums and not kwargs.yield_photos:
+            exc = exceptions.NoYields(['yield_albums', 'yield_photos'])
+            self.warning_bag.add(exc)
+            if self.raise_errors:
+                raise exceptions.NoYields(['yield_albums', 'yield_photos'])
+            else:
+                return
+
+        photo_tag_rel_exist_clauses = searchhelpers.photo_tag_rel_exist_clauses(
+            kwargs.tag_musts,
+            kwargs.tag_mays,
+            kwargs.tag_forbids,
+        )
+
+        notnulls = set()
+        yesnulls = set()
+        wheres = []
+        bindings = []
+
+        if photo_tag_rel_exist_clauses:
+            wheres.extend(photo_tag_rel_exist_clauses)
+
+        if kwargs.author:
+            author_ids = [user.id for user in kwargs.author]
+            wheres.append(f'author_id IN {sqlhelpers.listify(author_ids)}')
+
+        if kwargs.extension:
+            if '*' in kwargs.extension:
+                wheres.append('extension != ""')
+            else:
+                qmarks = ', '.join('?' * len(kwargs.extension))
+                wheres.append(f'extension IN ({qmarks})')
+                bindings.extend(kwargs.extension)
+
+        if kwargs.extension_not:
+            if '*' in kwargs.extension_not:
+                wheres.append('extension == ""')
+            else:
+                qmarks = ', '.join('?' * len(kwargs.extension_not))
+                wheres.append(f'extension NOT IN ({qmarks})')
+                bindings.extend(kwargs.extension_not)
+
+        if kwargs.mimetype:
+            extensions = {
+                extension
+                for (extension, (typ, subtyp)) in constants.MIMETYPES.items()
+                if typ in kwargs.mimetype
+            }
+            wheres.append(f'extension IN {sqlhelpers.listify(extensions)} COLLATE NOCASE')
+
+        if kwargs.within_directory:
+            patterns = {d.absolute_path.rstrip(os.sep) for d in kwargs.within_directory}
+            patterns = {f'{d}{os.sep}%' for d in patterns}
+            clauses = ['filepath LIKE ?'] * len(patterns)
+            if len(clauses) > 1:
+                clauses = ' OR '.join(clauses)
+                clauses = f'({clauses})'
+            else:
+                clauses = clauses.pop()
+            wheres.append(clauses)
+            bindings.extend(patterns)
+
+        if kwargs.has_albums is True or (kwargs.yield_albums and not kwargs.yield_photos):
+            wheres.append('EXISTS (SELECT 1 FROM album_photo_rel WHERE photoid == photos.id)')
+        elif kwargs.has_albums is False:
+            wheres.append('NOT EXISTS (SELECT 1 FROM album_photo_rel WHERE photoid == photos.id)')
+
+        if kwargs.has_tags is True:
+            wheres.append('EXISTS (SELECT 1 FROM photo_tag_rel WHERE photoid == photos.id)')
+        elif kwargs.has_tags is False:
+            wheres.append('NOT EXISTS (SELECT 1 FROM photo_tag_rel WHERE photoid == photos.id)')
+
+        if kwargs.has_thumbnail is True:
+            notnulls.add('thumbnail')
+        elif kwargs.has_thumbnail is False:
+            yesnulls.add('thumbnail')
+
+        for (column, direction) in orderby:
+            if column != 'RANDOM()':
+                notnulls.add(column)
+
+        if kwargs.is_searchhidden is True:
+            wheres.append('searchhidden == 1')
+        elif kwargs.is_searchhidden is False:
+            wheres.append('searchhidden == 0')
+
+        if kwargs.sha256:
+            wheres.append(f'sha256 IN {sqlhelpers.listify(kwargs.sha256)}')
+
+        for column in notnulls:
+            wheres.append(column + ' IS NOT NULL')
+        for column in yesnulls:
+            wheres.append(column + ' IS NULL')
+
+        for (column, value) in minimums.items():
+            wheres.append(column + ' >= ' + str(value))
+
+        for (column, value) in maximums.items():
+            wheres.append(column + ' <= ' + str(value))
+
+        query = ['SELECT * FROM photos']
+
+        if wheres:
+            wheres = 'WHERE ' + ' AND '.join(wheres)
+            query.append(wheres)
+
+        if orderby:
+            orderby = [f'{column} {direction}' for (column, direction) in orderby]
+            orderby = ', '.join(orderby)
+            orderby = 'ORDER BY ' + orderby
+            query.append(orderby)
+
+        query = ' '.join(query)
+
+        query = f'{"-" * 80}\n{query}\n{"-" * 80}'
+
+        log.debug('\n%s %s', query, bindings)
+        # print(self.photodb.explain(query, bindings))
+        generator = self.photodb.select(query, bindings)
+        seen_albums = set()
+        offset = kwargs.offset
+        for row in generator:
+            photo = self.photodb.get_cached_instance(Photo, row)
+
+            if filename_tree and not filename_tree.evaluate(photo.basename.lower()):
+                continue
+
+            if tag_expression_tree:
+                photo_tags = set(photo.get_tags())
+                success = tag_expression_tree.evaluate(
+                    photo_tags,
+                    match_function=tag_match_function,
+                )
+                if not success:
+                    continue
+
+            if offset > 0:
+                offset -= 1
+                continue
+
+            if kwargs.yield_albums:
+                new_albums = photo.get_containing_albums().difference(seen_albums)
+                yield from new_albums
+                self.results_received += len(new_albums)
+                seen_albums.update(new_albums)
+
+            if kwargs.yield_photos:
+                yield photo
+                self.results_received += 1
+
+            if kwargs.limit is not None and self.results_received >= kwargs.limit:
+                break
+
+        try:
+            next(generator)
+        except StopIteration:
+            self.more_after_limit = False
+        else:
+            self.more_after_limit = True
+
+        self.generator_exhausted = True
+        self.end_time = time.perf_counter()
+        log.debug('Search took %s.', self.end_time - self.start_time)
+
 class Tag(ObjectBase, GroupableMixin):
     '''
     A Tag, which can be applied to Photos for organization.
@@ -1619,8 +2048,8 @@ class Tag(ObjectBase, GroupableMixin):
         # only has A because some other photo with A and B thinks A is obsolete.
         # This technique is nice and simple to understand for now.
         ancestors = list(member.walk_parents())
-        photos = self.photodb.search(tag_musts=[member], is_searchhidden=None, yield_albums=False)
-        for photo in photos:
+        photos = self.photodb.search(tag_musts=[member], is_searchhidden=None, yield_photos=True, yield_albums=False)
+        for photo in photos.results:
             photo.remove_tags(ancestors)
 
     @decorators.required_feature('tag.edit')
@@ -2112,3 +2541,6 @@ class WarningBag:
 
     def add(self, warning) -> None:
         self.warnings.add(warning)
+
+    def jsonify(self):
+        return [getattr(w, 'error_message', str(w)) for w in self.warnings]

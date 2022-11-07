@@ -183,7 +183,7 @@ def normalize_filename(filename_terms):
     Returns: A string where terms are separated by spaces.
     '''
     if filename_terms is None:
-        filename_terms = ''
+        return None
 
     if not isinstance(filename_terms, str):
         filename_terms = ' '.join(filename_terms)

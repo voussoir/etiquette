@@ -365,130 +365,98 @@ def post_batch_photos_download_zip():
 # Search ###########################################################################################
 
 def get_search_core():
-    warning_bag = etiquette.objects.WarningBag()
+    search = common.P.search(
+        area=request.args.get('area'),
+        width=request.args.get('width'),
+        height=request.args.get('height'),
+        aspectratio=request.args.get('aspectratio'),
+        bytes=request.args.get('bytes'),
+        duration=request.args.get('duration'),
+        bitrate=request.args.get('bitrate'),
 
-    has_tags = request.args.get('has_tags')
-    tag_musts = request.args.get('tag_musts')
-    tag_mays = request.args.get('tag_mays')
-    tag_forbids = request.args.get('tag_forbids')
-    tag_expression = request.args.get('tag_expression')
+        filename=request.args.get('filename'),
+        extension_not=request.args.get('extension_not'),
+        extension=request.args.get('extension'),
+        mimetype=request.args.get('mimetype'),
+        sha256=request.args.get('sha256'),
 
-    filename_terms = request.args.get('filename')
-    extension = request.args.get('extension')
-    extension_not = request.args.get('extension_not')
-    mimetype = request.args.get('mimetype')
-    sha256 = request.args.get('sha256')
-    is_searchhidden = request.args.get('is_searchhidden', False)
-    yield_albums = request.args.get('yield_albums', False)
-    yield_photos = request.args.get('yield_photos', True)
+        author=request.args.get('author'),
+        created=request.args.get('created'),
+        has_albums=request.args.get('has_albums'),
+        has_thumbnail=request.args.get('has_thumbnail'),
+        is_searchhidden=request.args.get('is_searchhidden', False),
 
-    limit = request.args.get('limit')
-    # This is being pre-processed because the site enforces a maximum value
-    # which the PhotoDB api does not.
-    limit = etiquette.searchhelpers.normalize_limit(limit, warning_bag=warning_bag)
+        has_tags=request.args.get('has_tags'),
+        tag_musts=request.args.get('tag_musts'),
+        tag_mays=request.args.get('tag_mays'),
+        tag_forbids=request.args.get('tag_forbids'),
+        tag_expression=request.args.get('tag_expression'),
 
-    if limit is None:
-        limit = 50
+        limit=request.args.get('limit'),
+        offset=request.args.get('offset'),
+        orderby=request.args.get('orderby'),
+
+        yield_albums=request.args.get('yield_albums', False),
+        yield_photos=request.args.get('yield_photos', True),
+    )
+
+    # The site enforces a maximum value which the PhotoDB does not.
+    search.kwargs.limit = etiquette.searchhelpers.normalize_limit(search.kwargs.limit)
+    if search.kwargs.limit is None:
+        search.kwargs.limit = 50
     else:
-        limit = min(limit, 1000)
+        search.kwargs.limit = min(search.kwargs.limit, 1000)
 
-    offset = request.args.get('offset')
-
-    author = request.args.get('author')
-
-    orderby = request.args.get('orderby')
-    area = request.args.get('area')
-    width = request.args.get('width')
-    height = request.args.get('height')
-    aspectratio = request.args.get('aspectratio')
-    bytes = request.args.get('bytes')
-    has_albums = request.args.get('has_albums')
-    has_thumbnail = request.args.get('has_thumbnail')
-    duration = request.args.get('duration')
-    bitrate = request.args.get('bitrate')
-    created = request.args.get('created')
-
-    # These are in a dictionary so I can pass them to the page template.
-    search_kwargs = {
-        'area': area,
-        'width': width,
-        'height': height,
-        'aspectratio': aspectratio,
-        'bytes': bytes,
-        'duration': duration,
-        'bitrate': bitrate,
-
-        'author': author,
-        'created': created,
-        'extension': extension,
-        'extension_not': extension_not,
-        'filename': filename_terms,
-        'has_albums': has_albums,
-        'has_tags': has_tags,
-        'has_thumbnail': has_thumbnail,
-        'is_searchhidden': is_searchhidden,
-        'mimetype': mimetype,
-        'sha256': sha256,
-        'tag_musts': tag_musts,
-        'tag_mays': tag_mays,
-        'tag_forbids': tag_forbids,
-        'tag_expression': tag_expression,
-
-        'limit': limit,
-        'offset': offset,
-        'orderby': orderby,
-
-        'warning_bag': warning_bag,
-        'give_back_parameters': True,
-
-        'yield_albums': yield_albums,
-        'yield_photos': yield_photos,
-    }
-    # print(search_kwargs)
-    search_generator = common.P.search(**search_kwargs)
-    # Because of the giveback, first element is cleaned up kwargs
-    search_kwargs = next(search_generator)
-    # Web UI users aren't allowed to use within_directory anyway, so don't
-    # show it to them.
-    search_kwargs.pop('within_directory', None)
-    # print(search_kwargs)
-
-    warnings = set()
-    search_results = []
-    for item in search_generator:
-        if isinstance(item, etiquette.objects.WarningBag):
-            warnings.update(item.warnings)
-            continue
-        search_results.append(item)
-
+    search.results = list(search.results)
     warnings = [
         w.error_message if hasattr(w, 'error_message') else str(w)
-        for w in warnings
+        for w in search.warning_bag.warnings
     ]
+
+    # Web UI users aren't allowed to use within_directory anyway, so don't
+    # show it to them.
+    del search.kwargs.within_directory
+    return search
+
+@site.route('/search_embed')
+def get_search_embed():
+    search = get_search_core()
+    response = common.render_template(
+        request,
+        'search_embed.html',
+        results=search.results,
+        search_kwargs=search.kwargs,
+    )
+    return response
+
+@site.route('/search')
+def get_search_html():
+    search = get_search_core()
+    search.kwargs.view = request.args.get('view', 'grid')
 
     # TAGS ON THIS PAGE
     total_tags = set()
-    for result in search_results:
+    for result in search.results:
         if isinstance(result, etiquette.objects.Photo):
             total_tags.update(result.get_tags())
     total_tags = sorted(total_tags, key=lambda t: t.name)
 
     # PREV-NEXT PAGE URLS
-    offset = search_kwargs['offset'] or 0
+    offset = search.kwargs.offset or 0
     original_params = request.args.to_dict()
-    original_params['limit'] = limit
+    original_params['limit'] = search.kwargs.limit
 
-    if limit and len(search_results) >= limit:
+    if search.more_after_limit:
         next_params = original_params.copy()
-        next_params['offset'] = offset + limit
+        next_params['offset'] = offset + search.kwargs.limit
         next_params = helpers.dict_to_params(next_params)
         next_page_url = '/search' + next_params
     else:
         next_page_url = None
 
-    if limit and offset > 0:
+    if search.kwargs.limit and offset > 0:
         prev_params = original_params.copy()
-        prev_offset = max(0, offset - limit)
+        prev_offset = max(0, offset - search.kwargs.limit)
         if prev_offset > 0:
             prev_params['offset'] = prev_offset
         else:
@@ -498,49 +466,23 @@ def get_search_core():
     else:
         prev_page_url = None
 
-    search_kwargs['view'] = request.args.get('view', 'grid')
-
-    final_results = {
-        'next_page_url': next_page_url,
-        'prev_page_url': prev_page_url,
-        'results': search_results,
-        'total_tags': total_tags,
-        'warnings': list(warnings),
-        'search_kwargs': search_kwargs,
-    }
-    return final_results
-
-@site.route('/search_embed')
-def get_search_embed():
-    search_results = get_search_core()
-    response = common.render_template(
-        request,
-        'search_embed.html',
-        results=search_results['results'],
-        search_kwargs=search_results['search_kwargs'],
-    )
-    return response
-
-@site.route('/search')
-def get_search_html():
-    search_results = get_search_core()
     response = common.render_template(
         request,
         'search.html',
-        next_page_url=search_results['next_page_url'],
-        prev_page_url=search_results['prev_page_url'],
-        results=search_results['results'],
-        search_kwargs=search_results['search_kwargs'],
-        total_tags=search_results['total_tags'],
-        warnings=search_results['warnings'],
+        next_page_url=next_page_url,
+        prev_page_url=prev_page_url,
+        results=search.results,
+        search_kwargs=search.kwargs,
+        total_tags=total_tags,
+        warnings=search.warning_bag.jsonify(),
     )
     return response
 
 @site.route('/search.atom')
 def get_search_atom():
-    search_results = get_search_core()['results']
+    search = get_search_core()
     soup = etiquette.helpers.make_atom_feed(
-        search_results,
+        search.results,
         feed_id=request.query_string.decode('utf-8'),
         feed_title='etiquette search',
         feed_link=request.url.replace('/search.atom', '/search'),
@@ -553,34 +495,9 @@ def get_search_atom():
 
 @site.route('/search.json')
 def get_search_json():
-    search_results = get_search_core()
-    search_kwargs = search_results['search_kwargs']
-
-    # The search has converted many arguments into sets or other types.
-    # Convert them back into something that will display nicely on the search form.
-    join_helper = lambda x: ', '.join(x) if x else None
-    search_kwargs['extension'] = join_helper(search_kwargs['extension'])
-    search_kwargs['extension_not'] = join_helper(search_kwargs['extension_not'])
-    search_kwargs['mimetype'] = join_helper(search_kwargs['mimetype'])
-
-    author_helper = lambda users: ', '.join(user.username for user in users) if users else None
-    search_kwargs['author'] = author_helper(search_kwargs['author'])
-
-    tagname_helper = lambda tags: [tag.name for tag in tags] if tags else None
-    search_kwargs['tag_musts'] = tagname_helper(search_kwargs['tag_musts'])
-    search_kwargs['tag_mays'] = tagname_helper(search_kwargs['tag_mays'])
-    search_kwargs['tag_forbids'] = tagname_helper(search_kwargs['tag_forbids'])
-
-    search_results['results'] = [
-        result.jsonify(include_albums=False)
-        if isinstance(result, etiquette.objects.Photo) else
-        result.jsonify(minimal=True)
-        for result in search_results['results']
-    ]
-    search_results['total_tags'] = [
-        tag.jsonify(minimal=True) for tag in search_results['total_tags']
-    ]
-    return flasktools.json_response(search_results)
+    search = get_search_core()
+    response = search.jsonify()
+    return flasktools.json_response(response)
 
 # Swipe ############################################################################################
 

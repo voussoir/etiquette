@@ -125,7 +125,7 @@ def search_in_cwd(**kwargs):
     return photodb.search(
         within_directory=cwd,
         **kwargs,
-    )
+    ).results
 
 def search_by_argparse(args, yield_albums=False, yield_photos=False):
     return search_in_cwd(
