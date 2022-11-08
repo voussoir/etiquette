@@ -32,7 +32,7 @@ class Migrator:
         self.photodb = photodb
 
         query = 'SELECT name FROM sqlite_master WHERE type == "table"'
-        table_names = list(self.photodb.select(query))
+        table_names = list(self.photodb.select_column(query))
         self.tables = {name: {} for name in table_names}
 
         # The user may be adding entirely new tables derived from the data of
