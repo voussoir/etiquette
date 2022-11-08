@@ -37,6 +37,9 @@ class SessionManager:
     def add(self, session):
         self.sessions[session.token] = session
 
+    def clear(self):
+        self.sessions.clear()
+
     def get(self, request):
         token = _normalize_token(request)
         session = self.sessions[token]

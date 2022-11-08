@@ -3,6 +3,15 @@ const api = {};
 /**************************************************************************************************/
 api.admin = {};
 
+api.admin.clear_sessions =
+function clear_sessions(callback)
+{
+    return http.post({
+        url: "/admin/clear_sessions",
+        callback: callback,
+    });
+}
+
 api.admin.reload_config =
 function reload_config(callback)
 {

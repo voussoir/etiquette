@@ -35,6 +35,14 @@ def get_dbdump():
     }
     return flask.Response(binary, headers=outgoing_headers)
 
+@site.route('/admin/clear_sessions', methods=['POST'])
+def post_clear_sessions():
+    if not request.is_localhost:
+        return flasktools.json_response({}, status=403)
+
+    session_manager.clear()
+    return flasktools.json_response({})
+
 @site.route('/admin/reload_config', methods=['POST'])
 def post_reload_config():
     if not request.is_localhost:
