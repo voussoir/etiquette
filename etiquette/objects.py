@@ -1905,7 +1905,7 @@ class Search:
         query = f'{"-" * 80}\n{query}\n{"-" * 80}'
 
         log.debug('\n%s %s', query, bindings)
-        # print(self.photodb.explain(query, bindings))
+        log.loud(self.photodb.explain(query, bindings))
         generator = self.photodb.select(query, bindings)
         seen_albums = set()
         offset = kwargs.offset
