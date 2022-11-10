@@ -178,7 +178,6 @@ Here is a brief overview of the project to help you learn your way around:
 
 - Make the wording between "new", "create", "add"; and "remove", "delete" more consistent.
 - User account system, permission levels, private pages.
-- Replace columns like area, ratio, bitrate by using expression indices or views (`width * height` etc).
 - Add a `Photo.merge` to combine duplicate entries.
 - Generate thumbnails for vector files without falling victim to bombs.
 - Allow photos to have nonstandard, orderby-able properties like "release year". How?
@@ -192,7 +191,6 @@ Here is a brief overview of the project to help you learn your way around:
 - Check for embedded cover art when thumbnailing audio files.
 - Batch movement of Albums... but without winding up with a second clipboard system?
 - Overall, more dynamism with cards and tag objects and updating page without requiring refresh.
-- Serve RSS/Atom forms of search results.
 - Caching!! I want more caching of photo's tags and albums, album's children and photos, tag's children, etc. At the moment I don't trust myself to implement it correctly with respect to deletion, relationship changes, and the possibility of two object instances (like an album holding on to a photo, but the photo itself falls out of photodb's get_cached_instance cache, then later a new instance of the photo is created, modified, deleted...)
 
 ## To do list: User permissions
