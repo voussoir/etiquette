@@ -58,7 +58,7 @@ def join_and_trail(l, s):
 
 @filter_function
 def timestamp_to_8601(timestamp):
-    return timestamp.isoformat(' ') + ' UTC'
+    return timestamp.isoformat(' ')
 
 @filter_function
 def timestamp_strftime(timestamp, format):
