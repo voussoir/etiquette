@@ -122,12 +122,10 @@ def minmax(key, value, minimums, maximums, warning_bag=None):
 def normalize_author(authors, photodb, warning_bag=None):
     '''
     Either:
-    - A string, where the usernames are separated by commas
-    - An iterable containing
-        - Usernames as strings
-        - User objects
+    - A string, where the user IDs are separated by commas
+    - An iterable containing IDs or User objects
 
-    Returns: A set of user IDs.
+    Returns: A set of User objects.
     '''
     if authors is None:
         authors = []
@@ -140,11 +138,12 @@ def normalize_author(authors, photodb, warning_bag=None):
         if isinstance(requested_author, objects.User):
             if requested_author.photodb == photodb:
                 users.add(requested_author)
+                continue
             else:
-                requested_author = requested_author.username
+                requested_author = requested_author.id
 
         try:
-            user = photodb.get_user(username=requested_author)
+            user = photodb.get_user_by_id(requested_author)
         except exceptions.NoSuchUser as exc:
             if warning_bag:
                 warning_bag.add(exc)

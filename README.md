@@ -178,7 +178,6 @@ Here is a brief overview of the project to help you learn your way around:
 
 - Make the wording between "new", "create", "add"; and "remove", "delete" more consistent.
 - User account system, permission levels, private pages.
-- Ability to access user photos by user's ID, not just username.
 - Replace columns like area, ratio, bitrate by using expression indices or views (`width * height` etc).
 - Add a `Photo.merge` to combine duplicate entries.
 - Generate thumbnails for vector files without falling victim to bombs.
