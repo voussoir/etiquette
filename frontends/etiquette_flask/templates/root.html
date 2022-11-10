@@ -76,6 +76,9 @@ body > .nice_link
     {% else %}
     <a class="nice_link" href="/login">Log in</a>
     {% endif %}
+    {% if request.is_localhost %}
+    <a class="nice_link" href="/admin">Admin</a>
+    {% endif %}
     <div class="link_group">
         <a class="nice_link" href="/?theme=turquoise">Turquoise</a>
         <a class="nice_link" href="/?theme=slate">Slate</a>
