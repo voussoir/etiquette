@@ -193,12 +193,12 @@
 <div id="content_body">
     <div id="left" class="panel">
         {% for tagtype in ["musts", "mays", "forbids"] %}
-        <div id="search_builder_{{tagtype}}" {% if search_kwargs["tag_expression"]%}class="hidden"{%endif%}>
+        <div id="search_builder_{{tagtype}}" {% if search_kwargs.tag_expression%}class="hidden"{%endif%}>
             <span>Tag {{tagtype}}:</span>
             <ul class="search_builder_tagger">
                 {% set key="tag_" + tagtype %}
-                {% if search_kwargs[key] %}
-                    {% for tag in search_kwargs[key] %}
+                {% if search_kwargs|attr(key) %}
+                    {% for tag in search_kwargs|attr(key) %}
                         <li class="search_builder_{{tagtype}}_inputted">
                             {{cards.create_tag_card(tag, link='info', with_alt_description=True)}}<!--
                             --><button class="remove_tag_button red_button"
@@ -210,17 +210,17 @@
             </ul>
         </div>
         {% endfor %}
-        <div id="search_builder_expression" {% if not search_kwargs["tag_expression"]%}class="hidden"{%endif%}>
+        <div id="search_builder_expression" {% if not search_kwargs.tag_expression%}class="hidden"{%endif%}>
             <span>Tag Expression:</span>
             <input id="search_builder_expression_input" name="tag_expression" type="text"
-            value="{{search_kwargs['tag_expression'] or ''}}"
+            value="{{search_kwargs.tag_expression or ''}}"
             >
         </div>
         <div id="search_builder_orderby">
             <span>Order by</span>
             <ul id="search_builder_orderby_ul">
-                {% if "orderby" in search_kwargs and search_kwargs["orderby"] %}
-                    {% for orderby in search_kwargs["orderby"] %}
+                {% if search_kwargs.orderby %}
+                    {% for orderby in search_kwargs.orderby %}
                         {% set column, sorter=orderby.split("-") %}
                         {{ create_orderby_li(selected_column=column, selected_sorter=sorter) }}
                     {% endfor %}
@@ -235,97 +235,98 @@
 
             <span>Min-max values</span>
             <input type="text" class="basic_param"
-            {%if search_kwargs['area']%} value="{{search_kwargs['area']}}" {%endif%}
+            {%if search_kwargs.area%} value="{{search_kwargs.area}}" {%endif%}
             name="area" placeholder="Area: 1m..2m">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['width']%} value="{{search_kwargs['width']}}" {%endif%}
+            {%if search_kwargs.width%} value="{{search_kwargs.width}}" {%endif%}
             name="width" placeholder="Width: 1k..2k">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['height']%} value="{{search_kwargs['height']}}" {%endif%}
+            {%if search_kwargs.height%} value="{{search_kwargs.height}}" {%endif%}
             name="height" placeholder="Height: 1k..2k">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['aspectratio']%} value="{{search_kwargs['aspectratio']}}" {%endif%}
+            {%if search_kwargs.aspectratio%} value="{{search_kwargs.aspectratio}}" {%endif%}
             name="aspectratio" placeholder="Aspect Ratio: 1.7..2">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['bytes']%} value="{{search_kwargs['bytes']}}" {%endif%}
+            {%if search_kwargs.bytes%} value="{{search_kwargs.bytes}}" {%endif%}
             name="bytes" placeholder="File Size: 1mb..2mb">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['duration']%} value="{{search_kwargs['duration']}}" {%endif%}
+            {%if search_kwargs.duration%} value="{{search_kwargs.duration}}" {%endif%}
             name="duration" placeholder="Duration: 10:00..20:00">
 
             <input type="text" class="basic_param"
-            {%if search_kwargs['created']%} value="{{search_kwargs['created']}}" {%endif%}
+            {%if search_kwargs.created%} value="{{search_kwargs.created}}" {%endif%}
             name="created" placeholder="Created: 1483228800..1514764800">
 
             <br>
 
             <span>Other filters</span>
             <input type="text" class="basic_param"
-            value="{{search_kwargs['filename'] or ''}}"
+            value="{{search_kwargs.filename or ''}}"
             name="filename" placeholder="Filename">
 
             <input type="text" class="basic_param"
-            value="{{search_kwargs['mimetype']|comma_join}}"
+            value="{{search_kwargs.mimetype|comma_join}}"
             name="mimetype" placeholder="Mimetype (archive, audio, image, text, video)">
 
             <input type="text" class="basic_param"
-            value="{{search_kwargs['extension']|comma_join}}"
+            value="{{search_kwargs.extension|comma_join}}"
             name="extension" placeholder="Extension(s)">
 
             <input type="text" class="basic_param"
-            value="{{search_kwargs['extension_not']|comma_join}}"
+            value="{{search_kwargs.extension_not|comma_join}}"
             name="extension_not" placeholder="Forbid extension(s)">
 
             <input type="text" class="basic_param"
-            value="{{search_kwargs['author']|users_to_usernames|comma_join}}"
+            value="{{search_kwargs.author|users_to_usernames|comma_join}}"
             name="author" placeholder="Author">
 
             <select name="limit" class="basic_param">
                 {% set limit_options = [20, 50, 100, 200, 500, 1000] %}
-                {% if search_kwargs['limit'] not in limit_options %}
-                    {% do limit_options.append(search_kwargs['limit']) %}
+                {% if search_kwargs.limit not in limit_options %}
+                    {% do limit_options.append(search_kwargs.limit) %}
                     {% do limit_options.sort() %}
                 {% endif %}
                 {% for limit_option in limit_options %}
-                <option value="{{limit_option}}" {{"selected" if search_kwargs['limit'] == limit_option else ""}}>
+                <option value="{{limit_option}}" {{"selected" if search_kwargs.limit == limit_option else ""}}>
                 {{- limit_option }} items{{''-}}
                 </option>
                 {% endfor %}
             </select>
             <select name="has_albums" class="basic_param" onchange="return disable_yield_albums_if_not_has_albums();">
-                <option value=""    {{"selected" if search_kwargs['has_albums']==None else ""}}>Album or no album</option>
-                <option value="yes" {{"selected" if search_kwargs['has_albums']==True else ""}}>Photos contained in albums</option>
-                <option value="no"  {{"selected" if search_kwargs['has_albums']==False else ""}}>Photos not in albums</option>
+                <option value=""    {{"selected" if search_kwargs.has_albums==None else ""}}>Album or no album</option>
+                <option value="yes" {{"selected" if search_kwargs.has_albums==True else ""}}>Photos contained in albums</option>
+                <option value="no"  {{"selected" if search_kwargs.has_albums==False else ""}}>Photos not in albums</option>
             </select>
             <select name="has_tags" class="basic_param">
-                <option value=""    {{"selected" if search_kwargs['has_tags']==None else ""}}>Tagged or untagged</option>
-                <option value="yes" {{"selected" if search_kwargs['has_tags']==True else ""}}>Tagged only</option>
-                <option value="no"  {{"selected" if search_kwargs['has_tags']==False else ""}}>Untagged only</option>
+                <option value=""    {{"selected" if search_kwargs.has_tags==None else ""}}>Tagged or untagged</option>
+                <option value="yes" {{"selected" if search_kwargs.has_tags==True else ""}}>Tagged only</option>
+                <option value="no"  {{"selected" if search_kwargs.has_tags==False else ""}}>Untagged only</option>
             </select>
             <select name="has_thumbnail" class="basic_param">
-                <option value=""    {{"selected" if search_kwargs['has_thumbnail']==None else ""}}>Thumbnail or no thumbnail</option>
-                <option value="yes" {{"selected" if search_kwargs['has_thumbnail']==True else ""}}>Has thumbnail</option>
-                <option value="no"  {{"selected" if search_kwargs['has_thumbnail']==False else ""}}>No thumbnail</option>
+                <option value=""    {{"selected" if search_kwargs.has_thumbnail==None else ""}}>Thumbnail or no thumbnail</option>
+                <option value="yes" {{"selected" if search_kwargs.has_thumbnail==True else ""}}>Has thumbnail</option>
+                <option value="no"  {{"selected" if search_kwargs.has_thumbnail==False else ""}}>No thumbnail</option>
             </select>
             <select name="yield_albums" class="basic_param">
-                <option value="yes" {{"selected" if search_kwargs['yield_albums']==True else ""}}>Include albums</option>
-                <option value="no" {{"selected" if search_kwargs['yield_albums']==False else ""}}>Don't include albums</option>
+                <option value="yes" {{"selected" if search_kwargs.yield_albums==True else ""}}>Include albums</option>
+                <option value="no" {{"selected" if search_kwargs.yield_albums==False else ""}}>Don't include albums</option>
             </select>
             <select name="yield_photos" class="basic_param">
-                <option value="yes" {{"selected" if search_kwargs['yield_photos']==True else ""}}>Include photos</option>
-                <option value="no" {{"selected" if search_kwargs['yield_photos']==False else ""}}>Don't include photos</option>
+                <option value="yes" {{"selected" if search_kwargs.yield_photos==True else ""}}>Include photos</option>
+                <option value="no" {{"selected" if search_kwargs.yield_photos==False else ""}}>Don't include photos</option>
             </select>
             <select name="view" class="basic_param">
-                <option value="grid"  {{"selected" if search_kwargs['view']=="grid" else ""}}>Grid view</option>
-                <option value="list"  {{"selected" if search_kwargs['view']=="list" else ""}}>List view</option>
+                <option value="grid"  {{"selected" if search_kwargs.view=="grid" else ""}}>Grid view</option>
+                <option value="list"  {{"selected" if search_kwargs.view=="list" else ""}}>List view</option>
             </select>
             <button type="submit" id="search_go_button" class="green_button" value="">Search</button>
             <button type="button" id="swipe_go_button" class="green_button" value="" onclick="return submit_swipe();">Swipe UI</button>
+            <div style="text-align:center"><a href="/search.atom" class="merge_params">Atom</a></div>
         </form>
         {% if total_tags %}
         <h4>Tags on this page:</h4>
@@ -381,9 +382,9 @@
         <div id="search_results_holder" class="photos_holder">
             {% for result in results %}
                 {% if result.__class__.__name__ == 'Photo' %}
-                {{cards.create_photo_card(result, view=search_kwargs["view"])}}
+                {{cards.create_photo_card(result, view=search_kwargs.view)}}
                 {% elif result.__class__.__name__ == 'Album' %}
-                {{cards.create_album_card(result, view=search_kwargs["view"])}}
+                {{cards.create_album_card(result, view=search_kwargs.view)}}
                 {% endif %}
             {% endfor %}
         </div>
@@ -403,7 +404,7 @@ selected form values are these.
 const PARAM_DEFAULTS = {
     'limit': 50,
     'view': 'grid',
-    'yield_albums': 'yes',
+    'yield_albums': 'no',
     'yield_photos': 'yes'
 }
 
@@ -731,8 +732,8 @@ const inputted_mays = [];
 const inputted_forbids = [];
 {% for tagtype in ["musts", "mays", "forbids"] %}
     {% set key="tag_" + tagtype %}
-    {% if search_kwargs[key] %}
-    {% for tag in search_kwargs[key] %}
+    {% if search_kwargs|attr(key) %}
+    {% for tag in search_kwargs|attr(key) %}
         inputted_{{tagtype}}.push("{{tag.name|safe}}");
     {% endfor %}
     {% endif %}
