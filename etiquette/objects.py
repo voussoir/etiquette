@@ -433,7 +433,8 @@ class Album(ObjectBase, GroupableMixin):
         for photo in photos:
             photo.add_tag(tag)
 
-    def atomify(self) -> bs4.BeautifulSoup:
+    def atomify(self, web_root='') -> bs4.BeautifulSoup:
+        web_root = web_root.rstrip('/')
         soup = bs4.BeautifulSoup('', 'xml')
         entry = soup.new_tag('entry')
         soup.append(entry)
@@ -449,7 +450,7 @@ class Album(ObjectBase, GroupableMixin):
         link = soup.new_tag('link')
         link['rel'] = 'alternate'
         link['type'] = 'text/html'
-        link['href'] = f'/album/{self.id}'
+        link['href'] = f'{web_root}/album/{self.id}'
         entry.append(link)
 
         published = soup.new_tag('published')
@@ -991,7 +992,8 @@ class Photo(ObjectBase):
 
         return tag
 
-    def atomify(self) -> bs4.BeautifulSoup:
+    def atomify(self, web_root='') -> bs4.BeautifulSoup:
+        web_root = web_root.rstrip('/')
         soup = bs4.BeautifulSoup('', 'xml')
         entry = soup.new_tag('entry')
         soup.append(entry)
@@ -1007,7 +1009,7 @@ class Photo(ObjectBase):
         link = soup.new_tag('link')
         link['rel'] = 'alternate'
         link['type'] = 'text/html'
-        link['href'] = f'/photo/{self.id}'
+        link['href'] = f'{web_root}/photo/{self.id}'
         entry.append(link)
 
         published = soup.new_tag('published')
@@ -1015,7 +1017,7 @@ class Photo(ObjectBase):
         entry.append(published)
 
         content = soup.new_tag('content')
-        content.string = bs4.CData(f'<img src="/thumbnail/{self.id}.jpg"/>')
+        content.string = bs4.CData(f'<img src="{web_root}/thumbnail/{self.id}.jpg"/>')
         entry.append(content)
 
         typ = soup.new_tag('etiquette:type')
