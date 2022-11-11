@@ -3,6 +3,8 @@ This file contains styles that I want on almost all webpages that I make,
 not specific to one project.
 */
 
+/* SCREEN SIZE CAPTURE ****************************************************************************/
+
 /*
 These properties are used by javascript functions in common.js.
 See common.is_narrow_mode, is_wide_mode.
@@ -22,6 +24,8 @@ getComputedStyle(document.documentElement).getPropertyValue("--narrow").trim() =
         --narrow: 1;
     }
 }
+
+/**************************************************************************************************/
 
 html
 {
@@ -46,6 +50,8 @@ body
 
     min-height: 100%;
     margin: 0;
+    padding: 8px;
+    grid-row-gap: 8px;
 
     background-color: var(--color_primary);
 }
@@ -68,21 +74,14 @@ textarea:disabled
     background-color: var(--color_text_placeholder);
 }
 
-input::placeholder, textarea::placeholder
+input::placeholder,
+textarea::placeholder
 {
     color: var(--color_text_placeholder);
     opacity: 1;
 }
 
-.hidden
-{
-    display: none !important;
-}
-
-.bold
-{
-    font-weight: bold;
-}
+/* ELEMENTS I USE OFTEN ***************************************************************************/
 
 #header
 {
@@ -91,8 +90,7 @@ input::placeholder, textarea::placeholder
     flex-direction: row;
 
     height: 18px;
-    margin: 8px;
-    margin-bottom: 0;
+    margin: 0;
     background-color: var(--color_transparency);
 }
 #header button
@@ -106,10 +104,7 @@ input::placeholder, textarea::placeholder
     flex: 1;
     display: flex;
     justify-content: center;
-}
-.header_element:hover
-{
-    background-color: var(--color_transparency);
+    align-items: center;
 }
 
 #content_body
@@ -118,8 +113,6 @@ input::placeholder, textarea::placeholder
     display: grid;
     grid-auto-rows: min-content;
     grid-gap: 8px;
-
-    padding: 8px;
 }
 
 .panel
@@ -128,6 +121,20 @@ input::placeholder, textarea::placeholder
     border-radius: 5px;
     padding: 8px;
 }
+
+/* NONSEMANTICS ***********************************************************************************/
+
+.hidden
+{
+    display: none !important;
+}
+
+.bold
+{
+    font-weight: bold;
+}
+
+/* BUTTONS ****************************************************************************************/
 
 button,
 button *
@@ -168,6 +175,8 @@ button:active
 {
     background-color: #ffea57;
 }
+
+/* TABBED CONTAINER *******************************************************************************/
 
 .tabbed_container
 {
@@ -219,6 +228,8 @@ button:active
     loading or if javascript is disabled.
     /*border-top-color: transparent;*/
 }
+
+/* MESSAGE BUBBLES ********************************************************************************/
 
 #message_area
 {
