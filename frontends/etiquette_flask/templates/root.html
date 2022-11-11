@@ -67,27 +67,27 @@ body > .nice_link
         {{motd[1]}}
         {%- endif -%}
     </p>
-    <a class="nice_link" href="/search">Search</a>
-    <a class="nice_link" href="/tags">Browse tags</a>
-    <a class="nice_link" href="/albums">Browse albums</a>
-    <a class="nice_link" href="/bookmarks">Bookmarks</a>
+    <a class="nice_link navigation_link" href="/search">Search</a>
+    <a class="nice_link navigation_link" href="/tags">Browse tags</a>
+    <a class="nice_link navigation_link" href="/albums">Browse albums</a>
+    <a class="nice_link navigation_link" href="/bookmarks">Bookmarks</a>
     {% if session.user %}
-    <a class="nice_link" href="/userid/{{session.user.id}}">{{session.user.display_name}}</a>
+    <a class="nice_link navigation_link" href="/userid/{{session.user.id}}">{{session.user.display_name}}</a>
     {% else %}
-    <a class="nice_link" href="/login">Log in</a>
+    <a class="nice_link navigation_link" href="/login">Log in</a>
     {% endif %}
     {% if request.is_localhost %}
-    <a class="nice_link" href="/admin">Admin</a>
+    <a class="nice_link navigation_link" href="/admin">Admin</a>
     {% endif %}
     <div class="link_group">
-        <a class="nice_link" href="/?theme=turquoise">Turquoise</a>
-        <a class="nice_link" href="/?theme=slate">Slate</a>
-        <a class="nice_link" href="/?theme=pearl">Pearl</a>
+        <a class="nice_link navigation_link" href="/?theme=turquoise">Turquoise</a>
+        <a class="nice_link navigation_link" href="/?theme=slate">Slate</a>
+        <a class="nice_link navigation_link" href="/?theme=pearl">Pearl</a>
     </div>
     <div class="link_group">
-        <a class="nice_link" href="https://www.github.com/voussoir/etiquette">GitHub</a>
-        <a class="nice_link" href="https://www.gitlab.com/voussoir/etiquette">GitLab</a>
-        <a class="nice_link" href="https://www.codeberg.org/voussoir/etiquette">Codeberg</a>
+        <a class="nice_link navigation_link" href="https://www.github.com/voussoir/etiquette">GitHub</a>
+        <a class="nice_link navigation_link" href="https://www.gitlab.com/voussoir/etiquette">GitLab</a>
+        <a class="nice_link navigation_link" href="https://www.codeberg.org/voussoir/etiquette">Codeberg</a>
     </div>
 </body>
 

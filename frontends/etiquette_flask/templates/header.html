@@ -1,13 +1,13 @@
 {% macro make_header(session) %}
 <nav id="header">
-    <a class="header_element" href="/">Etiquette</a>
-    <a class="header_element" href="/search">Search</a>
-    <a class="header_element" href="/tags">Tags</a>
+    <a class="header_element navigation_link" href="/">Etiquette</a>
+    <a class="header_element navigation_link" href="/search">Search</a>
+    <a class="header_element navigation_link" href="/tags">Tags</a>
     {% if session.user %}
-    <a class="header_element dynamic_user_display_name" href="/userid/{{session.user.id}}">{{session.user.display_name}}</a>
+    <a class="header_element navigation_link dynamic_user_display_name" href="/userid/{{session.user.id}}">{{session.user.display_name}}</a>
     <button id="logout_button" class="header_element" onclick="return api.users.logout(common.go_to_root);" style="flex:0">Logout</button>
     {% else %}
-    <a class="header_element" href="/login">Log in</a>
+    <a class="header_element navigation_link" href="/login">Log in</a>
     {% endif %}
 </nav>
 {% endmacro %}
