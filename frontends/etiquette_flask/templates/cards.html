@@ -26,7 +26,7 @@ draggable=true
         {% else %}
         {% set thumbnail_src = "/static/basic_thumbnails/album.png" %}
         {% endif %}
-        <img src="{{thumbnail_src}}" draggable="false"/>
+        <img src="{{thumbnail_src}}" loading="lazy" draggable="false"/>
     </a>
 
     <div class="album_card_title">
