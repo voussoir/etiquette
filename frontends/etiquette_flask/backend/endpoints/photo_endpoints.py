@@ -483,14 +483,11 @@ def get_search_atom():
     search = get_search_core()
     soup = etiquette.helpers.make_atom_feed(
         search.results,
-        feed_id=request.query_string.decode('utf-8'),
+        feed_id='/search' + request.query_string.decode('utf-8'),
         feed_title='etiquette search',
         feed_link=request.url.replace('/search.atom', '/search'),
     )
-    outgoing_headers = {
-        'Content-Type': 'application/atom+xml; charset=utf-8',
-    }
-    response = flask.Response(str(soup), headers=outgoing_headers)
+    response = flasktools.atom_response(soup)
     return response
 
 @site.route('/search.json')
