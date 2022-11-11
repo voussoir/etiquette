@@ -187,6 +187,9 @@ class FeatureDisabled(EtiquetteException):
     '''
     error_message = 'This feature has been disabled. Requires {requires}.'
 
+class GenerateIDFailed(EtiquetteException):
+    error_message = 'Could not generate unique ID on {table}. You should increase ID bits.'
+
 class MinMaxInvalid(EtiquetteException):
     '''
     For when the user searches for e.g. width=a-b but the a-b can't be parsed.

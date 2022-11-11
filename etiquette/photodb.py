@@ -1236,10 +1236,11 @@ class PhotoDB(
         table = thing_class.table
 
         length = self.config['id_bits']
-        while True:
+        for retry in range(10):
             id = RNG.getrandbits(length)
             if not self.exists(f'SELECT 1 FROM {table} WHERE id == ?', [id]):
                 return id
+        raise exceptions.GenerateIDFailed(table=table)
 
     def load_config(self) -> None:
         log.debug('Loading config file.')
