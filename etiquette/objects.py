@@ -737,7 +737,11 @@ class Album(ObjectBase, GroupableMixin):
             return None
         if isinstance(self._thumbnail_photo, Photo):
             return self._thumbnail_photo
-        photo = self.photodb.get_photo(self._thumbnail_photo)
+        try:
+            photo = self.photodb.get_photo(self._thumbnail_photo)
+        except exceptions.NoSuchPhoto:
+            self._thumbnail_photo = None
+            return None
         self._thumbnail_photo = photo
         return photo
 
