@@ -17,6 +17,7 @@ from . import tag_export
 from voussoirkit import cacheclass
 from voussoirkit import configlayers
 from voussoirkit import pathclass
+from voussoirkit import progressbars
 from voussoirkit import ratelimiter
 from voussoirkit import spinal
 from voussoirkit import sqlhelpers
@@ -856,9 +857,16 @@ class PDBUtilMixin:
                 return photo
 
             log.loud('Hashing file %s to check for rename.', filepath)
+
+            if filepath.size > 100 * (2 ** 20):
+                progressbar = progressbars.bar1_bytestring()
+            else:
+                progressbar = None
+
             sha256 = spinal.hash_file(
                 filepath,
                 hash_class=hashlib.sha256, **hash_kwargs,
+                progressbar=progressbar,
             ).hexdigest()
 
             same_hash = self.get_photos_by_hash(sha256)

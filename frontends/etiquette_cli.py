@@ -7,6 +7,7 @@ from voussoirkit import betterhelp
 from voussoirkit import interactive
 from voussoirkit import pathclass
 from voussoirkit import pipeable
+from voussoirkit import progressbars
 from voussoirkit import ratelimiter
 from voussoirkit import spinal
 from voussoirkit import stringtools
@@ -460,7 +461,7 @@ def reload_metadata_argparse(args):
 
     hash_kwargs = {
         'bytes_per_second': args.hash_bytes_per_second,
-        'callback_progress': spinal.callback_progress_v1,
+        'progressbar': progressbars.Bar1_bytestring,
     }
 
     need_commit = False
