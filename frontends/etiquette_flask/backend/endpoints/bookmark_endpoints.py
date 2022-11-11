@@ -32,6 +32,17 @@ def post_bookmark_edit(bookmark_id):
 
 # Bookmark listings ################################################################################
 
+@site.route('/bookmarks.atom')
+def get_bookmarks_atom():
+    bookmarks = common.P.get_bookmarks()
+    response = etiquette.helpers.make_atom_feed(
+        bookmarks,
+        feed_id='/bookmarks' + request.query_string.decode('utf-8'),
+        feed_title='bookmarks',
+        feed_link=request.url.replace('/bookmarks.atom', '/bookmarks'),
+    )
+    return flasktools.atom_response(response)
+
 @site.route('/bookmarks')
 def get_bookmarks_html():
     bookmarks = list(common.P.get_bookmarks())

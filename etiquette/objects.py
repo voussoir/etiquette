@@ -807,6 +807,34 @@ class Bookmark(ObjectBase):
     def _uncache(self):
         self.photodb.caches[Bookmark].remove(self.id)
 
+    def atomify(self, web_root='') -> bs4.BeautifulSoup:
+        web_root = web_root.rstrip('/')
+        soup = bs4.BeautifulSoup('', 'xml')
+        entry = soup.new_tag('entry')
+        soup.append(entry)
+
+        id_element = soup.new_tag('id')
+        id_element.string = str(self.id)
+        entry.append(id_element)
+
+        title = soup.new_tag('title')
+        title.string = self.title
+        entry.append(title)
+
+        link = soup.new_tag('link')
+        link['href'] = self.url
+        entry.append(link)
+
+        published = soup.new_tag('published')
+        published.string = self.created.isoformat()
+        entry.append(published)
+
+        typ = soup.new_tag('etiquette:type')
+        typ.string = 'bookmark'
+        entry.append(typ)
+
+        return soup
+
     @decorators.required_feature('bookmark.edit')
     @worms.atomic
     def delete(self) -> None:
