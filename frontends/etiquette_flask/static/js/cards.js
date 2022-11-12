@@ -174,7 +174,6 @@ function create(photo, view)
     const photo_card_filename = document.createElement("div");
     photo_card_filename.className = "photo_card_filename";
     const filename_link = document.createElement("a");
-    filename_link.target = "_blank";
     filename_link.href = `/photo/${photo.id}`;
     filename_link.draggable = false;
     filename_link.innerText = photo.filename;
