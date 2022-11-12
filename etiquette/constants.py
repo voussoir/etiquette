@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS photos(
     thumbnail TEXT,
     tagged_at INT,
     author_id INT,
-    searchhidden INT,
+    searchhidden BOOLEAN,
     -- GENERATED COLUMNS
     area INT GENERATED ALWAYS AS (width * height) VIRTUAL,
     aspectratio REAL GENERATED ALWAYS AS (1.0 * width / height) VIRTUAL,
