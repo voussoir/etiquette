@@ -42,9 +42,9 @@ def comma_join(l):
 @filter_function
 def file_link(photo, short=False):
     if short:
-        return f'/file/{photo.id}{photo.dot_extension}'
+        return f'/photo/{photo.id}/download/{photo.id}{photo.dot_extension}'
     basename = jinja2.filters.do_urlencode(photo.basename)
-    return f'/file/{photo.id}/{basename}'
+    return f'/photo/{photo.id}/download/{basename}'
 
 @filter_function
 def islice(gen, start, stop):

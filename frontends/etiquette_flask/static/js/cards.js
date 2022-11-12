@@ -143,10 +143,10 @@ function file_link(photo, short)
 {
     if (short)
     {
-        return `/file/${photo.id}${photo.dot_extension}`;
+        return `/photo/${photo.id}/download/${photo.id}${photo.dot_extension}`;
     }
     const basename = escape(photo.filename);
-    return `/file/${photo.id}/${basename}`;
+    return `/photo/${photo.id}/download/${basename}`;
 }
 
 cards.photos.create =

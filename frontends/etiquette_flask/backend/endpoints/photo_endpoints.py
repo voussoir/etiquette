@@ -35,8 +35,8 @@ def get_photo_json(photo_id):
     photo = flasktools.json_response(photo)
     return photo
 
-@site.route('/file/<photo_id>')
-@site.route('/file/<photo_id>/<basename>')
+@site.route('/photo/<photo_id>/download')
+@site.route('/photo/<photo_id>/download/<basename>')
 def get_file(photo_id, basename=None):
     photo_id = photo_id.split('.')[0]
     photo = common.P.get_photo(photo_id)
@@ -51,7 +51,7 @@ def get_file(photo_id, basename=None):
         if use_original_filename:
             download_as = photo.basename
         else:
-            download_as = photo.id + photo.dot_extension
+            download_as = f'{photo.id}{photo.dot_extension}'
 
         download_as = etiquette.helpers.remove_path_badchars(download_as)
         download_as = urllib.parse.quote(download_as)
