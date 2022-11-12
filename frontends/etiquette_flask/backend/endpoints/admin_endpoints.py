@@ -1,5 +1,6 @@
 import flask; from flask import request
 
+from voussoirkit import dotdict
 from voussoirkit import flasktools
 from voussoirkit import timetools
 
@@ -17,7 +18,14 @@ def get_admin():
     if not request.is_localhost:
         flask.abort(403)
 
-    return common.render_template(request, 'admin.html')
+    counts = dotdict.DotDict({
+        'albums': common.P.get_album_count(),
+        'bookmarks': common.P.get_bookmark_count(),
+        'photos': common.P.get_photo_count(),
+        'tags': common.P.get_tag_count(),
+        'users': common.P.get_user_count(),
+    })
+    return common.render_template(request, 'admin.html', counts=counts)
 
 @site.route('/admin/dbdownload')
 def get_dbdump():
