@@ -14,6 +14,15 @@
     <script src="/static/js/http.js"></script>
 
 <style>
+table, th, td
+{
+    border: 1px solid var(--color_text_placeholder);
+    border-collapse: collapse
+}
+th, td
+{
+    padding: 4px;
+}
 </style>
 </head>
 
@@ -30,11 +39,14 @@
     </div>
     <div class="panel">
         <h2>Statistics</h2>
-        <p>{{counts.albums}} albums</p>
-        <p>{{counts.bookmarks}} bookmarks</p>
-        <p>{{counts.photos}} photos</p>
-        <p>{{counts.tags}} tags</p>
-        <p>{{counts.users}} users</p>
+        <table>
+            <tr><th></th><th>Stored</th><th>Cached</th></tr>
+            <tr><td>Albums</td><td>{{counts.albums}}</td><td>{{cached.albums}}</td></tr>
+            <tr><td>Bookmarks</td><td>{{counts.bookmarks}}</td><td>{{cached.bookmarks}}</td></tr>
+            <tr><td>Photos</td><td>{{counts.photos}}</td><td>{{cached.photos}}</td></tr>
+            <tr><td>Tags</td><td>{{counts.tags}}</td><td>{{cached.tags}}</td></tr>
+            <tr><td>Users</td><td>{{counts.users}}</td><td>{{cached.users}}</td></tr>
+        </table>
     </div>
 </div>
 </body>

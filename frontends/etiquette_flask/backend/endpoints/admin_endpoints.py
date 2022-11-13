@@ -25,7 +25,14 @@ def get_admin():
         'tags': common.P.get_tag_count(),
         'users': common.P.get_user_count(),
     })
-    return common.render_template(request, 'admin.html', counts=counts)
+    cached = dotdict.DotDict({
+        'albums': len(common.P.caches[etiquette.objects.Album]),
+        'bookmarks': len(common.P.caches[etiquette.objects.Bookmark]),
+        'photos': len(common.P.caches[etiquette.objects.Photo]),
+        'tags': len(common.P.caches[etiquette.objects.Tag]),
+        'users': len(common.P.caches[etiquette.objects.User]),
+    })
+    return common.render_template(request, 'admin.html', cached=cached, counts=counts)
 
 @site.route('/admin/dbdownload')
 def get_dbdump():
