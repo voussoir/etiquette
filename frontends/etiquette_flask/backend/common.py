@@ -46,7 +46,7 @@ site.localhost_only = False
 session_manager = sessions.SessionManager(maxlen=10000)
 file_etag_manager = client_caching.FileEtagManager(
     maxlen=10000,
-    max_filesize=5 * bytestring.MIBIBYTE,
+    max_filesize=5 * bytestring.MEBIBYTE,
     max_age=BROWSER_CACHE_DURATION,
 )
 
