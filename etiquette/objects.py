@@ -1676,6 +1676,9 @@ class Search:
         self.generator_started = False
         self.generator_exhausted = False
         self.more_after_limit = None
+        self.query = None
+        self.bindings = None
+        self.explain = None
         self.start_time = None
         self.end_time = None
         self.start_commit_id = None
@@ -1934,11 +1937,12 @@ class Search:
 
         query = ' '.join(query)
 
-        query = f'{"-" * 80}\n{query}\n{"-" * 80}'
+        self.query = query
+        self.bindings = bindings
+        self.explain = self.photodb.explain(query, bindings)
 
-        log.debug('\n%s %s', query, bindings)
-        log.loud(self.photodb.explain(query, bindings))
-        generator = self.photodb.select(query, bindings)
+        log.loud(self.explain)
+        generator = self.photodb.select(self.query, self.bindings)
         seen_albums = set()
         offset = kwargs.offset
         for row in generator:
