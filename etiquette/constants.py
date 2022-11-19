@@ -218,8 +218,6 @@ ALLOWED_ORDERBY_COLUMNS = {
 
 FILENAME_BADCHARS = '\\/:*?<>|"'
 
-USER_ID_CHARACTERS = string.digits + string.ascii_uppercase
-
 MIMETYPES = {
     '7z': ('archive', '7z'),
     'gz': ('archive', 'gz'),
