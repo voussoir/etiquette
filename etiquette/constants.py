@@ -43,7 +43,7 @@ ffmpeg = _load_ffmpeg()
 
 DATABASE_VERSION = 23
 
-DB_INIT = f'''
+DB_INIT = '''
 CREATE TABLE IF NOT EXISTS albums(
     id INT PRIMARY KEY NOT NULL,
     title TEXT,
