@@ -54,7 +54,7 @@ p:last-child
     color: var(--color_text_link);
 }
 
-.header_element:hover
+.navigation_link:hover
 {
     background-color: var(--color_secondary);
 }
