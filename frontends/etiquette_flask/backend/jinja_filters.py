@@ -1,4 +1,3 @@
-import datetime
 import itertools
 import jinja2.filters
 

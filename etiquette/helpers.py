@@ -6,8 +6,8 @@ import bs4
 import datetime
 import hashlib
 import os
-import re
 import PIL.Image
+import re
 import typing
 import zipstream
 
