@@ -16,6 +16,7 @@ from voussoirkit import hms
 from voussoirkit import imagetools
 from voussoirkit import pathclass
 from voussoirkit import stringtools
+from voussoirkit import timetools
 
 from . import constants
 from . import exceptions
@@ -348,12 +349,12 @@ def parse_unit_string(s) -> typing.Union[int, float, None]:
         return float(s)
 
     if s == 'now':
-        return now().timestamp()
+        return timetools.now().timestamp()
 
     nowdelta = re.search(r'now((?:\+|-)\d+(?:\.\d*)?)', s)
     if nowdelta:
         nowdelta = nowdelta.group(1)
-        return now().timestamp() + float(nowdelta)
+        return timetools.now().timestamp() + float(nowdelta)
 
     return bytestring.parsebytes(s)
 
