@@ -362,7 +362,7 @@ def read_filebytes(
         filepath,
         range_min=0,
         range_max=None,
-        chunk_size=bytestring.MIBIBYTE,
+        chunk_size=bytestring.MEBIBYTE,
     ) -> typing.Iterable[bytes]:
     '''
     Yield chunks of bytes from the file between the endpoints.
