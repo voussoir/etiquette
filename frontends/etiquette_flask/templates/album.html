@@ -254,7 +254,7 @@ const ALBUM_ID = undefined;
             </div> <!-- #album_metadata -->
             <div id="album_thumbnail">
                 {%- if album.thumbnail_photo %}
-                <img src="/thumbnail/{{album.thumbnail_photo.id}}.jpg"/>
+                <img src="/photo/{{album.thumbnail_photo.id}}/thumbnail/{{album.thumbnail_photo.id}}.jpg"/>
                 {% endif -%}
             </div>
         </div>

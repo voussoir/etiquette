@@ -20,6 +20,7 @@ from voussoirkit import dotdict
 from voussoirkit import expressionmatch
 from voussoirkit import gentools
 from voussoirkit import hms
+from voussoirkit import imagetools
 from voussoirkit import pathclass
 from voussoirkit import sentinel
 from voussoirkit import spinal
@@ -921,7 +922,8 @@ class Photo(ObjectBase):
         self.aspectratio = db_row['aspectratio']
         self.bitrate = db_row['bitrate']
 
-        self.thumbnail = self.normalize_thumbnail(db_row['thumbnail'])
+        # self.thumbnail = db_row['thumbnail_image']
+        self._has_thumbnail = None
         self.tagged_at_unix = db_row['tagged_at']
         self._tagged_at_dt = None
         self.searchhidden = db_row['searchhidden']
@@ -933,16 +935,6 @@ class Photo(ObjectBase):
 
     def __str__(self):
         return f'Photo:{self.id}:{self.basename}'
-
-    def normalize_thumbnail(self, thumbnail) -> pathclass.Path:
-        if thumbnail is None:
-            return None
-
-        thumbnail = self.photodb.thumbnail_directory.join(thumbnail)
-        if not thumbnail.is_file:
-            return None
-
-        return thumbnail
 
     @staticmethod
     def normalize_override_filename(override_filename) -> typing.Optional[str]:
@@ -1082,6 +1074,7 @@ class Photo(ObjectBase):
         log.info('Deleting %s.', self)
         self.photodb.delete(table='photo_tag_rel', pairs={'photoid': self.id})
         self.photodb.delete(table='album_photo_rel', pairs={'photoid': self.id})
+        self.photodb.delete(table='photo_thumbnails', pairs={'photoid': self.id})
         self.photodb.delete(table=Photo, pairs={'id': self.id})
 
         if delete_file and self.real_path.exists:
@@ -1096,11 +1089,6 @@ class Photo(ObjectBase):
                 'action': action,
                 'args': [self.real_path],
             })
-            if self.thumbnail and self.thumbnail.is_file:
-                self.photodb.on_commit_queue.append({
-                    'action': action,
-                    'args': [self.thumbnail],
-                })
 
         self._uncache()
         self.deleted = True
@@ -1113,15 +1101,14 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.generate_thumbnail')
     @worms.atomic
-    def generate_thumbnail(self, trusted_file=False, **special) -> pathclass.Path:
+    def generate_thumbnail(self, trusted_file=False, **special):
         '''
         special:
             For images, you can provide `max_width` and/or `max_height` to
             override the config file.
             For videos, you can provide a `timestamp` to take the thumbnail at.
         '''
-        hopeful_filepath = self.make_thumbnail_filepath()
-        return_filepath = None
+        image = None
 
         if self.simple_mimetype == 'image':
             log.info('Thumbnailing %s.', self.real_path.absolute_path)
@@ -1133,44 +1120,27 @@ class Photo(ObjectBase):
                     trusted_file=trusted_file,
                 )
             except (OSError, ValueError):
-                traceback.print_exc()
-            else:
-                hopeful_filepath.parent.makedirs(exist_ok=True)
-                image.save(hopeful_filepath.absolute_path, quality=50)
-                return_filepath = hopeful_filepath
+                log.warning(traceback.format_exc())
+                return
 
         elif self.simple_mimetype == 'video' and constants.ffmpeg:
             log.info('Thumbnailing %s.', self.real_path.absolute_path)
             try:
-                hopeful_filepath.parent.makedirs(exist_ok=True)
-                success = helpers.generate_video_thumbnail(
+                image = helpers.generate_video_thumbnail(
                     self.real_path.absolute_path,
-                    outfile=hopeful_filepath.absolute_path,
                     width=self.photodb.config['thumbnail_width'],
                     height=self.photodb.config['thumbnail_height'],
                     **special
                 )
-                if success:
-                    return_filepath = hopeful_filepath
             except Exception:
                 log.warning(traceback.format_exc())
+                return
 
-        if return_filepath != self.thumbnail:
-            if return_filepath is None:
-                store_as = None
-            else:
-                store_as = return_filepath.relative_to(self.photodb.thumbnail_directory)
-            data = {
-                'id': self.id,
-                'thumbnail': store_as,
-            }
-            self.photodb.update(table=Photo, pairs=data, where_key='id')
-            self.thumbnail = return_filepath
+        if image is None:
+            return
 
-        self._uncache()
-
-        self.__reinit__()
-        return self.thumbnail
+        self.set_thumbnail(image)
+        return image
 
     def get_containing_albums(self) -> set[Album]:
         '''
@@ -1183,6 +1153,7 @@ class Photo(ObjectBase):
         albums = set(self.photodb.get_albums_by_id(album_ids))
         return albums
 
+    @decorators.cache_until_commit
     def get_tags(self) -> set:
         '''
         Return the tags assigned to this Photo.
@@ -1193,6 +1164,11 @@ class Photo(ObjectBase):
         )
         tags = set(self.photodb.get_tags_by_id(tag_ids))
         return tags
+
+    def get_thumbnail(self):
+        query = 'SELECT thumbnail FROM photo_thumbnails WHERE photoid = ?'
+        blob = self.photodb.select_one_value(query, [self.id])
+        return blob
 
     # Will add -> Tag/False when forward references are supported.
     def has_tag(self, tag, *, check_children=True):
@@ -1223,6 +1199,12 @@ class Photo(ObjectBase):
 
         return tag_by_id[tag_id]
 
+    def has_thumbnail(self) -> bool:
+        if self._has_thumbnail is not None:
+            return self._has_thumbnail
+        self._has_thumbnail = self.photodb.exists('SELECT 1 FROM photo_thumbnails WHERE photoid = ?', [self.id])
+        return self._has_thumbnail
+
     def jsonify(self, include_albums=True, include_tags=True, minimal=False) -> dict:
         j = {
             'type': 'photo',
@@ -1237,7 +1219,7 @@ class Photo(ObjectBase):
             'duration_string': self.duration_string,
             'duration': self.duration,
             'bytes_string': self.bytes_string,
-            'has_thumbnail': bool(self.thumbnail),
+            'has_thumbnail': self.has_thumbnail(),
             'created': self.created_unix,
             'filename': self.basename,
             'mimetype': self.mimetype,
@@ -1372,8 +1354,6 @@ class Photo(ObjectBase):
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
-        # self._uncache()
-
     @decorators.required_feature('photo.edit')
     @worms.atomic
     def relocate(self, new_filepath) -> None:
@@ -1443,6 +1423,12 @@ class Photo(ObjectBase):
             'tagged_at': timetools.now().timestamp(),
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
+
+    @decorators.required_feature('photo.edit')
+    @worms.atomic
+    def remove_thumbnail(self) -> None:
+        self.photodb.delete(table='photo_thumbnails', pairs={'photoid': self.id})
+        self._has_thumbnail = False
 
     @decorators.required_feature('photo.edit')
     @worms.atomic
@@ -1551,6 +1537,25 @@ class Photo(ObjectBase):
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
         self.searchhidden = searchhidden
+
+    @decorators.required_feature('photo.edit')
+    @worms.atomic
+    def set_thumbnail(self, image):
+        if not isinstance(image, PIL.Image.Image):
+            raise TypeError(image)
+
+        blob = imagetools.save_to_bytes(image, format='jpeg', quality=50)
+        pairs = {
+            'photoid': self.id,
+            'thumbnail': blob,
+            'created': timetools.now().timestamp(),
+        }
+        if self.photodb.exists('SELECT 1 FROM photo_thumbnails WHERE photoid = ?', [self.id]):
+            self.photodb.update(table='photo_thumbnails', pairs=pairs, where_key='photoid')
+        else:
+            self.photodb.insert(table='photo_thumbnails', pairs=pairs)
+        self._has_thumbnail = True
+        return blob
 
     @property
     def tagged_at(self) -> datetime.datetime:

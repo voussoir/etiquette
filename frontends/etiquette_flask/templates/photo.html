@@ -259,7 +259,7 @@
         src="{{photo|file_link}}"
         controls
         preload=none
-        {%if photo.thumbnail%}poster="/thumbnail/{{photo.id}}.jpg"{%endif%}
+        {%if photo.has_thumbnail()%}poster="/photo/{{photo.id}}/thumbnail/{{photo.id}}.jpg"{%endif%}
         ></video>
 
         {% elif photo.simple_mimetype == "audio" %}

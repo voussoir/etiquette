@@ -8,6 +8,7 @@ import hashlib
 import os
 import PIL.Image
 import re
+import tempfile
 import typing
 import zipstream
 
@@ -253,7 +254,7 @@ def generate_image_thumbnail(*args, trusted_file=False, **kwargs) -> PIL.Image:
     finally:
         PIL.Image.MAX_IMAGE_PIXELS = _max_pixels
 
-def generate_video_thumbnail(filepath, outfile, width, height, **special) -> PIL.Image:
+def generate_video_thumbnail(filepath, width, height, **special) -> PIL.Image:
     if not os.path.isfile(filepath):
         raise FileNotFoundError(filepath)
     probe = constants.ffmpeg.probe(filepath)
@@ -277,14 +278,17 @@ def generate_video_thumbnail(filepath, outfile, width, height, **special) -> PIL
     else:
         timestamp = 2
 
+    outfile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
     constants.ffmpeg.thumbnail(
         filepath,
-        outfile=outfile,
+        outfile=outfile.name,
         quality=2,
         size=size,
         time=timestamp,
     )
-    return True
+    outfile.close()
+    image = PIL.Image.open(outfile.name)
+    return image
 
 def get_mimetype(extension) -> typing.Optional[str]:
     extension = extension.strip('.')

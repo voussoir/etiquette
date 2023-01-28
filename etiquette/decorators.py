@@ -2,7 +2,29 @@ import functools
 import time
 import warnings
 
+from voussoirkit import sentinel
+
 from . import exceptions
+
+NOT_CACHED = sentinel.Sentinel('not cached')
+
+def cache_until_commit(method):
+    cache_name = f'_cached_{method.__name__}'
+    cache_commit_name = f'_cached_{method.__name__}_commit_id'
+
+    @functools.wraps(method)
+    def wrapped(self, *args, **kwargs):
+        use_cache = (
+            getattr(self, cache_name, NOT_CACHED) is not NOT_CACHED and
+            getattr(self, cache_commit_name, NOT_CACHED) == self._photodb.last_commit_id
+        )
+        if use_cache:
+            return getattr(self, cache_name)
+        value = method(self, *args, **kwargs)
+        setattr(self, cache_name, value)
+        setattr(self, cache_commit_name, self._photodb.last_commit_id)
+        return value
+    return wrapped
 
 def required_feature(features):
     '''

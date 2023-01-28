@@ -61,15 +61,30 @@ def get_file(photo_id, basename=None):
     else:
         return common.send_file(photo.real_path.absolute_path, override_mimetype=photo.mimetype)
 
-@site.route('/thumbnail/<photo_id>')
-def get_thumbnail(photo_id):
+@site.route('/photo/<photo_id>/thumbnail')
+@site.route('/photo/<photo_id>/thumbnail/<basename>')
+@flasktools.cached_endpoint(max_age=common.BROWSER_CACHE_DURATION)
+def get_thumbnail(photo_id, basename=None):
     photo_id = photo_id.split('.')[0]
     photo = common.P_photo(photo_id, response_type='html')
-    if photo.thumbnail:
-        path = photo.thumbnail
-    else:
-        flask.abort(404, 'That file doesnt have a thumbnail')
-    return common.send_file(path)
+    blob = photo.get_thumbnail()
+    if blob is None:
+        return flask.abort(404)
+
+    outgoing_headers = {
+        'Content-Type': 'image/jpeg',
+    }
+    response = flask.Response(
+        blob,
+        status=200,
+        headers=outgoing_headers,
+    )
+    return response
+    # if photo.thumbnail:
+    #     path = photo.thumbnail
+    # else:
+    #     flask.abort(404, 'That file doesnt have a thumbnail')
+    # return common.send_file(path)
 
 # Photo create and delete ##########################################################################
 
@@ -186,7 +201,8 @@ def post_photo_refresh_metadata_core(photo_ids):
                 photo.reload_metadata()
             except pathclass.NotFile:
                 flask.abort(404)
-            if photo.thumbnail is None:
+
+            if not photo.has_thumbnail() or photo.simple_mimetype == 'image':
                 try:
                     photo.generate_thumbnail()
                 except Exception:

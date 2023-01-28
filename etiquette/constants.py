@@ -41,7 +41,7 @@ ffmpeg = _load_ffmpeg()
 
 # Database #########################################################################################
 
-DATABASE_VERSION = 23
+DATABASE_VERSION = 24
 
 DB_INIT = '''
 CREATE TABLE IF NOT EXISTS albums(
@@ -79,7 +79,6 @@ CREATE TABLE IF NOT EXISTS photos(
     duration INT,
     bytes INT,
     created INT,
-    thumbnail TEXT,
     tagged_at INT,
     author_id INT,
     searchhidden BOOLEAN,
@@ -106,7 +105,7 @@ CREATE INDEX IF NOT EXISTS index_photos_basename on photos(basename COLLATE NOCA
 CREATE INDEX IF NOT EXISTS index_photos_created on photos(created);
 CREATE INDEX IF NOT EXISTS index_photos_extension on photos(extension);
 CREATE INDEX IF NOT EXISTS index_photos_author_id on photos(author_id);
-CREATE INDEX IF NOT EXISTS index_photos_searchhidden on photos(searchhidden);
+CREATE INDEX IF NOT EXISTS index_photos_searchhidden_created on photos(searchhidden, created);
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tags(
     id INT PRIMARY KEY NOT NULL,
@@ -177,6 +176,14 @@ CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid on photo_tag_rel(photoid)
 CREATE INDEX IF NOT EXISTS index_photo_tag_rel_tagid on photo_tag_rel(tagid);
 CREATE INDEX IF NOT EXISTS index_photo_tag_rel_photoid_tagid on photo_tag_rel(photoid, tagid);
 ----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS photo_thumbnails(
+    photoid INT PRIMARY KEY NOT NULL,
+    thumbnail BLOB NOT NULL,
+    created INT NOT NULL,
+    FOREIGN KEY(photoid) REFERENCES photos(id)
+);
+CREATE INDEX IF NOT EXISTS index_photo_thumbnails_photoid on photo_thumbnails(photoid);
+----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tag_group_rel(
     parentid INT NOT NULL,
     memberid INT NOT NULL,
@@ -189,11 +196,12 @@ CREATE INDEX IF NOT EXISTS index_tag_group_rel_parentid on tag_group_rel(parenti
 CREATE INDEX IF NOT EXISTS index_tag_group_rel_memberid on tag_group_rel(memberid);
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tag_synonyms(
-    name TEXT NOT NULL,
+    name TEXT PRIMARY KEY NOT NULL,
     mastername TEXT NOT NULL,
-    created INT
+    created INT,
 );
 CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
+CREATE INDEX IF NOT EXISTS index_tag_synonyms_mastername on tag_synonyms(mastername);
 '''
 
 SQL_COLUMNS = sqlhelpers.extract_table_column_map(DB_INIT)

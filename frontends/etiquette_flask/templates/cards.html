@@ -22,7 +22,7 @@ draggable=true
     <a class="album_card_thumbnail" href="/album/{{album.id}}{{viewparam}}" draggable="false">
     {% endif %}
         {% if album.thumbnail_photo %}
-        {% set thumbnail_src = "/thumbnail/" ~ album.thumbnail_photo.id ~ ".jpg" %}
+        {% set thumbnail_src = "/photo/" ~ album.thumbnail_photo.id ~ "/thumbnail/" ~ album.thumbnail_photo.id ~ ".jpg" %}
         {% else %}
         {% set thumbnail_src = "/static/basic_thumbnails/album.png" %}
         {% endif %}
@@ -160,8 +160,8 @@ draggable="true"
     </span>
 
     {% if view == "grid" %}
-    {% if photo.thumbnail %}
-        {% set thumbnail_src = "/thumbnail/" ~ photo.id ~ ".jpg" %}
+    {% if photo.has_thumbnail() %}
+        {% set thumbnail_src = "/photo/" ~ photo.id ~ "/thumbnail/" ~ photo.id ~ ".jpg" %}
     {% else %}
         {% set thumbnail_src =
             thumbnails.get(photo.extension, "") or

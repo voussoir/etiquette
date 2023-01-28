@@ -205,7 +205,7 @@ function create(photo, view)
         let thumbnail_src;
         if (photo.has_thumbnail)
         {
-            thumbnail_src = `/thumbnail/${photo.id}.jpg`;
+            thumbnail_src = `/photo/${photo.id}/thumbnail/${photo.id}.jpg`;
         }
         else
         {

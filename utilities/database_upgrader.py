@@ -999,6 +999,37 @@ def upgrade_22_to_23(photodb):
     '''
     m.go()
 
+def upgrade_23_to_24(photodb):
+    '''
+    In this version, thumbnail files were moved into the database as BLOBs.
+    '''
+    thumbnail_directory = photodb.data_directory.with_child(etiquette.constants.DEFAULT_THUMBDIR)
+    photodb.execute('''
+        CREATE TABLE IF NOT EXISTS photo_thumbnails(
+        photoid INT PRIMARY KEY NOT NULL,
+        thumbnail BLOB NOT NULL,
+        created INT NOT NULL,
+        FOREIGN KEY(photoid) REFERENCES photos(id)
+        )
+    ''')
+    photodb.execute('''
+        CREATE INDEX IF NOT EXISTS index_photo_thumbnails_photoid on photo_thumbnails(photoid)
+    ''')
+    thumbnails = photodb.select('SELECT id, thumbnail FROM photos WHERE thumbnail IS NOT NULL')
+    for (photoid, thumbnail) in thumbnails:
+        thumbnail = thumbnail_directory.join(thumbnail)
+        if not thumbnail.is_file:
+            continue
+        print(thumbnail)
+        pairs = {
+            'photoid': photoid,
+            'thumbnail': thumbnail.read('rb'),
+            'created': thumbnail.stat.st_mtime,
+        }
+        photodb.insert(table='photo_thumbnails', pairs=pairs)
+
+    photodb.execute('ALTER TABLE photos DROP COLUMN thumbnail')
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

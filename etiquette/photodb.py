@@ -368,7 +368,6 @@ class PDBPhotoMixin:
             'width': None,
             'height': None,
             'duration': None,
-            'thumbnail': None,
         }
         self.insert(table=objects.Photo, pairs=data)
 
