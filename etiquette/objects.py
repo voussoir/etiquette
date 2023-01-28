@@ -983,22 +983,8 @@ class Photo(ObjectBase):
     def add_tag(self, tag):
         tag = self.photodb.get_tag(name=tag)
 
-        existing = self.has_tag(tag, check_children=False)
-        if existing:
-            return existing
-
-        # If the new tag is less specific than one we already have,
-        # keep our current one.
-        existing = self.has_tag(tag, check_children=True)
-        if existing:
-            log.debug('Preferring existing %s over %s.', existing, tag)
-            return existing
-
-        # If the new tag is more specific, remove our current one for it.
-        for parent in tag.walk_parents():
-            if self.has_tag(parent, check_children=False):
-                log.debug('Preferring new %s over %s.', tag, parent)
-                self.remove_tag(parent)
+        if self.has_tag(tag, check_children=False):
+            return tag
 
         log.info('Applying %s to %s.', tag, self)
 
@@ -1008,6 +994,7 @@ class Photo(ObjectBase):
             'created': timetools.now().timestamp(),
         }
         self.photodb.insert(table='photo_tag_rel', pairs=data)
+
         data = {
             'id': self.id,
             'tagged_at': timetools.now().timestamp(),
