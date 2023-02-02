@@ -71,8 +71,8 @@ body > .nice_link
     <a class="nice_link navigation_link" href="/tags">Browse tags</a>
     <a class="nice_link navigation_link" href="/albums">Browse albums</a>
     <a class="nice_link navigation_link" href="/bookmarks">Bookmarks</a>
-    {% if session.user %}
-    <a class="nice_link navigation_link" href="/userid/{{session.user.id}}">{{session.user.display_name}}</a>
+    {% if request.session.user %}
+    <a class="nice_link navigation_link" href="/userid/{{request.session.user.id}}">{{request.session.user.display_name}}</a>
     {% else %}
     <a class="nice_link navigation_link" href="/login">Log in</a>
     {% endif %}

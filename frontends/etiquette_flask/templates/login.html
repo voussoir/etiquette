@@ -72,7 +72,7 @@ form h2
 </head>
 
 <body>
-    {{header.make_header(session=session)}}
+    {{header.make_header(session=request.session)}}
     <div id="content_body">
         <form id="login_form" class="panel" action="/login" method="post">
             <h2>Log in</h2>

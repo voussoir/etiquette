@@ -78,11 +78,14 @@ def before_request():
     # In NGINX: proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     request.is_localhost = (request.remote_addr == '127.0.0.1')
     if site.localhost_only and not request.is_localhost:
-        flask.abort(403)
+        return flask.abort(403)
+
+    session_manager._before_request(request)
 
 @site.after_request
 def after_request(response):
     response = flasktools.gzip_response(request, response)
+    response = session_manager._after_request(response)
     return response
 
 site.route = flasktools.decorate_and_route(
@@ -95,7 +98,6 @@ site.route = flasktools.decorate_and_route(
             default_theme='slate',
         ),
         catch_etiquette_exception,
-        session_manager.give_token
     ],
 )
 
@@ -173,13 +175,11 @@ def back_url():
     return request.args.get('goto') or request.referrer or '/'
 
 def render_template(request, template_name, **kwargs):
-    session = session_manager.get(request)
     theme = request.cookies.get('etiquette_theme', None)
 
     response = flask.render_template(
         template_name,
         request=request,
-        session=session,
         theme=theme,
         **kwargs,
     )

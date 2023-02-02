@@ -37,12 +37,10 @@ def get_user_id_redirect(user_id):
 
 @site.route('/user/<username>/edit', methods=['POST'])
 def post_user_edit(username):
-    session = session_manager.get(request)
-
-    if not session:
+    if not request.session:
         return flasktools.json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
     user = common.P_user(username, response_type='json')
-    if session.user != user:
+    if request.session.user != user:
         return flasktools.json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
 
     display_name = request.form.get('display_name')
@@ -68,8 +66,7 @@ def get_login():
 @site.route('/login', methods=['POST'])
 @flasktools.required_fields(['username', 'password'])
 def post_login():
-    session = session_manager.get(request)
-    if session.user:
+    if request.session.user:
         exc = etiquette.exceptions.AlreadySignedIn()
         response = exc.jsonify()
         return flasktools.json_response(response, status=403)
@@ -93,8 +90,8 @@ def post_login():
         response = exc.jsonify()
         return flasktools.json_response(response, status=400)
 
-    session = sessions.Session(request, user)
-    session_manager.add(session)
+    request.session = sessions.Session(request, user)
+    session_manager.add(request.session)
     return flasktools.json_response({})
 
 @site.route('/logout', methods=['POST'])
@@ -112,8 +109,7 @@ def get_register():
 @site.route('/register', methods=['POST'])
 @flasktools.required_fields(['username', 'password_1', 'password_2'])
 def post_register():
-    session = session_manager.get(request)
-    if session.user:
+    if request.session.user:
         exc = etiquette.exceptions.AlreadySignedIn()
         response = exc.jsonify()
         return flasktools.json_response(response, status=403)
@@ -133,6 +129,6 @@ def post_register():
     with common.P.transaction:
         user = common.P.new_user(username, password_1, display_name=display_name)
 
-    session = sessions.Session(request, user)
-    session_manager.add(session)
+    request.session = sessions.Session(request, user)
+    session_manager.add(request.session)
     return flasktools.json_response({})

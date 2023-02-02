@@ -34,6 +34,45 @@ class SessionManager:
     def __init__(self, maxlen=None):
         self.sessions = cacheclass.Cache(maxlen=maxlen)
 
+    def _before_request(self, request):
+        # Inject new token so the function doesn't know the difference
+        token = request.cookies.get('etiquette_session', None)
+        if not token or token not in self.sessions:
+            token = _generate_token()
+            # cookies is currently an ImmutableMultiDict, but in order to
+            # trick the wrapped function I'm gonna have to mutate it.
+            # It is important to use a werkzeug MultiDict and not a plain
+            # Python dict, because werkzeug puts cookies into lists like
+            # {name: [value]} and then cookies.get pulls the first item out
+            # of that list. A plain dict wouldn't have this .get behavior.
+            request.cookies = werkzeug.datastructures.MultiDict(request.cookies)
+            request.cookies['etiquette_session'] = token
+
+        try:
+            session = self.get(request)
+        except KeyError:
+            session = Session(request, user=None)
+            self.add(session)
+        else:
+            session.maintain()
+
+        request.session = session
+        return session
+
+    def _after_request(self, response):
+        # Send the token back to the client
+        # but only if the endpoint didn't manually set the cookie.
+        function_cookies = response.headers.get_all('Set-Cookie')
+        if not any('etiquette_session=' in cookie for cookie in function_cookies):
+            response.set_cookie(
+                'etiquette_session',
+                value=request.session.token,
+                max_age=SESSION_MAX_AGE,
+                httponly=True,
+            )
+
+        return response
+
     def add(self, session):
         self.sessions[session.token] = session
 
@@ -61,41 +100,10 @@ class SessionManager:
         '''
         @functools.wraps(function)
         def wrapped(*args, **kwargs):
-            # Inject new token so the function doesn't know the difference
-            token = request.cookies.get('etiquette_session', None)
-            if not token or token not in self.sessions:
-                token = _generate_token()
-                # cookies is currently an ImmutableMultiDict, but in order to
-                # trick the wrapped function I'm gonna have to mutate it.
-                # It is important to use a werkzeug MultiDict and not a plain
-                # Python dict, because werkzeug puts cookies into lists like
-                # {name: [value]} and then cookies.get pulls the first item out
-                # of that list. A plain dict wouldn't have this .get behavior.
-                request.cookies = werkzeug.datastructures.MultiDict(request.cookies)
-                request.cookies['etiquette_session'] = token
-
-            try:
-                session = self.get(request)
-            except KeyError:
-                session = Session(request, user=None)
-                self.add(session)
-            else:
-                session.maintain()
-
+            self._before_request(request)
             response = function(*args, **kwargs)
+            return self._after_request(response)
 
-            # Send the token back to the client
-            # but only if the endpoint didn't manually set the cookie.
-            function_cookies = response.headers.get_all('Set-Cookie')
-            if not any('etiquette_session=' in cookie for cookie in function_cookies):
-                response.set_cookie(
-                    'etiquette_session',
-                    value=session.token,
-                    max_age=SESSION_MAX_AGE,
-                    httponly=True,
-                )
-
-            return response
         return wrapped
 
     def remove(self, token):

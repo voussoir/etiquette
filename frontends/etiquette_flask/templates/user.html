@@ -27,7 +27,7 @@
 </head>
 
 <body>
-    {{header.make_header(session=session)}}
+    {{header.make_header(session=request.session)}}
     <div id="content_body">
         <div id="hierarchy_self" class="panel">
             <h1 id="display_name">{{user.display_name}}</h1>
@@ -82,7 +82,7 @@
 </body>
 
 <script type="text/javascript">
-{% if user.id == session.user.id %}
+{% if user.id == request.session.user.id %}
 const USERNAME = "{{user.username}}";
 
 profile_ed_on_open = undefined;
