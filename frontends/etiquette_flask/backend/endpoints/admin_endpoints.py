@@ -15,8 +15,7 @@ session_manager = common.session_manager
 
 @site.route('/admin')
 def get_admin():
-    if not request.is_localhost:
-        flask.abort(403)
+    common.permission_manager.admin()
 
     counts = dotdict.DotDict({
         'albums': common.P.get_album_count(),
@@ -36,8 +35,7 @@ def get_admin():
 
 @site.route('/admin/dbdownload')
 def get_dbdump():
-    if not request.is_localhost:
-        flask.abort(403)
+    common.permission_manager.admin()
 
     with common.P.transaction:
         binary = common.P.database_filepath.read('rb')
@@ -52,24 +50,23 @@ def get_dbdump():
 
 @site.route('/admin/clear_sessions', methods=['POST'])
 def post_clear_sessions():
-    if not request.is_localhost:
-        return flasktools.json_response({}, status=403)
+    common.permission_manager.admin()
 
     session_manager.clear()
     return flasktools.json_response({})
 
 @site.route('/admin/reload_config', methods=['POST'])
 def post_reload_config():
-    if not request.is_localhost:
-        return flasktools.json_response({}, status=403)
+    common.permission_manager.admin()
 
     common.P.load_config()
+    common.load_config()
+
     return flasktools.json_response({})
 
 @site.route('/admin/uncache', methods=['POST'])
 def post_uncache():
-    if not request.is_localhost:
-        return flasktools.json_response({}, status=403)
+    common.permission_manager.admin()
 
     with common.P.transaction:
         for cache in common.P.caches.values():

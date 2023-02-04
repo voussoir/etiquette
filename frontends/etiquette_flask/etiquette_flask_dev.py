@@ -1,6 +1,9 @@
 '''
 This file is the gevent launcher for local / development use.
 '''
+from voussoirkit import vlogging
+vlogging.earlybird_config()
+
 import gevent.monkey; gevent.monkey.patch_all()
 import werkzeug.middleware.proxy_fix
 
@@ -11,6 +14,7 @@ import sys
 
 from voussoirkit import betterhelp
 from voussoirkit import pathclass
+from voussoirkit import operatornotify
 from voussoirkit import vlogging
 
 log = vlogging.getLogger(__name__, 'etiquette_flask_dev')
@@ -79,7 +83,7 @@ def etiquette_flask_launch_argparse(args):
         use_https=args.use_https,
     )
 
-@vlogging.main_decorator
+@operatornotify.main_decorator(subject='etiquette_flask_dev', notify_every_line=True)
 def main(argv):
     parser = argparse.ArgumentParser(
         description='''

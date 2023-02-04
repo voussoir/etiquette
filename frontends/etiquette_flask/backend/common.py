@@ -4,18 +4,33 @@ Use etiquette_flask_dev.py or etiquette_flask_prod.py.
 '''
 import flask; from flask import request
 import functools
+import json
 import mimetypes
 import traceback
 
 from voussoirkit import bytestring
+from voussoirkit import configlayers
 from voussoirkit import flasktools
 from voussoirkit import pathclass
+from voussoirkit import vlogging
 
 import etiquette
 
 from . import client_caching
 from . import jinja_filters
+from . import permissions
 from . import sessions
+
+log = vlogging.getLogger(__name__)
+
+# Constants ########################################################################################
+
+DEFAULT_SERVER_CONFIG = {
+    'anonymous_read': True,
+    'anonymous_write': True,
+}
+
+BROWSER_CACHE_DURATION = 180
 
 # Flask init #######################################################################################
 
@@ -23,10 +38,12 @@ from . import sessions
 # root_dir = .../etiquette_flask
 root_dir = pathclass.Path(__file__).parent.parent
 
+P = None
+
 TEMPLATE_DIR = root_dir.with_child('templates')
 STATIC_DIR = root_dir.with_child('static')
 FAVICON_PATH = STATIC_DIR.with_child('favicon.png')
-BROWSER_CACHE_DURATION = 180
+SERVER_CONFIG_FILENAME = 'etiquette_flask_config.json'
 
 site = flask.Flask(
     __name__,
@@ -37,6 +54,7 @@ site.config.update(
     SEND_FILE_MAX_AGE_DEFAULT=BROWSER_CACHE_DURATION,
     TEMPLATES_AUTO_RELOAD=True,
 )
+site.server_config = None
 site.jinja_env.add_extension('jinja2.ext.do')
 site.jinja_env.trim_blocks = True
 site.jinja_env.lstrip_blocks = True
@@ -49,6 +67,7 @@ file_etag_manager = client_caching.FileEtagManager(
     max_filesize=5 * bytestring.MEBIBYTE,
     max_age=BROWSER_CACHE_DURATION,
 )
+permission_manager = permissions.PermissionManager(site)
 
 # Response wrappers ################################################################################
 
@@ -80,10 +99,18 @@ def before_request():
     if site.localhost_only and not request.is_localhost:
         return flask.abort(403)
 
+    # Since we don't define this route, I can't just add this where it belongs.
+    # Sorry.
+    if request.url_rule.rule == '/static/<path:filename>':
+        permission_manager.global_public()
+
     session_manager._before_request(request)
 
 @site.after_request
 def after_request(response):
+    if response.status_code < 400 and not hasattr(request, 'checked_permissions'):
+        log.error('You forgot to set checked_permissions for ' + request.path)
+        return flask.abort(500)
     response = flasktools.gzip_response(request, response)
     response = session_manager._after_request(response)
     return response
@@ -277,3 +304,22 @@ def send_file(filepath, override_mimetype=None):
 def init_photodb(*args, **kwargs):
     global P
     P = etiquette.photodb.PhotoDB.closest_photodb(*args, **kwargs)
+    load_config()
+
+def load_config() -> None:
+    log.debug('Loading server config file.')
+    config_file = P.data_directory.with_child(SERVER_CONFIG_FILENAME)
+    (config, needs_rewrite) = configlayers.load_file(
+        filepath=config_file,
+        default_config=DEFAULT_SERVER_CONFIG,
+    )
+    site.server_config = config
+
+    if needs_rewrite:
+        save_config()
+
+def save_config() -> None:
+    log.debug('Saving server config file.')
+    config_file = P.data_directory.with_child(SERVER_CONFIG_FILENAME)
+    with config_file.open('w', encoding='utf-8') as handle:
+        handle.write(json.dumps(site.server_config, indent=4, sort_keys=True))

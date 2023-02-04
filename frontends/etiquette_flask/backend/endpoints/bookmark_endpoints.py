@@ -13,12 +13,14 @@ session_manager = common.session_manager
 
 @site.route('/bookmark/<bookmark_id>.json')
 def get_bookmark_json(bookmark_id):
+    common.permission_manager.basic()
     bookmark = common.P_bookmark(bookmark_id, response_type='json')
     response = bookmark.jsonify()
     return flasktools.json_response(response)
 
 @site.route('/bookmark/<bookmark_id>/edit', methods=['POST'])
 def post_bookmark_edit(bookmark_id):
+    common.permission_manager.basic()
     with common.P.transaction:
         bookmark = common.P_bookmark(bookmark_id, response_type='json')
         # Emptystring is okay for titles, but not for URL.
@@ -34,6 +36,7 @@ def post_bookmark_edit(bookmark_id):
 
 @site.route('/bookmarks.atom')
 def get_bookmarks_atom():
+    common.permission_manager.basic()
     bookmarks = common.P.get_bookmarks()
     response = etiquette.helpers.make_atom_feed(
         bookmarks,
@@ -45,11 +48,13 @@ def get_bookmarks_atom():
 
 @site.route('/bookmarks')
 def get_bookmarks_html():
+    common.permission_manager.basic()
     bookmarks = list(common.P.get_bookmarks())
     return common.render_template(request, 'bookmarks.html', bookmarks=bookmarks)
 
 @site.route('/bookmarks.json')
 def get_bookmarks_json():
+    common.permission_manager.basic()
     bookmarks = [b.jsonify() for b in common.P.get_bookmarks()]
     return flasktools.json_response(bookmarks)
 
@@ -58,6 +63,7 @@ def get_bookmarks_json():
 @site.route('/bookmarks/create_bookmark', methods=['POST'])
 @flasktools.required_fields(['url'], forbid_whitespace=True)
 def post_bookmark_create():
+    common.permission_manager.basic()
     url = request.form['url']
     title = request.form.get('title', None)
     user = session_manager.get(request).user
@@ -69,6 +75,7 @@ def post_bookmark_create():
 
 @site.route('/bookmark/<bookmark_id>/delete', methods=['POST'])
 def post_bookmark_delete(bookmark_id):
+    common.permission_manager.basic()
     with common.P.transaction:
         bookmark = common.P_bookmark(bookmark_id, response_type='json')
         bookmark.delete()

@@ -25,11 +25,13 @@ photo_download_zip_tokens = cacheclass.Cache(maxlen=100)
 
 @site.route('/photo/<photo_id>')
 def get_photo_html(photo_id):
+    common.permission_manager.basic()
     photo = common.P_photo(photo_id, response_type='html')
     return common.render_template(request, 'photo.html', photo=photo)
 
 @site.route('/photo/<photo_id>.json')
 def get_photo_json(photo_id):
+    common.permission_manager.basic()
     photo = common.P_photo(photo_id, response_type='json')
     photo = photo.jsonify()
     photo = flasktools.json_response(photo)
@@ -38,6 +40,7 @@ def get_photo_json(photo_id):
 @site.route('/photo/<photo_id>/download')
 @site.route('/photo/<photo_id>/download/<basename>')
 def get_file(photo_id, basename=None):
+    common.permission_manager.basic()
     photo_id = photo_id.split('.')[0]
     photo = common.P.get_photo(photo_id)
 
@@ -63,6 +66,7 @@ def get_file(photo_id, basename=None):
 
 @site.route('/photo/<photo_id>/thumbnail')
 @site.route('/photo/<photo_id>/thumbnail/<basename>')
+@common.permission_manager.basic_decorator
 @flasktools.cached_endpoint(max_age=common.BROWSER_CACHE_DURATION)
 def get_thumbnail(photo_id, basename=None):
     photo_id = photo_id.split('.')[0]
@@ -90,6 +94,7 @@ def get_thumbnail(photo_id, basename=None):
 
 @site.route('/photo/<photo_id>/delete', methods=['POST'])
 def post_photo_delete(photo_id):
+    common.permission_manager.basic()
     delete_file = request.form.get('delete_file', False)
     delete_file = stringtools.truthystring(delete_file)
     with common.P.transaction:
@@ -122,6 +127,7 @@ def post_photo_add_tag(photo_id):
     '''
     Add a tag to this photo.
     '''
+    common.permission_manager.basic()
     response = post_photo_add_remove_tag_core(
         photo_ids=photo_id,
         tagname=request.form['tagname'],
@@ -135,6 +141,7 @@ def post_photo_copy_tags(photo_id):
     '''
     Copy the tags from another photo.
     '''
+    common.permission_manager.basic()
     with common.P.transaction:
         photo = common.P_photo(photo_id, response_type='json')
         other = common.P_photo(request.form['other_photo'], response_type='json')
@@ -147,6 +154,7 @@ def post_photo_remove_tag(photo_id):
     '''
     Remove a tag from this photo.
     '''
+    common.permission_manager.basic()
     response = post_photo_add_remove_tag_core(
         photo_ids=photo_id,
         tagname=request.form['tagname'],
@@ -157,6 +165,7 @@ def post_photo_remove_tag(photo_id):
 @site.route('/batch/photos/add_tag', methods=['POST'])
 @flasktools.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
 def post_batch_photos_add_tag():
+    common.permission_manager.basic()
     response = post_photo_add_remove_tag_core(
         photo_ids=request.form['photo_ids'],
         tagname=request.form['tagname'],
@@ -167,6 +176,7 @@ def post_batch_photos_add_tag():
 @site.route('/batch/photos/remove_tag', methods=['POST'])
 @flasktools.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
 def post_batch_photos_remove_tag():
+    common.permission_manager.basic()
     response = post_photo_add_remove_tag_core(
         photo_ids=request.form['photo_ids'],
         tagname=request.form['tagname'],
@@ -178,6 +188,7 @@ def post_batch_photos_remove_tag():
 
 @site.route('/photo/<photo_id>/generate_thumbnail', methods=['POST'])
 def post_photo_generate_thumbnail(photo_id):
+    common.permission_manager.basic()
     special = request.form.to_dict()
 
     with common.P.transaction:
@@ -212,17 +223,20 @@ def post_photo_refresh_metadata_core(photo_ids):
 
 @site.route('/photo/<photo_id>/refresh_metadata', methods=['POST'])
 def post_photo_refresh_metadata(photo_id):
+    common.permission_manager.basic()
     response = post_photo_refresh_metadata_core(photo_ids=photo_id)
     return response
 
 @site.route('/batch/photos/refresh_metadata', methods=['POST'])
 @flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_refresh_metadata():
+    common.permission_manager.basic()
     response = post_photo_refresh_metadata_core(photo_ids=request.form['photo_ids'])
     return response
 
 @site.route('/photo/<photo_id>/set_searchhidden', methods=['POST'])
 def post_photo_set_searchhidden(photo_id):
+    common.permission_manager.basic()
     with common.P.transaction:
         photo = common.P_photo(photo_id, response_type='json')
         photo.set_searchhidden(True)
@@ -230,6 +244,7 @@ def post_photo_set_searchhidden(photo_id):
 
 @site.route('/photo/<photo_id>/unset_searchhidden', methods=['POST'])
 def post_photo_unset_searchhidden(photo_id):
+    common.permission_manager.basic()
     with common.P.transaction:
         photo = common.P_photo(photo_id, response_type='json')
         photo.set_searchhidden(False)
@@ -249,6 +264,7 @@ def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
 
 @site.route('/photo/<photo_id>/show_in_folder', methods=['POST'])
 def post_photo_show_in_folder(photo_id):
+    common.permission_manager.basic()
     if not request.is_localhost:
         flask.abort(403)
 
@@ -267,6 +283,7 @@ def post_photo_show_in_folder(photo_id):
 @site.route('/batch/photos/set_searchhidden', methods=['POST'])
 @flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_set_searchhidden():
+    common.permission_manager.basic()
     photo_ids = request.form['photo_ids']
     response = post_batch_photos_searchhidden_core(photo_ids=photo_ids, searchhidden=True)
     return response
@@ -274,6 +291,7 @@ def post_batch_photos_set_searchhidden():
 @site.route('/batch/photos/unset_searchhidden', methods=['POST'])
 @flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_unset_searchhidden():
+    common.permission_manager.basic()
     photo_ids = request.form['photo_ids']
     response = post_batch_photos_searchhidden_core(photo_ids=photo_ids, searchhidden=False)
     return response
@@ -282,6 +300,7 @@ def post_batch_photos_unset_searchhidden():
 
 @site.route('/clipboard')
 def get_clipboard_page():
+    common.permission_manager.basic()
     return common.render_template(request, 'clipboard.html')
 
 @site.route('/batch/photos', methods=['POST'])
@@ -290,6 +309,7 @@ def post_batch_photos():
     '''
     Return a list of photo.jsonify() for each requested photo id.
     '''
+    common.permission_manager.basic()
     photo_ids = request.form['photo_ids']
 
     photo_ids = stringtools.comma_space_split(photo_ids)
@@ -302,6 +322,7 @@ def post_batch_photos():
 @site.route('/batch/photos/photo_card', methods=['POST'])
 @flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_photo_cards():
+    common.permission_manager.basic()
     photo_ids = request.form['photo_ids']
 
     photo_ids = stringtools.comma_space_split(photo_ids)
@@ -333,6 +354,7 @@ def get_batch_photos_download_zip(zip_token):
     After the user has generated their zip token, they can retrieve
     that zip file.
     '''
+    common.permission_manager.basic()
     zip_token = zip_token.split('.')[0]
     try:
         photo_ids = photo_download_zip_tokens[zip_token]
@@ -362,6 +384,7 @@ def post_batch_photos_download_zip():
     so the way this works is we generate a token representing the photoset
     that they want, and then they can retrieve the zip itself via GET.
     '''
+    common.permission_manager.basic()
     photo_ids = request.form['photo_ids']
     photo_ids = stringtools.comma_space_split(photo_ids)
 
@@ -436,6 +459,7 @@ def get_search_core():
 
 @site.route('/search_embed')
 def get_search_embed():
+    common.permission_manager.basic()
     search = get_search_core()
     response = common.render_template(
         request,
@@ -447,6 +471,8 @@ def get_search_embed():
 
 @site.route('/search')
 def get_search_html():
+    common.permission_manager.basic()
+
     search = get_search_core()
     search.kwargs.view = request.args.get('view', 'grid')
 
@@ -496,6 +522,7 @@ def get_search_html():
 
 @site.route('/search.atom')
 def get_search_atom():
+    common.permission_manager.basic()
     search = get_search_core()
     soup = etiquette.helpers.make_atom_feed(
         search.results,
@@ -508,6 +535,7 @@ def get_search_atom():
 
 @site.route('/search.json')
 def get_search_json():
+    common.permission_manager.basic()
     search = get_search_core()
     response = search.jsonify()
     return flasktools.json_response(response)
@@ -516,5 +544,6 @@ def get_search_json():
 
 @site.route('/swipe')
 def get_swipe():
+    common.permission_manager.basic()
     response = common.render_template(request, 'swipe.html')
     return response

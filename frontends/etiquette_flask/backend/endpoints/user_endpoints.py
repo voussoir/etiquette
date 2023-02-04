@@ -14,11 +14,13 @@ session_manager = common.session_manager
 
 @site.route('/user/<username>')
 def get_user_html(username):
+    common.permission_manager.basic()
     user = common.P_user(username, response_type='html')
     return common.render_template(request, 'user.html', user=user)
 
 @site.route('/user/<username>.json')
 def get_user_json(username):
+    common.permission_manager.basic()
     user = common.P_user(username, response_type='json')
     user = user.jsonify()
     return flasktools.json_response(user)
@@ -26,6 +28,7 @@ def get_user_json(username):
 @site.route('/userid/<user_id>')
 @site.route('/userid/<user_id>.json')
 def get_user_id_redirect(user_id):
+    common.permission_manager.basic()
     if request.path.endswith('.json'):
         user = common.P_user_id(user_id, response_type='json')
     else:
@@ -37,6 +40,7 @@ def get_user_id_redirect(user_id):
 
 @site.route('/user/<username>/edit', methods=['POST'])
 def post_user_edit(username):
+    common.permission_manager.basic()
     if not request.session:
         return flasktools.json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
     user = common.P_user(username, response_type='json')
@@ -54,6 +58,7 @@ def post_user_edit(username):
 
 @site.route('/login', methods=['GET'])
 def get_login():
+    common.permission_manager.global_public()
     response = common.render_template(
         request,
         'login.html',
@@ -66,6 +71,7 @@ def get_login():
 @site.route('/login', methods=['POST'])
 @flasktools.required_fields(['username', 'password'])
 def post_login():
+    common.permission_manager.global_public()
     if request.session.user:
         exc = etiquette.exceptions.AlreadySignedIn()
         response = exc.jsonify()
@@ -96,6 +102,7 @@ def post_login():
 
 @site.route('/logout', methods=['POST'])
 def post_logout():
+    common.permission_manager.basic()
     session_manager.remove(request)
     response = flasktools.json_response({})
     return response
@@ -104,11 +111,13 @@ def post_logout():
 
 @site.route('/register', methods=['GET'])
 def get_register():
+    common.permission_manager.global_public()
     return flask.redirect('/login')
 
 @site.route('/register', methods=['POST'])
 @flasktools.required_fields(['username', 'password_1', 'password_2'])
 def post_register():
+    common.permission_manager.global_public()
     if request.session.user:
         exc = etiquette.exceptions.AlreadySignedIn()
         response = exc.jsonify()
