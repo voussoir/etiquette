@@ -198,7 +198,7 @@ CREATE INDEX IF NOT EXISTS index_tag_group_rel_memberid on tag_group_rel(memberi
 CREATE TABLE IF NOT EXISTS tag_synonyms(
     name TEXT PRIMARY KEY NOT NULL,
     mastername TEXT NOT NULL,
-    created INT,
+    created INT
 );
 CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
 CREATE INDEX IF NOT EXISTS index_tag_synonyms_mastername on tag_synonyms(mastername);
