@@ -1150,7 +1150,7 @@ class PhotoDB(
         self.COLUMNS = constants.SQL_COLUMNS
         self.COLUMN_INDEX = constants.SQL_INDEX
 
-    def _init_sql(self, create, skip_version_check):
+    def _init_sql(self, create=False, skip_version_check=False):
         if self.ephemeral:
             existing_database = False
             self.sql_write = self._make_sqlite_write_connection(':memory:')
