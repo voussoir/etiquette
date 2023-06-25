@@ -151,7 +151,7 @@ ondrop="return cards.photos.drag_drop(event);"
 draggable="true"
 >
     <div class="photo_card_filename">
-        <a href="/photo/{{photo.id}}" draggable="false">{{photo.basename}}</a>
+        <a target="_blank" href="/photo/{{photo.id}}" draggable="false">{{photo.basename}}</a>
     </div>
 
     <span class="photo_card_metadata">
@@ -172,7 +172,7 @@ draggable="true"
         {% set thumbnail_src = "/static/basic_thumbnails/" ~ thumbnail_src ~ ".png" %}
     {% endif -%}{# if thumbnail #}
 
-    <a class="photo_card_thumbnail" href="/photo/{{photo.id}}" draggable="false">
+    <a class="photo_card_thumbnail" target="_blank" href="/photo/{{photo.id}}" draggable="false">
         <img loading="lazy" src="{{thumbnail_src}}" draggable="false">
     </a>
     {% endif %}{# if grid #}
