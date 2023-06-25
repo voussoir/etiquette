@@ -67,7 +67,7 @@ def get_file(photo_id, basename=None):
 @site.route('/photo/<photo_id>/thumbnail')
 @site.route('/photo/<photo_id>/thumbnail/<basename>')
 @common.permission_manager.basic_decorator
-@flasktools.cached_endpoint(max_age=common.BROWSER_CACHE_DURATION)
+@flasktools.cached_endpoint(max_age=common.BROWSER_CACHE_DURATION, etag_function=lambda: common.P.last_commit_id)
 def get_thumbnail(photo_id, basename=None):
     photo_id = photo_id.split('.')[0]
     photo = common.P_photo(photo_id, response_type='html')
@@ -186,16 +186,35 @@ def post_batch_photos_remove_tag():
 
 # Photo metadata operations ########################################################################
 
+def post_photo_generate_thumbnail_core(photo_ids, special={}):
+    if isinstance(photo_ids, str):
+        photo_ids = stringtools.comma_space_split(photo_ids)
+
+    with common.P.transaction:
+        photos = list(common.P_photos(photo_ids, response_type='json'))
+
+        for photo in photos:
+            photo._uncache()
+            photo = common.P_photo(photo.id, response_type='json')
+            try:
+                photo.generate_thumbnail()
+            except Exception:
+                log.warning(traceback.format_exc())
+
+    return flasktools.json_response({})
+
 @site.route('/photo/<photo_id>/generate_thumbnail', methods=['POST'])
 def post_photo_generate_thumbnail(photo_id):
     common.permission_manager.basic()
     special = request.form.to_dict()
+    response = post_photo_generate_thumbnail_core(photo_ids=photo_id, special=special)
+    return response
 
-    with common.P.transaction:
-        photo = common.P_photo(photo_id, response_type='json')
-        photo.generate_thumbnail(**special)
-
-    response = flasktools.json_response({})
+@site.route('/batch/photos/generate_thumbnail', methods=['POST'])
+def post_batch_photos_generate_thumbnail():
+    common.permission_manager.basic()
+    special = request.form.to_dict()
+    response = post_photo_generate_thumbnail_core(photo_ids=request.form['photo_ids'], special=special)
     return response
 
 def post_photo_refresh_metadata_core(photo_ids):

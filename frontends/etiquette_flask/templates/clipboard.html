@@ -122,6 +122,10 @@
             <button class="green_button button_with_spinner" id="refresh_metadata_button" data-spinner-delay="500" onclick="return refresh_metadata_form();">Refresh metadata</button>
         </div>
 
+        <div id="generate_thumbnail_area">
+            <button class="green_button button_with_spinner" id="generate_thumbnail_button" data-spinner-delay="500" onclick="return generate_thumbnail_form();">Generate thumbnail</button>
+        </div>
+
         <div id="searchhidden_area">
             <button class="yellow_button" id="set_searchhidden_button" onclick="return set_searchhidden_form();">Searchhide</button>
             <button class="yellow_button" id="unset_searchhidden_button" onclick="return unset_searchhidden_form();">Unhide</button>
@@ -365,6 +369,42 @@ function refresh_metadata_form()
 
     const photo_ids = Array.from(photo_clipboard.clipboard);
     api.photos.batch_refresh_metadata(photo_ids, refresh_metadata_callback);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+const generate_thumbnail_button = document.getElementById("generate_thumbnail_button");
+
+function generate_thumbnail_callback(response)
+{
+    window[generate_thumbnail_button.dataset.spinnerCloser]();
+    if (! response.meta.json_ok)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
+    if ("error_type" in response.data)
+    {
+        const message_area = document.getElementById("message_area");
+        const message_positivity = "message_negative";
+        const message_text = response.data.error_message;
+        common.create_message_bubble(message_area, message_positivity, message_text, 8000);
+    }
+    else
+    {
+        common.refresh();
+    }
+}
+
+function generate_thumbnail_form()
+{
+    if (photo_clipboard.clipboard.size == 0)
+    {
+        return spinners.BAIL;
+    }
+
+    const photo_ids = Array.from(photo_clipboard.clipboard);
+    api.photos.batch_generate_thumbnail(photo_ids, generate_thumbnail_callback);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

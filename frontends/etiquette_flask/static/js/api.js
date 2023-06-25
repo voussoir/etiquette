@@ -236,7 +236,17 @@ function batch_add_tag(photo_ids, tagname, callback)
     return http.post({
         url: "/batch/photos/add_tag",
         data: {"photo_ids": photo_ids.join(","), "tagname": tagname},
-        add_remove_tag_callback: callback,
+        callback: callback,
+    });
+}
+
+api.photos.batch_generate_thumbnail =
+function batch_generate_thumbnail(photo_ids, callback)
+{
+    return http.post({
+        url: "/batch/photos/generate_thumbnail",
+        data: {"photo_ids": photo_ids.join(",")},
+        callback: callback,
     });
 }
 
@@ -256,7 +266,7 @@ function batch_remove_tag(photo_ids, tagname, callback)
     return http.post({
         url: "/batch/photos/remove_tag",
         data: {"photo_ids": photo_ids.join(","), "tagname": tagname},
-        add_remove_tag_callback: callback,
+        callback: callback,
     });
 }
 
