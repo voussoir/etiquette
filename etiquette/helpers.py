@@ -3,7 +3,9 @@ This file provides functions which are used in various places throughout the
 codebase but don't deserve to be methods of any class.
 '''
 import bs4
+import io
 import datetime
+import kkroening_ffmpeg
 import hashlib
 import os
 import PIL.Image
@@ -18,6 +20,9 @@ from voussoirkit import imagetools
 from voussoirkit import pathclass
 from voussoirkit import stringtools
 from voussoirkit import timetools
+from voussoirkit import vlogging
+
+log = vlogging.get_logger(__name__)
 
 from . import constants
 from . import exceptions
@@ -255,13 +260,23 @@ def generate_image_thumbnail(*args, trusted_file=False, **kwargs) -> PIL.Image:
     finally:
         PIL.Image.MAX_IMAGE_PIXELS = _max_pixels
 
+def image_is_mostly_black(image):
+    tiny = image.copy()
+    tiny.thumbnail((64, 64))
+    pixels = list(tiny.getdata())
+    black_count = 0
+    if tiny.mode == 'RGB':
+        black_count = sum(1 for pixel in pixels if sum(pixel) <= 24)
+
+    return (black_count / len(pixels)) > 0.5
+
 def generate_video_thumbnail(filepath, width, height, **special) -> PIL.Image:
-    if not os.path.isfile(filepath):
-        raise FileNotFoundError(filepath)
+    file = pathclass.Path(filepath)
+    file.assert_is_file()
     probe = constants.ffmpeg.probe(filepath)
 
     if not probe or not probe.video:
-        return False
+        return None
 
     size = imagetools.fit_into_bounds(
         image_width=probe.video.video_width,
@@ -269,26 +284,25 @@ def generate_video_thumbnail(filepath, width, height, **special) -> PIL.Image:
         frame_width=width,
         frame_height=height,
     )
-    size = '%dx%d' % size
     duration = probe.video.duration
 
     if 'timestamp' in special:
-        timestamp = special['timestamp']
-    elif duration < 3:
-        timestamp = 0
+        timestamp_choices = [special['timestamp']]
     else:
-        timestamp = 2
+        timestamp_choices = list(range(0, int(duration), 3))
 
-    outfile = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False)
-    constants.ffmpeg.thumbnail(
-        filepath,
-        outfile=outfile.name,
-        quality=2,
-        size=size,
-        time=timestamp,
-    )
-    outfile.close()
-    image = PIL.Image.open(outfile.name)
+    image = None
+    for this_time in timestamp_choices:
+        log.debug('Attempting video thumbnail at t=%d', this_time)
+        command = kkroening_ffmpeg.input(file.absolute_path, ss=this_time)
+        command = command.filter('scale', size[0], size[1])
+        command = command.output('pipe:', vcodec='bmp', format='image2pipe', vframes=1)
+        (out, trash) = command.run(capture_stdout=True, capture_stderr=True)
+        bio = io.BytesIO(out)
+        image = PIL.Image.open(bio)
+        if not image_is_mostly_black(image):
+            break
+
     return image
 
 def get_mimetype(extension) -> typing.Optional[str]:
