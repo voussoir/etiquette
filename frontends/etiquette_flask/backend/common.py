@@ -99,8 +99,11 @@ def before_request():
     if site.localhost_only and not request.is_localhost:
         return flask.abort(403)
 
-    # Since we don't define this route, I can't just add this where it belongs.
-    # Sorry.
+    if request.url_rule is None:
+        return flask.abort(404)
+
+    # Since we don't define this route (/static/ is a default from flask),
+    # I can't just add this where it belongs. Sorry.
     if request.url_rule.rule == '/static/<path:filename>':
         permission_manager.global_public()
 

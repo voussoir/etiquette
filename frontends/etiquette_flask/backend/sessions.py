@@ -63,6 +63,10 @@ class SessionManager:
         # Send the token back to the client
         # but only if the endpoint didn't manually set the cookie.
         function_cookies = response.headers.get_all('Set-Cookie')
+
+        if not hasattr(request, 'session') or not request.session:
+            return response
+
         if not any('etiquette_session=' in cookie for cookie in function_cookies):
             response.set_cookie(
                 'etiquette_session',
