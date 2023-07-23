@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="theme_{{theme}}">
 <head>
     {% import "header.html" as header %}
     {% import "cards.html" as cards %}
@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="/static/css/common.css">
     <link rel="stylesheet" href="/static/css/etiquette.css">
     <link rel="stylesheet" href="/static/css/cards.css">
-    {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
     <script src="/static/js/editor.js"></script>

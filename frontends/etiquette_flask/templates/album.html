@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="theme_{{theme}}">
 
 {% macro shared_css() %}
 <style>
@@ -89,7 +89,6 @@
     <link rel="stylesheet" href="/static/css/common.css">
     <link rel="stylesheet" href="/static/css/etiquette.css">
     <link rel="stylesheet" href="/static/css/cards.css">
-    {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
     <script src="/static/js/cards.js"></script>
@@ -146,7 +145,6 @@ const ALBUM_ID = undefined;
     <link rel="stylesheet" href="/static/css/etiquette.css">
     <link rel="stylesheet" href="/static/css/clipboard_tray.css">
     <link rel="stylesheet" href="/static/css/cards.css">
-    {% if theme %}<link rel="stylesheet" href="/static/css/theme_{{theme}}.css">{% endif %}
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
     <script src="/static/js/album_autocomplete.js"></script>

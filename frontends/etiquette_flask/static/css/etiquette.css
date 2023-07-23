@@ -203,3 +203,105 @@ is hovered over.
 {
     flex: 2;
 }
+
+/******************************************************************************/
+html.theme_slate
+{
+    --color_primary: #222;
+    --color_secondary: #3b4d5d;
+
+    --color_text_normal: #efefef;
+    --color_text_link: #1edeff;
+    --color_text_bubble: black;
+
+    --color_textfields: var(--color_secondary);
+    --color_text_placeholder: gray;
+
+    --color_transparency: rgba(255, 255, 255, 0.05);
+    --color_dropshadow: rgba(0, 0, 0, 0.25);
+    --color_shadow: rgba(0, 0, 0, 0.5);
+    --color_highlight: rgba(255, 255, 255, 0.5);
+
+    --color_tag_card_bg: #e6e6e6;
+    --color_tag_card_fg: black;
+}
+
+html.theme_slate button,
+html.theme_slate button *
+{
+    color: black;
+}
+/******************************************************************************/
+html.theme_hotdogstand
+{
+    --color_primary: yellow;
+    --color_secondary: red;
+
+    --color_text_normal: black;
+    --color_text_link: rebeccapurple;
+    --color_text_bubble: black;
+
+    --color_textfields: var(--color_secondary);
+    --color_text_placeholder: black;
+
+    --color_transparency: yellow;
+    --color_dropshadow: rgba(0, 0, 0, 0.25);
+    --color_shadow: rgba(0, 0, 0, 0.5);
+    --color_highlight: rgba(255, 255, 255, 0.5);
+
+    --color_tag_card_bg: red;
+    --color_tag_card_fg: white;
+}
+
+html.theme_hotdogstand button,
+html.theme_hotdogstand button *
+{
+    color: black;
+}
+
+html.theme_hotdogstand .panel
+{
+    border: 1px solid black;
+}
+/******************************************************************************/
+html.theme_pearl
+{
+    --color_primary: #f6ffff;
+    --color_secondary: #aad7ff;
+
+    --color_text_normal: black;
+    --color_text_link: #00f;
+    --color_text_bubble: black;
+
+    --color_textfields: white;
+    --color_text_placeholder: gray;
+
+    --color_transparency: rgba(0, 0, 0, 0.1);
+    --color_dropshadow: rgba(0, 0, 0, 0.25);
+    --color_shadow: rgba(0, 0, 0, 0.5);
+    --color_highlight: rgba(255, 255, 255, 0.5);
+
+    --color_tag_card_bg: #fff;
+    --color_tag_card_fg: black;
+}
+/******************************************************************************/
+html.theme_turquoise
+{
+    --color_primary: #00d8f4;
+    --color_secondary: #ffffd4;
+
+    --color_text_normal: black;
+    --color_text_link: blue;
+    --color_text_bubble: black;
+
+    --color_textfields: white;
+    --color_text_placeholder: gray;
+
+    --color_transparency: rgba(0, 0, 0, 0.1);
+    --color_dropshadow: rgba(0, 0, 0, 0.25);
+    --color_shadow: rgba(0, 0, 0, 0.5);
+    --color_highlight: rgba(255, 255, 255, 0.5);
+
+    --color_tag_card_bg: #fff;
+    --color_tag_card_fg: blue;
+}
