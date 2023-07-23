@@ -71,6 +71,54 @@ function join_and_trail(list, separator)
     return list.join(separator) + separator
 }
 
+common.hms_render_colons =
+function hms_render_colons(hours, minutes, seconds)
+{
+    const parts = [];
+    if (hours !== null)
+    {
+        parts.push(hours.toLocaleString(undefined, {minimumIntegerDigits: 2}));
+    }
+    if (minutes !== null)
+    {
+        parts.push(minutes.toLocaleString(undefined, {minimumIntegerDigits: 2}));
+    }
+    parts.push(seconds.toLocaleString(undefined, {minimumIntegerDigits: 2}));
+    return parts.join(":")
+}
+
+common.seconds_to_hms =
+function seconds_to_hms(seconds, args)
+{
+    args = args || {};
+    const renderer = args["renderer"] || common.hms_render_colons;
+    const force_minutes = args["force_minutes"] || false;
+    const force_hours = args["force_hours"] || false;
+
+    if (seconds > 0 && seconds < 1)
+    {
+        seconds = 1;
+    }
+    else
+    {
+        seconds = Math.round(seconds);
+    }
+    let minutes = Math.floor(seconds / 60);
+    seconds = seconds % 60;
+    let hours = Math.floor(minutes / 60);
+    minutes = minutes % 60;
+
+    if (hours == 0 && force_hours == false)
+    {
+        hours = null;
+    }
+    if (minutes == 0 && force_minutes == false)
+    {
+        minutes = null;
+    }
+    return renderer(hours, minutes, seconds);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // HTML & DOM //////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
