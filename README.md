@@ -221,6 +221,8 @@ Here are some thoughts about the kinds of features that need to exist within the
 
 ## Mirrors
 
+https://git.voussoir.net/voussoir/etiquette
+
 https://github.com/voussoir/etiquette
 
 https://gitlab.com/voussoir/etiquette
