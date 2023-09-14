@@ -240,6 +240,7 @@ MIMETYPES = {
     'aiff': ('audio', 'x-aiff'),
     'au': ('audio', 'basic'),
     'dts': ('audio', 'dts'),
+    'flac': ('audio', 'flac'),
     'm4a': ('audio', 'mp4'),
     'mp2': ('audio', 'mpeg'),
     'mp3': ('audio', 'mpeg'),
