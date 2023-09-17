@@ -114,7 +114,7 @@ def post_tag_remove_synonym(tagname):
 @common.permission_manager.basic_decorator
 @flasktools.cached_endpoint(max_age=15)
 def get_all_tag_names():
-    all_tags = list(common.P.get_all_tag_names())
+    all_tags = list(sorted(common.P.get_all_tag_names()))
     all_synonyms = common.P.get_all_synonyms()
     response = {'tags': all_tags, 'synonyms': all_synonyms}
     return flasktools.json_response(response)

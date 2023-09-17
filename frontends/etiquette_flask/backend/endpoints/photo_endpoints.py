@@ -84,11 +84,6 @@ def get_thumbnail(photo_id, basename=None):
         headers=outgoing_headers,
     )
     return response
-    # if photo.thumbnail:
-    #     path = photo.thumbnail
-    # else:
-    #     flask.abort(404, 'That file doesnt have a thumbnail')
-    # return common.send_file(path)
 
 # Photo create and delete ##########################################################################
 
@@ -104,21 +99,22 @@ def post_photo_delete(photo_id):
 
 # Photo tag operations #############################################################################
 
-def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove):
+def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove, timestamp=None):
     if isinstance(photo_ids, str):
         photo_ids = stringtools.comma_space_split(photo_ids)
 
     photos = list(common.P_photos(photo_ids, response_type='json'))
     tag = common.P_tag(tagname, response_type='json')
 
+    response = {'action': add_or_remove, 'tagname': tag.name}
     with common.P.transaction:
         for photo in photos:
             if add_or_remove == 'add':
-                photo.add_tag(tag)
+                photo_tag = photo.add_tag(tag, timestamp=timestamp)
+                response["photo_tag_rel_id"] = photo_tag.id
             elif add_or_remove == 'remove':
                 photo.remove_tag(tag)
 
-    response = {'action': add_or_remove, 'tagname': tag.name}
     return flasktools.json_response(response)
 
 @site.route('/photo/<photo_id>/add_tag', methods=['POST'])
@@ -128,12 +124,13 @@ def post_photo_add_tag(photo_id):
     Add a tag to this photo.
     '''
     common.permission_manager.basic()
-    response = post_photo_add_remove_tag_core(
-        photo_ids=photo_id,
-        tagname=request.form['tagname'],
-        add_or_remove='add',
-    )
-    return response
+    photo = common.P_photo(photo_id, response_type='json')
+    tag = common.P_tag(request.form['tagname'], response_type='json')
+
+    with common.P.transaction:
+        tag_timestamp = request.form.get('timestamp').strip() or None
+        photo_tag = photo.add_tag(tag, timestamp=tag_timestamp)
+        return flasktools.json_response(photo_tag.jsonify())
 
 @site.route('/photo/<photo_id>/copy_tags', methods=['POST'])
 @flasktools.required_fields(['other_photo'], forbid_whitespace=True)
@@ -146,7 +143,7 @@ def post_photo_copy_tags(photo_id):
         photo = common.P_photo(photo_id, response_type='json')
         other = common.P_photo(request.form['other_photo'], response_type='json')
         photo.copy_tags(other)
-    return flasktools.json_response([tag.jsonify(minimal=True) for tag in photo.get_tags()])
+    return flasktools.json_response([tag.jsonify() for tag in photo.get_tags()])
 
 @site.route('/photo/<photo_id>/remove_tag', methods=['POST'])
 @flasktools.required_fields(['tagname'], forbid_whitespace=True)
@@ -161,6 +158,17 @@ def post_photo_remove_tag(photo_id):
         add_or_remove='remove',
     )
     return response
+
+@site.route('/photo_tag_rel/<photo_tag_rel_id>/delete', methods=['POST'])
+def post_photo_tag_rel_delete(photo_tag_rel_id):
+    '''
+    Remove a tag from a photo.
+    '''
+    common.permission_manager.basic()
+    with common.P.transaction:
+        photo_tag = common.P.get_object_by_id(etiquette.objects.PhotoTagRel, photo_tag_rel_id)
+        photo_tag.delete()
+        return flasktools.json_response(photo_tag.jsonify())
 
 @site.route('/batch/photos/add_tag', methods=['POST'])
 @flasktools.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
@@ -499,7 +507,7 @@ def get_search_html():
     total_tags = set()
     for result in search.results:
         if isinstance(result, etiquette.objects.Photo):
-            total_tags.update(result.get_tags())
+            total_tags.update(photo_tag.tag for photo_tag in result.get_tags())
     total_tags = sorted(total_tags, key=lambda t: t.name)
 
     # PREV-NEXT PAGE URLS

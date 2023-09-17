@@ -191,12 +191,13 @@ is hovered over.
     display: none;
 }
 
+li:hover .remove_tag_button,
 .tag_card:hover ~ * .remove_tag_button,
 .tag_card:hover ~ .remove_tag_button,
 .remove_tag_button:hover,
 .remove_tag_button_perm:hover
 {
-    display:inline;
+    display: inline;
 }
 
 #message_area

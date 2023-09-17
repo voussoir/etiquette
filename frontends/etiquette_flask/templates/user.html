@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="/static/css/cards.css">
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
+    <script src="/static/js/cards.js"></script>
     <script src="/static/js/editor.js"></script>
     <script src="/static/js/http.js"></script>
     <script src="/static/js/spinners.js"></script>
@@ -21,6 +22,17 @@
 {
     grid-row-gap: 8px;
     grid-auto-rows: max-content;
+}
+#hierarchy_photos:not(:has(.photo_card)),
+#hierarchy_albums:not(:has(.album_card)),
+#hierarchy_tags:not(:has(.tag_card)),
+#hierarchy_bookmarks:not(:has(.bookmark_card))
+{
+    display: none;
+}
+#tags_list .tag_card
+{
+    margin: 4px;
 }
 </style>
 </head>
@@ -37,53 +49,90 @@
             <p>User since <span title="{{user.created|timestamp_to_8601}}">{{user.created|timestamp_to_naturaldate}}.</span></p>
         </div>
 
-        {% set photos = user.get_photos(direction='desc')|islice(0, 15)|list %}
-        {% if photos %}
         <div id="hierarchy_photos" class="panel">
             <h2><a href="/search?author={{user.id}}">Photos by <span class="dynamic_user_display_name">{{user.display_name}}</span></a></h2>
-            {% for photo in photos %}
-            {{cards.create_photo_card(photo)}}
-            {% endfor %}
+            <div id="photos_list">
+            </div>
         </div>
-        {% endif %}
 
-        {% set tags = user.get_tags(direction='desc')|islice(0, 100)|list %}
-        {% if tags %}
         <div id="hierarchy_tags" class="panel">
             <h2>Tags by <span class="dynamic_user_display_name">{{user.display_name}}</span></h2>
-            {% for tag in tags %}
-            {{cards.create_tag_card(tag, with_alt_description=True)}}
-            {% endfor %}
+            <div id="tags_list">
+            </div>
         </div>
-        {% endif %}
 
-        {% set albums = user.get_albums()|islice(0, 20)|list %}
-        {% if albums %}
         <div id="hierarchy_albums" class="panel">
             <h2>Albums by <span class="dynamic_user_display_name">{{user.display_name}}</span></h2>
-            {% for album in albums %}
-            {{cards.create_album_card(album)}}
-            {% endfor %}
+            <div id="albums_list">
+            </div>
         </div>
-        {% endif %}
 
-        {% set bookmarks = user.get_bookmarks()|islice(0, 50)|list %}
-        {% if bookmarks %}
         <div id="hierarchy_bookmarks" class="panel">
             <h2>Bookmarks by <span class="dynamic_user_display_name">{{user.display_name}}</span></h2>
-            {% for bookmark in bookmarks %}
-            {{cards.create_bookmark_card(bookmark, add_author=False)}}
-            {% endfor %}
+            <div id="bookmarks_list">
+            </div>
         </div>
-        {% endif %}
 
     </div>
 </body>
 
 <script type="text/javascript">
+const PHOTOS = [
+    {% for photo in user.get_photos(direction='desc')|islice(0, 15) %}
+    {{photo.jsonify(include_albums=False)|tojson|safe}},
+    {% endfor %}
+];
+
+const ALBUMS = [
+    {% for album in user.get_albums()|islice(0, 20) %}
+    {{album.jsonify(include_photos=False, include_children=False, include_parents=False, count_children=True, count_photos=True)|tojson|safe}},
+    {% endfor %}
+];
+
+const TAGS = [
+    {% for tag in user.get_tags(direction='desc')|islice(0, 100) %}
+    {{tag.jsonify()|tojson|safe}},
+    {% endfor %}
+];
+
+const BOOKMARKS = [
+    {% for bookmark in user.get_bookmarks()|islice(0, 50) %}
+    {{bookmark.jsonify()|tojson|safe}},
+    {% endfor %}
+];
+
+function on_pageload()
+{
+    for (const photo of PHOTOS)
+    {
+        const photo_card = cards.photos.create({photo: photo});
+        document.getElementById("photos_list").append(photo_card);
+    }
+    for (const album of ALBUMS)
+    {
+        const album_card = cards.albums.create({album: album});
+        document.getElementById("albums_list").append(album_card);
+    }
+    for (const tag of TAGS)
+    {
+        const tag_card = cards.tags.create({tag: tag});
+        document.getElementById("tags_list").append(tag_card);
+    }
+    for (const bookmark of BOOKMARKS)
+    {
+        const bookmark_card = cards.bookmarks.create({
+            bookmark: bookmark,
+            add_author: false,
+            add_delete_button: false,
+            add_url_element: false,
+        });
+        document.getElementById("bookmarks_list").append(bookmark_card);
+    }
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
+
 {% if user.id == request.session.user.id %}
 const USERNAME = "{{user.username}}";
-
 profile_ed_on_open = undefined;
 
 function profile_ed_on_save(ed)
@@ -116,7 +165,7 @@ function profile_ed_on_save(ed)
     api.users.edit(USERNAME, ed.elements["display_name"].edit.value, callback);
 }
 
-profile_ed_on_cancel = undefined;
+const profile_ed_on_cancel = undefined;
 
 const profile_ed_elements = [
     {
@@ -127,7 +176,6 @@ const profile_ed_elements = [
         "autofocus": true,
     },
 ];
-
 const profile_ed = new editor.Editor(
     profile_ed_elements,
     profile_ed_on_open,

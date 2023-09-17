@@ -63,46 +63,6 @@ draggable=true
 </div>
 {% endmacro %}
 
-{# BOOKMARK ###################################################################}
-
-{% macro create_bookmark_card(bookmark, add_author=True, add_delete_button=False, add_url_element=False) %}
-<div class="bookmark_card" data-id="{{bookmark.id}}">
-    <h2><a href="{{bookmark.url}}" class="bookmark_title" title="{{bookmark.url}}">{{bookmark.display_name}}</a></h2>
-
-    {# The URL element is always display:none, but its presence is useful in #}
-    {# facilitating the Editor object. If this bookmark will not be editable, #}
-    {# there is no need for it. #}
-    {% if add_url_element %}
-    <a href="{{bookmark.url}}" class="bookmark_url">{{bookmark.url}}</a>
-    {% endif %}
-
-    {# if more tools are added, this will become an `or` #}
-    {% if add_delete_button %}
-    <div class="bookmark_toolbox">
-        {% if add_delete_button %}
-        <button
-        class="red_button button_with_confirm"
-        data-onclick="return delete_bookmark_form(event);"
-        data-prompt="Delete Bookmark?"
-        data-cancel-class="gray_button"
-        >
-            Delete
-        </button>
-        {% endif %}
-    </div>
-    {% endif %}
-
-    {% if add_author %}
-    {% set author = bookmark.author %}
-    {% if author is not none %}
-    <p>
-        Author: <a href="/userid/{{author.id}}">{{author.display_name}}</a>
-    </p>
-    {% endif %}
-    {% endif %}
-</div>
-{% endmacro %}
-
 {# PHOTO ######################################################################}
 
 {# Priority: specific extensions > specific mimetypes > general mimtypes #}
@@ -132,11 +92,7 @@ draggable=true
     {% do metadatas.append("{d}".format(d=photo.duration_string)) %}
 {% endif -%}
 
-{% set tag_names_title = [] %}
-{% for tag in photo.get_tags() %}
-    {% do tag_names_title.append(tag.name) %}
-{% endfor -%}
-{% set tag_names_title = tag_names_title|comma_join %}
+{% set tag_names_title = photo.get_tag_names()|sort|comma_join %}
 {% set tag_names_inner = "T" if tag_names_title else "" %}
 
 <div
@@ -203,6 +159,7 @@ draggable="true"
 -->
 {%- macro create_tag_card(
     tag,
+    photo_tag_rel_id=None,
     extra_classes="",
     innertext=None,
     innertext_safe=None,
@@ -225,6 +182,6 @@ draggable="true"
 {%- set innertext = innertext_safe or (innertext or tag.name)|e -%}
 {%- set element = "a" if (link or onclick) else "span" -%}
 
-<{{element}} {{make_attributes(class=class, title=title, href=href, onclick=onclick, **kwargs)|safe}}>{{innertext|safe}}</{{element}}>
+<{{element}} {{make_attributes(data_id=photo_tag_rel_id, class=class, title=title, href=href, onclick=onclick, **kwargs)|safe}}>{{innertext|safe}}</{{element}}>
 {{-''-}}
 {%- endmacro -%}

@@ -29,11 +29,11 @@
     grid-row-gap: 8px;
     grid-auto-rows: max-content;
 }
-#left ul
+.panel
 {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
+    display: grid;
+    grid-auto-rows: auto;
+    grid-gap: 8px;
 }
 #hierarchy_self h1 .editor_input
 {
@@ -111,7 +111,6 @@
             >
                 {{-specific_tag.description-}}
             </pre>
-            <button class="green_button editor_toolbox_placeholder">Edit</button>
 
             <button
             class="red_button button_with_confirm"
@@ -134,15 +133,15 @@
         {% if parents %}
         <div id="hierarchy_parents" class="panel">
             <h2>{{parents|length}} Parents</h2>
-            <ul id="parent_list">
-            {% for ancestor in specific_tag.get_parents() %}
-            <li>
-                {{cards.create_tag_card(ancestor, link="search_musts", innertext="(+)")}}
-                {{cards.create_tag_card(ancestor, link="search_forbids", innertext="(x)")}}
-                {{cards.create_tag_card(ancestor, link="info", innertext=ancestor.name, with_alt_description=True)}}
-            </li>
-            {% endfor %}
-            </ul>
+            <div id="parent_list">
+                {% for ancestor in specific_tag.get_parents() %}
+                <div>
+                    {{cards.create_tag_card(ancestor, link="search_musts", innertext="(+)")}}
+                    {{cards.create_tag_card(ancestor, link="search_forbids", innertext="(x)")}}
+                    {{cards.create_tag_card(ancestor, link="info", innertext=ancestor.name, with_alt_description=True)}}
+                </div>
+                {% endfor %}
+            </div>
         </div> <!-- hierarchy_parents -->
         {% endif %} <!-- if parents -->
         {% endif %} <!-- if specific tag -->
@@ -158,9 +157,9 @@
                 <input disabled class="enable_on_pageload entry_with_tagname_replacements" type="text" id="search_filter" placeholder="filter"/>
             </div>
 
-            <ul id="tag_list">
-            {% for (qualified_name, tag) in tags %}
-                <li>
+            <div id="tag_list">
+                {% for (qualified_name, tag) in tags %}
+                <div>
                     {{cards.create_tag_card(tag, link="info", extra_classes="main_card", innertext=qualified_name, with_alt_description=True)-}}
                     {% if specific_tag or '.' in qualified_name -%}
                     <button
@@ -187,11 +186,11 @@
                     Delete
                     </button>
                     {% endif %}
-                </li>
+                </div>
 
                 {% if include_synonyms %}
                 {% for synonym in tag.get_synonyms()|sort %}
-                <li>
+                <div>
                     {# -cards.create_tag_card(tag, link="search_musts", extra_classes="must_shortcut", innertext="(+)") #}
                     {# cards.create_tag_card(tag, link="search_forbids", extra_classes="forbid_shortcut", innertext="(x)") #}
                     {{cards.create_tag_card(tag, link='info', extra_classes="main_card", innertext=qualified_name + '+' + synonym)-}}
@@ -206,50 +205,50 @@
                     >
                     Remove
                     </button>
-                </li>
+                </div>
                 {% endfor %}
                 {% endif %}
-            {% endfor %}
+                {% endfor %}
 
-            {% if specific_tag %}
-            <li>
-                <input id="add_child_input" type="text" class="entry_with_tagname_replacements" list="tag_autocomplete_datalist"></input><!--
-                 --><button id="add_child_button" class="green_button" onclick="return add_child_form(event);">Add child</button>
-            </li>
-            {% endif %} <!-- if specific_tag -->
-            </ul>
+                {% if specific_tag %}
+                <div>
+                    <input id="add_child_input" type="text" class="entry_with_tagname_replacements" list="tag_autocomplete_datalist"></input><!--
+                     --><button id="add_child_button" class="green_button" onclick="return add_child_form(event);">Add child</button>
+                </div>
+                {% endif %} <!-- if specific_tag -->
+            </div> <!-- tag_list -->
         </div> <!-- hierarchy_tags -->
 
         {% if specific_tag and include_synonyms %}
         {% set synonyms = specific_tag.get_synonyms() %}
         <div id="hierarchy_synonyms" class="panel">
             <h2>{{synonyms|length}} Synonyms</h2>
-            <ul>
-            {% for synonym in synonyms %}
-            <li>
-                {{cards.create_tag_card(specific_tag, link="search_musts", innertext="(+)")}}
+            <div>
+                {% for synonym in synonyms %}
+                <div>
+                    {{cards.create_tag_card(specific_tag, link="search_musts", innertext="(+)")}}
 
-                {{cards.create_tag_card(specific_tag, link="search_forbids", innertext="(x)")}}
+                    {{cards.create_tag_card(specific_tag, link="search_forbids", innertext="(x)")}}
 
-                {{cards.create_tag_card(specific_tag, link=none, innertext=synonym)-}}
-                <button
-                class="remove_tag_button red_button button_with_confirm"
-                data-onclick="return remove_synonym_form(event);"
-                data-prompt="Remove Synonym?"
-                data-confirm="Remove"
-                data-confirm-class="remove_tag_button_perm red_button"
-                data-cancel-class="remove_tag_button_perm gray_button"
-                >
-                Remove
-                </button>
-            </li>
-            {% endfor %}
+                    {{cards.create_tag_card(specific_tag, link=none, innertext=synonym)-}}
+                    <button
+                    class="remove_tag_button red_button button_with_confirm"
+                    data-onclick="return remove_synonym_form(event);"
+                    data-prompt="Remove Synonym?"
+                    data-confirm="Remove"
+                    data-confirm-class="remove_tag_button_perm red_button"
+                    data-cancel-class="remove_tag_button_perm gray_button"
+                    >
+                    Remove
+                    </button>
+                </div>
+                {% endfor %}
 
-            <li>
-                <input id="add_synonym_input" type="text" class="entry_with_tagname_replacements"></input><!--
-                 --><button id="add_synonym_button" class="green_button" onclick="return add_synonym_form(event);">Add synonym</button>
-            </li>
-            </ul>
+                <div>
+                    <input id="add_synonym_input" type="text" class="entry_with_tagname_replacements"></input><!--
+                     --><button id="add_synonym_button" class="green_button" onclick="return add_synonym_form(event);">Add synonym</button>
+                </div>
+            </div>
         </div> <!-- hierarchy_synonyms -->
         {% endif %} <!-- if specific tag and include synonyms -->
 
@@ -257,6 +256,8 @@
         <div id="hierarchy_recentphotos" class="panel">
             <h2><a href="/search?tag_musts={{specific_tag.name}}&orderby=tagged_at-desc">Recent photos</a></h2>
             <span class="spinner hidden">⌛</span>
+            <div id="recentphotos_list" class="photos_holder">
+            </div>
         </div> <!-- hierarchy_recentphotos -->
         {% endif %} <!-- if specific tag -->
     </div>
@@ -275,17 +276,18 @@ common.bind_box_to_button(easybake_input, easybake_button, false);
 
 function search_recent_photos()
 {
-    const div = document.getElementById("hierarchy_recentphotos");
-    const spinner = div.querySelector(".spinner");
+    const hierarchy_recentphotos = document.getElementById("hierarchy_recentphotos");
+    const recentphotos_list = document.getElementById("recentphotos_list");
+    const spinner = hierarchy_recentphotos.querySelector(".spinner");
     spinner.classList.remove("hidden");
     function callback(response)
     {
         spinner.classList.add("hidden");
         const count = response.data.results.length + (response.data.more_after_limit ? "+" : "");
-        div.querySelector("h2").prepend(count + " ");
+        hierarchy_recentphotos.querySelector("h2").prepend(count + " ");
         for (const photo of response.data.results)
         {
-            div.append(cards.photos.create(photo, "grid"));
+            recentphotos_list.append(cards.photos.create({photo: photo, view: "grid"}));
         }
     }
     const parameters = new URLSearchParams();

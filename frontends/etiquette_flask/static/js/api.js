@@ -221,11 +221,11 @@ function edit(bookmark_id, title, b_url, callback)
 api.photos = {};
 
 api.photos.add_tag =
-function add_tag(photo_id, tagname, callback)
+function add_tag(photo_id, tagname, timestamp, callback)
 {
     return http.post({
         url: `/photo/${photo_id}/add_tag`,
-        data: {"tagname": tagname},
+        data: {"tagname": tagname, "timestamp": timestamp},
         callback: callback,
     });
 }
@@ -414,6 +414,18 @@ function callback_go_to_search(response)
         return;
     }
     window.location.href = "/search";
+}
+
+/**************************************************************************************************/
+api.photo_tag_rel = {};
+
+api.photo_tag_rel.delete =
+function _delete({id, callback=null})
+{
+    return http.post({
+        url: `/photo_tag_rel/${id}/delete`,
+        callback: callback,
+    });
 }
 
 /**************************************************************************************************/

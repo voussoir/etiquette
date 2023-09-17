@@ -3,6 +3,127 @@ const cards = {};
 /******************************************************************************/
 cards.albums = {};
 
+cards.albums.create =
+function create({
+    album,
+    view="grid",
+    unlink_parent=null,
+    draggable=false,
+})
+{
+    const viewparam = view == "list" ? "?view=list" : "";
+
+    const album_card = document.createElement("div");
+    album_card.classList.add("album_card");
+    album_card.classList.add(`album_card_${view}`);
+    album_card.dataset.id = album == "root" ? "root" : album.id;
+    album_card.ondragstart = cards.albums.drag_start
+    album_card.ondragend = cards.albums.drag_end
+    album_card.ondragover = cards.albums.drag_over
+    album_card.ondrop = cards.albums.drag_drop
+    album_card.draggable = draggable && album != "root";
+
+    const thumbnail_link = document.createElement("a");
+    thumbnail_link.classList.add("album_card_thumbnail");
+    thumbnail_link.draggable = false;
+    album_card.append(thumbnail_link);
+
+    const thumbnail_img = document.createElement("img");
+    thumbnail_img.loading = "lazy";
+    thumbnail_img.draggable = false;
+    thumbnail_link.append(thumbnail_img);
+
+    let href;
+    if (album == "root")
+    {
+        href = `/albums${viewparam}`;
+    }
+    else
+    {
+        href = `/album/${album.id}${viewparam}`
+    }
+    thumbnail_link.href = href;
+
+    if (album == "root")
+    {
+        thumbnail_img.src = "/static/basic_thumbnails/album.png";
+    }
+    else
+    {
+        if (album.thumbnail_photo)
+        {
+            thumbnail_img.src = `/photo/${album.thumbnail_photo}/thumbnail/${album.thumbnail_photo.id}.jpg`;
+        }
+        else
+        {
+            thumbnail_img.src = "/static/basic_thumbnails/album.png";
+        }
+    }
+
+    const album_title = document.createElement("a");
+    album_card.append(album_title);
+    album_title.classList.add("album_card_title");
+    album_title.draggable = false;
+    album_title.href = href;
+    if (album == "root")
+    {
+        album_title.innerText = "Albums";
+    }
+    else
+    {
+        album_title.innerText = album.display_name;
+    }
+
+    const album_metadata = document.createElement("div");
+    album_metadata.classList.add("album_card_metadata");
+    album_card.append(album_metadata);
+    if (album != "root")
+    {
+        const child_count = document.createElement("span");
+        child_count.classList.add("album_card_child_count");
+        child_count.title = `${album.children_count} child albums`;
+        child_count.innerText = album.children_count;
+        album_metadata.append(child_count);
+
+        album_metadata.append(" | ");
+
+        const photo_count = document.createElement("span");
+        photo_count.classList.add("album_card_photo_count");
+        photo_count.title = `${album.photos_count} photos`;
+        photo_count.innerText = album.photos_count;
+        album_metadata.append(photo_count);
+    }
+
+    const album_tools = document.createElement("div");
+    album_tools.classList.add("album_card_tools");
+    album_card.append(album_tools);
+
+    if (unlink_parent !== null)
+    {
+        const unlink_button = document.createElement("button");
+        unlink_button.classList.add("remove_child_button");
+        unlink_button.classList.add("red_button");
+
+        unlink_button.classList.add("button_with_confirm");
+        unlink_button.dataset.prompt = "Remove child?";
+        unlink_button.dataset.holderClass = "remove_child_button";
+        unlink_button.dataset.confirmClass = "red_button";
+        unlink_button.dataset.cancelClass = "gray_button";
+        unlink_button.innerText = "Unlink";
+
+        unlink_button.addEventListener("click", function(event)
+        {
+            return api.albums.remove_child(
+                unlink_parent,
+                album.id,
+                common.refresh_or_alert
+            );
+        });
+        album_tools.append(unlink_button);
+    }
+    return album_card;
+}
+
 cards.albums.drag_start =
 function drag_start(event)
 {
@@ -72,7 +193,12 @@ function drag_drop(event)
 cards.bookmarks = {};
 
 cards.bookmarks.create =
-function create(bookmark, add_author, add_delete_button, add_url_element)
+function create({
+    bookmark,
+    add_author=false,
+    add_delete_button=false,
+    add_url_element=false,
+})
 {
     const bookmark_card = document.createElement("div");
     bookmark_card.className = "bookmark_card"
@@ -119,6 +245,16 @@ function create(bookmark, add_author, add_delete_button, add_url_element)
         }
     }
 
+    if (add_author && bookmark.author !== null)
+    {
+        const p = document.createElement("p");
+        const authorlink = document.createElement("a");
+        authorlink.href = "/userid/" + bookmark.author.id;
+        authorlink.innerText = bookmark.author.display_name;
+        p.append(authorlink);
+        bookmark_card.append(p);
+    }
+
     return bookmark_card;
 }
 
@@ -150,7 +286,7 @@ function file_link(photo, short)
 }
 
 cards.photos.create =
-function create(photo, view)
+function create({photo, view="grid"})
 {
     if (view !== "list" && view !== "grid")
     {
@@ -230,16 +366,16 @@ function create(photo, view)
         photo_card.appendChild(photo_card_thumbnail);
     }
 
-    let tag_names_title = [];
+    let tag_names_title = new Set();
     let tag_names_inner = "";
-    for (const tag of photo.tags)
+    for (const photo_tag of photo.tags)
     {
-        tag_names_title.push(tag.name);
+        tag_names_title.add(photo_tag.tag_name);
         tag_names_inner = "T";
     }
     const photo_card_tags = document.createElement("span");
     photo_card_tags.className = "photo_card_tags";
-    photo_card_tags.title = tag_names_title.join(",");
+    photo_card_tags.title = Array.from(tag_names_title).join(",");
     photo_card_tags.innerText = tag_names_inner;
     photo_card.appendChild(photo_card_tags);
 
@@ -321,4 +457,73 @@ function photo_rightclick(event)
 }
 
 /******************************************************************************/
+cards.photo_tags = {};
+
+cards.photo_tags.create =
+function create({photo_tag, timestamp_onclick=null, remove_button_onclick=null})
+{
+    const photo_tag_card = document.createElement("div");
+    console.log(photo_tag);
+    photo_tag_card.dataset.id = photo_tag.id;
+    photo_tag_card.classList.add("photo_tag_card");
+
+    const tag = {"id": photo_tag.tag_id, "name": photo_tag.tag_name};
+    const tag_card = cards.tags.create({tag: tag});
+    photo_tag_card.append(tag_card);
+
+    if (photo_tag.timestamp !== null)
+    {
+        const timestamp = document.createElement("a");
+        timestamp.innerText = " " + common.seconds_to_hms({seconds: photo_tag.timestamp});
+        timestamp.addEventListener("click", timestamp_onclick);
+        photo_tag_card.append(timestamp)
+    }
+    if (remove_button_onclick !== null)
+    {
+        const remove_button = document.createElement("button");
+        remove_button.classList.add("remove_tag_button");
+        remove_button.classList.add("red_button");
+        remove_button.addEventListener("click", remove_button_onclick);
+        photo_tag_card.append(remove_button);
+    }
+    return photo_tag_card;
+}
+
+/******************************************************************************/
 cards.tags = {};
+
+cards.tags.create =
+function create({tag, extra_classes=[], link="info", innertext=null, add_alt_description=false})
+{
+    const tag_card = document.createElement("div");
+    tag_card.dataset.id = tag.id;
+    tag_card.classList.add("tag_card");
+    for (const cls of extra_classes)
+    {
+        tag_card.classList.add(cls);
+    }
+
+    const a_or_span = link === null ? "span" : "a";
+    const tag_text = document.createElement(a_or_span);
+    tag_text.innerText = innertext || tag.name;
+    if (add_alt_description && tag.description != "")
+    {
+        tag_text.title = tag.description;
+    }
+    tag_card.append(tag_text);
+
+    const href_options = {
+        "search": `/search?tag_musts=${encodeURIComponent(tag.name)}`,
+        "search_musts":`/search?tag_musts=${encodeURIComponent(tag.name)}`,
+        "search_mays": `/search?tag_mays=${encodeURIComponent(tag.name)}`,
+        "search_forbids": `/search?tag_forbids=${encodeURIComponent(tag.name)}`,
+        "info": `/tag/${encodeURIComponent(tag.name)}`,
+    };
+    const href = href_options[link] || null;
+    if (href !== null)
+    {
+        tag_text.href = href;
+    }
+
+    return tag_card;
+}

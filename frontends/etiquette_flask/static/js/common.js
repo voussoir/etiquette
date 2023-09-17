@@ -88,13 +88,13 @@ function hms_render_colons(hours, minutes, seconds)
 }
 
 common.seconds_to_hms =
-function seconds_to_hms(seconds, args)
+function seconds_to_hms({
+    seconds,
+    renderer=common.hms_render_colons,
+    force_minutes=false,
+    force_hours=false,
+})
 {
-    args = args || {};
-    const renderer = args["renderer"] || common.hms_render_colons;
-    const force_minutes = args["force_minutes"] || false;
-    const force_hours = args["force_hours"] || false;
-
     if (seconds > 0 && seconds < 1)
     {
         seconds = 1;

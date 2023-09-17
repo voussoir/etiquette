@@ -233,7 +233,7 @@ function request_more_divs()
         }
         for (const photo of response.data)
         {
-            photo_div = cards.photos.create(photo);
+            photo_div = cards.photos.create({photo: photo});
             divs[photo.id] = photo_div;
             needed.delete(photo.id)
         }

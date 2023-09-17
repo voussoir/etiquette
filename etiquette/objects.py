@@ -583,7 +583,14 @@ class Album(ObjectBase, GroupableMixin):
         )
         return exists is not None
 
-    def jsonify(self, include_photos=True, minimal=False) -> dict:
+    def jsonify(
+            self,
+            include_photos=True,
+            include_parents=True,
+            include_children=True,
+            count_children=False,
+            count_photos=False,
+        ) -> dict:
         j = {
             'type': 'album',
             'id': self.id,
@@ -594,12 +601,23 @@ class Album(ObjectBase, GroupableMixin):
             'thumbnail_photo': self.thumbnail_photo.id if self._thumbnail_photo else None,
             'author': self.author.jsonify() if self._author_id else None,
         }
-        if not minimal:
+        if self.deleted:
+            j['deleted'] = True
+
+        if include_parents:
             j['parents'] = [parent.id for parent in self.get_parents()]
+
+        if include_children:
             j['children'] = [child.id for child in self.get_children()]
 
-            if include_photos:
-                j['photos'] = [photo.id for photo in self.get_photos()]
+        if include_photos:
+            j['photos'] = [photo.id for photo in self.get_photos()]
+
+        if count_children:
+            j['children_count'] = self.sum_children(recurse=False)
+
+        if count_photos:
+            j['photos_count'] = self.sum_photos(recurse=False)
 
         return j
 
@@ -884,6 +902,9 @@ class Bookmark(ObjectBase):
             'title': self.title,
             'display_name': self.display_name,
         }
+        if self.deleted:
+            j['deleted'] = True
+
         return j
 
 class Photo(ObjectBase):
@@ -958,7 +979,7 @@ class Photo(ObjectBase):
         return cleaned
 
     def _assign_mimetype(self):
-        # This function is defined separately because it is a derivative
+        # This method is defined separately because it is a derivative
         # property of the file's basename and needs to be recalculated after
         # file renames. However, I decided not to write it as a @property
         # because that would require either wasted computation or using private
@@ -977,23 +998,27 @@ class Photo(ObjectBase):
     def _uncache(self):
         self.photodb.caches[Photo].remove(self.id)
 
-    # Will add -> Tag when forward references are supported by Python.
+    # Will add -> PhotoTagRel when forward references are supported by Python.
     @decorators.required_feature('photo.add_remove_tag')
     @worms.atomic
-    def add_tag(self, tag):
+    def add_tag(self, tag, timestamp=None):
         tag = self.photodb.get_tag(name=tag)
 
-        if self.has_tag(tag, check_children=False):
-            return tag
+        existing = self.has_tag(tag, check_children=False, match_timestamp=timestamp)
+        if existing:
+            return existing
 
         log.info('Applying %s to %s.', tag, self)
 
         data = {
+            'id': self.photodb.generate_id(PhotoTagRel),
             'photoid': self.id,
             'tagid': tag.id,
             'created': timetools.now().timestamp(),
+            'timestamp': PhotoTagRel.normalize_timestamp(timestamp)
         }
-        self.photodb.insert(table='photo_tag_rel', pairs=data)
+        self.photodb.insert(table=PhotoTagRel, pairs=data)
+        photo_tag = PhotoTagRel(self.photodb, data)
 
         data = {
             'id': self.id,
@@ -1001,7 +1026,7 @@ class Photo(ObjectBase):
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
 
-        return tag
+        return photo_tag
 
     def atomify(self, web_root='') -> bs4.BeautifulSoup:
         web_root = web_root.rstrip('/')
@@ -1129,6 +1154,7 @@ class Photo(ObjectBase):
         self.set_thumbnail(image)
         return image
 
+    @decorators.cache_until_commit
     def get_containing_albums(self) -> set[Album]:
         '''
         Return the albums of which this photo is a member.
@@ -1137,7 +1163,7 @@ class Photo(ObjectBase):
             'SELECT albumid FROM album_photo_rel WHERE photoid == ?',
             [self.id]
         )
-        albums = set(self.photodb.get_albums_by_id(album_ids))
+        albums = frozenset(self.photodb.get_albums_by_id(album_ids))
         return albums
 
     @decorators.cache_until_commit
@@ -1145,12 +1171,16 @@ class Photo(ObjectBase):
         '''
         Return the tags assigned to this Photo.
         '''
-        tag_ids = self.photodb.select_column(
-            'SELECT tagid FROM photo_tag_rel WHERE photoid == ?',
+        photo_tags = frozenset(self.photodb.get_objects_by_sql(
+            PhotoTagRel,
+            'SELECT * FROM photo_tag_rel WHERE photoid == ?',
             [self.id]
-        )
-        tags = set(self.photodb.get_tags_by_id(tag_ids))
-        return tags
+        ))
+        return photo_tags
+
+    @decorators.cache_until_commit
+    def get_tag_names(self) -> set:
+        return set(photo_tag.tag.name for photo_tag in self.get_tags())
 
     def get_thumbnail(self):
         query = 'SELECT thumbnail FROM photo_thumbnails WHERE photoid = ?'
@@ -1158,9 +1188,9 @@ class Photo(ObjectBase):
         return blob
 
     # Will add -> Tag/False when forward references are supported.
-    def has_tag(self, tag, *, check_children=True):
+    def has_tag(self, tag, *, check_children=True, match_timestamp=False):
         '''
-        Return the Tag object if this photo contains that tag.
+        Return the PhotoTagRel object if this photo contains that tag.
         Otherwise return False.
 
         check_children:
@@ -1176,15 +1206,19 @@ class Photo(ObjectBase):
 
         tag_by_id = {t.id: t for t in tag_options}
         tag_option_ids = sqlhelpers.listify(tag_by_id)
-        tag_id = self.photodb.select_one_value(
-            f'SELECT tagid FROM photo_tag_rel WHERE photoid == ? AND tagid IN {tag_option_ids}',
-            [self.id]
-        )
 
-        if tag_id is None:
+        if match_timestamp is False or match_timestamp is None:
+            query = f'SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid IN {tag_option_ids}'
+            bindings = [self.id]
+        else:
+            query = f'SELECT * FROM photo_tag_rel WHERE photoid == ? AND tagid IN {tag_option_ids} AND timestamp == ?'
+            bindings = [self.id, match_timestamp]
+
+        results = list(self.photodb.get_objects_by_sql(PhotoTagRel, query, bindings))
+        if not results:
             return False
 
-        return tag_by_id[tag_id]
+        return results[0]
 
     def has_thumbnail(self) -> bool:
         if self._has_thumbnail is not None:
@@ -1192,7 +1226,7 @@ class Photo(ObjectBase):
         self._has_thumbnail = self.photodb.exists('SELECT 1 FROM photo_thumbnails WHERE photoid = ?', [self.id])
         return self._has_thumbnail
 
-    def jsonify(self, include_albums=True, include_tags=True, minimal=False) -> dict:
+    def jsonify(self, include_albums=True, include_tags=True) -> dict:
         j = {
             'type': 'photo',
             'id': self.id,
@@ -1213,13 +1247,14 @@ class Photo(ObjectBase):
             'searchhidden': bool(self.searchhidden),
             'simple_mimetype': self.simple_mimetype,
         }
+        if self.deleted:
+            j['deleted'] = True
 
-        if not minimal:
-            if include_albums:
-                j['albums'] = [album.id for album in self.get_containing_albums()]
+        if include_albums:
+            j['albums'] = [album.id for album in self.get_containing_albums()]
 
-            if include_tags:
-                j['tags'] = [tag.id for tag in self.get_tags()]
+        if include_tags:
+            j['tags'] = [photo_tag.jsonify() for photo_tag in self.get_tags()]
 
         return j
 
@@ -1377,6 +1412,11 @@ class Photo(ObjectBase):
     @decorators.required_feature('photo.add_remove_tag')
     @worms.atomic
     def remove_tag(self, tag) -> None:
+        '''
+        This method removes all PhotoTagRel between this photo and tag.
+        If you just want to remove one timestamped instance, get the PhotoTagRel
+        object and call its delete method.
+        '''
         tag = self.photodb.get_tag(name=tag)
 
         log.info('Removing %s from %s.', tag, self)
@@ -1384,6 +1424,7 @@ class Photo(ObjectBase):
             'photoid': self.id,
             'tagid': tag.id,
         }
+
         self.photodb.delete(table='photo_tag_rel', pairs=pairs)
 
         data = {
@@ -1395,6 +1436,10 @@ class Photo(ObjectBase):
     @decorators.required_feature('photo.add_remove_tag')
     @worms.atomic
     def remove_tags(self, tags) -> None:
+        '''
+        This method removes all PhotoTagRel between this photo and
+        multiple tags.
+        '''
         tags = [self.photodb.get_tag(name=tag) for tag in tags]
 
         log.info('Removing %s from %s.', tags, self)
@@ -1551,6 +1596,67 @@ class Photo(ObjectBase):
         self._tagged_at_dt = helpers.utcfromtimestamp(self.tagged_at_unix)
         return self._tagged_at_dt
 
+class PhotoTagRel(ObjectBase):
+    table = 'photo_tag_rel'
+
+    def __init__(self, photodb, db_row):
+        super().__init__(photodb)
+        self.photodb = photodb
+        self.id = db_row['id']
+        self.photo_id = db_row['photoid']
+        self.photo = photodb.get_photo(self.photo_id)
+        self.tag_id = db_row['tagid']
+        self.tag = photodb.get_tag_by_id(self.tag_id)
+        self.created_unix = db_row['created']
+        self.timestamp = db_row['timestamp']
+
+    def __hash__(self):
+        return hash(f'{self.photo_id}.{self.tag_id}')
+
+    def __lt__(self, other):
+        my_tuple = (self.photo_id, self.tag.name, (self.timestamp or 0))
+        other_tuple = (other.photo_id, other.tag.name, (other.timestamp or 0))
+        return my_tuple < other_tuple
+
+    @staticmethod
+    def normalize_timestamp(timestamp) -> float:
+        if timestamp is None:
+            return timestamp
+
+        if timestamp == '':
+            return None
+
+        if isinstance(timestamp, str):
+            return float(timestamp)
+
+        if isinstance(timestamp, (int, float)):
+            return timestamp
+
+        else:
+            raise TypeError(f'timestamp should be {float}, not {type(timestamp)}.')
+
+    @decorators.required_feature('photo.add_remove_tag')
+    @worms.atomic
+    def delete(self) -> None:
+        log.info('Removing %s from %s.', self.tag.name, self.photo.id)
+        self.photodb.delete(table=PhotoTagRel, pairs={'id': self.id})
+        self.deleted = True
+
+    def jsonify(self):
+        j = {
+            'type': 'photo_tag_rel',
+            'id': self.id,
+            'photo_id': self.photo_id,
+            'tag_id': self.tag_id,
+            'tag_name': self.tag.name,
+            'created': self.created_unix,
+            'timestamp': self.timestamp,
+        }
+        if self.deleted:
+            j['deleted'] = True
+
+        return j
+
 class Search:
     '''
     FILE METADATA
@@ -1702,11 +1808,16 @@ class Search:
         results = [
             result.jsonify(include_albums=False)
             if isinstance(result, Photo) else
-            result.jsonify(minimal=True)
+            result.jsonify(
+                include_photos=False,
+                include_parents=False,
+                include_children=False,
+            )
             for result in self.results
         ]
 
         j = {
+            'type': 'search',
             'kwargs': kwargs,
             'results': results,
             'more_after_limit': self.more_after_limit,
@@ -2060,28 +2171,6 @@ class Tag(ObjectBase, GroupableMixin):
     def _uncache(self):
         self.photodb.caches[Tag].remove(self.id)
 
-    def _add_child(self, member):
-        ret = super()._add_child(member)
-        if ret is BAIL:
-            return BAIL
-
-        # Suppose a photo has tags A and B. Then, B is added as a child of A.
-        # We should remove A from the photo leaving only the more specific B.
-        # We must walk all ancestors, not just the immediate parent, because
-        # the same situation could apply to a photo that has tag A, where A
-        # already has children B.C.D, and then E is added as a child of D,
-        # obsoleting A.
-        # I expect that this method, which calls `search`, will be inefficient
-        # when used in a large `add_children` loop. I would consider batching
-        # up all the ancestors and doing it all at once. Just need to make sure
-        # I don't cause any collateral damage e.g. removing A from a photo that
-        # only has A because some other photo with A and B thinks A is obsolete.
-        # This technique is nice and simple to understand for now.
-        ancestors = list(member.walk_parents())
-        photos = self.photodb.search(tag_musts=[member], is_searchhidden=None, yield_photos=True, yield_albums=False)
-        for photo in photos.results:
-            photo.remove_tags(ancestors)
-
     @decorators.required_feature('tag.edit')
     @worms.atomic
     def add_child(self, member):
@@ -2246,21 +2335,26 @@ class Tag(ObjectBase, GroupableMixin):
         self._cached_synonyms = synonyms
         return synonyms
 
-    def jsonify(self, include_synonyms=False, minimal=False) -> dict:
+    def jsonify(self, include_synonyms=False, include_parents=True, include_children=True) -> dict:
         j = {
             'type': 'tag',
             'id': self.id,
             'name': self.name,
             'created': self.created_unix,
+            'author': self.author.jsonify() if self._author_id else None,
+            'description': self.description,
         }
-        if not minimal:
-            j['author'] = self.author.jsonify() if self._author_id else None
-            j['description'] = self.description
+        if self.deleted:
+            j['deleted'] = True
+
+        if include_parents:
             j['parents'] = [parent.id for parent in self.get_parents()]
+
+        if include_children:
             j['children'] = [child.id for child in self.get_children()]
 
-            if include_synonyms:
-                j['synonyms'] = list(self.get_synonyms())
+        if include_synonyms:
+            j['synonyms'] = list(self.get_synonyms())
 
         return j
 
@@ -2532,6 +2626,9 @@ class User(ObjectBase):
             'created': self.created_unix,
             'display_name': self.display_name,
         }
+        if self.deleted:
+            j['deleted'] = True
+
         return j
 
     @decorators.required_feature('user.edit')
@@ -2573,4 +2670,5 @@ class WarningBag:
         self.warnings.add(warning)
 
     def jsonify(self):
-        return [getattr(w, 'error_message', str(w)) for w in self.warnings]
+        j = [getattr(w, 'error_message', str(w)) for w in self.warnings]
+        return j

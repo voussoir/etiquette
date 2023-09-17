@@ -186,7 +186,11 @@ def post_album_edit(album_id):
         album = common.P_album(album_id, response_type='json')
         album.edit(title=title, description=description)
 
-    response = album.jsonify(minimal=True)
+    response = album.jsonify(
+        include_parents=False,
+        include_children=False,
+        include_photos=False,
+    )
     return flasktools.json_response(response)
 
 @site.route('/album/<album_id>/show_in_folder', methods=['POST'])
@@ -257,7 +261,11 @@ def post_albums_create():
         if parent_id is not None:
             parent.add_child(album)
 
-    response = album.jsonify(minimal=False)
+    response = album.jsonify(
+        include_parents=False,
+        include_children=False,
+        include_photos=False,
+    )
     return flasktools.json_response(response)
 
 @site.route('/album/<album_id>/delete', methods=['POST'])

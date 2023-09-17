@@ -93,68 +93,68 @@
 <body>
 {{header.make_header(session=request.session)}}
 <div id="content_body">
-<div id="right" class="panel">
-    <a id="name_tag" target="_blank">Swipe!</a>
-    <div id="message_area">
+    <div id="right" class="panel">
+        <a id="name_tag" target="_blank">Swipe!</a>
+        <div id="message_area">
+        </div>
     </div>
-</div>
-<div id="photo_viewer">
-    <img id="photo_viewer_img" onload="return onload_img(event);" src=""/>
-</div>
-<div id="upcoming_area">
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-    <img class="upcoming_img" src="" width="75px" height="75px"/>
-</div>
-<div id="button_bar" class="panel">
-    <button class="action_button red_button" data-action-index="left">
-        &larr;
-        <select class="action_select">
-            <option value="do_nothing">Do nothing</option>
-            <option value="add_clipboard">Add to clipboard</option>
-            <option value="add_tag">Add tag</option>
-            <option value="remove_tag">Remove tag</option>
-        </select>
-        <input type="text" class="action_tag_input hidden entry_with_tagname_replacements" list="tag_autocomplete_datalist"/>
-    </button>
-    <button class="action_button yellow_button" data-action-index="down">Do nothing</button>
-    <button class="action_button green_button" data-action-index="right">
-        <select class="action_select">
-            <option value="do_nothing">Do nothing</option>
-            <option value="add_clipboard">Add to clipboard</option>
-            <option value="add_tag">Add tag</option>
-            <option value="remove_tag">Remove tag</option>
-        </select>
-        <input type="text" class="action_tag_input hidden entry_with_tagname_replacements" list="tag_autocomplete_datalist"/>
-        &rarr;
-    </button>
-</div>
+    <div id="photo_viewer">
+        <img id="photo_viewer_img" onload="return onload_img(event);" src=""/>
+    </div>
+    <div id="upcoming_area">
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+        <img class="upcoming_img" src="" width="75px" height="75px"/>
+    </div>
+    <div id="button_bar" class="panel">
+        <button class="action_button red_button" data-action-index="left">
+            &larr;
+            <select class="action_select">
+                <option value="do_nothing">Do nothing</option>
+                <option value="add_clipboard">Add to clipboard</option>
+                <option value="add_tag">Add tag</option>
+                <option value="remove_tag">Remove tag</option>
+            </select>
+            <input type="text" class="action_tag_input hidden entry_with_tagname_replacements" list="tag_autocomplete_datalist"/>
+        </button>
+        <button class="action_button yellow_button" data-action-index="down">Do nothing</button>
+        <button class="action_button green_button" data-action-index="right">
+            <select class="action_select">
+                <option value="do_nothing">Do nothing</option>
+                <option value="add_clipboard">Add to clipboard</option>
+                <option value="add_tag">Add tag</option>
+                <option value="remove_tag">Remove tag</option>
+            </select>
+            <input type="text" class="action_tag_input hidden entry_with_tagname_replacements" list="tag_autocomplete_datalist"/>
+            &rarr;
+        </button>
+    </div>
 </div>
 {{clipboard_tray.clipboard_tray()}}
 </body>
@@ -375,7 +375,7 @@ function process_current_photo(action, action_tag)
         {
             return;
         }
-        api.photos.add_tag(current_photo.id, action_tag, add_remove_tag_callback);
+        api.photos.add_tag(current_photo.id, action_tag, null, add_remove_tag_callback);
     }
     if (action === "remove_tag")
     {

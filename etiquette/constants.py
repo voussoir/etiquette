@@ -41,7 +41,7 @@ ffmpeg = _load_ffmpeg()
 
 # Database #########################################################################################
 
-DATABASE_VERSION = 24
+DATABASE_VERSION = 25
 
 DB_INIT = '''
 CREATE TABLE IF NOT EXISTS albums(
@@ -165,10 +165,12 @@ CREATE INDEX IF NOT EXISTS index_album_photo_rel_albumid on album_photo_rel(albu
 CREATE INDEX IF NOT EXISTS index_album_photo_rel_photoid on album_photo_rel(photoid);
 ----------------------------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS photo_tag_rel(
+    id INT PRIMARY KEY NOT NULL,
     photoid INT NOT NULL,
     tagid INT NOT NULL,
     created INT,
-    PRIMARY KEY(photoid, tagid),
+    timestamp REAL,
+    UNIQUE(photoid, tagid, timestamp),
     FOREIGN KEY(photoid) REFERENCES photos(id),
     FOREIGN KEY(tagid) REFERENCES tags(id)
 );

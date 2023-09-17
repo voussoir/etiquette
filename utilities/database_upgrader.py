@@ -1030,6 +1030,35 @@ def upgrade_23_to_24(photodb):
 
     photodb.execute('ALTER TABLE photos DROP COLUMN thumbnail')
 
+def upgrade_24_to_25(photodb):
+    '''
+    In this version, the photo_tag_rel table got a new column `timestamp` for
+    tagging individual moments of a video or audio.
+    '''
+    m = Migrator(photodb)
+    m.tables['photo_tag_rel']['create'] = '''
+    CREATE TABLE IF NOT EXISTS photo_tag_rel(
+        id INT PRIMARY KEY NOT NULL,
+        photoid INT NOT NULL,
+        tagid INT NOT NULL,
+        created INT,
+        timestamp REAL,
+        UNIQUE(photoid, tagid, timestamp),
+        FOREIGN KEY(photoid) REFERENCES photos(id),
+        FOREIGN KEY(tagid) REFERENCES tags(id)
+    );
+    '''
+    m.tables['photo_tag_rel']['transfer'] = '''
+    INSERT INTO photo_tag_rel SELECT
+        abs(random()),
+        photoid,
+        tagid,
+        created,
+        null
+    FROM photo_tag_rel_old;
+    '''
+    m.go()
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

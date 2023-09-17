@@ -8,7 +8,7 @@
 }
 .album_card_list
 {
-    display: grid;
+    display: inline-grid;
     grid-template:
         "title metadata"
         /1fr;
@@ -122,6 +122,7 @@
 .photo_card
 {
     background-color: var(--color_secondary);
+    width: max-content;
 }
 .photo_card:hover
 {
@@ -301,8 +302,20 @@
 /* ########################################################################## */
 /* ########################################################################## */
 
+.photo_tag_card
+{
+    position: relative;
+    display: inline;
+}
+
+/* ########################################################################## */
+/* ########################################################################## */
+/* ########################################################################## */
+
 .tag_card
 {
+    position: relative;
+    display: inline-block;
     border-radius: 2px;
     padding-left: 2px;
     padding-right: 2px;
@@ -311,7 +324,11 @@
     color: var(--color_tag_card_fg);
 
     font-size: 0.9em;
-    text-decoration: none;
     font-family: monospace;
-    line-height: 1.5;
+}
+.tag_card,
+.tag_card a
+{
+    color: var(--color_tag_card_fg);
+    text-decoration: none;
 }

@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="/static/css/cards.css">
     <script src="/static/js/common.js"></script>
     <script src="/static/js/api.js"></script>
+    <script src="/static/js/cards.js"></script>
     <script src="/static/js/hotkeys.js"></script>
     <script src="/static/js/http.js"></script>
     <script src="/static/js/photo_clipboard.js"></script>
@@ -165,21 +166,14 @@
 
         <!-- TAG INFO -->
         <h4>Tags</h4>
+        {% if photo.simple_mimetype == "audio" or photo.simple_mimetype == "video" %}
+        <label><input type="checkbox" id="use_photo_tag_timestamps"/>Add tags with timestamps</label>
+        {% endif %}
         <ul id="this_tags">
-            <li>
+            <li id="add_tag_li">
                 <input type="text" id="add_tag_textbox" class="entry_with_history entry_with_tagname_replacements" list="tag_autocomplete_datalist">
                 <button id="add_tag_button" class="green_button" onclick="return add_photo_tag_form();">add</button>
             </li>
-            {% set tags = photo.get_tags()|sort(attribute='name') %}
-            {% for tag in tags %}
-            <li>
-                {{cards.create_tag_card(tag, link="info", with_alt_description=True)}}<!--
-                --><button
-                class="remove_tag_button red_button"
-                onclick="return remove_photo_tag_form('{{photo.id}}', '{{tag.name}}');">
-                </button>
-            </li>
-            {% endfor %}
         </ul>
 
         <!-- METADATA & DOWNLOAD -->
@@ -313,11 +307,22 @@
 <script type="text/javascript">
 const PHOTO_ID = "{{photo.id}}";
 
+const PHOTO_TAGS = [
+    {% for photo_tag in photo.get_tags()|sort %}
+    {{photo_tag.jsonify()|tojson|safe}},
+    {% endfor %}
+];
 const add_tag_box = document.getElementById('add_tag_textbox');
 const add_tag_button = document.getElementById('add_tag_button');
 common.bind_box_to_button(add_tag_box, add_tag_button, false);
 
 const message_area = document.getElementById('message_area');
+
+const PHOTO_MEDIA = (
+    document.querySelector(".photo_viewer_video video")
+    || document.querySelector(".photo_viewer_audio audio")
+    || null
+);
 
 // API /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -328,7 +333,8 @@ function add_photo_tag_form()
     {
         return;
     }
-    api.photos.add_tag(PHOTO_ID, tagname, add_photo_tag_callback);
+    const timestamp = get_media_timestamp();
+    api.photos.add_tag(PHOTO_ID, tagname, timestamp, add_photo_tag_callback);
     add_tag_box.value = "";
 }
 
@@ -339,27 +345,29 @@ function add_photo_tag_callback(response)
     {
         return;
     }
+    const photo_tag = response.data;
+
     const this_tags = document.getElementById("this_tags");
-    const tag_cards = this_tags.getElementsByClassName("tag_card");
-    for (const tag_card of tag_cards)
+    const photo_tag_cards = this_tags.getElementsByClassName("photo_tag_card");
+    for (const photo_tag_card of photo_tag_cards)
     {
-        if (tag_card.innerText === response.data.tagname)
+        if (photo_tag_card.dataset.id == photo_tag.id)
         {
             return;
         }
     }
+
     const li = document.createElement("li");
-    const tag_card = document.createElement("a");
-    tag_card.className = "tag_card"
-    tag_card.href = "/tag/" + response.data.tagname;
-    tag_card.innerText = response.data.tagname;
-    const remove_button = document.createElement("button");
-    remove_button.className = "remove_tag_button red_button"
-    remove_button.onclick = () => remove_photo_tag_form(PHOTO_ID, response.data.tagname);
-    li.appendChild(tag_card);
-    li.appendChild(remove_button);
-    this_tags.appendChild(li);
+    const card = cards.photo_tags.create({
+        photo_tag: photo_tag,
+        "timestamp_onclick": ()=>{seek_media(photo_tag.timestamp)},
+        "remove_button_onclick": ()=>{remove_photo_tag_form(photo_tag.id)},
+    });
+    li.append(card);
+    this_tags.append(li);
+
     sort_tag_cards();
+    common.create_message_bubble(message_area, "message_positive", `Added tag ${response.data.tag_name}`, 8000);
 }
 
 function copy_other_photo_tags_form(event)
@@ -372,9 +380,9 @@ function copy_other_photo_tags_form(event)
     api.photos.copy_tags(PHOTO_ID, other_photo, common.refresh_or_alert);
 }
 
-function remove_photo_tag_form(photo_id, tagname)
+function remove_photo_tag_form(photo_tag_rel_id)
 {
-    api.photos.remove_tag(photo_id, tagname, remove_photo_tag_callback);
+    api.photo_tag_rel.delete({id: photo_tag_rel_id, callback: remove_photo_tag_callback});
     add_tag_box.focus();
 }
 
@@ -385,15 +393,17 @@ function remove_photo_tag_callback(response)
     {
         return;
     }
-    const tag_cards = document.getElementById("this_tags").getElementsByClassName("tag_card");
-    for (const tag_card of tag_cards)
+    const photo_tag_cards = document.getElementById("this_tags").getElementsByClassName("photo_tag_card");
+    for (const photo_tag_card of photo_tag_cards)
     {
-        if (tag_card.innerText === response.data.tagname)
+        console.log(photo_tag_card);
+        if (photo_tag_card.dataset.id == response.data.id)
         {
-            const li = tag_card.parentElement;
+            const li = photo_tag_card.parentElement;
             li.parentElement.removeChild(li);
         }
     }
+    common.create_message_bubble(message_area, "message_positive", `Removed tag ${response.data.tag_name}`, 8000);
 }
 
 function add_remove_photo_tag_callback(response)
@@ -403,30 +413,12 @@ function add_remove_photo_tag_callback(response)
         alert(JSON.stringify(response));
         return;
     }
-    let message_text;
-    let message_positivity;
-    let abort;
+    let abort = false;
     if ("error_type" in response.data)
     {
-        message_positivity = "message_negative";
-        message_text = response.data.error_message;
         abort = true;
+        common.create_message_bubble(message_area, "message_negative", response.data.error_message, 8000);
     }
-    else
-    {
-        const tagname = response.data.tagname;
-        message_positivity = "message_positive";
-        if (response.meta.kwargs.url.includes("add_tag"))
-        {
-            message_text = "Added tag " + tagname;
-        }
-        else if (response.meta.kwargs.url.includes("remove_tag"))
-        {
-            message_text = "Removed tag " + tagname;
-        }
-        abort = false;
-    }
-    common.create_message_bubble(message_area, message_positivity, message_text, 8000);
     return abort;
 }
 
@@ -520,8 +512,16 @@ function sort_tag_cards()
     const lis = Array.from(tag_list.children).filter(el => el.getElementsByClassName("tag_card").length);
     function compare(li1, li2)
     {
-        const tag1 = li1.querySelector(".tag_card:last-of-type").innerText;
-        const tag2 = li2.querySelector(".tag_card:last-of-type").innerText;
+        if (li1.id == "add_tag_li")
+        {
+            return -1;
+        }
+        if (li2.id == "add_tag_li")
+        {
+            return 1;
+        }
+        const tag1 = li1.querySelector(".tag_card").innerText;
+        const tag2 = li2.querySelector(".tag_card").innerText;
         return tag1 < tag2 ? -1 : 1;
     }
     lis.sort(compare);
@@ -529,6 +529,58 @@ function sort_tag_cards()
     {
         tag_list.appendChild(li);
     }
+}
+
+function seek_media(timestamp)
+{
+    if (PHOTO_MEDIA === null)
+    {
+        return null;
+    }
+    const paused = PHOTO_MEDIA.paused;
+    if (PHOTO_MEDIA !== 4)
+    {
+        PHOTO_MEDIA.play();
+    }
+    PHOTO_MEDIA.currentTime = timestamp;
+    if (paused)
+    {
+        PHOTO_MEDIA.pause()
+    }
+}
+
+function get_media_timestamp()
+{
+    if (PHOTO_MEDIA === null)
+    {
+        return null;
+    }
+
+    if (! document.getElementById("use_photo_tag_timestamps").checked)
+    {
+        return null;
+    }
+
+    if (PHOTO_MEDIA.currentTime === 0)
+    {
+        return null;
+    }
+
+    return PHOTO_MEDIA.currentTime;
+}
+
+function media_frame_by_frame_left(event)
+{
+    if (PHOTO_MEDIA === null)
+    {
+        return null;
+    }
+
+    seek_media(PHOTO_MEDIA.currentTime - (1/30));
+}
+function media_frame_by_frame_right(event)
+{
+    seek_media(PHOTO_MEDIA.currentTime + (1/30));
 }
 
 // UI - HOVERZOOM //////////////////////////////////////////////////////////////////////////////////
@@ -664,8 +716,23 @@ function autofocus_add_tag_box()
 
 function on_pageload()
 {
+    for (const photo_tag of PHOTO_TAGS)
+    {
+        const li = document.createElement("li");
+        console.log(photo_tag);
+        const card = cards.photo_tags.create({
+            photo_tag: photo_tag,
+            timestamp_onclick: ()=>{seek_media(photo_tag.timestamp)},
+            remove_button_onclick: ()=>{remove_photo_tag_form(photo_tag.id)},
+        });
+        li.append(card);
+        document.getElementById("this_tags").append(li);
+    }
+
     autofocus_add_tag_box();
     photo_clipboard.apply_check(document.getElementById("clipboard_checkbox"));
+    hotkeys.register_hotkey(",", media_frame_by_frame_left, "Frame-by-frame seek left.");
+    hotkeys.register_hotkey(".", media_frame_by_frame_right, "Frame-by-frame seek right.");
     photo_clipboard.register_hotkeys();
 }
 document.addEventListener("DOMContentLoaded", on_pageload);

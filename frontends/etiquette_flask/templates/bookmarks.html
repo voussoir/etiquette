@@ -18,6 +18,7 @@
     <script src="/static/js/editor.js"></script>
 
 <style>
+#bookmark_panel,
 #bookmark_list
 {
     display: flex;
@@ -35,11 +36,10 @@
 <body>
     {{header.make_header(session=request.session)}}
     <div id="content_body">
-        <div id="bookmark_list" class="panel">
-            <h1>{{bookmarks|length}} Bookmarks</h1>
-            {% for bookmark in bookmarks %}
-            {{cards.create_bookmark_card(bookmark, add_delete_button=True, add_url_element=True)}}
-            {% endfor %}
+        <div id="bookmark_panel" class="panel">
+            <h1><span class="dynamic_bookmark_count">{{bookmarks|length}}</span> Bookmarks</h1>
+            <div id="bookmark_list">
+            </div>
 
             <div id="new_bookmark_card" class="bookmark_card">
                 <input id="new_bookmark_title" type="text" placeholder="title (optional)">
@@ -53,6 +53,12 @@
 </body>
 
 <script type="text/javascript">
+const BOOKMARKS = [
+    {% for bookmark in bookmarks %}
+    {{bookmark.jsonify()|tojson|safe}},
+    {% endfor %}
+];
+
 function create_bookmark_form()
 {
     const url = document.getElementById("new_bookmark_url").value.trim();
@@ -72,20 +78,17 @@ function create_bookmark_callback(response)
         return;
     }
     const bookmark = response.data;
-    const add_author = true;
-    const add_delete_button = true;
-    const add_url_element = true;
-    const bookmark_card = cards.bookmarks.create(
-        bookmark,
-        add_author,
-        add_delete_button,
-        add_url_element
-    );
+    const bookmark_card = cards.bookmarks.create({
+        bookmark: bookmark,
+        add_author: true,
+        add_delete_button: true,
+        add_url_element: true,
+    });
     create_editor(bookmark_card);
 
-    const bookmark_list = document.getElementById("bookmark_list");
+    const bookmark_panel = document.getElementById("bookmark_panel");
     const new_bookmark_card = document.getElementById("new_bookmark_card");
-    bookmark_list.insertBefore(bookmark_card, new_bookmark_card);
+    bookmark_panel.insertBefore(bookmark_card, new_bookmark_card);
 
     document.getElementById("new_bookmark_url").value = "";
     document.getElementById("new_bookmark_title").value = "";
@@ -182,6 +185,17 @@ function create_editors()
 
 function on_pageload()
 {
+    common.update_dynamic_elements("dynamic_bookmark_count", BOOKMARKS.length);
+    for (const bookmark of BOOKMARKS)
+    {
+        const bookmark_card = cards.bookmarks.create({
+            bookmark: bookmark,
+            add_author: true,
+            add_delete_button: true,
+            add_url_element: true,
+        });
+        document.getElementById("bookmark_list").append(bookmark_card);
+    }
     create_editors();
 }
 document.addEventListener("DOMContentLoaded", on_pageload);
