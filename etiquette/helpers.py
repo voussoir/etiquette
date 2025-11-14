@@ -317,7 +317,7 @@ def hash_photoset(photos) -> str:
 
     photo_ids = sorted(set(p.id for p in photos))
     for photo_id in photo_ids:
-        hasher.update(photo_id.encode('utf-8'))
+        hasher.update(str(photo_id).encode('utf-8'))
 
     return hasher.hexdigest()
 
