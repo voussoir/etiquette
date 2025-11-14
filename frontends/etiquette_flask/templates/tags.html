@@ -388,7 +388,7 @@ function delete_specific_tag_form(event)
 function delete_tag_form(event)
 {
     const delete_button = event.target;
-    const li = delete_button.closest("li");
+    const li = delete_button.closest("div");
     const tag_card = tag_card_from_li(li);
     const tag_name = tag_card.innerText.split(".").pop();
     return api.tags.delete(tag_name, tag_action_callback);
@@ -397,7 +397,7 @@ function delete_tag_form(event)
 function remove_child_form(event)
 {
     const delete_button = event.target;
-    const li = delete_button.closest("li");
+    const li = delete_button.closest("div");
     const tag_card = tag_card_from_li(li);
     const qual_name = tag_card.innerText;
     let tag_name;
@@ -419,7 +419,7 @@ function remove_child_form(event)
 function remove_synonym_form(event)
 {
     const delete_button = event.target;
-    const li = delete_button.closest("li");
+    const li = delete_button.closest("div");
     const tag_card = tag_card_from_li(li);
     const qual_name = tag_card.innerText;
     let tag_name;
