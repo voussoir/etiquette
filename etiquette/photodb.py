@@ -725,6 +725,7 @@ class PDBUtilMixin:
             self,
             directory,
             *,
+            check_existing=True,
             exclude_directories=None,
             exclude_filenames=None,
             glob_directories=None,
@@ -744,6 +745,21 @@ class PDBUtilMixin:
 
         If a Photo object already exists for a file, it will be added to the
         correct album.
+
+        check_existing:
+            If True, we will check each file to see if it is already in the
+            database. We will also use the file hash to see if each file is a
+            move/rename of a file in the database. This is helpful when we are
+            re-digesting a folder we've already digested before, looking for new
+            files and skipping the existing ones, and updating the database to
+            match out of band moves/renames.
+            If False, we will not check for existing records, and treat every
+            file as brand new. This saves some processing time during the
+            digest, but could lead to duplicate Photo records if you are not
+            careful. This can be helpful when processing a user's upload job
+            because it is guaranteed we've never processed that folder before,
+            and because we'd want to consider incoming uploads new and unique
+            even if they are a hash match for an existing file.
 
         exclude_directories:
             A list of basenames or absolute paths of directories to ignore.
@@ -881,6 +897,17 @@ class PDBUtilMixin:
             # hash work by passing this as the known_hash to new_photo.
             return {'sha256': sha256}
 
+        def create_photo(filepath):
+            '''
+            Create a Photo from this filepath without attempting to check for
+            existing copies or hash matches.
+            '''
+            photo = self.new_photo(filepath, **new_photo_kwargs)
+            if new_photo_ratelimit is not None:
+                new_photo_ratelimit.limit()
+
+            return (photo, True)
+
         def create_or_fetch_photo(filepath):
             '''
             Given a filepath, find the corresponding Photo object if it exists,
@@ -961,7 +988,10 @@ class PDBUtilMixin:
             if natural_sort:
                 files = sorted(files, key=lambda f: stringtools.natural_sorter(f.basename))
 
-            photos = [create_or_fetch_photo(file) for file in files]
+            if check_existing:
+                photos = [create_or_fetch_photo(file) for file in files]
+            else:
+                photos = [create_photo(file) for file in files]
 
             # Note, this means that empty folders will not get an Album.
             # At this time this behavior is intentional. Furthermore, due to
