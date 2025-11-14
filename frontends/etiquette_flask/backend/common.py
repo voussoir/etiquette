@@ -12,6 +12,7 @@ from voussoirkit import bytestring
 from voussoirkit import configlayers
 from voussoirkit import flasktools
 from voussoirkit import pathclass
+from voussoirkit import timetools
 from voussoirkit import vlogging
 
 import etiquette
@@ -44,6 +45,7 @@ TEMPLATE_DIR = root_dir.with_child('templates')
 STATIC_DIR = root_dir.with_child('static')
 FAVICON_PATH = STATIC_DIR.with_child('favicon.png')
 SERVER_CONFIG_FILENAME = 'etiquette_flask_config.json'
+SESSIONS_STATE_FILENAME = 'etiquette_flask_sessions.json'
 
 site = flask.Flask(
     __name__,
@@ -61,6 +63,7 @@ site.jinja_env.lstrip_blocks = True
 jinja_filters.register_all(site)
 site.localhost_only = False
 
+# state_file will be set later
 session_manager = sessions.SessionManager(maxlen=10000)
 file_etag_manager = client_caching.FileEtagManager(
     maxlen=10000,
@@ -308,6 +311,7 @@ def init_photodb(*args, **kwargs):
     global P
     P = etiquette.photodb.PhotoDB.closest_photodb(*args, **kwargs)
     load_config()
+    load_sessions()
 
 def load_config() -> None:
     log.debug('Loading server config file.')
@@ -320,6 +324,30 @@ def load_config() -> None:
 
     if needs_rewrite:
         save_config()
+
+def load_sessions():
+    state_file = P.data_directory.with_child(SESSIONS_STATE_FILENAME)
+    session_manager.state_file = state_file
+    if not state_file.exists:
+        return
+    log.debug('Loading sessions from state file')
+    j = json.loads(state_file.read('r'))
+    for session in j:
+        if session['userid'] is None:
+            user = None
+        else:
+            try:
+                user = P.get_user(id=session['userid'])
+            except etiquette.exceptions.NoSuchUser:
+                continue
+        session = sessions.Session(
+            session_manager=session_manager,
+            user=user,
+            token=session['token'],
+            ip_address=session['ip_address'],
+            user_agent=session['user_agent'],
+            last_activity=timetools.fromtimestamp(session['last_activity']),
+        )
 
 def save_config() -> None:
     log.debug('Saving server config file.')
