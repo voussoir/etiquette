@@ -409,7 +409,7 @@ def purge_deleted_files_argparse(args):
     if args.any_photo_args:
         photos = get_photos_from_args(args)
     else:
-        photos = search_in_cwd(yield_photos=True, yield_albums=False)
+        photos = list(photodb.get_photos())
 
     need_commit = False
 
