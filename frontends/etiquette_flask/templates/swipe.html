@@ -446,7 +446,7 @@ function show_current_photo()
     name_tag.href = "/photo/" + current_photo.id;
     if (current_photo.has_thumbnail)
     {
-        photo_viewer_img.src = "/thumbnail/" + current_photo.id + ".jpg";
+        photo_viewer_img.src = "/photo/" + current_photo.id + "/thumbnail";
         waiting_for_img = true;
     }
     else
@@ -459,7 +459,7 @@ function show_current_photo()
         upcoming_photo = photo_queue[index];
         if (upcoming_photo !== undefined && upcoming_photo.has_thumbnail)
         {
-            upcoming_imgs[index].src = "/thumbnail/" + upcoming_photo.id + ".jpg";
+            upcoming_imgs[index].src = "/photo/" + upcoming_photo.id + "/thumbnail";
         }
         else
         {
