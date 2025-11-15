@@ -38,10 +38,10 @@
 </head>
 
 <body>
-    {{header.make_header(session=request.session)}}
+    {{header.make_header(request=request)}}
     <div id="content_body">
         <div id="hierarchy_self" class="panel">
-            <h1 id="display_name">{{user.display_name}}</h1>
+            <h1 id="display_name" class="dynamic_user_display_name">{{user.display_name}}</h1>
             {% if user.display_name != user.username %}
             <p>Username: {{user.username}}</p>
             {% endif %}
@@ -73,10 +73,43 @@
             </div>
         </div>
 
+        {% if user.id == request.session.user.id %}
+        <div id="hierarchy_settings" class="panel">
+            <h2>Settings</h2>
+            <div>
+                <input type="text" id="set_display_name_input" value="{{user.display_name}}" placeholder="display name"/>
+                <button id="set_display_name_button" onclick="return set_display_name_form(event);">Set display name</button>
+            </div>
+
+            <div>
+                <input type="password" id="current_password_input" placeholder="current password"/>
+                <input type="password" id="password_1_input" placeholder="new password"/>
+                <input type="password" id="password_2_input" placeholder="new password again"/>
+                <button id="set_password_button" onclick="return set_password_form(event);">Set password</button>
+            </div>
+
+            <div id="message_area">
+            </div>
+        </div>
+        {% endif %}
+
+        {% if request.is_localhost %}
+        <div id="hierarchy_permissions" class="panel">
+            <h2>Permissions</h2>
+            <ul>
+            {% for permission in constants_all_permissions|sort %}
+            <li><label><input type="checkbox" name="{{permission}}" onchange="return permission_checkbox_onchange(event);" {% if permission in user_permissions %}checked{%endif%}/>{{permission}}</label></li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
     </div>
 </body>
 
 <script type="text/javascript">
+const USER_ID = "{{user.id}}";
+const USERNAME = "{{user.username}}";
+
 const PHOTOS = [
     {% for photo in user.get_photos(direction='desc')|islice(0, 15) %}
     {{photo.jsonify(include_albums=False)|tojson|safe}},
@@ -100,6 +133,14 @@ const BOOKMARKS = [
     {{bookmark.jsonify()|tojson|safe}},
     {% endfor %}
 ];
+
+function permission_checkbox_onchange(event)
+{
+    function callback(response)
+    {
+    }
+    api.users.set_permission(USERNAME, event.target.name, event.target.checked, callback);
+}
 
 function on_pageload()
 {
@@ -132,15 +173,12 @@ function on_pageload()
 document.addEventListener("DOMContentLoaded", on_pageload);
 
 {% if user.id == request.session.user.id %}
-const USERNAME = "{{user.username}}";
-profile_ed_on_open = undefined;
-
-function profile_ed_on_save(ed)
+function set_display_name_form(event)
 {
+    const input = document.getElementById("set_display_name_input");
     function callback(response)
     {
-        ed.hide_spinner();
-
+        console.log("HI");
         if (! response.meta.json_ok)
         {
             alert(JSON.stringify(response));
@@ -148,7 +186,7 @@ function profile_ed_on_save(ed)
         }
         if ("error_type" in response.data)
         {
-            ed.show_error(`${response.data.error_type} ${response.data.error_message}`);
+            common.create_message_button(message_area, "message_negative", response.data.error_message);
             return;
         }
 
@@ -156,32 +194,44 @@ function profile_ed_on_save(ed)
         const new_display_name = response.data.display_name;
         common.update_dynamic_elements("dynamic_user_display_name", new_display_name);
 
-        ed.elements["display_name"].edit.value = new_display_name;
-
-        ed.save();
+        input.value = new_display_name;
     }
 
-    ed.show_spinner();
-    api.users.edit(USERNAME, ed.elements["display_name"].edit.value, callback);
+    api.users.edit(USERNAME, input.value, callback);
 }
 
-const profile_ed_on_cancel = undefined;
+function set_password_form(event)
+{
+    const current_password = document.getElementById("current_password_input");
+    const password_1 = document.getElementById("password_1_input");
+    const password_2 = document.getElementById("password_2_input");
+    const message_area = document.getElementById("message_area");
 
-const profile_ed_elements = [
+    function callback(response)
     {
-        "id": "display_name",
-        "element": document.getElementById("display_name"),
-        "placeholder": "Display name",
-        "empty_text": USERNAME,
-        "autofocus": true,
-    },
-];
-const profile_ed = new editor.Editor(
-    profile_ed_elements,
-    profile_ed_on_open,
-    profile_ed_on_save,
-    profile_ed_on_cancel,
-);
+        if (! response.meta.json_ok)
+        {
+            alert(JSON.stringify(response));
+            return;
+        }
+        if ("error_type" in response.data)
+        {
+            common.create_message_bubble(message_area, "message_negative", response.data.error_message);
+            return;
+        }
+        common.create_message_bubble(message_area, "message_positive", "Password has been changed.");
+        current_password.value = "";
+        password_1.value = "";
+        password_2.value = "";
+    }
+    api.users.set_password(
+        USERNAME,
+        current_password.value,
+        password_1.value,
+        password_2.value,
+        callback,
+    );
+}
 {% endif %}
 </script>
 </html>

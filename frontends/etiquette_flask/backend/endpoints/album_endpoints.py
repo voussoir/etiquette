@@ -17,7 +17,7 @@ session_manager = common.session_manager
 
 @site.route('/album/<album_id>')
 def get_album_html(album_id):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     album = common.P_album(album_id, response_type='html')
     response = common.render_template(
         request,
@@ -29,14 +29,14 @@ def get_album_html(album_id):
 
 @site.route('/album/<album_id>.json')
 def get_album_json(album_id):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     album = common.P_album(album_id, response_type='json')
     album = album.jsonify()
     return flasktools.json_response(album)
 
 @site.route('/album/<album_id>.zip')
 def get_album_zip(album_id):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     album = common.P_album(album_id, response_type='html')
 
     recursive = request.args.get('recursive', True)
@@ -61,10 +61,10 @@ def get_album_zip(album_id):
 @site.route('/album/<album_id>/add_child', methods=['POST'])
 @flasktools.required_fields(['child_id'], forbid_whitespace=True)
 def post_album_add_child(album_id):
-    common.permission_manager.basic()
+    album = common.P_album(album_id, response_type='json')
+    common.permission_manager.edit_thing(album)
     child_ids = stringtools.comma_space_split(request.form['child_id'])
     with common.P.transaction:
-        album = common.P_album(album_id, response_type='json')
         children = list(common.P_albums(child_ids, response_type='json'))
         print(children)
         album.add_children(children)
@@ -75,10 +75,10 @@ def post_album_add_child(album_id):
 @site.route('/album/<album_id>/remove_child', methods=['POST'])
 @flasktools.required_fields(['child_id'], forbid_whitespace=True)
 def post_album_remove_child(album_id):
-    common.permission_manager.basic()
+    album = common.P_album(album_id, response_type='json')
+    common.permission_manager.edit_thing(album)
     child_ids = stringtools.comma_space_split(request.form['child_id'])
     with common.P.transaction:
-        album = common.P_album(album_id, response_type='json')
         children = list(common.P_albums(child_ids, response_type='json'))
         album.remove_children(children)
     response = album.jsonify()
@@ -86,17 +86,18 @@ def post_album_remove_child(album_id):
 
 @site.route('/album/<album_id>/remove_thumbnail_photo', methods=['POST'])
 def post_album_remove_thumbnail_photo(album_id):
-    common.permission_manager.basic()
+    album = common.P_album(album_id, response_type='json')
+    common.permission_manager.edit_thing(album)
     with common.P.transaction:
-        album = common.P_album(album_id, response_type='json')
         album.set_thumbnail_photo(None)
     return flasktools.json_response(album.jsonify())
 
 @site.route('/album/<album_id>/refresh_directories', methods=['POST'])
 def post_album_refresh_directories(album_id):
-    common.permission_manager.basic()
+    album = common.P_album(album_id, response_type='json')
+    common.permission_manager.edit_thing(album)
+    common.permission_manager.permission_string(etiquette.constants.PERMISSION_PHOTO_CREATE)
     with common.P.transaction:
-        album = common.P_album(album_id, response_type='json')
         for directory in album.get_associated_directories():
             if not directory.is_dir:
                 continue
@@ -107,9 +108,9 @@ def post_album_refresh_directories(album_id):
 @site.route('/album/<album_id>/set_thumbnail_photo', methods=['POST'])
 @flasktools.required_fields(['photo_id'], forbid_whitespace=True)
 def post_album_set_thumbnail_photo(album_id):
-    common.permission_manager.basic()
+    album = common.P_album(album_id, response_type='json')
+    common.permission_manager.edit_thing(album)
     with common.P.transaction:
-        album = common.P_album(album_id, response_type='json')
         photo = common.P_photo(request.form['photo_id'], response_type='json')
         album.set_thumbnail_photo(photo)
     return flasktools.json_response(album.jsonify())
@@ -122,10 +123,10 @@ def post_album_add_photo(album_id):
     '''
     Add a photo or photos to this album.
     '''
-    common.permission_manager.basic()
+    album = common.P_album(album_id, response_type='json')
+    common.permission_manager.edit_thing(album)
     photo_ids = stringtools.comma_space_split(request.form['photo_id'])
     with common.P.transaction:
-        album = common.P_album(album_id, response_type='json')
         photos = list(common.P_photos(photo_ids, response_type='json'))
         album.add_photos(photos)
     response = album.jsonify()
@@ -137,10 +138,10 @@ def post_album_remove_photo(album_id):
     '''
     Remove a photo or photos from this album.
     '''
-    common.permission_manager.basic()
+    album = common.P_album(album_id, response_type='json')
+    common.permission_manager.edit_thing(album)
     photo_ids = stringtools.comma_space_split(request.form['photo_id'])
     with common.P.transaction:
-        album = common.P_album(album_id, response_type='json')
         photos = list(common.P_photos(photo_ids, response_type='json'))
         album.remove_photos(photos)
     response = album.jsonify()
@@ -153,7 +154,7 @@ def post_album_add_tag(album_id):
     '''
     Apply a tag to every photo in the album.
     '''
-    common.permission_manager.basic()
+    common.permission_manager.admin_only()
     response = {}
     with common.P.transaction:
         album = common.P_album(album_id, response_type='json')
@@ -178,12 +179,12 @@ def post_album_edit(album_id):
     '''
     Edit the title / description.
     '''
-    common.permission_manager.basic()
+    album = common.P_album(album_id, response_type='json')
+    common.permission_manager.edit_thing(album)
     title = request.form.get('title', None)
     description = request.form.get('description', None)
 
     with common.P.transaction:
-        album = common.P_album(album_id, response_type='json')
         album.edit(title=title, description=description)
 
     response = album.jsonify(
@@ -195,9 +196,7 @@ def post_album_edit(album_id):
 
 @site.route('/album/<album_id>/show_in_folder', methods=['POST'])
 def post_album_show_in_folder(album_id):
-    common.permission_manager.basic()
-    if not request.is_localhost:
-        flask.abort(403)
+    common.permission_manager.localhost_only()
 
     album = common.P_album(album_id, response_type='json')
     directories = album.get_associated_directories()
@@ -215,7 +214,7 @@ def post_album_show_in_folder(album_id):
 # Album listings ###################################################################################
 
 @site.route('/all_albums.json')
-@common.permission_manager.basic_decorator
+@common.permission_manager.read_decorator
 @flasktools.cached_endpoint(max_age=15)
 def get_all_album_names():
     all_albums = {album.id: album.display_name for album in common.P.get_albums()}
@@ -224,7 +223,7 @@ def get_all_album_names():
 
 @site.route('/albums')
 def get_albums_html():
-    common.permission_manager.basic()
+    common.permission_manager.read()
     albums = list(common.P.get_root_albums())
     albums.sort(key=lambda x: x.display_name.lower())
     response = common.render_template(
@@ -237,7 +236,7 @@ def get_albums_html():
 
 @site.route('/albums.json')
 def get_albums_json():
-    common.permission_manager.basic()
+    common.permission_manager.read()
     albums = list(common.P.get_albums())
     albums.sort(key=lambda x: x.display_name.lower())
     albums = [album.jsonify(include_photos=False) for album in albums]
@@ -247,7 +246,7 @@ def get_albums_json():
 
 @site.route('/albums/create_album', methods=['POST'])
 def post_albums_create():
-    common.permission_manager.basic()
+    common.permission_manager.permission_string(etiquette.constants.PERMISSION_ALBUM_CREATE)
     title = request.form.get('title', None)
     description = request.form.get('description', None)
     parent_id = request.form.get('parent_id', None)
@@ -270,8 +269,8 @@ def post_albums_create():
 
 @site.route('/album/<album_id>/delete', methods=['POST'])
 def post_album_delete(album_id):
-    common.permission_manager.basic()
+    album = common.P_album(album_id, response_type='json')
+    common.permission_manager.delete_thing(album)
     with common.P.transaction:
-        album = common.P_album(album_id, response_type='json')
         album.delete()
     return flasktools.json_response({})

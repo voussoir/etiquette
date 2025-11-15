@@ -1059,6 +1059,23 @@ def upgrade_24_to_25(photodb):
     '''
     m.go()
 
+def upgrade_25_to_26(photodb):
+    '''
+    In this version, the `user_permissions` table was added.
+    '''
+    photodb.execute('''
+    CREATE TABLE IF NOT EXISTS user_permissions(
+        userid TEXT NOT NULL,
+        permission TEXT NOT NULL,
+        created INT,
+        PRIMARY KEY(userid, permission),
+        FOREIGN KEY(userid) REFERENCES users(id)
+    );
+    ''')
+    photodb.execute('''
+    CREATE INDEX IF NOT EXISTS index_user_permissions_userid on user_permissions(userid);
+    ''')
+
 def upgrade_all(data_directory):
     '''
     Given the directory containing a phototagger database, apply all of the

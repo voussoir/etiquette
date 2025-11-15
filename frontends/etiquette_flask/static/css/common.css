@@ -105,6 +105,8 @@ textarea::placeholder
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 8px;
+    text-decoration: none;
 }
 
 #content_body

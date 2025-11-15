@@ -157,11 +157,13 @@ class UsernameTooShort(InvalidUsername):
 class DisplayNameTooLong(EtiquetteException):
     error_message = 'Display name "{display_name}" is longer than maximum of {max_length}.'
 
-class Unauthorized(EtiquetteException):
-    error_message = 'You\'re not allowed to do that.'
-
 class WrongLogin(EtiquetteException):
     error_message = 'Wrong username-password combination.'
+
+# PERMISSION ERRORS ################################################################################
+
+class Unauthorized(EtiquetteException):
+    error_message = 'You\'re not allowed to do that.'
 
 # GENERAL ERRORS ###################################################################################
 

@@ -64,16 +64,19 @@ body > .nice_link
         {{motd[1]}}
         {%- endif -%}
     </p>
+    {% if anonymous_read or request.session.user or request.is_localhost %}
     <a class="nice_link navigation_link" href="/search">Search</a>
     <a class="nice_link navigation_link" href="/tags">Tags</a>
     <a class="nice_link navigation_link" href="/albums">Albums</a>
     <a class="nice_link navigation_link" href="/bookmarks">Bookmarks</a>
+    <a class="nice_link navigation_link" href="/upload">Upload</a>
+    {% endif %}
     {% if request.session.user %}
     <a class="nice_link navigation_link" href="/userid/{{request.session.user.id}}">{{request.session.user.display_name}}</a>
     {% else %}
     <a class="nice_link navigation_link" href="/login">Log in</a>
     {% endif %}
-    {% if request.is_localhost %}
+    {% if request.is_localhost or (request.session.user and request.session.user.has_permission('admin')) %}
     <a class="nice_link navigation_link" href="/admin">Admin</a>
     {% endif %}
     <div class="link_group">

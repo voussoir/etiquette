@@ -27,17 +27,15 @@ th, td
 
 
 <body>
-{{header.make_header(session=request.session)}}
+{{header.make_header(request=request)}}
 <div id="content_body">
     <div class="panel">
         <h1>Admin tools</h1>
-        <p><button id="reload_config_button" class="green_button" onclick="return reload_config_form();">Reload config file</button></p>
-        <p><button id="uncache_button" class="green_button" onclick="return uncache_form();">Uncache objects</button></p>
-        <p><button id="clear_sessions_button" class="green_button" onclick="return clear_sessions_form();">Clear login sessions</button></p>
         <p><a href="/admin/dbdownload">Download database file</a></p>
     </div>
     <div class="panel">
         <h2>Statistics</h2>
+        <p><button id="uncache_button" class="red_button" onclick="return uncache_form();">Uncache objects</button></p>
         <table>
             <tr><th></th><th>Stored</th><th>Cached</th></tr>
             <tr><td>Albums</td><td>{{counts.albums}}</td><td>{{cached.albums}}</td></tr>
@@ -45,6 +43,60 @@ th, td
             <tr><td>Photos</td><td>{{counts.photos}}</td><td>{{cached.photos}}</td></tr>
             <tr><td>Tags</td><td>{{counts.tags}}</td><td>{{cached.tags}}</td></tr>
             <tr><td>Users</td><td>{{counts.users}}</td><td>{{cached.users}}</td></tr>
+        </table>
+    </div>
+
+    <div class="panel">
+        <h2>Users</h2>
+        <table id="users_table">
+            <thead>
+                <tr>
+                    <td>ID</td>
+                    <td>Name</td>
+                    <td>Username</td>
+                </tr>
+            </thead>
+            {% for user in users %}
+            <tr>
+                <td><code>{{user.id}}</code></td>
+                <td><a href="/userid/{{user.id}}">{{user.display_name}}</a></td>
+                <td>{{user.username}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="panel">
+        <h2>Config</h2>
+        <p><button id="reload_config_button" class="green_button" onclick="return reload_config_form();">Reload config file</button></p>
+        <pre style="white-space:break-spaces;">{{etq_config}}</pre>
+        <pre style="white-space:break-spaces;">{{server_config}}</pre>
+    </div>
+
+    <div class="panel">
+        <h2>Sessions</h2>
+        <p><button id="clear_sessions_button" class="red_button" onclick="return clear_sessions_form();">Clear login sessions</button></p>
+        <table id="sessions_table">
+            <thead>
+                <tr>
+                    <td>Token</td>
+                    <td>IP</td>
+                    <td>User</td>
+                    <td>Last activity</td>
+                    <td>Remove</td>
+                </tr>
+            </thead>
+            <tbody>
+            {% for (token, session) in sessions %}
+            <tr>
+                <td class="session_token"><code>{{token}}</code></td>
+                <td class="session_ip"><code>{{session.ip_address}}</code></td>
+                <td>{% if session.user %}{{session.user.display_name}}{% else %}<i>anonymous</i>{%endif%}</td>
+                <td><time>{{session.last_activity|timestamp_to_8601}}</time></td>
+                <td><button class="red_button" onclick="return remove_session_form(event);">x</button></td>
+            </tr>
+            {% endfor %}
+            </tbody>
         </table>
     </div>
 </div>
@@ -63,6 +115,7 @@ function clear_sessions_form()
         {
             alert(JSON.stringify(response));
         }
+        common.delete_all_children(document.querySelector("#sessions_table tbody"));
     }
     return api.admin.clear_sessions(callback);
 }
@@ -80,6 +133,22 @@ function reload_config_form()
         }
     }
     return api.admin.reload_config(callback);
+}
+
+function remove_session_form(event)
+{
+    const button = event.target;
+    const row = button.closest("tr");
+    const token = row.querySelector(".session_token").innerText;
+    function callback(response)
+    {
+        if (response.meta.status !== 200)
+        {
+            alert(JSON.stringify(response));
+        }
+        row.parentElement.removeChild(row);
+    }
+    return api.admin.remove_session(token, callback);
 }
 
 function uncache_form()

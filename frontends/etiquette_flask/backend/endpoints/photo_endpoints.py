@@ -1,5 +1,8 @@
+import gevent
 import flask; from flask import request
 import os
+import random
+import re
 import subprocess
 import traceback
 import urllib.parse
@@ -8,6 +11,7 @@ from voussoirkit import cacheclass
 from voussoirkit import flasktools
 from voussoirkit import pathclass
 from voussoirkit import stringtools
+from voussoirkit import timetools
 from voussoirkit import vlogging
 
 log = vlogging.get_logger(__name__)
@@ -17,6 +21,8 @@ import etiquette
 from .. import common
 from .. import helpers
 
+RNG = random.SystemRandom()
+
 site = common.site
 session_manager = common.session_manager
 photo_download_zip_tokens = cacheclass.Cache(maxlen=100)
@@ -25,13 +31,13 @@ photo_download_zip_tokens = cacheclass.Cache(maxlen=100)
 
 @site.route('/photo/<photo_id>')
 def get_photo_html(photo_id):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     photo = common.P_photo(photo_id, response_type='html')
     return common.render_template(request, 'photo.html', photo=photo)
 
 @site.route('/photo/<photo_id>.json')
 def get_photo_json(photo_id):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     photo = common.P_photo(photo_id, response_type='json')
     photo = photo.jsonify()
     photo = flasktools.json_response(photo)
@@ -40,7 +46,7 @@ def get_photo_json(photo_id):
 @site.route('/photo/<photo_id>/download')
 @site.route('/photo/<photo_id>/download/<basename>')
 def get_file(photo_id, basename=None):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     photo_id = photo_id.split('.')[0]
     photo = common.P.get_photo(photo_id)
 
@@ -66,7 +72,7 @@ def get_file(photo_id, basename=None):
 
 @site.route('/photo/<photo_id>/thumbnail')
 @site.route('/photo/<photo_id>/thumbnail/<basename>')
-@common.permission_manager.basic_decorator
+@common.permission_manager.read_decorator
 @flasktools.cached_endpoint(max_age=common.BROWSER_CACHE_DURATION, etag_function=lambda: common.P.last_commit_id)
 def get_thumbnail(photo_id, basename=None):
     photo_id = photo_id.split('.')[0]
@@ -89,11 +95,11 @@ def get_thumbnail(photo_id, basename=None):
 
 @site.route('/photo/<photo_id>/delete', methods=['POST'])
 def post_photo_delete(photo_id):
-    common.permission_manager.basic()
+    photo = common.P_photo(photo_id, response_type='json')
+    common.permission_manager.delete_thing(photo)
     delete_file = request.form.get('delete_file', False)
     delete_file = stringtools.truthystring(delete_file)
     with common.P.transaction:
-        photo = common.P_photo(photo_id, response_type='json')
         photo.delete(delete_file=delete_file)
     return flasktools.json_response({})
 
@@ -105,6 +111,9 @@ def post_photo_add_remove_tag_core(photo_ids, tagname, add_or_remove, timestamp=
 
     photos = list(common.P_photos(photo_ids, response_type='json'))
     tag = common.P_tag(tagname, response_type='json')
+
+    for photo in photos:
+        common.permission_manager.edit_thing(photo)
 
     response = {'action': add_or_remove, 'tagname': tag.name}
     with common.P.transaction:
@@ -123,8 +132,8 @@ def post_photo_add_tag(photo_id):
     '''
     Add a tag to this photo.
     '''
-    common.permission_manager.basic()
     photo = common.P_photo(photo_id, response_type='json')
+    common.permission_manager.edit_thing(photo)
     tag = common.P_tag(request.form['tagname'], response_type='json')
 
     with common.P.transaction:
@@ -138,9 +147,9 @@ def post_photo_copy_tags(photo_id):
     '''
     Copy the tags from another photo.
     '''
-    common.permission_manager.basic()
+    photo = common.P_photo(photo_id, response_type='json')
+    common.permission_manager.edit_thing(photo)
     with common.P.transaction:
-        photo = common.P_photo(photo_id, response_type='json')
         other = common.P_photo(request.form['other_photo'], response_type='json')
         photo.copy_tags(other)
     return flasktools.json_response([tag.jsonify() for tag in photo.get_tags()])
@@ -151,7 +160,7 @@ def post_photo_remove_tag(photo_id):
     '''
     Remove a tag from this photo.
     '''
-    common.permission_manager.basic()
+    common.permission_manager.edit_thing(photo)
     response = post_photo_add_remove_tag_core(
         photo_ids=photo_id,
         tagname=request.form['tagname'],
@@ -164,16 +173,15 @@ def post_photo_tag_rel_delete(photo_tag_rel_id):
     '''
     Remove a tag from a photo.
     '''
-    common.permission_manager.basic()
+    photo_tag = common.P.get_object_by_id(etiquette.objects.PhotoTagRel, photo_tag_rel_id)
+    common.permission_manager.edit_thing(photo_tag.photo)
     with common.P.transaction:
-        photo_tag = common.P.get_object_by_id(etiquette.objects.PhotoTagRel, photo_tag_rel_id)
         photo_tag.delete()
         return flasktools.json_response(photo_tag.jsonify())
 
 @site.route('/batch/photos/add_tag', methods=['POST'])
 @flasktools.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
 def post_batch_photos_add_tag():
-    common.permission_manager.basic()
     response = post_photo_add_remove_tag_core(
         photo_ids=request.form['photo_ids'],
         tagname=request.form['tagname'],
@@ -184,7 +192,6 @@ def post_batch_photos_add_tag():
 @site.route('/batch/photos/remove_tag', methods=['POST'])
 @flasktools.required_fields(['photo_ids', 'tagname'], forbid_whitespace=True)
 def post_batch_photos_remove_tag():
-    common.permission_manager.basic()
     response = post_photo_add_remove_tag_core(
         photo_ids=request.form['photo_ids'],
         tagname=request.form['tagname'],
@@ -198,14 +205,15 @@ def post_photo_generate_thumbnail_core(photo_ids, special={}):
     if isinstance(photo_ids, str):
         photo_ids = stringtools.comma_space_split(photo_ids)
 
-    with common.P.transaction:
-        photos = list(common.P_photos(photo_ids, response_type='json'))
+    photos = list(common.P_photos(photo_ids, response_type='json'))
+    for photo in photos:
+        common.permission_manager.edit_thing(photo)
 
+    with common.P.transaction:
         for photo in photos:
             photo._uncache()
-            photo = common.P_photo(photo.id, response_type='json')
             try:
-                photo.generate_thumbnail()
+                photo.generate_thumbnail(special=special)
             except Exception:
                 log.warning(traceback.format_exc())
 
@@ -213,14 +221,14 @@ def post_photo_generate_thumbnail_core(photo_ids, special={}):
 
 @site.route('/photo/<photo_id>/generate_thumbnail', methods=['POST'])
 def post_photo_generate_thumbnail(photo_id):
-    common.permission_manager.basic()
+    common.permission_manager.early_read()
     special = request.form.to_dict()
     response = post_photo_generate_thumbnail_core(photo_ids=photo_id, special=special)
     return response
 
 @site.route('/batch/photos/generate_thumbnail', methods=['POST'])
 def post_batch_photos_generate_thumbnail():
-    common.permission_manager.basic()
+    common.permission_manager.early_read()
     special = request.form.to_dict()
     response = post_photo_generate_thumbnail_core(photo_ids=request.form['photo_ids'], special=special)
     return response
@@ -229,14 +237,18 @@ def post_photo_refresh_metadata_core(photo_ids):
     if isinstance(photo_ids, str):
         photo_ids = stringtools.comma_space_split(photo_ids)
 
+    photos = list(common.P_photos(photo_ids, response_type='json'))
+    for photo in photos:
+        common.permission_manager.edit_thing(photo)
+
     with common.P.transaction:
-        photos = list(common.P_photos(photo_ids, response_type='json'))
 
         for photo in photos:
             photo._uncache()
             photo = common.P_photo(photo.id, response_type='json')
             try:
                 photo.reload_metadata()
+                gevent.sleep(0.01)
             except pathclass.NotFile:
                 flask.abort(404)
 
@@ -250,50 +262,36 @@ def post_photo_refresh_metadata_core(photo_ids):
 
 @site.route('/photo/<photo_id>/refresh_metadata', methods=['POST'])
 def post_photo_refresh_metadata(photo_id):
-    common.permission_manager.basic()
+    common.permission_manager.early_read()
     response = post_photo_refresh_metadata_core(photo_ids=photo_id)
     return response
 
 @site.route('/batch/photos/refresh_metadata', methods=['POST'])
 @flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_refresh_metadata():
-    common.permission_manager.basic()
+    common.permission_manager.early_read()
     response = post_photo_refresh_metadata_core(photo_ids=request.form['photo_ids'])
     return response
 
 @site.route('/photo/<photo_id>/set_searchhidden', methods=['POST'])
 def post_photo_set_searchhidden(photo_id):
-    common.permission_manager.basic()
+    photo = common.P_photo(photo_id, response_type='json')
+    common.permission_manager.edit_thing(photo)
     with common.P.transaction:
-        photo = common.P_photo(photo_id, response_type='json')
         photo.set_searchhidden(True)
     return flasktools.json_response({})
 
 @site.route('/photo/<photo_id>/unset_searchhidden', methods=['POST'])
 def post_photo_unset_searchhidden(photo_id):
-    common.permission_manager.basic()
+    photo = common.P_photo(photo_id, response_type='json')
+    common.permission_manager.edit_thing(photo)
     with common.P.transaction:
-        photo = common.P_photo(photo_id, response_type='json')
         photo.set_searchhidden(False)
-    return flasktools.json_response({})
-
-def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
-    if isinstance(photo_ids, str):
-        photo_ids = stringtools.comma_space_split(photo_ids)
-
-    with common.P.transaction:
-        photos = list(common.P_photos(photo_ids, response_type='json'))
-
-        for photo in photos:
-            photo.set_searchhidden(searchhidden)
-
     return flasktools.json_response({})
 
 @site.route('/photo/<photo_id>/show_in_folder', methods=['POST'])
 def post_photo_show_in_folder(photo_id):
-    common.permission_manager.basic()
-    if not request.is_localhost:
-        flask.abort(403)
+    common.permission_manager.localhost_only()
 
     photo = common.P_photo(photo_id, response_type='json')
     if os.name == 'nt':
@@ -307,10 +305,25 @@ def post_photo_show_in_folder(photo_id):
 
     flask.abort(501)
 
+def post_batch_photos_searchhidden_core(photo_ids, searchhidden):
+    if isinstance(photo_ids, str):
+        photo_ids = stringtools.comma_space_split(photo_ids)
+
+    photos = list(common.P_photos(photo_ids, response_type='json'))
+    for photo in photos:
+        common.permission_manager.edit_thing(photo)
+
+    with common.P.transaction:
+
+        for photo in photos:
+            photo.set_searchhidden(searchhidden)
+
+    return flasktools.json_response({})
+
 @site.route('/batch/photos/set_searchhidden', methods=['POST'])
 @flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_set_searchhidden():
-    common.permission_manager.basic()
+    common.permission_manager.early_read()
     photo_ids = request.form['photo_ids']
     response = post_batch_photos_searchhidden_core(photo_ids=photo_ids, searchhidden=True)
     return response
@@ -318,16 +331,46 @@ def post_batch_photos_set_searchhidden():
 @site.route('/batch/photos/unset_searchhidden', methods=['POST'])
 @flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_unset_searchhidden():
-    common.permission_manager.basic()
+    common.permission_manager.early_read()
     photo_ids = request.form['photo_ids']
     response = post_batch_photos_searchhidden_core(photo_ids=photo_ids, searchhidden=False)
+    return response
+
+def post_batch_photos_delete_core(photo_ids, delete_file):
+    if isinstance(photo_ids, str):
+        photo_ids = stringtools.comma_space_split(photo_ids)
+
+    photos = list(common.P_photos(photo_ids, response_type='json'))
+    for photo in photos:
+        common.permission_manager.delete_thing(photo)
+
+    with common.P.transaction:
+        for photo in photos:
+            photo.delete(delete_file=delete_file)
+
+    return flasktools.json_response({})
+
+@site.route('/batch/photos/soft_delete', methods=['POST'])
+@flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
+def post_batch_photos_soft_delete():
+    common.permission_manager.early_read()
+    photo_ids = request.form['photo_ids']
+    response = post_batch_photos_delete_core(photo_ids=photo_ids, delete_file=False)
+    return response
+
+@site.route('/batch/photos/hard_delete', methods=['POST'])
+@flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
+def post_batch_photos_hard_delete():
+    common.permission_manager.early_read()
+    photo_ids = request.form['photo_ids']
+    response = post_batch_photos_delete_core(photo_ids=photo_ids, delete_file=True)
     return response
 
 # Clipboard ########################################################################################
 
 @site.route('/clipboard')
 def get_clipboard_page():
-    common.permission_manager.basic()
+    common.permission_manager.read()
     return common.render_template(request, 'clipboard.html')
 
 @site.route('/batch/photos', methods=['POST'])
@@ -336,7 +379,7 @@ def post_batch_photos():
     '''
     Return a list of photo.jsonify() for each requested photo id.
     '''
-    common.permission_manager.basic()
+    common.permission_manager.read()
     photo_ids = request.form['photo_ids']
 
     photo_ids = stringtools.comma_space_split(photo_ids)
@@ -349,7 +392,7 @@ def post_batch_photos():
 @site.route('/batch/photos/photo_card', methods=['POST'])
 @flasktools.required_fields(['photo_ids'], forbid_whitespace=True)
 def post_batch_photos_photo_cards():
-    common.permission_manager.basic()
+    common.permission_manager.read()
     photo_ids = request.form['photo_ids']
 
     photo_ids = stringtools.comma_space_split(photo_ids)
@@ -381,7 +424,7 @@ def get_batch_photos_download_zip(zip_token):
     After the user has generated their zip token, they can retrieve
     that zip file.
     '''
-    common.permission_manager.basic()
+    common.permission_manager.read()
     zip_token = zip_token.split('.')[0]
     try:
         photo_ids = photo_download_zip_tokens[zip_token]
@@ -411,7 +454,7 @@ def post_batch_photos_download_zip():
     so the way this works is we generate a token representing the photoset
     that they want, and then they can retrieve the zip itself via GET.
     '''
-    common.permission_manager.basic()
+    common.permission_manager.read()
     photo_ids = request.form['photo_ids']
     photo_ids = stringtools.comma_space_split(photo_ids)
 
@@ -486,7 +529,7 @@ def get_search_core():
 
 @site.route('/search_embed')
 def get_search_embed():
-    common.permission_manager.basic()
+    common.permission_manager.read()
     search = get_search_core()
     response = common.render_template(
         request,
@@ -498,7 +541,7 @@ def get_search_embed():
 
 @site.route('/search')
 def get_search_html():
-    common.permission_manager.basic()
+    common.permission_manager.read()
 
     search = get_search_core()
     search.kwargs.view = request.args.get('view', 'grid')
@@ -549,7 +592,7 @@ def get_search_html():
 
 @site.route('/search.atom')
 def get_search_atom():
-    common.permission_manager.basic()
+    common.permission_manager.read()
     search = get_search_core()
     soup = etiquette.helpers.make_atom_feed(
         search.results,
@@ -562,7 +605,7 @@ def get_search_atom():
 
 @site.route('/search.json')
 def get_search_json():
-    common.permission_manager.basic()
+    common.permission_manager.read()
     search = get_search_core()
     response = search.jsonify()
     return flasktools.json_response(response)
@@ -571,6 +614,92 @@ def get_search_json():
 
 @site.route('/swipe')
 def get_swipe():
-    common.permission_manager.basic()
+    common.permission_manager.read()
     response = common.render_template(request, 'swipe.html')
     return response
+
+# Upload ###########################################################################################
+
+@site.route('/upload')
+def get_upload_page():
+    common.permission_manager.permission_string(etiquette.constants.PERMISSION_PHOTO_CREATE)
+    response = common.render_template(request, 'upload.html')
+    return response
+
+@site.route('/photo/upload', methods=['POST'])
+def post_photo_upload():
+    common.permission_manager.permission_string(etiquette.constants.PERMISSION_PHOTO_CREATE)
+
+    files = request.files.getlist('file')
+    print(files)
+    if len(files) == 0:
+        return flask.abort(400)
+
+    job_id = f'{int(timetools.now().timestamp() * 1000)}_{RNG.getrandbits(32)}'
+    folder = common.P.uploads_directory.with_child(job_id)
+    folder.makedirs()
+
+    # All uploading/saving must be done before the transaction so the database
+    # is not locked up by a slow uploader.
+    diskpaths = []
+    for (index, file) in enumerate(files):
+        log.debug('Receiving uploaded file %s.' % file.filename)
+        unsafepath = file.filename
+        unsafepath = unsafepath.replace('\\', '/')
+        unsafepath = re.sub(r'//+', '/', unsafepath)
+        unsafepath = unsafepath.strip('/')
+
+        extension = pathclass.Path(unsafepath).extension
+        if len(extension) > 30:
+            extension = ''
+
+        diskpath = folder.with_child(f'{job_id}_{index}').add_extension(extension)
+        file.save(diskpath.absolute_path)
+
+        diskpaths.append(diskpath)
+        diskpath._unsafepath = unsafepath
+
+    diskpaths.sort(key=lambda x: x._unsafepath)
+
+    with common.P.transaction:
+        albums_by_path = {}
+        for diskpath in diskpaths:
+            print(diskpath._unsafepath)
+            photo = common.P.new_photo(
+                diskpath,
+                author=request.session.user,
+                override_filename=diskpath._unsafepath.split('/')[-1],
+            )
+
+            if '/' not in diskpath._unsafepath:
+                continue
+
+            (parentpath, basename) = diskpath._unsafepath.rsplit('/', 1)
+            if parentpath in albums_by_path:
+                parentalbum = albums_by_path[parentpath]
+            else:
+                parentname = parentpath.rsplit('/', 1)[-1]
+                parentalbum = common.P.new_album(parentname)
+                albums_by_path[parentpath] = parentalbum
+
+            parentalbum.add_photo(photo)
+
+        # Build the Album tree
+        to_check = set(albums_by_path.keys())
+        while len(to_check) > 0:
+            key = to_check.pop()
+            album = albums_by_path[key]
+            print(key, album)
+
+            if '/' not in key:
+                continue
+
+            (parentkey, parentname) = key.rsplit('/', 1)
+            if parentkey in albums_by_path:
+                parentalbum = albums_by_path[parentkey]
+            else:
+                parentalbum = common.P.new_album(parentname)
+                albums_by_path[parentkey] = parentalbum
+                to_check.add(parentkey)
+
+            parentalbum.add_child(album)

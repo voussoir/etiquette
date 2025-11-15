@@ -273,6 +273,10 @@ class Album(ObjectBase, GroupableMixin):
     table = 'albums'
     group_table = 'album_group_rel'
     no_such_exception = exceptions.NoSuchAlbum
+    permission_edit_all = constants.PERMISSION_ALBUM_EDIT_ALL
+    permission_edit_own = constants.PERMISSION_ALBUM_EDIT_OWN
+    permission_delete_all = constants.PERMISSION_ALBUM_DELETE_ALL
+    permission_delete_own = constants.PERMISSION_ALBUM_DELETE_OWN
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
@@ -468,7 +472,7 @@ class Album(ObjectBase, GroupableMixin):
 
         return soup
 
-    @decorators.required_feature('album.edit')
+    @decorators.required_feature('album.delete')
     @worms.atomic
     def delete(self, *, delete_children=False) -> None:
         log.info('Deleting %s.', self)
@@ -775,6 +779,10 @@ class Album(ObjectBase, GroupableMixin):
 class Bookmark(ObjectBase):
     table = 'bookmarks'
     no_such_exception = exceptions.NoSuchBookmark
+    permission_edit_all = constants.PERMISSION_BOOKMARK_EDIT_ALL
+    permission_edit_own = constants.PERMISSION_BOOKMARK_EDIT_OWN
+    permission_delete_all = constants.PERMISSION_BOOKMARK_DELETE_ALL
+    permission_delete_own = constants.PERMISSION_BOOKMARK_DELETE_OWN
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
@@ -854,7 +862,7 @@ class Bookmark(ObjectBase):
 
         return soup
 
-    @decorators.required_feature('bookmark.edit')
+    @decorators.required_feature('bookmark.delete')
     @worms.atomic
     def delete(self) -> None:
         self.photodb.delete(table=Bookmark, pairs={'id': self.id})
@@ -915,6 +923,10 @@ class Photo(ObjectBase):
     '''
     table = 'photos'
     no_such_exception = exceptions.NoSuchPhoto
+    permission_edit_all = constants.PERMISSION_PHOTO_EDIT_ALL
+    permission_edit_own = constants.PERMISSION_PHOTO_EDIT_OWN
+    permission_delete_all = constants.PERMISSION_PHOTO_DELETE_ALL
+    permission_delete_own = constants.PERMISSION_PHOTO_DELETE_OWN
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
@@ -1002,7 +1014,12 @@ class Photo(ObjectBase):
     @decorators.required_feature('photo.add_remove_tag')
     @worms.atomic
     def add_tag(self, tag, timestamp=None):
-        tag = self.photodb.get_tag(name=tag)
+        if isinstance(tag, PhotoTagRel):
+            tag = tag.tag
+        elif isinstance(tag, Tag):
+            pass
+        else:
+            tag = self.photodb.get_tag(name=tag)
 
         existing = self.has_tag(tag, check_children=False, match_timestamp=timestamp)
         if existing:
@@ -1075,9 +1092,9 @@ class Photo(ObjectBase):
         Take all of the tags owned by other_photo and apply them to this photo.
         '''
         for tag in other_photo.get_tags():
-            self.add_tag(tag)
+            self.add_tag(tag, timestamp=tag.timestamp)
 
-    @decorators.required_feature('photo.edit')
+    @decorators.required_feature('photo.delete')
     @worms.atomic
     def delete(self, *, delete_file=False) -> None:
         '''
@@ -1113,11 +1130,11 @@ class Photo(ObjectBase):
 
     @decorators.required_feature('photo.generate_thumbnail')
     @worms.atomic
-    def generate_thumbnail(self, trusted_file=False, **special):
+    def generate_thumbnail(self, trusted_file=False, special={}):
         '''
         special:
-            For images, you can provide `max_width` and/or `max_height` to
-            override the config file.
+            You can provide `max_width` and/or `max_height` to override the
+            config file.
             For videos, you can provide a `timestamp` to take the thumbnail at.
         '''
         image = None
@@ -1140,9 +1157,9 @@ class Photo(ObjectBase):
             try:
                 image = helpers.generate_video_thumbnail(
                     self.real_path.absolute_path,
-                    width=self.photodb.config['thumbnail_width'],
-                    height=self.photodb.config['thumbnail_height'],
-                    **special
+                    width=special.get('max_width', self.photodb.config['thumbnail_width']),
+                    height=special.get('max_height', self.photodb.config['thumbnail_height']),
+                    special=special,
                 )
             except Exception:
                 log.warning(traceback.format_exc())
@@ -1375,6 +1392,7 @@ class Photo(ObjectBase):
             'bytes': self.bytes,
         }
         self.photodb.update(table=Photo, pairs=data, where_key='id')
+        self.__reinit__()
 
     @decorators.required_feature('photo.edit')
     @worms.atomic
@@ -2098,6 +2116,10 @@ class Tag(ObjectBase, GroupableMixin):
     table = 'tags'
     group_table = 'tag_group_rel'
     no_such_exception = exceptions.NoSuchTag
+    permission_edit_all = constants.PERMISSION_TAG_EDIT_ALL
+    permission_edit_own = constants.PERMISSION_TAG_EDIT_OWN
+    permission_delete_all = constants.PERMISSION_TAG_DELETE_ALL
+    permission_delete_own = constants.PERMISSION_TAG_DELETE_OWN
 
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
@@ -2291,7 +2313,7 @@ class Tag(ObjectBase, GroupableMixin):
         # Enjoy your new life as a monk.
         mastertag.add_synonym(self.name)
 
-    @decorators.required_feature('tag.edit')
+    @decorators.required_feature('tag.delete')
     @worms.atomic
     def delete(self, *, delete_children=False) -> None:
         log.info('Deleting %s.', self)
@@ -2500,6 +2522,15 @@ class User(ObjectBase):
     def _uncache(self):
         self.photodb.caches[User].remove(self.id)
 
+    @decorators.required_feature('user.edit')
+    def add_permission(self, permission):
+        pairs = {
+            'userid': self.id,
+            'permission': permission,
+            'created': timetools.now().timestamp(),
+        }
+        self.photodb.insert(table='user_permissions', pairs=pairs, ignore_duplicate=True)
+
     @decorators.required_feature('user.login')
     def check_password(self, password):
         if not isinstance(password, bytes):
@@ -2510,7 +2541,7 @@ class User(ObjectBase):
             raise exceptions.WrongLogin()
         return success
 
-    @decorators.required_feature('user.edit')
+    @decorators.required_feature('user.delete')
     @worms.atomic
     def delete(self, *, disown_authored_things) -> None:
         '''
@@ -2574,6 +2605,13 @@ class User(ObjectBase):
             [self.id]
         )
 
+    @decorators.cache_until_commit
+    def get_permissions(self):
+        return set(self.photodb.select_column(
+            'SELECT permission FROM user_permissions WHERE userid == ?',
+            [self.id],
+        ))
+
     def get_photos(self, *, direction='asc') -> typing.Iterable[Photo]:
         '''
         Raises ValueError if direction is not asc or desc.
@@ -2618,6 +2656,41 @@ class User(ObjectBase):
         exists = self.photodb.select_one_value(query, [self.id])
         return exists is not None
 
+    def has_object_permission(self, thing, edit_or_delete) -> bool:
+        my_permissions = self.get_permissions()
+        if constants.PERMISSION_ADMIN in my_permissions:
+            return True
+
+        if edit_or_delete == 'edit' and thing.permission_edit_all in my_permissions:
+            return True
+
+        if edit_or_delete == 'delete' and thing.permission_delete_all in my_permissions:
+            return True
+
+        # If this user does not have ADMIN or ALL permission, then they must be
+        # the owner or deputy of the owner. So if the thing has no owner then
+        # there's no way.
+        thing_author = thing.author
+        if not thing_author:
+            return False
+
+        if edit_or_delete == 'edit':
+            own_permission = thing.permission_edit_own
+        elif edit_or_delete == 'delete':
+            own_permission = thing.permission_delete_own
+
+        if thing_author == self and own_permission in my_permissions:
+            return True
+
+        deputy_permission = constants.PERMISSION_DEPUTY + f':{thing_author.id}'
+        if deputy_permission in my_permissions and own_permission in thing_author.get_permissions():
+            return True
+
+        return False
+
+    def has_permission(self, permission_string):
+        return permission_string in self.get_permissions()
+
     def jsonify(self) -> dict:
         j = {
             'type': 'user',
@@ -2630,6 +2703,14 @@ class User(ObjectBase):
             j['deleted'] = True
 
         return j
+
+    @decorators.required_feature('user.edit')
+    def remove_permission(self, permission):
+        pairs = {
+            'userid': self.id,
+            'permission': permission,
+        }
+        self.photodb.delete(table='user_permissions', pairs=pairs)
 
     @decorators.required_feature('user.edit')
     @worms.atomic

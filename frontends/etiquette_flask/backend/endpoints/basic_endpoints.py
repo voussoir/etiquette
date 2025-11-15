@@ -12,7 +12,12 @@ session_manager = common.session_manager
 def root():
     common.permission_manager.global_public()
     motd = random.choice(common.P.config['motd_strings'])
-    return common.render_template(request, 'root.html', motd=motd)
+    return common.render_template(
+        request,
+        'root.html',
+        motd=motd,
+        anonymous_read=common.site.server_config['anonymous_read'],
+    )
 
 @site.route('/favicon.ico')
 @site.route('/favicon.png')

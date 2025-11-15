@@ -315,6 +315,7 @@ class PDBPhotoMixin:
             do_thumbnail=True,
             hash_kwargs=None,
             known_hash=None,
+            override_filename=None,
             searchhidden=False,
             tags=None,
             trusted_file=False,
@@ -356,7 +357,7 @@ class PDBPhotoMixin:
         data = {
             'id': photo_id,
             'filepath': filepath.absolute_path,
-            'override_filename': None,
+            'override_filename': override_filename,
             'created': timetools.now().timestamp(),
             'tagged_at': None,
             'author_id': author_id,
@@ -682,7 +683,14 @@ class PDBUserMixin:
 
     @decorators.required_feature('user.new')
     @worms.atomic
-    def new_user(self, username, password, *, display_name=None) -> objects.User:
+    def new_user(
+            self,
+            username,
+            password,
+            *,
+            display_name=None,
+            permissions=constants.NEW_USER_PERMISSIONS,
+        ) -> objects.User:
         # These might raise exceptions.
         self.assert_valid_username(username)
         self.assert_no_such_user(username=username)
@@ -703,14 +711,23 @@ class PDBUserMixin:
 
         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
 
+        now = timetools.now().timestamp()
         data = {
             'id': user_id,
             'username': username,
             'password': hashed_password,
             'display_name': display_name,
-            'created': timetools.now().timestamp(),
+            'created': now,
         }
         self.insert(table=objects.User, pairs=data)
+
+        for permission in set(permissions):
+            permission_row = {
+                'userid': user_id,
+                'permission': permission,
+                'created': now,
+            }
+            self.insert(table='user_permissions', pairs=permission_row)
 
         return self.get_cached_instance(objects.User, data)
 
@@ -1137,6 +1154,9 @@ class PhotoDB(
         # THUMBNAIL DIRECTORY
         self.thumbnail_directory = self.data_directory.with_child(constants.DEFAULT_THUMBDIR)
         self.thumbnail_directory.makedirs(exist_ok=True)
+
+        self.uploads_directory = self.data_directory.with_child(constants.DEFAULT_UPLOADS_DIR)
+        self.uploads_directory.makedirs(exist_ok=True)
 
         # CONFIG
         self.config_filepath = self.data_directory.with_child(constants.DEFAULT_CONFIGNAME)

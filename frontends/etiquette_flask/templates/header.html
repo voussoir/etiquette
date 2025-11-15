@@ -1,11 +1,13 @@
-{% macro make_header(session) %}
+{% macro make_header(request) %}
 <nav id="header">
     <a class="header_element navigation_link" href="/">Etiquette</a>
     <a class="header_element navigation_link" href="/search">Search</a>
     <a class="header_element navigation_link" href="/tags">Tags</a>
-    {% if session.user %}
-    <a class="header_element navigation_link dynamic_user_display_name" href="/userid/{{session.user.id}}">{{session.user.display_name}}</a>
+    {% if request.session.user %}
+    <a class="header_element navigation_link dynamic_user_display_name" href="/userid/{{request.session.user.id}}">{{request.session.user.display_name}}{% if request.is_localhost %}<i> localhost</i>{% endif %}</a>
     <button id="logout_button" class="header_element" onclick="return api.users.logout(common.go_to_root);" style="flex:0">Logout</button>
+    {% elif request.is_localhost %}
+    <a class="header_element navigation_link" href="/login"><i>localhost</i></a>
     {% else %}
     <a class="header_element navigation_link" href="/login">Log in</a>
     {% endif %}

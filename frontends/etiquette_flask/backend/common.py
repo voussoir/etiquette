@@ -27,8 +27,8 @@ log = vlogging.getLogger(__name__)
 # Constants ########################################################################################
 
 DEFAULT_SERVER_CONFIG = {
-    'anonymous_read': True,
-    'anonymous_write': True,
+    'anonymous_read': False,
+    'registration_enabled': False,
 }
 
 BROWSER_CACHE_DURATION = 180
@@ -84,7 +84,9 @@ def catch_etiquette_exception(endpoint):
         try:
             return endpoint(*args, **kwargs)
         except etiquette.exceptions.EtiquetteException as exc:
-            if isinstance(exc, etiquette.exceptions.NoSuch):
+            if isinstance(exc, etiquette.exceptions.Unauthorized):
+                status = 403
+            elif isinstance(exc, etiquette.exceptions.NoSuch):
                 status = 404
             else:
                 status = 400
@@ -98,7 +100,9 @@ def before_request():
     # visitors, make sure your reverse proxy is properly setting X-Forwarded-For
     # so that werkzeug's proxyfix can set that as the remote_addr.
     # In NGINX: proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    request.client_address = request.remote_addr
     request.is_localhost = (request.remote_addr == '127.0.0.1')
+
     if site.localhost_only and not request.is_localhost:
         return flask.abort(403)
 
@@ -145,7 +149,9 @@ def P_wrapper(function):
             return function(thingid)
 
         except etiquette.exceptions.EtiquetteException as exc:
-            if isinstance(exc, etiquette.exceptions.NoSuch):
+            if isinstance(exc, etiquette.exceptions.Unauthorized):
+                status = 403
+            elif isinstance(exc, etiquette.exceptions.NoSuch):
                 status = 404
             else:
                 status = 400

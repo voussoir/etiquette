@@ -270,7 +270,7 @@ def image_is_mostly_black(image):
 
     return (black_count / len(pixels)) > 0.5
 
-def generate_video_thumbnail(filepath, width, height, **special) -> PIL.Image:
+def generate_video_thumbnail(filepath, width, height, special={}) -> PIL.Image:
     file = pathclass.Path(filepath)
     file.assert_is_file()
     probe = constants.ffmpeg.probe(filepath)
@@ -284,16 +284,16 @@ def generate_video_thumbnail(filepath, width, height, **special) -> PIL.Image:
         frame_width=width,
         frame_height=height,
     )
-    duration = probe.video.duration
+    duration = probe.video.duration or probe.format.duration
 
     if 'timestamp' in special:
-        timestamp_choices = [special['timestamp']]
+        timestamp_choices = [float(special['timestamp'])]
     else:
         timestamp_choices = list(range(0, int(duration), 3))
 
     image = None
     for this_time in timestamp_choices:
-        log.debug('Attempting video thumbnail at t=%d', this_time)
+        log.debug('Attempting video thumbnail at t=%s', this_time)
         command = kkroening_ffmpeg.input(file.absolute_path, ss=this_time)
         command = command.filter('scale', size[0], size[1])
         command = command.output('pipe:', vcodec='bmp', format='image2pipe', vframes=1)

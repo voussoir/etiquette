@@ -1,6 +1,7 @@
 import flask; from flask import request
 
 from voussoirkit import flasktools
+from voussoirkit import stringtools
 
 import etiquette
 
@@ -14,13 +15,19 @@ session_manager = common.session_manager
 
 @site.route('/user/<username>')
 def get_user_html(username):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     user = common.P_user(username, response_type='html')
-    return common.render_template(request, 'user.html', user=user)
+    return common.render_template(
+        request,
+        'user.html',
+        user=user,
+        user_permissions=user.get_permissions(),
+        constants_all_permissions=etiquette.constants.ALL_PERMISSIONS,
+    )
 
 @site.route('/user/<username>.json')
 def get_user_json(username):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     user = common.P_user(username, response_type='json')
     user = user.jsonify()
     return flasktools.json_response(user)
@@ -28,7 +35,7 @@ def get_user_json(username):
 @site.route('/userid/<user_id>')
 @site.route('/userid/<user_id>.json')
 def get_user_id_redirect(user_id):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     if request.path.endswith('.json'):
         user = common.P_user_id(user_id, response_type='json')
     else:
@@ -40,18 +47,62 @@ def get_user_id_redirect(user_id):
 
 @site.route('/user/<username>/edit', methods=['POST'])
 def post_user_edit(username):
-    common.permission_manager.basic()
-    if not request.session:
-        return flasktools.json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
     user = common.P_user(username, response_type='json')
-    if request.session.user != user:
-        return flasktools.json_response(etiquette.exceptions.Unauthorized().jsonify(), status=403)
+    common.permission_manager.logged_in(user)
 
     display_name = request.form.get('display_name')
     if display_name is not None:
         with common.P.transaction:
             user.set_display_name(display_name)
 
+    return flasktools.json_response(user.jsonify())
+
+@site.route('/user/<username>/set_password', methods=['POST'])
+@flasktools.required_fields(['current_password', 'password_1', 'password_2'])
+def post_user_set_password(username):
+    user = common.P_user(username, response_type='json')
+    common.permission_manager.logged_in(user)
+
+    current_password = request.form.get('current_password')
+    try:
+        user.check_password(current_password)
+    except (etiquette.exceptions.WrongLogin):
+        exc = etiquette.exceptions.WrongLogin()
+        response = exc.jsonify()
+        return flasktools.json_response(response, status=422)
+    except etiquette.exceptions.FeatureDisabled as exc:
+        response = exc.jsonify()
+        return flasktools.json_response(response, status=400)
+
+    password_1 = request.form.get('password_1')
+    password_2 = request.form.get('password_2')
+    if password_1 != password_2:
+        response = {
+            'error_type': 'PASSWORDS_DONT_MATCH',
+            'error_message': 'Passwords do not match.',
+        }
+        return flasktools.json_response(response, status=422)
+
+    with common.P.transaction:
+        user.set_password(password_1)
+
+    sessions = list(session_manager.sessions.items())
+    for (token, session) in sessions:
+        if session.user == user and token != request.session.token:
+            session_manager.remove(token)
+
+@site.route('/user/<username>/set_permission', methods=['POST'])
+@flasktools.required_fields(['permission', 'value'])
+def post_user_set_permission(username):
+    common.permission_manager.admin_only()
+    permission_string = request.form['permission']
+    permission_value = stringtools.truthystring(request.form['value'])
+    user = common.P_user(username, response_type='json')
+    with common.P.transaction:
+        if permission_value:
+            user.add_permission(permission_string)
+        else:
+            user.remove_permission(permission_string)
     return flasktools.json_response(user.jsonify())
 
 # Login and logout #################################################################################
@@ -64,7 +115,7 @@ def get_login():
         'login.html',
         min_username_length=common.P.config['user']['min_username_length'],
         min_password_length=common.P.config['user']['min_password_length'],
-        registration_enabled=common.P.config['enable_feature']['user']['new'],
+        registration_enabled=common.site.server_config['registration_enabled'],
     )
     return response
 
@@ -96,13 +147,13 @@ def post_login():
         response = exc.jsonify()
         return flasktools.json_response(response, status=400)
 
-    request.session = sessions.Session(request, user)
-    session_manager.add(request.session)
+    request.session = sessions.Session.from_request(session_manager=session_manager, request=request, user=user)
+    session_manager.save_state()
     return flasktools.json_response({})
 
 @site.route('/logout', methods=['POST'])
 def post_logout():
-    common.permission_manager.basic()
+    common.permission_manager.logged_in()
     session_manager.remove(request)
     response = flasktools.json_response({})
     return response
@@ -138,6 +189,5 @@ def post_register():
     with common.P.transaction:
         user = common.P.new_user(username, password_1, display_name=display_name)
 
-    request.session = sessions.Session(request, user)
-    session_manager.add(request.session)
+    request.session = sessions.Session.from_request(session_manager=session_manager, request=request, user=user)
     return flasktools.json_response({})

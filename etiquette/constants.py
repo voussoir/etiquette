@@ -41,7 +41,7 @@ ffmpeg = _load_ffmpeg()
 
 # Database #########################################################################################
 
-DATABASE_VERSION = 25
+DATABASE_VERSION = 26
 
 DB_INIT = '''
 CREATE TABLE IF NOT EXISTS albums(
@@ -204,6 +204,15 @@ CREATE TABLE IF NOT EXISTS tag_synonyms(
 );
 CREATE INDEX IF NOT EXISTS index_tag_synonyms_name on tag_synonyms(name);
 CREATE INDEX IF NOT EXISTS index_tag_synonyms_mastername on tag_synonyms(mastername);
+----------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS user_permissions(
+    userid TEXT NOT NULL,
+    permission TEXT NOT NULL,
+    created INT,
+    PRIMARY KEY(userid, permission),
+    FOREIGN KEY(userid) REFERENCES users(id)
+);
+CREATE INDEX IF NOT EXISTS index_user_permissions_userid on user_permissions(userid);
 '''
 
 SQL_COLUMNS = sqlhelpers.extract_table_column_map(DB_INIT)
@@ -309,6 +318,7 @@ DEFAULT_DATADIR = '_etiquette'
 DEFAULT_DBNAME = 'phototagger.db'
 DEFAULT_CONFIGNAME = 'config.json'
 DEFAULT_THUMBDIR = 'thumbnails'
+DEFAULT_UPLOADS_DIR = 'uploads'
 
 DEFAULT_CONFIGURATION = {
     'cache_size': {
@@ -322,25 +332,30 @@ DEFAULT_CONFIGURATION = {
     'enable_feature': {
         'album': {
             'edit': True,
+            'delete': True,
             'new': True,
         },
         'bookmark': {
             'edit': True,
+            'delete': True,
             'new': True,
         },
         'photo': {
             'add_remove_tag': True,
             'new': True,
             'edit': True,
+            'delete': True,
             'generate_thumbnail': True,
             'reload_metadata': True,
         },
         'tag': {
             'edit': True,
+            'delete': True,
             'new': True,
         },
         'user': {
             'edit': True,
+            'delete': True,
             'login': True,
             'new': True,
         },
@@ -382,4 +397,75 @@ DEFAULT_CONFIGURATION = {
     'motd_strings': [
         'Good morning, Paul. What will your first sequence of the day be?',
     ],
+}
+
+# Permissions ######################################################################################
+
+ANONYMOUS_USER_ID = 0
+
+PERMISSION_ADMIN = 'admin'
+PERMISSION_DEPUTY = 'deputy'
+
+PERMISSION_ALBUM_CREATE = 'album_create'
+PERMISSION_ALBUM_DELETE_ALL = 'album_delete_all'
+PERMISSION_ALBUM_DELETE_OWN = 'album_delete_own'
+PERMISSION_ALBUM_EDIT_ALL = 'album_edit_all'
+PERMISSION_ALBUM_EDIT_OWN = 'album_edit_own'
+
+PERMISSION_BOOKMARK_CREATE = 'bookmark_create'
+PERMISSION_BOOKMARK_DELETE_ALL = 'bookmark_delete_all'
+PERMISSION_BOOKMARK_DELETE_OWN = 'bookmark_delete_own'
+PERMISSION_BOOKMARK_EDIT_ALL = 'bookmark_edit_all'
+PERMISSION_BOOKMARK_EDIT_OWN = 'bookmark_edit_own'
+
+PERMISSION_PHOTO_CREATE = 'photo_create'
+PERMISSION_PHOTO_DELETE_ALL = 'photo_delete_all'
+PERMISSION_PHOTO_DELETE_OWN = 'photo_delete_own'
+PERMISSION_PHOTO_EDIT_ALL = 'photo_edit_all'
+PERMISSION_PHOTO_EDIT_OWN = 'photo_edit_own'
+
+PERMISSION_TAG_CREATE = 'tag_create'
+PERMISSION_TAG_DELETE_ALL = 'tag_delete_all'
+PERMISSION_TAG_DELETE_OWN = 'tag_delete_own'
+PERMISSION_TAG_EDIT_ALL = 'tag_edit_all'
+PERMISSION_TAG_EDIT_OWN = 'tag_edit_own'
+
+ALL_PERMISSIONS = {
+    PERMISSION_ADMIN,
+    # deputy is omitted intentionally
+    PERMISSION_ALBUM_CREATE,
+    PERMISSION_ALBUM_DELETE_ALL,
+    PERMISSION_ALBUM_DELETE_OWN,
+    PERMISSION_ALBUM_EDIT_ALL,
+    PERMISSION_ALBUM_EDIT_OWN,
+    PERMISSION_BOOKMARK_CREATE,
+    PERMISSION_BOOKMARK_DELETE_ALL,
+    PERMISSION_BOOKMARK_DELETE_OWN,
+    PERMISSION_BOOKMARK_EDIT_ALL,
+    PERMISSION_BOOKMARK_EDIT_OWN,
+    PERMISSION_PHOTO_CREATE,
+    PERMISSION_PHOTO_DELETE_ALL,
+    PERMISSION_PHOTO_DELETE_OWN,
+    PERMISSION_PHOTO_EDIT_ALL,
+    PERMISSION_PHOTO_EDIT_OWN,
+    PERMISSION_TAG_CREATE,
+    PERMISSION_TAG_DELETE_ALL,
+    PERMISSION_TAG_DELETE_OWN,
+    PERMISSION_TAG_EDIT_ALL,
+    PERMISSION_TAG_EDIT_OWN,
+}
+
+NEW_USER_PERMISSIONS = {
+    PERMISSION_ALBUM_CREATE,
+    PERMISSION_ALBUM_DELETE_OWN,
+    PERMISSION_ALBUM_EDIT_OWN,
+    PERMISSION_BOOKMARK_CREATE,
+    PERMISSION_BOOKMARK_DELETE_OWN,
+    PERMISSION_BOOKMARK_EDIT_OWN,
+    PERMISSION_PHOTO_CREATE,
+    PERMISSION_PHOTO_DELETE_OWN,
+    PERMISSION_PHOTO_EDIT_OWN,
+    PERMISSION_TAG_CREATE,
+    PERMISSION_TAG_DELETE_OWN,
+    PERMISSION_TAG_EDIT_OWN,
 }

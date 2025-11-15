@@ -158,7 +158,7 @@
 </head>
 
 <body>
-{{header.make_header(session=request.session)}}
+{{header.make_header(request=request)}}
 <div id="content_body">
 <div id="left" class="panel">
     <div id="editor_area">
@@ -184,8 +184,8 @@
             {% if photo.author is not none %}
                 <li>Author: <a href="/userid/{{photo.author.id}}">{{photo.author.display_name}}</a></li>
             {% endif %}
-            {% if photo.width and photo.height %}
-                <li title="{{(photo.area / 1000000)|round(2)}} mpx">Dimensions: <a href="/search?width={{photo.width}}..{{photo.width}}&height={{photo.height}}..{{photo.height}}">{{photo.width}}&times;{{photo.height}}</a> px</li>
+            {% if photo.width and photo.height and photo.area %}
+                <li title="{{((photo.area) / 1000000)|round(2)}} mpx">Dimensions: <a href="/search?width={{photo.width}}..{{photo.width}}&height={{photo.height}}..{{photo.height}}">{{photo.width}}&times;{{photo.height}}</a> px</li>
                 {% set aspectratio = photo.aspectratio|round(2) %}
                 <li>Aspect ratio: <a href="/search?aspectratio={{aspectratio-0.01}}..{{aspectratio+0.01}}">{{aspectratio}}</a></li>
             {% endif %}
@@ -273,6 +273,7 @@
         <button id="generate_thumbnail_button" class="green_button button_with_spinner" onclick="return generate_thumbnail_for_video_form();">Capture thumbnail</button>
         {% endif %}
 
+        {% if request.is_localhost or (request.session.user and request.session.user.has_object_permission(photo, 'edit')) %}
         <button
         class="green_button button_with_confirm"
         data-holder-id="copy_other_photo_tags_holder"
@@ -283,24 +284,27 @@
         >
             Copy tags from other photo
         </button>
+        {% endif %}
 
+        {% if request.is_localhost or (request.session.user and request.session.user.has_object_permission(photo, 'delete')) %}
         <button
         class="red_button button_with_confirm"
-        data-onclick="return delete_photo_form();"
+        data-onclick="return soft_delete_form();"
         data-prompt="Delete photo, keep file?"
         data-cancel-class="gray_button"
         >
-            Remove
+            Soft delete
         </button>
 
         <button
         class="red_button button_with_confirm"
-        data-onclick="return delete_photo_from_disk_form();"
+        data-onclick="return hard_delete_form();"
         data-prompt="Delete file on disk?"
         data-cancel-class="gray_button"
         >
-            Delete
+            Hard delete
         </button>
+        {% endif %}
     </div>
 </div>
 </div>
@@ -424,14 +428,32 @@ function add_remove_photo_tag_callback(response)
     return abort;
 }
 
-function delete_photo_form()
+function soft_delete_form()
 {
-    api.photos.delete(PHOTO_ID, false, common.go_to_root);
+    function callback(response)
+    {
+        if (response.meta.status !== 200)
+        {
+            alert(JSON.stringify(response));
+            return;
+        }
+        common.go_to_root();
+    }
+    api.photos.delete(PHOTO_ID, false, callback);
 }
 
-function delete_photo_from_disk_form()
+function hard_delete_form()
 {
-    api.photos.delete(PHOTO_ID, true, common.go_to_root);
+    function callback(response)
+    {
+        if (response.meta.status !== 200)
+        {
+            alert(JSON.stringify(response));
+            return;
+        }
+        common.go_to_root();
+    }
+    api.photos.delete(PHOTO_ID, true, callback);
 }
 
 function generate_thumbnail_for_video_form()

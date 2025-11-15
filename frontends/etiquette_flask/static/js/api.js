@@ -21,6 +21,16 @@ function reload_config(callback)
     });
 }
 
+api.admin.remove_session =
+function remove_session(token, callback)
+{
+    return http.post({
+        url: "/admin/remove_session",
+        data: {"token": token},
+        callback: callback,
+    });
+}
+
 api.admin.uncache =
 function uncache(callback)
 {
@@ -236,6 +246,26 @@ function batch_add_tag(photo_ids, tagname, callback)
     return http.post({
         url: "/batch/photos/add_tag",
         data: {"photo_ids": photo_ids.join(","), "tagname": tagname},
+        callback: callback,
+    });
+}
+
+api.photos.batch_soft_delete =
+function batch_soft_delete(photo_ids, callback)
+{
+    return http.post({
+        url: "/batch/photos/soft_delete",
+        data: {"photo_ids": photo_ids.join(",")},
+        callback: callback,
+    });
+}
+
+api.photos.batch_hard_delete =
+function batch_hard_delete(photo_ids, callback)
+{
+    return http.post({
+        url: "/batch/photos/hard_delete",
+        data: {"photo_ids": photo_ids.join(",")},
         callback: callback,
     });
 }
@@ -574,6 +604,32 @@ function register(username, display_name, password_1, password_2, callback)
     return http.post({
         url: "/register",
         data: data,
+        callback: callback,
+    });
+}
+
+api.users.set_password =
+function set_password(username, current_password, password_1, password_2, callback)
+{
+    const data = {
+        "username": username,
+        "current_password": current_password,
+        "password_1": password_1,
+        "password_2": password_2,
+    };
+    return http.post({
+        url: `/user/${username}/set_password`,
+        data: data,
+        callback: callback,
+    })
+}
+
+api.users.set_permission =
+function set_permission(username, permission_string, value, callback)
+{
+    return http.post({
+        url: `/user/${username}/set_permission`,
+        data: {"permission": permission_string, "value": value},
         callback: callback,
     });
 }

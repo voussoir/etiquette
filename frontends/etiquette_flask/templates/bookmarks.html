@@ -34,7 +34,7 @@
 </head>
 
 <body>
-    {{header.make_header(session=request.session)}}
+    {{header.make_header(request=request)}}
     <div id="content_body">
         <div id="bookmark_panel" class="panel">
             <h1><span class="dynamic_bookmark_count">{{bookmarks|length}}</span> Bookmarks</h1>

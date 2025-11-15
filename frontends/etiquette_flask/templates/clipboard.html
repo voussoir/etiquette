@@ -95,7 +95,7 @@
 </head>
 
 <body>
-{{header.make_header(session=request.session)}}
+{{header.make_header(request=request)}}
 <div id="content_body" class="sticky_side_right sticky_bottom_right">
 <div id="left">
 
@@ -133,6 +133,13 @@
         <div id="download_zip_area">
             <button class="yellow_button" id="download_zip_button" onclick="return download_zip_form();">Download .zip</button>
         </div>
+
+        {% if request.is_localhost %}
+        <div id="delete_photo_area">
+            <button class="red_button" id="soft_delete_photos_button" data-spinner-delay="500" onclick="return soft_delete_form();">Soft delete
+            <button class="red_button" id="hard_delete_photos_button" data-spinner-delay="500" onclick="return hard_delete_form();">Hard delete
+        </div>
+        {% endif %}
     </div>
 
     <div id="message_area">
@@ -446,6 +453,54 @@ function unset_searchhidden_form()
     const photo_ids = Array.from(photo_clipboard.clipboard);
     api.photos.batch_unset_searchhidden(photo_ids, set_unset_searchhidden_callback);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+function delete_callback(response)
+{
+    if (! response.meta.json_ok)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
+    if (response.meta.status !== 200)
+    {
+        alert(JSON.stringify(response));
+        return;
+    }
+    photo_clipboard.clear_clipboard();
+    common.refresh();
+}
+
+function soft_delete_form()
+{
+    const photo_ids = Array.from(photo_clipboard.clipboard);
+    if (photo_ids.length === 0)
+    {
+        return;
+    }
+    const message = "You are about to REMOVE photos from the database, keeping the files on disk. Type 'REMOVE' to confirm.";
+    if (window.prompt(message) === "REMOVE")
+    {
+        api.photos.batch_hard_delete(photo_ids, delete_callback);
+    }
+}
+
+function hard_delete_form()
+{
+    const photo_ids = Array.from(photo_clipboard.clipboard);
+    if (photo_ids.length === 0)
+    {
+        return;
+    }
+    const message = "You are about to DELETE photos from disk. This is irreversible. Type 'DELETE' to confirm.";
+    if (window.prompt(message) === "DELETE")
+    {
+        api.photos.batch_hard_delete(photo_ids, delete_callback);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 function on_pageload()
 {

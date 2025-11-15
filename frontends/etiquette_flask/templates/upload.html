@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html class="theme_{{theme}}">
+<head>
+    {% import "header.html" as header %}
+    <title>Upload</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" href="/favicon.png" type="image/png"/>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/etiquette.css">
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/http.js"></script>
+    <script src="/static/js/spinners.js"></script>
+
+<style>
+button
+{
+    width: 80px;
+}
+
+#content_body
+{
+    margin: auto;
+}
+
+form
+{
+    display: grid;
+    grid-auto-rows: max-content;
+    grid-row-gap: 8px;
+    margin: 0;
+}
+form h2
+{
+    margin-bottom: 0;
+}
+progress
+{
+    width: 100%;
+}
+#login_form { grid-area: login_form; }
+#register_form { grid-area: register_form; }
+#message_area
+{
+    grid-area: message_area;
+}
+
+#upload_submit_button
+{
+    width: 100%;
+}
+
+@media screen and (min-width: 800px)
+{
+    #content_body
+    {
+        grid-template:
+            "upload_files_form" auto
+    }
+}
+
+@media screen and (max-width: 800px)
+{
+    #content_body
+    {
+        grid-template:
+            "login_form" auto
+            "register_form" auto
+            "message_area" 150px
+            / 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+    {{header.make_header(request=request)}}
+    <div id="content_body">
+        <form id="upload_form" class="panel" action="/photo/upload" method="post" enctype="multipart/form-data">
+            <div id="div_single_files">
+            <h2>Upload single files</h2>
+            <input id="files_input" type="file" name="file[]" multiple onchange="return file_input_onchange(event);"/>
+            </div>
+            <div id="div_folder">
+            <h2>Upload a folder</h2>
+            <input id="folder_input" type="file" name="folder[]" directory webkitdirectory onchange="return folder_input_onchange(event);"/>
+            </div>
+            <!-- <h2>Options</h2> -->
+            <!-- <label><input id="make_album_checkbox" type="checkbox" onchange="return make_album_checkbox_onchange(event);"> Make an album</label> -->
+            <!-- <input id="make_album_name_input" type="text" class="hidden" placeholder="Album name"/> -->
+            <button type="submit" id="upload_submit_button" class="green_button" onclick="return upload_form(event);">Upload</button>
+        </form>
+        <div class="panel">
+            <p id="progresstext">Progress</p>
+            <progress id="progressbar" max="100" value="0"></progress>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript">
+const message_area = document.getElementById("message_area");
+
+function make_album_checkbox_onchange(event)
+{
+    const make_album_name = document.getElementById("make_album_name_input");
+    if (document.getElementById("make_album_checkbox").checked)
+    {
+        make_album_name.classList.remove("hidden");
+    }
+    else
+    {
+        make_album_name.classList.add("hidden");
+    }
+}
+
+function file_input_onchange(event)
+{
+    const files_input = document.getElementById("files_input");
+    if (files_input.files.length > 0)
+    {
+        const folder_input = document.getElementById("div_folder");
+        folder_input.classList.add("hidden");
+    }
+}
+
+function folder_input_onchange(event)
+{
+    const folder_input = document.getElementById("folder_input");
+    if (folder_input.files.length > 0)
+    {
+        const files_input = document.getElementById("div_single_files");
+        files_input.classList.add("hidden");
+        // document.getElementById("make_album_checkbox").checked = true;
+        // const make_album_name = document.getElementById("make_album_name_input");
+        // make_album_name.classList.remove("hidden");
+        // const albumname = folder_input.files[0].webkitRelativePath.split("/")[0];
+        // make_album_name.value = albumname;
+    }
+    const progress = document.getElementById("progressbar");
+    progress.max = Array.from(folder_input.files).reduce((accumulator, file) => accumulator + file.size, 0);
+}
+function upload_form(event)
+{
+    event.preventDefault();
+    console.log(event);
+
+    const xhr = new XMLHttpRequest();
+
+    function xhr_event(e)
+    {
+        if (e.loaded === e.total)
+        {
+            progresstext.innerText = 'Processing...';
+        }
+        else
+        {
+            progresstext.textContent = `${e.loaded} / ${e.total}`;
+        }
+        progressbar.value = e.total;
+        progressbar.value = e.loaded;
+    }
+
+    function xhr_loadend(event)
+    {
+        window.location.href = "/search"
+    }
+
+    xhr.onreadystatechange = function()
+    {
+        // window.alert("readystate: " + xhr.readyState + " " + xhr.status);
+    }
+
+    xhr.addEventListener("loadstart", xhr_event);
+    xhr.addEventListener("load", xhr_event);
+    xhr.addEventListener("loadend", xhr_loadend);
+    xhr.addEventListener("progress", xhr_event);
+    xhr.addEventListener("error", xhr_event);
+    xhr.addEventListener("abort", xhr_event);
+
+    xhr.upload.addEventListener("progress", xhr_event);
+    xhr.open("POST", "/photo/upload");
+
+    const files_input = document.getElementById("files_input");
+    const folder_input = document.getElementById("folder_input");
+    let files;
+    if (files_input.files.length > 0)
+    {
+        files = files_input.files;
+    }
+    else if (folder_input.files.length > 0)
+    {
+        files = folder_input.files;
+    }
+    else
+    {
+        return false;
+    }
+    console.log(files);
+    const formdata = new FormData();
+    for (const file of files)
+    {
+        formdata.append("file", file);
+    }
+    
+    // if (document.getElementById("make_album_checkbox").checked)
+    // {
+    //     formdata.append("album_name", document.getElementById("make_album_name_input").value);
+    // }
+
+    const progresstext = document.getElementById("progresstext");
+    const progressbar = document.getElementById("progressbar");
+
+    xhr.send(formdata);
+}
+</script>
+</html>

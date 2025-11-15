@@ -98,7 +98,7 @@
 </head>
 
 <body>
-{{header.make_header(session=request.session)}}
+{{header.make_header(request=request)}}
 <div id="content_body" class="sticky_side_right sticky_bottom_right">
     <div id="left">
         <div id="album_list" class="panel">
@@ -160,7 +160,7 @@ const ALBUM_ID = undefined;
 </head>
 
 <body>
-{{header.make_header(session=request.session)}}
+{{header.make_header(request=request)}}
 <div id="content_body" class="sticky_side_right sticky_bottom_right">
     <div id="right" class="panel">
         {% if view != "list" %}

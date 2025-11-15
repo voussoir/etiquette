@@ -15,13 +15,13 @@ session_manager = common.session_manager
 @site.route('/tags/<specific_tag>')
 @site.route('/tags/<specific_tag>.json')
 def get_tags_specific_redirect(specific_tag):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     return flask.redirect(request.url.replace('/tags/', '/tag/'))
 
 @site.route('/tagid/<tag_id>')
 @site.route('/tagid/<tag_id>.json')
 def get_tag_id_redirect(tag_id):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     if request.path.endswith('.json'):
         tag = common.P_tag_id(tag_id, response_type='json')
     else:
@@ -33,7 +33,7 @@ def get_tag_id_redirect(tag_id):
 
 @site.route('/tag/<specific_tag_name>.json')
 def get_tag_json(specific_tag_name):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     specific_tag = common.P_tag(specific_tag_name, response_type='json')
     if specific_tag.name != specific_tag_name:
         new_url = f'/tag/{specific_tag.name}.json' + request.query_string.decode('utf-8')
@@ -47,9 +47,9 @@ def get_tag_json(specific_tag_name):
 
 @site.route('/tag/<tagname>/edit', methods=['POST'])
 def post_tag_edit(tagname):
-    common.permission_manager.basic()
+    tag = common.P_tag(tagname, response_type='json')
+    common.permission_manager.edit_thing(tag)
     with common.P.transaction:
-        tag = common.P_tag(tagname, response_type='json')
         name = request.form.get('name', '').strip()
         if name:
             tag.rename(name)
@@ -63,10 +63,13 @@ def post_tag_edit(tagname):
 @site.route('/tag/<tagname>/add_child', methods=['POST'])
 @flasktools.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_add_child(tagname):
-    common.permission_manager.basic()
+    parent = common.P_tag(tagname, response_type='json')
+    common.permission_manager.edit_thing(parent)
+
+    child = common.P_tag(request.form['child_name'], response_type='json')
+    common.permission_manager.edit_thing(child)
+
     with common.P.transaction:
-        parent = common.P_tag(tagname, response_type='json')
-        child = common.P_tag(request.form['child_name'], response_type='json')
         parent.add_child(child)
     response = {'action': 'add_child', 'tagname': f'{parent.name}.{child.name}'}
     return flasktools.json_response(response)
@@ -74,11 +77,11 @@ def post_tag_add_child(tagname):
 @site.route('/tag/<tagname>/add_synonym', methods=['POST'])
 @flasktools.required_fields(['syn_name'], forbid_whitespace=True)
 def post_tag_add_synonym(tagname):
-    common.permission_manager.basic()
+    master_tag = common.P_tag(tagname, response_type='json')
+    common.permission_manager.edit_thing(master_tag)
     syn_name = request.form['syn_name']
 
     with common.P.transaction:
-        master_tag = common.P_tag(tagname, response_type='json')
         syn_name = master_tag.add_synonym(syn_name)
 
     response = {'action': 'add_synonym', 'synonym': syn_name}
@@ -87,10 +90,13 @@ def post_tag_add_synonym(tagname):
 @site.route('/tag/<tagname>/remove_child', methods=['POST'])
 @flasktools.required_fields(['child_name'], forbid_whitespace=True)
 def post_tag_remove_child(tagname):
-    common.permission_manager.basic()
+    parent = common.P_tag(tagname, response_type='json')
+    common.permission_manager.edit_thing(parent)
+
+    child = common.P_tag(request.form['child_name'], response_type='json')
+    common.permission_manager.edit_thing(child)
+
     with common.P.transaction:
-        parent = common.P_tag(tagname, response_type='json')
-        child = common.P_tag(request.form['child_name'], response_type='json')
         parent.remove_child(child)
     response = {'action': 'remove_child', 'tagname': f'{parent.name}.{child.name}'}
     return flasktools.json_response(response)
@@ -98,11 +104,11 @@ def post_tag_remove_child(tagname):
 @site.route('/tag/<tagname>/remove_synonym', methods=['POST'])
 @flasktools.required_fields(['syn_name'], forbid_whitespace=True)
 def post_tag_remove_synonym(tagname):
-    common.permission_manager.basic()
+    master_tag = common.P_tag(tagname, response_type='json')
+    common.permission_manager.edit_thing(master_tag)
     syn_name = request.form['syn_name']
 
     with common.P.transaction:
-        master_tag = common.P_tag(tagname, response_type='json')
         syn_name = master_tag.remove_synonym(syn_name)
 
     response = {'action': 'delete_synonym', 'synonym': syn_name}
@@ -111,7 +117,7 @@ def post_tag_remove_synonym(tagname):
 # Tag listings #####################################################################################
 
 @site.route('/all_tags.json')
-@common.permission_manager.basic_decorator
+@common.permission_manager.read_decorator
 @flasktools.cached_endpoint(max_age=15)
 def get_all_tag_names():
     all_tags = list(sorted(common.P.get_all_tag_names()))
@@ -122,7 +128,7 @@ def get_all_tag_names():
 @site.route('/tag/<specific_tag_name>')
 @site.route('/tags')
 def get_tags_html(specific_tag_name=None):
-    common.permission_manager.basic()
+    common.permission_manager.read()
     if specific_tag_name is None:
         specific_tag = None
     else:
@@ -161,7 +167,7 @@ def get_tags_html(specific_tag_name=None):
 
 @site.route('/tags.json')
 def get_tags_json():
-    common.permission_manager.basic()
+    common.permission_manager.read()
     include_synonyms = request.args.get('synonyms')
     include_synonyms = include_synonyms is None or stringtools.truthystring(include_synonyms)
 
@@ -175,7 +181,8 @@ def get_tags_json():
 @site.route('/tags/create_tag', methods=['POST'])
 @flasktools.required_fields(['name'], forbid_whitespace=True)
 def post_tag_create():
-    common.permission_manager.basic()
+    common.permission_manager.permission_string(etiquette.constants.PERMISSION_TAG_CREATE)
+
     name = request.form['name']
     description = request.form.get('description', None)
 
@@ -187,7 +194,7 @@ def post_tag_create():
 @site.route('/tags/easybake', methods=['POST'])
 @flasktools.required_fields(['easybake_string'], forbid_whitespace=True)
 def post_tag_easybake():
-    common.permission_manager.basic()
+    common.permission_manager.admin_only()
     easybake_string = request.form['easybake_string']
 
     with common.P.transaction:
@@ -197,9 +204,9 @@ def post_tag_easybake():
 
 @site.route('/tag/<tagname>/delete', methods=['POST'])
 def post_tag_delete(tagname):
-    common.permission_manager.basic()
+    tag = common.P_tag(tagname, response_type='json')
+    common.permission_manager.delete_thing(tag)
     with common.P.transaction:
-        tag = common.P_tag(tagname, response_type='json')
         tag.delete()
     response = {'action': 'delete_tag', 'tagname': tag.name}
     return flasktools.json_response(response)
