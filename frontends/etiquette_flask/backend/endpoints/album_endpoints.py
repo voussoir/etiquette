@@ -45,7 +45,7 @@ def get_album_zip(album_id):
     streamed_zip = etiquette.helpers.zip_album(album, recursive=recursive)
 
     if album.title:
-        download_as = f'album {album.id} - {album.title}.zip'
+        download_as = f'{album.title} ({album.id}).zip'
     else:
         download_as = f'album {album.id}.zip'
 
