@@ -6,7 +6,6 @@ vlogging.earlybird_config()
 
 import gevent.monkey; gevent.monkey.patch_all()
 import werkzeug.middleware.proxy_fix
-
 import argparse
 import gevent.pywsgi
 import os
@@ -24,9 +23,15 @@ import backend
 
 site = backend.site
 site.wsgi_app = werkzeug.middleware.proxy_fix.ProxyFix(site.wsgi_app)
-site.debug = True
+site.debug = False
 
 HTTPS_DIR = pathclass.Path(__file__).parent.with_child('https')
+
+def fix_proxied_logging(method):
+    def format_request(self, *a, **k):
+        self.client_address = self.headers.get('X-Forwarded-For', self.client_address)
+        return method(self, *a, **k)
+    return format_request
 
 ####################################################################################################
 
@@ -51,6 +56,8 @@ def etiquette_flask_launch(
             listener=('0.0.0.0', port),
             application=site,
         )
+
+    http.handler_class.format_request = fix_proxied_logging(http.handler_class.format_request)
 
     if localhost_only:
         log.info('Setting localhost_only=True')
