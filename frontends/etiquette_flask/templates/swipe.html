@@ -460,10 +460,12 @@ function show_current_photo()
         if (upcoming_photo !== undefined && upcoming_photo.has_thumbnail)
         {
             upcoming_imgs[index].src = "/photo/" + upcoming_photo.id + "/thumbnail";
+            upcoming_imgs[index].classList.remove("hidden");
         }
         else
         {
             upcoming_imgs[index].src = "";
+            upcoming_imgs[index].classList.add("hidden");
         }
     }
 }
