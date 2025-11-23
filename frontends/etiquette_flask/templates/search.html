@@ -61,7 +61,8 @@
     word-wrap: break-word;
 }
 #search_go_button,
-#swipe_go_button
+#swipe_go_button,
+#radio_go_button
 {
     width: 100%;
 }
@@ -327,6 +328,7 @@
             </select>
             <button type="submit" id="search_go_button" class="green_button" value="">Search</button>
             <button type="button" id="swipe_go_button" class="green_button" value="" onclick="return submit_swipe();">Swipe UI</button>
+            <button type="button" id="radio_go_button" class="green_button" value="" onclick="return submit_radio();">Radio</button>
             <div style="text-align:center"><a href="/search.atom" class="merge_params">Atom</a></div>
         </form>
         {% if total_tags %}
@@ -652,6 +654,19 @@ function submit_swipe()
 {
     const parameters = build_search_params().toString();
     let url = "/swipe";
+    if (parameters !== "")
+    {
+        url += "?" + parameters.toString();
+    }
+    console.log(url);
+    window.location.href = url;
+    return false;
+}
+
+function submit_radio()
+{
+    const parameters = build_search_params().toString();
+    let url = "/radio";
     if (parameters !== "")
     {
         url += "?" + parameters.toString();

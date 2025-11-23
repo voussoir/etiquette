@@ -610,6 +610,14 @@ def get_search_json():
     response = search.jsonify()
     return flasktools.json_response(response)
 
+# Radio ############################################################################################
+
+@site.route('/radio')
+def get_radio():
+    common.permission_manager.read()
+    response = common.render_template(request, 'radio.html')
+    return response
+
 # Swipe ############################################################################################
 
 @site.route('/swipe')

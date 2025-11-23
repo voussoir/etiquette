@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html class="theme_{{theme}}">
+<head>
+    {% import "header.html" as header %}
+    <title>Radio</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" href="/favicon.png" type="image/png"/>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/etiquette.css">
+    <link rel="stylesheet" href="/static/css/cards.css">
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/cards.js"></script>
+    <script src="/static/js/hotkeys.js"></script>
+    <script src="/static/js/http.js"></script>
+    <script src="/static/js/spinners.js"></script>
+
+<style>
+#content_body
+{
+    position: relative;
+    display: grid;
+    grid-template:
+        "name_tag" auto
+        "photo_viewer" 1fr
+        "upcoming_area" auto
+        /1fr;
+    /* header=18+8+8 + content_body margin-bottom=8 */
+    height: calc(100vh - 42px);
+}
+#name_tag
+{
+    grid-area: name_tag;
+    text-align: center;
+}
+#upcoming_area
+{
+    grid-area: upcoming_area;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    overflow: hidden;
+    min-height: 0;
+}
+#message_area
+{
+    grid-area: message_area;
+}
+#photo_viewer
+{
+    grid-area: photo_viewer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 0;
+}
+#photo_viewer video
+{
+    min-height: 0;
+    max-height: 100%;
+    max-width: 100%;
+}
+#photo_viewer audio
+{
+    min-height: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+}
+#button_bar
+{
+    grid-area: button_bar;
+    display: flex;
+    height: 100px;
+}
+#button_bar > .action_button
+{
+    flex: 1;
+}
+#button_bar select,
+#button_bar input
+{
+    background-color: white;
+}
+</style>
+</head>
+
+<body>
+{{header.make_header(request=request)}}
+<div id="content_body">
+    <a id="name_tag" target="_blank"></a>
+    <div id="photo_viewer">
+        <video id="photo_viewer_video" controls class="hidden" src=""></video>
+        <audio id="photo_viewer_audio" controls class="hidden" src=""></audio>
+    </div>
+    <div id="upcoming_area">
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+        <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
+    </div>
+</div>
+</body>
+
+<script type="text/javascript">
+const original_search_params = Array.from(new URLSearchParams(window.location.search));
+
+const name_tag = document.getElementById("name_tag");
+const photo_viewer_video = document.getElementById("photo_viewer_video");
+const photo_viewer_audio = document.getElementById("photo_viewer_audio");
+const upcoming_imgs = document.getElementsByClassName("upcoming_img");
+
+const photo_queue = [];
+const rewind_queue = [];
+const REWIND_QUEUE_LENGTH = 15;
+
+let current_photo = null;
+let SEARCH_LIMIT = 100;
+let current_search_offset = 0;
+let waiting_for_load = false;
+let pending_search_request = null;
+
+// STATE ///////////////////////////////////////////////////////////////////////////////////////////
+
+function get_more_photos()
+{
+    // Prevents multiple calls from requesting duplicate ranges.
+    if (pending_search_request !== null)
+    {
+        return;
+    }
+    function callback(response)
+    {
+        pending_search_request = null;
+        if (! response.meta.json_ok)
+        {
+            alert(JSON.stringify(response));
+            return;
+        }
+        if (response.data.error_type)
+        {
+            alert(response.data.error_type + "\n" + response.data.error_message);
+            return;
+        }
+        const need_show_photo = photo_queue.length === 0;
+        const results = response.data.results;
+        console.log("Got " + results.length + " more photos.");
+        
+        for (const photo of results)
+        {
+            if (photo.simple_mimetype !== "video" && photo.simple_mimetype !== "audio")
+            {
+                continue;
+            }
+            photo_queue.push(photo);
+        }
+
+        if (results.length === 0)
+        {
+            if (current_search_offset === 0)
+            {
+                console.log("Search results seem to be exhausted.");
+                return;
+            }
+            current_search_offset = 0;
+        }
+        else
+        {
+            current_search_offset += results.length;
+        }
+        waiting_for_more_photos = false;
+
+        if (need_show_photo)
+        {
+            show_next_photo();
+        }
+    }
+    console.log("Requesting more photos.");
+    const search_params = modify_search_params();
+    pending_search_request = api.photos.search(search_params, callback);
+}
+
+function modify_search_params()
+{
+    const search_params = new URLSearchParams();
+
+    let extra_musts = [];
+    let extra_forbids = [];
+
+    extra_musts = extra_musts.join(",");
+    extra_forbids = extra_forbids.join(",");
+
+    let had_musts = false;
+    let had_forbids = false;
+    for ([key, value] of original_search_params)
+    {
+        if (key === "limit" || key === "offset" || key === "yield_albums" || key === "yield_photos")
+        {
+            continue;
+        }
+        if (key === "tag_musts")
+        {
+            value = value + "," + extra_musts;
+        }
+        if (key === "tag_forbids")
+        {
+            value = value + "," + extra_forbids;
+        }
+        search_params.set(key, value);
+    }
+    if (! had_musts && extra_musts.length > 0)
+    {
+        search_params.set("tag_musts", extra_musts);
+    }
+    if (! had_forbids && extra_forbids.length > 0)
+    {
+        search_params.set("tag_forbids", extra_forbids);
+    }
+    search_params.set("yield_albums", "no");
+    search_params.set("yield_photos", "yes");
+    search_params.set("limit", SEARCH_LIMIT);
+    search_params.set("offset", current_search_offset);
+    console.log("Updated search params " + search_params.toString());
+    return search_params;
+}
+
+function step_previous_photo()
+{
+    const rewind_photo = rewind_queue.shift();
+    if (rewind_photo === undefined)
+    {
+        return;
+    }
+    if (current_photo !== null)
+    {
+        photo_queue.unshift(current_photo);
+    }
+    current_photo = rewind_photo;
+}
+
+function step_next_photo()
+{
+    if (current_photo !== null)
+    {
+        rewind_queue.unshift(current_photo);
+        rewind_queue.length = REWIND_QUEUE_LENGTH;
+    }
+    if (photo_queue.length == 0)
+    {
+        current_photo = null;
+        get_more_photos();
+        return;
+    }
+    current_photo = photo_queue.shift();
+    if (photo_queue.length < 20)
+    {
+        get_more_photos();
+    }
+}
+
+function show_previous_photo()
+{
+    step_previous_photo();
+    show_current_photo();
+    render_upcoming_thumbnails();
+}
+
+function show_next_photo()
+{
+    step_next_photo();
+    show_current_photo();
+    render_upcoming_thumbnails();
+}
+
+function show_current_photo()
+{
+    if (current_photo === null)
+    {
+        return;
+    }
+
+    if (current_photo.simple_mimetype === "video")
+    {
+        waiting_for_load = true;
+        photo_viewer_video.classList.remove("hidden");
+        photo_viewer_audio.classList.add("hidden");
+        photo_viewer_video.src = "/photo/" + current_photo.id + "/download";
+        photo_viewer_video.currentTime = 0;
+        photo_viewer_video.play();
+    }
+    else if (current_photo.simple_mimetype === "audio")
+    {
+        waiting_for_load = true;
+        photo_viewer_audio.classList.remove("hidden");
+        photo_viewer_video.classList.add("hidden");
+        photo_viewer_audio.src = "/photo/" + current_photo.id + "/download";
+        photo_viewer_audio.currentTime = 0;
+        photo_viewer_audio.play();
+    }
+    // name_tag.style.color = "red";
+    name_tag.textContent = current_photo.filename;
+    name_tag.href = "/photo/" + current_photo.id;
+}
+
+function render_upcoming_thumbnails()
+{
+    for (let index = 0; index < upcoming_imgs.length; index += 1)
+    {
+        upcoming_photo = photo_queue[index];
+        if (upcoming_photo === undefined)
+        {
+            upcoming_imgs[index].classList.add("hidden");
+            continue;
+        }
+        upcoming_imgs[index].classList.remove("hidden");
+        upcoming_imgs[index].title = upcoming_photo.filename;
+        if (upcoming_photo.has_thumbnail)
+        {
+            upcoming_imgs[index].src = "/photo/" + upcoming_photo.id + "/thumbnail";
+        }
+        else
+        {
+            upcoming_imgs[index].src = "/static/basic_thumbnails/" + upcoming_photo.simple_mimetype + ".png";
+        }
+    }
+}
+
+function on_media_loaded(event)
+{
+    console.log("media loaded");
+    waiting_for_load = false;
+    // name_tag.style.color = "green";
+    if (current_photo.simple_mimetype === "video")
+    {
+        media = photo_viewer_video.play();
+    }
+    else if (current_photo.simple_mimetype === "audio")
+    {
+        media = photo_viewer_audio.play();
+    }
+}
+
+function on_media_ended(event)
+{
+    console.log("media ended");
+    show_next_photo();
+}
+
+function upcoming_onclick(event)
+{
+    const index = Array.from(event.target.parentElement.children).indexOf(event.target);
+    const photo = photo_queue[index];
+    photo_queue.splice(index, 1);
+    photo_queue.unshift(photo);
+    show_next_photo();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function on_pageload()
+{
+    hotkeys.register_hotkey("arrowdown", show_next_photo, "Show the next photo");
+    hotkeys.register_hotkey("arrowup", show_previous_photo, "Show the previous photo");
+
+    photo_viewer_video.addEventListener("ended", on_media_ended);
+    photo_viewer_video.addEventListener("loadeddata", on_media_loaded);
+
+    photo_viewer_audio.addEventListener("ended", on_media_ended);
+    photo_viewer_audio.addEventListener("loadeddata", on_media_loaded);
+
+    show_next_photo();
+}
+document.addEventListener("DOMContentLoaded", on_pageload);
+</script>
+</html>
