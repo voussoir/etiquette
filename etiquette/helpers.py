@@ -289,7 +289,7 @@ def generate_video_thumbnail(filepath, width, height, special={}) -> PIL.Image:
     if 'timestamp' in special:
         timestamp_choices = [float(special['timestamp'])]
     else:
-        timestamp_choices = list(range(0, int(duration), 3))
+        timestamp_choices = list(range(0, min(int(duration), 60), 3))
 
     image = None
     for this_time in timestamp_choices:
