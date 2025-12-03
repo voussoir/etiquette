@@ -5,6 +5,7 @@ import sys
 
 from voussoirkit import betterhelp
 from voussoirkit import interactive
+from voussoirkit import operatornotify
 from voussoirkit import pathclass
 from voussoirkit import pipeable
 from voussoirkit import progressbars
@@ -616,6 +617,7 @@ def tag_list_argparse(args):
 
     return 0
 
+@operatornotify.main_decorator(subject='etiquette_cli')
 @vlogging.main_decorator
 def main(argv):
     parser = argparse.ArgumentParser(
