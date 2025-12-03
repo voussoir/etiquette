@@ -91,6 +91,7 @@ def etiquette_flask_launch_argparse(args):
     )
 
 @operatornotify.main_decorator(subject='etiquette_flask_dev', notify_every_line=True)
+@vlogging.main_decorator
 def main(argv):
     parser = argparse.ArgumentParser(
         description='''
