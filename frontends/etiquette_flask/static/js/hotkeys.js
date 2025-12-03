@@ -38,7 +38,7 @@ function register_hotkey(hotkey, action, description)
     }
 
     const key = hotkey.pop();
-    modifiers = hotkey.map(word => word.toLocaleLowerCase());
+    const modifiers = hotkey.map(word => word.toLocaleLowerCase());
     const ctrlKey = modifiers.includes("control") || modifiers.includes("ctrl");
     const shiftKey = modifiers.includes("shift");
     const altKey = modifiers.includes("alt");
@@ -96,7 +96,7 @@ function hotkeys_listener(event)
         return;
     }
 
-    identifier = hotkeys.hotkey_identifier(event.key, event.ctrlKey, event.shiftKey, event.altKey);
+    const identifier = hotkeys.hotkey_identifier(event.key, event.ctrlKey, event.shiftKey, event.altKey);
     //console.log(identifier);
     if (identifier in hotkeys.HOTKEYS)
     {
