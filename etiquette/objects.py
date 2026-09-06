@@ -1617,6 +1617,8 @@ class Photo(ObjectBase):
 class PhotoTagRel(ObjectBase):
     table = 'photo_tag_rel'
 
+    no_such_exception = exceptions.NoSuchPhotoTag
+
     def __init__(self, photodb, db_row):
         super().__init__(photodb)
         self.photodb = photodb

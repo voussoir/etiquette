@@ -60,6 +60,9 @@ class NoSuchGroup(NoSuch):
 class NoSuchPhoto(NoSuch):
     error_message = 'Photo "{}" does not exist.'
 
+class NoSuchPhotoTag(NoSuch):
+    error_message = 'PhotoTag "{}" does not exist.'
+
 class NoSuchSynonym(NoSuch):
     error_message = 'Synonym "{}" does not exist.'
 
