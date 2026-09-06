@@ -39,8 +39,9 @@ def _normalize_token(token):
     return token
 
 class SessionManager:
-    def __init__(self, maxlen=None, state_file=None):
+    def __init__(self, maxlen=None, max_age=SESSION_MAX_AGE, state_file=None):
         self.sessions = cacheclass.Cache(maxlen=maxlen)
+        self.max_age = max_age
         self.last_activity = timetools.now()
         self.last_save_state = timetools.now()
 
@@ -80,7 +81,7 @@ class SessionManager:
             response.set_cookie(
                 'etiquette_session',
                 value=request.session.token,
-                max_age=SESSION_MAX_AGE,
+                max_age=self.max_age,
                 httponly=True,
             )
 
@@ -179,7 +180,7 @@ class Session:
     def expired(self):
         now = timetools.now()
         age = now - self.last_activity
-        return age.seconds > SESSION_MAX_AGE
+        return age.seconds > self.session_manager.max_age
 
     def jsonify(self):
         return {

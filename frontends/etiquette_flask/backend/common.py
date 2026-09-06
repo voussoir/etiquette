@@ -328,6 +328,8 @@ def load_config() -> None:
     )
     site.server_config = config
 
+    session_manager.max_age = config.get('session_max_age', session_manager.max_age)
+
     if needs_rewrite:
         save_config()
 
