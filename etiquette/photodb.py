@@ -998,6 +998,7 @@ class PDBUtilMixin:
             glob_directories=glob_directories,
             glob_filenames=glob_filenames,
             recurse=recurse,
+            sort=True,
             yield_style='nested',
         )
 
