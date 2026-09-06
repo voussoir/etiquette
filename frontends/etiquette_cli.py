@@ -639,7 +639,10 @@ def main(argv):
     )
     p_add_tag.examples = [
         'wallpaper wall*.jpg wall*.png',
-        {'args': 'author.voussoir --photo-search --tag-forbids author', 'comment': 'Add an author tag to all photos that don\'t have one.'}
+        {
+            'args': 'author.voussoir --photo-search --tag-forbids author',
+            'comment': 'Add an author tag to all photos that don\'t have one.',
+        }
     ]
     p_add_tag.add_argument(
         'tag_name',
