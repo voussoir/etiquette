@@ -597,7 +597,7 @@ class Album(ObjectBase, GroupableMixin):
         ) -> dict:
         j = {
             'type': 'album',
-            'id': self.id,
+            'id': str(self.id),
             'description': self.description,
             'title': self.title,
             'created': self.created_unix,
@@ -903,7 +903,7 @@ class Bookmark(ObjectBase):
     def jsonify(self) -> dict:
         j = {
             'type': 'bookmark',
-            'id': self.id,
+            'id': str(self.id),
             'author': self.author.jsonify() if self._author_id else None,
             'url': self.url,
             'created': self.created_unix,
@@ -1246,7 +1246,7 @@ class Photo(ObjectBase):
     def jsonify(self, include_albums=True, include_tags=True) -> dict:
         j = {
             'type': 'photo',
-            'id': self.id,
+            'id': str(self.id),
             'aspectratio': self.aspectratio,
             'author': self.author.jsonify() if self._author_id else None,
             'extension': self.extension,
@@ -1663,7 +1663,7 @@ class PhotoTagRel(ObjectBase):
     def jsonify(self):
         j = {
             'type': 'photo_tag_rel',
-            'id': self.id,
+            'id': str(self.id),
             'photo_id': self.photo_id,
             'tag_id': self.tag_id,
             'tag_name': self.tag.name,
@@ -2360,7 +2360,7 @@ class Tag(ObjectBase, GroupableMixin):
     def jsonify(self, include_synonyms=False, include_parents=True, include_children=True) -> dict:
         j = {
             'type': 'tag',
-            'id': self.id,
+            'id': str(self.id),
             'name': self.name,
             'created': self.created_unix,
             'author': self.author.jsonify() if self._author_id else None,
@@ -2694,7 +2694,7 @@ class User(ObjectBase):
     def jsonify(self) -> dict:
         j = {
             'type': 'user',
-            'id': self.id,
+            'id': str(self.id),
             'username': self.username,
             'created': self.created_unix,
             'display_name': self.display_name,
