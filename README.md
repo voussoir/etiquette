@@ -1,7 +1,7 @@
 Etiquette
 =========
 
-I am currently running a read-only demonstration copy of Etiquette at https://etiquette.voussoir.net where you can browse around.
+<!-- Live demo: https://etiquette.voussoir.net-->
 
 ## What am I looking at
 
