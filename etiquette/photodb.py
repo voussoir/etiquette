@@ -1150,7 +1150,9 @@ class PhotoDB(
             raise exceptions.BadDataDirectory(self.data_directory.absolute_path)
 
         # DATABASE / WORMS
-        self._init_sql(create=create, skip_version_check=skip_version_check)
+        self._create = create
+        self._skip_version_check = skip_version_check
+        self._init_sql()
 
         # THUMBNAIL DIRECTORY
         self.thumbnail_directory = self.data_directory.with_child(constants.DEFAULT_THUMBDIR)
@@ -1201,7 +1203,7 @@ class PhotoDB(
         self.COLUMNS = constants.SQL_COLUMNS
         self.COLUMN_INDEX = constants.SQL_INDEX
 
-    def _init_sql(self, create=False, skip_version_check=False):
+    def _init_sql(self):
         if self.ephemeral:
             existing_database = False
             self.sql_write = self._make_sqlite_write_connection(':memory:')
@@ -1212,7 +1214,7 @@ class PhotoDB(
         self.database_filepath = self.data_directory.with_child(constants.DEFAULT_DBNAME)
         existing_database = self.database_filepath.exists
 
-        if not existing_database and not create:
+        if not existing_database and not self._create:
             msg = f'"{self.database_filepath.absolute_path}" does not exist and create is off.'
             raise FileNotFoundError(msg)
 
@@ -1221,7 +1223,7 @@ class PhotoDB(
         self.sql_read = self._make_sqlite_read_connection(self.database_filepath)
 
         if existing_database:
-            if not skip_version_check:
+            if not self._skip_version_check:
                 self._check_version()
             with self.transaction:
                 self._load_pragmas()
