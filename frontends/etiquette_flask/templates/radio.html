@@ -91,8 +91,7 @@
 <div id="content_body">
     <a id="name_tag" target="_blank"></a>
     <div id="photo_viewer">
-        <video id="photo_viewer_video" controls class="hidden" src=""></video>
-        <audio id="photo_viewer_audio" controls class="hidden" src=""></audio>
+        <span id="media_player"></span>
     </div>
     <div id="upcoming_area">
         <img class="upcoming_img" src="" class="hidden" width="75px" height="75px" onclick="return upcoming_onclick(event);"/>
@@ -132,8 +131,15 @@
 const original_search_params = Array.from(new URLSearchParams(window.location.search));
 
 const name_tag = document.getElementById("name_tag");
-const photo_viewer_video = document.getElementById("photo_viewer_video");
-const photo_viewer_audio = document.getElementById("photo_viewer_audio");
+
+const video_player = document.createElement("video");
+video_player.id = "media_player";
+video_player.controls = true;
+
+const audio_player = document.createElement("audio");
+audio_player.id = "media_player";
+audio_player.controls = true;
+
 const upcoming_imgs = document.getElementsByClassName("upcoming_img");
 
 const photo_queue = [];
@@ -305,24 +311,21 @@ function show_current_photo()
         return;
     }
 
-    if (current_photo.simple_mimetype === "video")
+    let media_player = document.getElementById("media_player");
+    if (current_photo.simple_mimetype === "video" && media_player != video_player)
     {
-        waiting_for_load = true;
-        photo_viewer_video.classList.remove("hidden");
-        photo_viewer_audio.classList.add("hidden");
-        photo_viewer_video.src = "/photo/" + current_photo.id + "/download";
-        photo_viewer_video.currentTime = 0;
-        photo_viewer_video.play();
+        document.getElementById("media_player").replaceWith(video_player);
+        media_player = video_player;
     }
-    else if (current_photo.simple_mimetype === "audio")
+    else if (current_photo.simple_mimetype === "audio" && media_player != audio_player)
     {
-        waiting_for_load = true;
-        photo_viewer_audio.classList.remove("hidden");
-        photo_viewer_video.classList.add("hidden");
-        photo_viewer_audio.src = "/photo/" + current_photo.id + "/download";
-        photo_viewer_audio.currentTime = 0;
-        photo_viewer_audio.play();
+        document.getElementById("media_player").replaceWith(audio_player);
+        media_player = audio_player;
     }
+    waiting_for_load = true;
+    media_player.src = "/photo/" + current_photo.id + "/download";
+    media_player.currentTime = 0;
+    media_player.play();
     // name_tag.style.color = "red";
     name_tag.textContent = current_photo.filename;
     name_tag.href = "/photo/" + current_photo.id;
@@ -356,14 +359,7 @@ function on_media_loaded(event)
     console.log("media loaded");
     waiting_for_load = false;
     // name_tag.style.color = "green";
-    if (current_photo.simple_mimetype === "video")
-    {
-        media = photo_viewer_video.play();
-    }
-    else if (current_photo.simple_mimetype === "audio")
-    {
-        media = photo_viewer_audio.play();
-    }
+    document.getElementById("media_player").play();
 }
 
 function on_media_ended(event)
@@ -381,7 +377,6 @@ function upcoming_onclick(event)
     show_next_photo();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function on_pageload()
@@ -389,11 +384,11 @@ function on_pageload()
     hotkeys.register_hotkey("arrowdown", show_next_photo, "Show the next photo");
     hotkeys.register_hotkey("arrowup", show_previous_photo, "Show the previous photo");
 
-    photo_viewer_video.addEventListener("ended", on_media_ended);
-    photo_viewer_video.addEventListener("loadeddata", on_media_loaded);
+    video_player.addEventListener("ended", on_media_ended);
+    video_player.addEventListener("loadeddata", on_media_loaded);
 
-    photo_viewer_audio.addEventListener("ended", on_media_ended);
-    photo_viewer_audio.addEventListener("loadeddata", on_media_loaded);
+    audio_player.addEventListener("ended", on_media_ended);
+    audio_player.addEventListener("loadeddata", on_media_loaded);
 
     show_next_photo();
 }
