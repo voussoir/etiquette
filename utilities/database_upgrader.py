@@ -1109,7 +1109,7 @@ def upgrade_all(data_directory):
 def upgrade_all_argparse(args):
     return upgrade_all(data_directory=args.data_directory)
 
-@vlogging.main_decorator
+@vlogging.main_decorator(log=log)
 def main(argv):
     parser = argparse.ArgumentParser()
 
